@@ -1,0 +1,47 @@
+{
+  "op": "recording.auto_zoom",
+  "args": {
+    "item_id": "itm_zzzzzzzzzz",
+    "resolved": {
+      "width": 1920,
+      "height": 1080,
+      "events": [
+        {
+          "t_ms": 4000,
+          "kind": "down",
+          "button": "left",
+          "x": 300,
+          "y": 200
+        },
+        {
+          "t_ms": 14000,
+          "kind": "down",
+          "button": "left",
+          "x": 1500,
+          "y": 300
+        },
+        {
+          "t_ms": 24000,
+          "kind": "down",
+          "button": "left",
+          "x": 960,
+          "y": 540
+        },
+        {
+          "t_ms": 34000,
+          "kind": "down",
+          "button": "left",
+          "x": 400,
+          "y": 900
+        },
+        {
+          "t_ms": 44000,
+          "kind": "down",
+          "button": "left",
+          "x": 1700,
+          "y": 950
+        }
+      ]
+    }
+  }
+}

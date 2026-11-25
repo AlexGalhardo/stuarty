@@ -306,6 +306,9 @@ var lateOps = map[string]func(p *docPick) string{
 	"clip.face_frame": func(p *docPick) string {
 		return fmt.Sprintf(`{"item_id":%q,%s}`, p.clip(), faceTrackArgs(5+p.n(10)))
 	},
+	"recording.auto_zoom": func(p *docPick) string {
+		return fmt.Sprintf(`{"item_id":%q,%s}`, p.clip(), randomClicks(p))
+	},
 	"transcript.delete_range": func(p *docPick) string {
 		from := p.n(5)
 

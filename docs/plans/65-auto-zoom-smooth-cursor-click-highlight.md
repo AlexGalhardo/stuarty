@@ -57,7 +57,7 @@ Names are proposals until task 1 writes them to SDD-000 and SDD-002. All are und
 ## Tasks
 
 - [x] 1. SDD-000, SDD-001, SDD-002, SDD-013. Verify: `task lint:md` exits 0 and `task codegen` leaves no unexpected diff.
-- [ ] 2. The zoom planner, with golden cases. Verify: `go test ./core/...` passes.
+- [x] 2. The zoom planner, with golden cases. Verify: `go test ./core/...` passes.
 - [ ] 3. Cursor smoothing and the cursor item. Verify: `go test ./core/...` passes.
 - [ ] 4. Click highlight. Verify: `go test ./core/...` passes.
 - [ ] 5. Frame plan and renderer support. Verify: the Rust gate of `renderer/` and the parity gates of `.agents/skills/renderer-parity/`.

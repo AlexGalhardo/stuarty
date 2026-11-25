@@ -1,0 +1,26 @@
+{
+  "op": "recording.auto_zoom",
+  "args": {
+    "item_id": "itm_m1n2p3q4r5",
+    "resolved": {
+      "width": 1920,
+      "height": 1080,
+      "events": [
+        {
+          "t_ms": 4000,
+          "kind": "down",
+          "button": "left",
+          "x": 200,
+          "y": 200
+        },
+        {
+          "t_ms": 7500,
+          "kind": "down",
+          "button": "left",
+          "x": 1700,
+          "y": 900
+        }
+      ]
+    }
+  }
+}

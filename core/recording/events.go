@@ -166,20 +166,15 @@ func parseEvent(line []byte, hdr *header) (ev PointerEvent, h *header, err error
 	return ev, nil, errLine
 }
 
-// ReadEvents reads an event file and returns what the query selects. The header must be the first line; a file
-// without one is ErrEvents. A line that fails validation is discarded and counted, never returned.
-func ReadEvents(r io.Reader, q EventsQuery) (EventsResult, error) {
-	q, err := NormalizeQuery(q)
-	if err != nil {
-		return EventsResult{}, fmt.Errorf("%w: %w", ErrEvents, err)
-	}
-
+// scanEvents reads an event file and calls visit for every valid event, in time order; visit returns false to stop
+// early. The header must be the first line; a file without one is ErrEvents. A line that fails validation is
+// discarded and counted, never visited.
+func scanEvents(r io.Reader, visit func(PointerEvent) bool) (width, height, discarded int, err error) {
 	sc := bufio.NewScanner(r)
 	// The capacity is the bound too: a longer line is an error, not a token.
 	sc.Buffer(make([]byte, 0, MaxEventLine+1), MaxEventLine+1)
 
 	var (
-		res   EventsResult
 		hdr   *header
 		lines int
 		last  int64
@@ -188,7 +183,7 @@ func ReadEvents(r io.Reader, q EventsQuery) (EventsResult, error) {
 	for sc.Scan() {
 		lines++
 		if lines > MaxEventLines {
-			return res, fmt.Errorf("%w: more than %d lines", ErrEvents, MaxEventLines)
+			return width, height, discarded, fmt.Errorf("%w: more than %d lines", ErrEvents, MaxEventLines)
 		}
 
 		ev, h, perr := parseEvent(sc.Bytes(), hdr)
@@ -196,23 +191,51 @@ func ReadEvents(r io.Reader, q EventsQuery) (EventsResult, error) {
 		switch {
 		case lines == 1:
 			if perr != nil || h == nil {
-				return res, fmt.Errorf("%w: no header", ErrEvents)
+				return width, height, discarded, fmt.Errorf("%w: no header", ErrEvents)
 			}
 
 			hdr = h
-			res.Width, res.Height = h.width, h.height
+			width, height = h.width, h.height
 
 			continue
 		case perr != nil || h != nil || ev.TMS < last:
-			res.Discarded++
+			discarded++
 
 			continue
 		}
 
 		last = ev.TMS
 
+		if !visit(ev) {
+			return width, height, discarded, nil
+		}
+	}
+
+	if serr := sc.Err(); serr != nil {
+		// A line longer than the bound: the rest of the file cannot be trusted.
+		return width, height, discarded, fmt.Errorf("%w: %w", ErrEvents, serr)
+	}
+
+	if lines == 0 {
+		return width, height, discarded, fmt.Errorf("%w: empty", ErrEvents)
+	}
+
+	return width, height, discarded, nil
+}
+
+// ReadEvents reads an event file and returns what the query selects. The header must be the first line; a file
+// without one is ErrEvents. A line that fails validation is discarded and counted, never returned.
+func ReadEvents(r io.Reader, q EventsQuery) (EventsResult, error) {
+	q, err := NormalizeQuery(q)
+	if err != nil {
+		return EventsResult{}, fmt.Errorf("%w: %w", ErrEvents, err)
+	}
+
+	var res EventsResult
+
+	w, h, discarded, serr := scanEvents(r, func(ev PointerEvent) bool {
 		if ev.TMS < q.FromMS || (q.Clicks && ev.Kind == EventMove) {
-			continue
+			return true
 		}
 
 		res.Total++
@@ -222,16 +245,11 @@ func ReadEvents(r io.Reader, q EventsQuery) (EventsResult, error) {
 		} else {
 			res.Truncated = true
 		}
-	}
 
-	if serr := sc.Err(); serr != nil {
-		// A line longer than the bound: the rest of the file cannot be trusted.
-		return res, fmt.Errorf("%w: %w", ErrEvents, serr)
-	}
+		return true
+	})
 
-	if lines == 0 {
-		return res, fmt.Errorf("%w: empty", ErrEvents)
-	}
+	res.Width, res.Height, res.Discarded = w, h, discarded
 
-	return res, nil
+	return res, serr
 }

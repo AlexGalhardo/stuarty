@@ -1,0 +1,139 @@
+[
+  {
+    "kind": "item.updated",
+    "id": "itm_m1n2p3q4r5",
+    "changes": {
+      "keyframes": [
+        null,
+        {
+          "scale": [
+            {
+              "easing": "ease_in_out",
+              "t": 87,
+              "value": 1
+            },
+            {
+              "easing": "linear",
+              "t": 108,
+              "value": 1.6
+            },
+            {
+              "easing": "ease_in_out",
+              "t": 156,
+              "value": 1.6
+            },
+            {
+              "easing": "linear",
+              "t": 177,
+              "value": 1
+            },
+            {
+              "easing": "ease_in_out",
+              "t": 387,
+              "value": 1
+            },
+            {
+              "easing": "linear",
+              "t": 408,
+              "value": 1.6
+            },
+            {
+              "easing": "ease_in_out",
+              "t": 456,
+              "value": 1.6
+            },
+            {
+              "easing": "linear",
+              "t": 477,
+              "value": 1
+            }
+          ],
+          "x": [
+            {
+              "easing": "ease_in_out",
+              "t": 87,
+              "value": 960
+            },
+            {
+              "easing": "linear",
+              "t": 108,
+              "value": 1536
+            },
+            {
+              "easing": "ease_in_out",
+              "t": 156,
+              "value": 1536
+            },
+            {
+              "easing": "linear",
+              "t": 177,
+              "value": 960
+            },
+            {
+              "easing": "ease_in_out",
+              "t": 387,
+              "value": 960
+            },
+            {
+              "easing": "linear",
+              "t": 408,
+              "value": 384
+            },
+            {
+              "easing": "ease_in_out",
+              "t": 456,
+              "value": 384
+            },
+            {
+              "easing": "linear",
+              "t": 477,
+              "value": 960
+            }
+          ],
+          "y": [
+            {
+              "easing": "ease_in_out",
+              "t": 87,
+              "value": 540
+            },
+            {
+              "easing": "linear",
+              "t": 108,
+              "value": 864
+            },
+            {
+              "easing": "ease_in_out",
+              "t": 156,
+              "value": 864
+            },
+            {
+              "easing": "linear",
+              "t": 177,
+              "value": 540
+            },
+            {
+              "easing": "ease_in_out",
+              "t": 387,
+              "value": 540
+            },
+            {
+              "easing": "linear",
+              "t": 408,
+              "value": 864
+            },
+            {
+              "easing": "ease_in_out",
+              "t": 456,
+              "value": 864
+            },
+            {
+              "easing": "linear",
+              "t": 477,
+              "value": 540
+            }
+          ]
+        }
+      ]
+    }
+  }
+]
