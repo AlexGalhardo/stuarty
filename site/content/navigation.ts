@@ -98,7 +98,7 @@ export const navigation: NavCategory[] = [
 	{
 		dir: "guide",
 		title: "Core editing",
-		pages: ["media-library", "asset-library", "timeline", "preview", "editing-tools", "clip-properties", "undo-and-history"],
+		pages: ["media-library", "record-your-screen", "asset-library", "timeline", "preview", "editing-tools", "clip-properties", "undo-and-history"],
 	},
 	{
 		dir: "guide",
