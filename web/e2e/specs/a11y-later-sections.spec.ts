@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import type { Page } from "@playwright/test";
 import { unnamedControls } from "../support/keyboard";
-import { caller, seedProject } from "./helpers";
+import { caller, chooseOption, seedProject } from "./helpers";
 import { editImage, expect, newImage, test } from "./image-support";
 
 // Epic 41 (SDD-012 section 18.10): the sections that merged after the epic started are held to the same checklist:
@@ -60,15 +60,18 @@ for (const theme of ["dark", "light"] as const) {
 			request,
 		}) => {
 			const api = await caller(request);
-			const made = await api("POST", "/projects", {
-				name: `A11y post ${theme} ${Date.now()}`,
-			});
+			const projectName = `A11y post ${theme} ${Date.now()}`;
+			await api("POST", "/projects", { name: projectName });
 			await page.goto("/write");
 			await page.getByRole("button", { name: "New text" }).click();
 			const form = page.getByRole("form", { name: "New text" });
-			await form.getByLabel("Project").selectOption(made.project_id as string);
+			await chooseOption(
+				page,
+				form.getByLabel("Project"),
+				projectName.replace(/-/g, " "),
+			);
 			await form.getByLabel("Title").fill(`Post ${theme}`);
-			await form.getByLabel("Kind").selectOption("post");
+			await chooseOption(page, form.getByLabel("Kind"), "Blog post");
 			await form.getByRole("button", { name: "Create" }).click();
 			const panel = page.getByTestId("post-panel");
 			await expect(page.getByTestId("post-issues")).toContainText("title");
