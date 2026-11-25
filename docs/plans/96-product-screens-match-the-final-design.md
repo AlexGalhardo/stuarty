@@ -57,7 +57,7 @@ None.
 - [x] 2. Navigation labels and order in both languages. Verify: `cd web && bun run check:i18n && bun run typecheck && task test:web`.
 - [x] 3. The home: greeting, "Your studio" and "Waiting for you" rows. Verify: unit tests of the home and an e2e that sees "Good morning" with the name and the rows.
 - [x] 4. The trail, approvals and publishing differences. Verify: their unit tests and e2e pass.
-- [ ] 5. Recapture the landing and update the credits. Verify: `cd site && bun test src/landing/content.test.ts && bun run test:browser` and `task site:build` pass, and the home capture says "Good morning, Alex.".
+- [x] 5. Recapture the landing and update the credits. Verify: `cd site && bun test src/landing/content.test.ts && bun run test:browser` and `task site:build` pass, and the home capture says "Good morning, Alex.".
 
 ## Test strategy
 

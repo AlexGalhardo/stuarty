@@ -362,6 +362,8 @@ async function shoot(browser: import("@playwright/test").Browser, ids: Ids): Pro
 			const login = await context.request.post("/auth/account/login", { headers: JSON_HEADERS, data: { identity: "alex", password: PASSWORD } });
 			if (!login.ok()) throw new Error(`login: ${await login.text()}`);
 			const page = await context.newPage();
+			// The home greets by the hour of the browser: the captures are taken at half past nine, in the morning, in the UTC of their context.
+			await page.clock.setFixedTime(new Date("2026-11-24T09:30:00Z"));
 			await page.goto(shot.path(ids), { waitUntil: "networkidle" });
 			await shot.prepare?.(page);
 			await page.waitForTimeout(1500);
