@@ -114,3 +114,21 @@ func TestEveryFilterTheEngineAllowsIsRequiredOfTheBuild(t *testing.T) {
 		}
 	}
 }
+
+// TestHeaderOnlyLicencesShipWithTheBuild: the NVENC and AMF header archives carry no licence file, so the build
+// copies the MIT texts of licenses/programs into the package; both files must exist and be named by the script.
+func TestHeaderOnlyLicencesShipWithTheBuild(t *testing.T) {
+	t.Parallel()
+
+	build := string(repoFile(t, "scripts/ffmpeg-build.sh"))
+
+	for _, rel := range []string{"nv-codec-headers/LICENSE", "amf/LICENSE.txt"} {
+		if !strings.Contains(build, rel) {
+			t.Errorf("ffmpeg-build.sh does not copy licenses/programs/%s into the package", rel)
+		}
+
+		if len(repoFile(t, "licenses/programs/"+rel)) == 0 {
+			t.Errorf("licenses/programs/%s is empty", rel)
+		}
+	}
+}
