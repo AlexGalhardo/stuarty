@@ -487,12 +487,12 @@ export function HomeView({
 						: summaryLine(t, inProgress, requests)
 				}
 				actions={
-					<Button asChild variant="outline" size="lg" className="max-md:hidden">
+					<PageHeaderAction asChild variant="outline" className="max-md:hidden">
 						<Link href={NEW_PROJECT}>
 							<Plus aria-hidden="true" />
 							{t("ui.dashboard.home.new_project")}
 						</Link>
-					</Button>
+					</PageHeaderAction>
 				}
 			/>
 			{home.state === "loading" ? (
