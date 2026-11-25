@@ -71,7 +71,9 @@ export default function TranscriptStage(): ReactNode {
 						className={`rounded-md border px-2 py-0.5 text-xs ${KIND_CLASS[kind]} ${kinds[kind] ? "" : "opacity-50"}`}
 						onClick={() => setKinds({ ...kinds, [kind]: !kinds[kind] })}
 					>
-						{t(`ui.editor.transcript.kind_${kind}`)}
+						{kind === "filler"
+							? t("ui.editor.transcript.kind_filler")
+							: t("ui.editor.transcript.kind_repetition")}
 					</button>
 				))}
 				<span className="ml-auto text-xs text-muted-foreground">
