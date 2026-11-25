@@ -101,6 +101,10 @@ import type {
 	RecordingListResult,
 	RecordingSourcesResult,
 	RecordingStartRequest,
+	RecordingUploadBeginRequest,
+	RecordingUploadChunkResult,
+	RecordingUploadFinishRequest,
+	RecordingUploadKind,
 	RenderedOrigin,
 	RevertRequest,
 	SessionResult,
@@ -141,6 +145,8 @@ import type {
 // Timeouts of SDD-012 section 4.3 item 4.
 const READ_TIMEOUT_MS = 10_000;
 const EDIT_TIMEOUT_MS = 30_000;
+// A chunk of a recording a browser uploads is about a second of media, a few megabytes at most.
+const UPLOAD_TIMEOUT_MS = 60_000;
 // Starting an agent waits for its process to start and open the protocol (SDD-017 section 4).
 const CHAT_START_TIMEOUT_MS = 45_000;
 // A bundle call may hold for up to 25 s (wait_ms) before the job is returned.
@@ -389,6 +395,25 @@ export interface ApiClient {
 	// browser session; any other caller gets E_PRIVILEGED_SESSION.
 	recordingSources(): Promise<RecordingSourcesResult>;
 	startRecording(request: RecordingStartRequest): Promise<Recording>;
+	// A recording a browser captures and uploads (SDD-025 section 17), for a person in a browser session. A chunk is
+	// the whole body of a PUT: `sha256` is its digest in lowercase hexadecimal, and the server accepts it only at the
+	// index the track waits for (a chunk sent twice is accepted once).
+	beginRecordingUpload(
+		request: RecordingUploadBeginRequest,
+	): Promise<Recording>;
+	uploadRecordingChunk(
+		id: string,
+		track: RecordingUploadKind,
+		index: number,
+		chunk: Blob,
+		sha256: string,
+		elapsedMs: number,
+		signal?: AbortSignal,
+	): Promise<RecordingUploadChunkResult>;
+	finishRecordingUpload(
+		id: string,
+		request: RecordingUploadFinishRequest,
+	): Promise<Recording>;
 	getRecording(id: string): Promise<Recording>;
 	listRecordings(projectId: string): Promise<RecordingListResult>;
 	stopRecording(id: string): Promise<Recording>;
@@ -532,6 +557,7 @@ export function createClient(
 		timeoutMs: number,
 		body?: unknown,
 		signal?: AbortSignal,
+		file?: Blob,
 	): Promise<T> {
 		return withRetry(async () => {
 			let response: Awaited<ReturnType<Transport["send"]>>;
@@ -540,6 +566,7 @@ export function createClient(
 					method,
 					path,
 					body,
+					...(file === undefined ? {} : { file }),
 					timeoutMs,
 					signal,
 				});
@@ -1054,6 +1081,32 @@ export function createClient(
 				"GET",
 				`/projects/${encodeURIComponent(projectId)}/recordings`,
 				READ_TIMEOUT_MS,
+			),
+		beginRecordingUpload: (request) =>
+			call("POST", "/recordings/upload", EDIT_TIMEOUT_MS, request),
+		uploadRecordingChunk: (
+			id,
+			track,
+			index,
+			chunk,
+			sha256,
+			elapsedMs,
+			signal,
+		) =>
+			call(
+				"PUT",
+				`/recordings/${encodeURIComponent(id)}/upload/${track}/${index}${query({ sha256, elapsed_ms: elapsedMs })}`,
+				UPLOAD_TIMEOUT_MS,
+				undefined,
+				signal,
+				chunk,
+			),
+		finishRecordingUpload: (id, request) =>
+			call(
+				"POST",
+				`/recordings/${encodeURIComponent(id)}/finish`,
+				EDIT_TIMEOUT_MS,
+				request,
 			),
 		getRecording: (id) =>
 			call("GET", `/recordings/${encodeURIComponent(id)}`, READ_TIMEOUT_MS),

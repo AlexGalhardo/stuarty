@@ -1569,6 +1569,46 @@ export interface RecordingStartRequest {
 	events?: boolean;
 }
 
+// A recording a browser captures and uploads (SDD-025 section 17). The server decides the order, the checksum and
+// the limits; the browser only slices what it records and sends it.
+export type RecordingContainer = "webm" | "mp4";
+export type RecordingUploadKind = "screen" | "camera";
+
+export interface RecordingUploadBeginRequest {
+	project_id: string;
+	container: RecordingContainer;
+	camera?: boolean;
+	label?: string;
+}
+
+export interface RecordingUploadTrack {
+	kind: RecordingUploadKind;
+	next_index: number;
+	bytes: number;
+}
+
+// Where a browser recording is while it receives chunks: what a client resumes from.
+export interface RecordingUpload {
+	container: string;
+	max_chunk_bytes: number;
+	tracks: RecordingUploadTrack[];
+}
+
+export interface RecordingUploadChunkResult {
+	recording_id: string;
+	track: string;
+	index: number;
+	next_index: number;
+	duplicate: boolean;
+	bytes: number;
+	text: string;
+}
+
+export interface RecordingUploadFinishRequest {
+	tracks?: { kind: RecordingUploadKind; chunks: number }[];
+	elapsed_ms?: number;
+}
+
 export interface Recording {
 	recording_id: string;
 	project_id: string;
@@ -1589,6 +1629,7 @@ export interface Recording {
 	tracks?: RecordingTrack[];
 	events_count?: number;
 	levels?: RecordingLevels;
+	upload?: RecordingUpload;
 	actor: string;
 	created_at: string;
 	text: string;
