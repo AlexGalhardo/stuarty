@@ -115,11 +115,18 @@ func (s *svc) ProviderSignInBegin(
 
 	var existing oauth.Envelope
 
+	label := strings.TrimSpace(req.Label)
+	if label == "" {
+		label = desc.Label
+	}
+
 	if connID == "" {
-		label := strings.TrimSpace(req.Label)
-		if label == "" {
-			label = desc.Label
-		}
+		// A sign-in that was begun and never finished left a placeholder: take it, so that a consent screen the
+		// person closed does not add one more card each time (VV-432).
+		connID, existing = s.unfinishedSignIn(ctx, desc.Provider, label)
+	}
+
+	if connID == "" {
 
 		spec, ferr := connections.Normalize(connections.Spec{
 			Kind: desc.Provider, Label: label, Endpoint: desc.Endpoint, Hosts: desc.Hosts, Accepts: desc.Accepts,
@@ -139,7 +146,7 @@ func (s *svc) ProviderSignInBegin(
 		}
 
 		connID = created.ID
-	} else {
+	} else if existing.Format == "" {
 		var gerr error
 
 		if existing, gerr = s.signInEnvelope(ctx, connID, desc.Provider); gerr != nil {
@@ -165,6 +172,28 @@ func (s *svc) ProviderSignInBegin(
 	}
 
 	return &ProviderSignInBeginResult{ConnectionID: connID, AuthorizeURL: authorize}, nil
+}
+
+// unfinishedSignIn finds the connection of a sign-in that was begun and never finished: the placeholder holds
+// no token and no account. It answers the id and the stored form, or an empty id.
+func (s *svc) unfinishedSignIn(ctx context.Context, provider, label string) (string, oauth.Envelope) {
+	list, err := s.conns.List(ctx)
+	if err != nil {
+		return "", oauth.Envelope{}
+	}
+
+	for _, conn := range list {
+		if conn.Kind != provider || conn.Label != label {
+			continue
+		}
+
+		env, eerr := s.signInEnvelope(ctx, conn.ID, provider)
+		if eerr == nil && env.NeedsSignIn && env.AccessToken == "" && env.RefreshToken == "" && env.Account == "" {
+			return conn.ID, env
+		}
+	}
+
+	return "", oauth.Envelope{}
 }
 
 // signInEnvelope reads the stored form of a connection that must be a sign-in of the provider.
