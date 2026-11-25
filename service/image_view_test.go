@@ -111,10 +111,13 @@ func TestImageFrameStartsFromTheCacheOfItsOwnUser(t *testing.T) {
 		return c.ImageID
 	}
 
-	frame := func(ctx context.Context, id string) []byte {
+	// A frame of the same revision at the same width is answered from the cache of frames and draws nothing
+	// (TestImageFrameAnswersTheSameRevisionAndWidthFromItsCache), so each frame here asks for another width: it is
+	// the picture that is drawn from the pictures of the cache of the renderer.
+	frame := func(ctx context.Context, id string, width int) []byte {
 		t.Helper()
 
-		f, err := s.ImageFrame(ctx, ImageFrameRequest{ImageID: id})
+		f, err := s.ImageFrame(ctx, ImageFrameRequest{ImageID: id, Width: width})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -124,20 +127,25 @@ func TestImageFrameStartsFromTheCacheOfItsOwnUser(t *testing.T) {
 
 	mine, theirs := same(alice), same(bob)
 
-	first := frame(alice, mine)
+	frame(alice, mine, 0)
+
 	if h := s.imageFrames.Stats().Hits; h != 0 {
 		t.Fatalf("the first frame found %d pictures in an empty cache", h)
 	}
 
-	if again := frame(alice, mine); !bytes.Equal(again, first) || s.imageFrames.Stats().Hits != 1 {
-		t.Fatalf("the same frame again must be the same picture, from the cache: %+v", s.imageFrames.Stats())
+	first := frame(alice, mine, 100)
+	if s.imageFrames.Stats().Hits != 1 {
+		t.Fatalf(
+			"the same document at another width must start from the picture in the cache: %+v",
+			s.imageFrames.Stats(),
+		)
 	}
 
-	if other := frame(bob, theirs); !bytes.Equal(other, first) || s.imageFrames.Stats().Hits != 1 {
+	if other := frame(bob, theirs, 100); !bytes.Equal(other, first) || s.imageFrames.Stats().Hits != 1 {
 		t.Fatalf("bob started from a picture of alice: %+v", s.imageFrames.Stats())
 	}
 
-	frame(bob, theirs)
+	frame(bob, theirs, 50)
 
 	if s.imageFrames.Stats().Hits != 2 {
 		t.Fatalf("bob does not find his own picture: %+v", s.imageFrames.Stats())

@@ -1,6 +1,7 @@
 package service
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -65,21 +66,9 @@ func (s *svc) ImageFrame(ctx context.Context, req ImageFrameRequest) (*ImageFram
 		return nil, lerr
 	}
 
-	cfg := s.imageRenderConfig(ctx, c)
-	cfg.Cache, cfg.CacheScope = s.imageCache(), c.OwnerUserID
-	pix, rerr := export.RenderImage(ctx, doc, cfg)
-	if rerr != nil {
-		return nil, imageExportError(rerr)
-	}
-
 	width := req.Width
 	if width == 0 || width == doc.Width {
 		width = 0
-	}
-
-	body, eerr := export.EncodeImage(ctx, pix, export.ImageEncodeOptions{Format: export.ImagePNG, Width: width})
-	if eerr != nil {
-		return nil, imageExportError(eerr)
 	}
 
 	w, h := doc.Width, doc.Height
@@ -87,6 +76,35 @@ func (s *svc) ImageFrame(ctx context.Context, req ImageFrameRequest) (*ImageFram
 		// The encoder's resample: the height rounded half up and never below one pixel.
 		w, h = width, max((doc.Height*width+doc.Width/2)/doc.Width, 1)
 	}
+
+	cfg := s.imageRenderConfig(ctx, c)
+	key := frameKey{owner: c.OwnerUserID, digest: row.DocSHA256, width: width}
+
+	// The same content at the same width is the same picture. A copy of it still asks for the file of every image
+	// and lookup table the document draws, so that what the caller lost access to is refused as it is on a render.
+	if kept, ok := s.frameCache.get(key); ok {
+		if aerr := export.CheckImageAccess(doc, cfg); aerr != nil {
+			return nil, imageExportError(aerr)
+		}
+
+		return &ImageFrameResult{
+			ImageID: row.ID, Revision: row.Revision, Width: w, Height: h, MIME: "image/png", Image: bytes.Clone(kept),
+		}, nil
+	}
+
+	epoch := s.frameCache.now()
+	cfg.Cache, cfg.CacheScope = s.imageCache(), c.OwnerUserID
+	pix, rerr := export.RenderImage(ctx, doc, cfg)
+	if rerr != nil {
+		return nil, imageExportError(rerr)
+	}
+
+	body, eerr := export.EncodeImage(ctx, pix, export.ImageEncodeOptions{Format: export.ImagePNG, Width: width})
+	if eerr != nil {
+		return nil, imageExportError(eerr)
+	}
+
+	s.frameCache.putIn(epoch, key, bytes.Clone(body))
 
 	return &ImageFrameResult{
 		ImageID: row.ID, Revision: row.Revision, Width: w, Height: h, MIME: "image/png", Image: body,

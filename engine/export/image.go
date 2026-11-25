@@ -46,15 +46,7 @@ func renderImage(ctx context.Context, doc *coreimage.Document, cfg ImageConfig, 
 		fonts = rasterize.Bundled()
 	}
 
-	fp := coreimage.Plan(doc, plan.Options{Measure: rasterize.Measure(fonts), OutputScale: 1})
-
-	live := make([]plan.Layer, 0, len(fp.Layers))
-
-	for i := range fp.Layers {
-		if opacity(&fp.Layers[i]) != 0 {
-			live = append(live, fp.Layers[i])
-		}
-	}
+	fp, live := livePlan(doc, fonts)
 
 	// The cache keys layers by what they draw; a custom font set is not part of the key, so it is not cached.
 	var chain *layerChain
@@ -111,6 +103,36 @@ func renderImage(ctx context.Context, doc *coreimage.Document, cfg ImageConfig, 
 	}
 
 	return base, nil
+}
+
+// livePlan is the one-frame plan of a document and the layers of it that draw something, in plan order.
+func livePlan(doc *coreimage.Document, fonts *rasterize.FontSet) (plan.FramePlan, []plan.Layer) {
+	fp := coreimage.Plan(doc, plan.Options{Measure: rasterize.Measure(fonts), OutputScale: 1})
+
+	live := make([]plan.Layer, 0, len(fp.Layers))
+
+	for i := range fp.Layers {
+		if opacity(&fp.Layers[i]) != 0 {
+			live = append(live, fp.Layers[i])
+		}
+	}
+
+	return fp, live
+}
+
+// CheckImageAccess asks cfg for the file of every image and lookup table of the layers a render of doc would
+// draw, and reads none of them: the error is the one the render would give. A caller that answers from a copy of
+// a render (the frame of the editor, SDD-021 section 6.1) calls it first, so that what a person lost access to is
+// refused whether or not a copy exists.
+func CheckImageAccess(doc *coreimage.Document, cfg ImageConfig) error {
+	fonts := cfg.Fonts
+	if fonts == nil {
+		fonts = rasterize.Bundled()
+	}
+
+	_, live := livePlan(doc, fonts)
+
+	return verifyAccess(cfg, live)
 }
 
 // verifyAccess asks for the file of every image and lookup table the layers name, without reading it, so that a

@@ -32,6 +32,7 @@ func (s *svc) dropContent() {
 	s.imageFrames = export.NewImageCache(0)
 	s.framesMu.Unlock()
 
+	s.frameCache.reset()
 	s.bitmaps.reset()
 	s.snaps.reset()
 	s.previews.reset()
