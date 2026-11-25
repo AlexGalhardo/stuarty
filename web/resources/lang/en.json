@@ -3188,7 +3188,8 @@
           "install": "Install",
           "cancel": "Cancel",
           "close": "Close"
-        }
+        },
+        "open": "Open vertical cuts"
       },
       "auto_captions": {
         "title": "Auto captions",
@@ -3591,6 +3592,30 @@
         "of": "{count} of {total}",
         "keep_all": "Keep everything",
         "undo_note": "You can undo from the history."
+      },
+      "cuts_stage": {
+        "label": "Vertical cuts",
+        "title": "{count} cuts proposed",
+        "waiting": "Waiting for you",
+        "face": "Face {share}%",
+        "review": "Review cut {n}",
+        "in_review": "In review",
+        "in_review_title": "Cut in review",
+        "proposed": "Proposed",
+        "accept": "Accept",
+        "refuse": "Refuse",
+        "accept_this": "Accept this cut",
+        "all_decided": "Every proposal was accepted or refused.",
+        "source": "Source video",
+        "faces_local": "Faces found on this computer, by the YuNet model.",
+        "nothing_enters": "Nothing enters the timeline before you accept.",
+        "nothing_to_review": "No cut to review.",
+        "framing": "Framing",
+        "format": "Format",
+        "framing_note": "The framing comes from the face_track job, saved with the project.",
+        "caption": "Caption",
+        "caption_note": "Once the cut is a timeline, choose its caption style on the Captions screen.",
+        "only_a_person": "Only a person accepts. The agent proposes."
       }
     },
     "account": {

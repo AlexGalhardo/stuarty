@@ -13,6 +13,8 @@ import UndoRedo from "../history/UndoRedo";
 import Inspector from "../inspector/Inspector";
 import Preview from "../preview/Preview";
 import RecordingBanner from "../record/RecordingBanner";
+import CutsStage from "../stages/CutsStage";
+import { CutsScope } from "../stages/useCuts";
 import { TranscriptScope } from "../stages/useTranscript";
 import VoiceStage from "../stages/VoiceStage";
 import {
@@ -154,85 +156,89 @@ export default function EditorShell({
 
 	return (
 		<TranscriptScope item={stage?.kind === "transcript" ? stage.item : null}>
-			<div
-				className="grid h-dvh min-h-0 bg-ed-bg text-foreground"
-				style={{
-					gridTemplateRows: `auto minmax(0, 1fr) ${sizes.timeline}px${sceneBar === null ? "" : " auto"}`,
-					gridTemplateColumns: `${sizes.library}px ${sizes.history}px minmax(0, 1fr) ${sizes.inspector}px`,
-				}}
-			>
-				<div className="col-span-full">
-					<TopBar onLocaleChange={onLocaleChange} agent={sceneBar !== null} />
-					<TrashedBanner />
-					<RecordingBanner />
-					{status === "failed" && (
-						<div
-							role="alert"
-							className="col-span-full flex items-center gap-3 border-b border-destructive bg-ed-panel px-3 py-2 text-sm text-destructive"
-						>
-							{loadError === null ? (
-								t("ui.editor.banner.failed")
-							) : (
-								<div className="flex flex-col">
-									<span>{t("ui.editor.banner.load_failed")}</span>
-									<FailureView failure={loadError} />
-								</div>
-							)}
-							<Button
-								type="button"
-								size="sm"
-								variant="outline"
-								onClick={() => location.reload()}
-							>
-								{t("ui.editor.banner.reload")}
-							</Button>
-						</div>
-					)}
-				</div>
-				<LeftPanel />
-				<HistorySidebar />
-				<main
-					aria-label={t("ui.editor.panels.preview")}
-					data-landmark="3"
-					className="flex min-h-0 min-w-0 flex-col bg-ed-preview-surround p-3 text-foreground"
+			<CutsScope item={stage?.kind === "cuts" ? stage.item : null}>
+				<div
+					className="grid h-dvh min-h-0 bg-ed-bg text-foreground"
+					style={{
+						gridTemplateRows: `auto minmax(0, 1fr) ${sizes.timeline}px${sceneBar === null ? "" : " auto"}`,
+						gridTemplateColumns: `${sizes.library}px ${sizes.history}px minmax(0, 1fr) ${sizes.inspector}px`,
+					}}
 				>
-					{status === "loading" ? (
-						<p role="status" className="text-sm text-muted-foreground">
-							{t("ui.editor.loading")}
-						</p>
-					) : stage?.kind === "voice" ? (
-						<VoiceStage
-							itemId={stage.item}
-							onClose={() => runtime.uiWriter.showStage(null)}
+					<div className="col-span-full">
+						<TopBar onLocaleChange={onLocaleChange} agent={sceneBar !== null} />
+						<TrashedBanner />
+						<RecordingBanner />
+						{status === "failed" && (
+							<div
+								role="alert"
+								className="col-span-full flex items-center gap-3 border-b border-destructive bg-ed-panel px-3 py-2 text-sm text-destructive"
+							>
+								{loadError === null ? (
+									t("ui.editor.banner.failed")
+								) : (
+									<div className="flex flex-col">
+										<span>{t("ui.editor.banner.load_failed")}</span>
+										<FailureView failure={loadError} />
+									</div>
+								)}
+								<Button
+									type="button"
+									size="sm"
+									variant="outline"
+									onClick={() => location.reload()}
+								>
+									{t("ui.editor.banner.reload")}
+								</Button>
+							</div>
+						)}
+					</div>
+					<LeftPanel />
+					<HistorySidebar />
+					<main
+						aria-label={t("ui.editor.panels.preview")}
+						data-landmark="3"
+						className="flex min-h-0 min-w-0 flex-col bg-ed-preview-surround p-3 text-foreground"
+					>
+						{status === "loading" ? (
+							<p role="status" className="text-sm text-muted-foreground">
+								{t("ui.editor.loading")}
+							</p>
+						) : stage?.kind === "cuts" ? (
+							<CutsStage onClose={() => runtime.uiWriter.showStage(null)} />
+						) : stage?.kind === "voice" ? (
+							<VoiceStage
+								itemId={stage.item}
+								onClose={() => runtime.uiWriter.showStage(null)}
+							/>
+						) : (
+							<Preview
+								port={canvasPort}
+								parseTime={(text) =>
+									timeToFrame(localizeDecimalInput(text, locale), fpsOf(fps))
+								}
+								trailing={<PlayerRatioSelect />}
+								shortcutRow={previewShortcutRow}
+							/>
+						)}
+					</main>
+					{panels.inspector ? <Inspector /> : <div />}
+					<div className="col-span-full min-h-0 border-t border-ed-track-line">
+						<Timeline
+							onAddCaption={() => setCaptionOpen(true)}
+							undoRedo={<UndoRedo />}
 						/>
-					) : (
-						<Preview
-							port={canvasPort}
-							parseTime={(text) =>
-								timeToFrame(localizeDecimalInput(text, locale), fpsOf(fps))
-							}
-							trailing={<PlayerRatioSelect />}
-							shortcutRow={previewShortcutRow}
-						/>
-					)}
-				</main>
-				{panels.inspector ? <Inspector /> : <div />}
-				<div className="col-span-full min-h-0 border-t border-ed-track-line">
-					<Timeline
-						onAddCaption={() => setCaptionOpen(true)}
-						undoRedo={<UndoRedo />}
-					/>
+					</div>
+					{sceneBar !== null && <div className="col-span-full">{sceneBar}</div>}
+					<AddCaptionDialog open={captionOpen} onOpenChange={setCaptionOpen} />
+					<ReleaseMark />
+					<Notices />
+					<FindBar />
+					<LiveRegion />
+					<InUseHost />
+					<RepeatDialog />
+					<Tour />
 				</div>
-				{sceneBar !== null && <div className="col-span-full">{sceneBar}</div>}
-				<AddCaptionDialog open={captionOpen} onOpenChange={setCaptionOpen} />
-				<ReleaseMark />
-				<Notices />
-				<FindBar />
-				<LiveRegion />
-				<InUseHost />
-				<RepeatDialog />
-				<Tour />
-			</div>
+			</CutsScope>
 		</TranscriptScope>
 	);
 }

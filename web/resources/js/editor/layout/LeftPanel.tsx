@@ -9,6 +9,7 @@ import {
 import { useT } from "@/lib/i18n";
 import { useCommandNames } from "../commands/useExposedCommands";
 import { TabIcon } from "../library/PanelFrame";
+import { CutsSource } from "../stages/CutsPanels";
 import TranscriptStage from "../stages/TranscriptStage";
 import { useRuntime, useUiState } from "../state/EditorContext";
 import type { LeftTab } from "../state/uiStore";
@@ -32,6 +33,7 @@ export default function LeftPanel(): ReactNode {
 	const active = LIBRARY_TABS.find((def) => def.id === tab);
 	// The edit by text screen puts the transcript where the panel of the tab is.
 	const transcript = useUiState((s) => s.stage?.kind === "transcript");
+	const cuts = useUiState((s) => s.stage?.kind === "cuts");
 	return (
 		<aside
 			aria-label={t(active?.labelKey ?? "ui.editor.panels.library")}
@@ -67,7 +69,9 @@ export default function LeftPanel(): ReactNode {
 					))}
 				</TabsList>
 				{transcript && <TranscriptStage />}
+				{cuts && <CutsSource />}
 				{!transcript &&
+					!cuts &&
 					LIBRARY_TABS.map((def) => (
 						<TabsContent
 							key={def.id}

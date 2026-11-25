@@ -3188,7 +3188,8 @@
           "install": "Instalar",
           "cancel": "Cancelar",
           "close": "Fechar"
-        }
+        },
+        "open": "Abrir cortes verticais"
       },
       "auto_captions": {
         "title": "Legendas automáticas",
@@ -3591,6 +3592,30 @@
         "of": "{count} de {total}",
         "keep_all": "Manter tudo",
         "undo_note": "Dá para desfazer pelo histórico."
+      },
+      "cuts_stage": {
+        "label": "Cortes verticais",
+        "title": "{count} cortes propostos",
+        "waiting": "Esperam você",
+        "face": "Rosto {share}%",
+        "review": "Revisar o corte {n}",
+        "in_review": "Em revisão",
+        "in_review_title": "Corte em revisão",
+        "proposed": "Proposto",
+        "accept": "Aceitar",
+        "refuse": "Recusar",
+        "accept_this": "Aceitar este corte",
+        "all_decided": "Todas as propostas foram aceitas ou recusadas.",
+        "source": "Vídeo de origem",
+        "faces_local": "Rostos encontrados neste computador, pelo modelo YuNet.",
+        "nothing_enters": "Nada entra na linha do tempo antes de você aceitar.",
+        "nothing_to_review": "Nenhum corte para revisar.",
+        "framing": "Enquadramento",
+        "format": "Formato",
+        "framing_note": "Vem do trabalho face_track, salvo com o projeto.",
+        "caption": "Legenda",
+        "caption_note": "Quando o corte virar uma linha do tempo, escolha o estilo da legenda na tela Legendas.",
+        "only_a_person": "Só uma pessoa aceita. O agente propõe."
       }
     },
     "account": {

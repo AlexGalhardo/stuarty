@@ -6,6 +6,7 @@ import {
 	Layers,
 	ListChecks,
 	type LucideIcon,
+	ScanFace,
 	Shapes,
 	SlidersHorizontal,
 	Type,
@@ -17,6 +18,7 @@ import UntrustedText from "@/components/UntrustedText";
 import { useT } from "@/lib/i18n";
 import { useCommandsExposed } from "../commands/useExposedCommands";
 import CaptionsInspector from "../stages/CaptionsInspector";
+import { CutsReview } from "../stages/CutsPanels";
 import TranscriptReview from "../stages/TranscriptReview";
 import VoiceInspector from "../stages/VoiceInspector";
 import ZoomPanel from "../stages/ZoomPanel";
@@ -117,7 +119,11 @@ export default function Inspector(): ReactNode {
 	let title: ReactNode;
 	let Icon: LucideIcon = SlidersHorizontal;
 	let body: ReactNode;
-	if (stage?.kind === "transcript") {
+	if (stage?.kind === "cuts") {
+		Icon = ScanFace;
+		title = t("ui.editor.cuts_stage.in_review_title");
+		body = <CutsReview />;
+	} else if (stage?.kind === "transcript") {
 		Icon = ListChecks;
 		title = t("ui.editor.transcript_review.title");
 		body = <TranscriptReview />;

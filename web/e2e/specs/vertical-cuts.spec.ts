@@ -50,6 +50,8 @@ async function openClip(page: Page, projectId: string): Promise<void> {
 	await page.goto(`/editor/${projectId}?debug=1`);
 	await page.locator("[data-item-id]").first().click();
 	await openInspectorTab(page, "Text");
+	// Epic 99: the cuts have a screen of their own; the clip inspector is the way in.
+	await page.getByRole("button", { name: "Open vertical cuts" }).click();
 }
 
 // SDD-024: the face set is offered with its size, licences and the dataset of the model, and is downloaded only
@@ -226,7 +228,7 @@ test.describe("vertical cuts", () => {
 		expect(created).toHaveLength(0);
 		expect(edits).toHaveLength(0);
 
-		await page.getByRole("button", { name: "Create 1 timelines" }).click();
+		await list.getByRole("button", { name: "Accept", exact: true }).click();
 		await expect(page.getByText("1 timelines created")).toBeVisible();
 		expect(created).toHaveLength(1);
 		expect(edits).toHaveLength(1);
