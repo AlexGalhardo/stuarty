@@ -111,7 +111,7 @@ export function ToolRail(): ReactNode {
 					side="right"
 					align="start"
 					sideOffset={8}
-					className="w-60"
+					className="w-72"
 				>
 					{more.map((o) => {
 						const Icon = o.icon;
