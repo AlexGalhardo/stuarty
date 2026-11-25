@@ -166,6 +166,9 @@ const (
 	KindPersonOnly = "person_only"
 )
 
+const hintPersonReschedules = "a person changes the time of an approved post in the Publish page of the Stuarty " +
+	"app; the local token, API keys and the agent surfaces cannot"
+
 // Error is a refusal the service shows as E_VALIDATION or E_INVALID_STATE.
 type Error struct {
 	Kind    string
@@ -696,10 +699,10 @@ func (m *Manager) Schedule(ctx context.Context, in ScheduleInput) (*Publication,
 			t := p.Target(id)
 			if !core.CanReschedule(t.State, person) {
 				return &Error{
-					Kind: KindPersonOnly, Path: "target_id",
+					Kind:    KindPersonOnly,
+					Path:    "target_id",
 					Message: fmt.Sprintf("the post to %s was approved; only a person in the app moves it.", t.Network),
-					Hint: "a person changes the time of an approved post in the Publish page of the Stuarty app; the local " +
-						"token, API keys and the agent surfaces cannot",
+					Hint:    hintPersonReschedules,
 				}
 			}
 
