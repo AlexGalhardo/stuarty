@@ -15,7 +15,8 @@ import (
 // pixels, 30 layers with their looks): compose_ms is the time to compose the picture after an edit of the top
 // layer, with the CPU path of the renderer and the cache of the pictures below it (SDD-021 section 6.1), the
 // native half of "composed for the preview within 100 ms after an edit"; s_export is the time of a cold export,
-// to compose the whole document with no cache and encode the PNG ("exported within 2 s"). The browser half is
+// to compose the whole document with no cache and no instance of the module held (the pool is drained first) and
+// encode the PNG ("exported within 2 s"). The browser half is
 // measured by the Playwright spec of the image editor.
 func BenchmarkImageReference(b *testing.B) {
 	d := referenceDocument(b)
@@ -35,6 +36,11 @@ func BenchmarkImageReference(b *testing.B) {
 	}
 
 	for i := 0; b.Loop(); i++ {
+		// A cold export starts with no instance of the module: the pool keeps them for 30 s, and an export after
+		// an idle minute pays for the instances (SDD-021 section 6.2). The pool is filled again by the edit that
+		// follows, as it is when a person edits.
+		imagePool.Drain()
+
 		start := time.Now()
 
 		img, err := RenderImage(ctx, d, cold)
