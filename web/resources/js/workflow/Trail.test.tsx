@@ -47,7 +47,7 @@ const TEXT: Workflow = {
 describe("Trail", () => {
 	test("draws the steps the server gave, in its order and with its states", () => {
 		const html = draw(<Trail workflow={TEXT} />);
-		const order = ["Briefing", "Writing", "Review", "Approval", "Publication"];
+		const order = ["Briefing", "Writing", "Review", "Approval", "Publishing"];
 		let from = 0;
 		for (const title of order) {
 			const at = html.indexOf(title, from);

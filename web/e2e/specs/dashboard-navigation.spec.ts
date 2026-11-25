@@ -69,7 +69,10 @@ test.describe("dashboard-navigation", () => {
 		await page.goto("/");
 		await expect(page).toHaveURL(/\/$/);
 		await expect(
-			page.getByRole("heading", { name: "Home", level: 1 }),
+			page.getByRole("heading", {
+				name: /^Good (morning|afternoon|evening)/,
+				level: 1,
+			}),
 		).toBeVisible();
 
 		const nav = page.getByRole("navigation", { name: "Main navigation" });
@@ -358,7 +361,10 @@ test.describe("dashboard-navigation", () => {
 		await page.getByRole("link", { name: "Dashboard" }).click();
 		await expect(page).toHaveURL(/\/$/);
 		await expect(
-			page.getByRole("heading", { name: "Home", level: 1 }),
+			page.getByRole("heading", {
+				name: /^Good (morning|afternoon|evening)/,
+				level: 1,
+			}),
 		).toBeVisible();
 
 		await page.goto(`/editor/${seeded.id}`);

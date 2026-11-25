@@ -2091,7 +2091,7 @@ Implements RF-310, RF-311 and RF-312 (PRD-004), author decision D-075 and epic 0
 
 | Route | Page component | Holds |
 | --- | --- | --- |
-| `GET /` | `pages/Dashboard/Home.tsx` | the home: a short welcome and one card for each section, with what it will hold |
+| `GET /` | `pages/Dashboard/Home.tsx` | the home (epics 79 and 96): a greeting with the part of the day and the name of the local account ("Good morning, Alex."; with no name, "Good morning."), one line that counts the productions at a step and the requests that wait, the project in progress with its path as a row of steps and one button for its current step, "Your studio" (six areas that link to existing pages) and "Waiting for you" as rows of the inbox of the shell (three at most, with the way to the queue), with the other projects under it and the step each is at. The greeting words the local hour and the username that the server shares as the prop `account`; the counts, the steps and the rows are the service's. A project may be text only (D-134), so no part assumes media. At 390 px the path is a bar of segments with the stage, and the studio is left out |
 | `GET /projects` | `pages/Projects/Index.tsx` | Projects (epic 06 owns the content) |
 | `GET /edit-image` and `/edit-image/{image_id}` | `pages/EditImage/Index.tsx`, `pages/EditImage/Show.tsx` | the image editor (epic 28, section 24) |
 | `GET /edit-video`, `/skills`, `/prompts`, `/memory` | `pages/Dashboard/Section.tsx` | an honest empty state, until the epic of the section replaces the route's page |

@@ -85,7 +85,7 @@ test.describe("a11y-home-projects", () => {
 				const found: string[] = [];
 
 				for (const { path, heading } of [
-					{ path: "/", heading: "Home" },
+					{ path: "/", heading: /^Good (morning|afternoon|evening)/ },
 					{ path: "/projects", heading: "Projects" },
 					{ path: `/projects/${text.project_id}`, heading: /A11y text/ },
 					{ path: `/projects/${video.project_id}`, heading: /A11y video/ },
