@@ -95,8 +95,9 @@ type Zoom struct {
 	StartMS, FullMS, ReleaseMS, EndMS int64
 	// FX and FY are the focus, in Unit of the source.
 	FX, FY int
-	// Clicks is how many presses the zoom holds.
+	// Clicks is how many presses the zoom holds, and LastMS is the time of the last one.
 	Clicks int
+	LastMS int64
 	// FromPrev says the view comes from the focus of the previous zoom instead of from rest (StartMS is then the
 	// release of that zoom); ToNext says the view goes on to the next zoom instead of returning to rest (EndMS is
 	// then ReleaseMS).
@@ -147,7 +148,7 @@ func PlanZooms(clicks []Click, opts ZoomOptions, vw, vh int, fromMS, toMS int64)
 	ramp := int64(opts.RampMS)
 
 	for i, g := range groups {
-		z := Zoom{FX: (g.minX + g.maxX) / 2, FY: (g.minY + g.maxY) / 2, Clicks: g.clicks}
+		z := Zoom{FX: (g.minX + g.maxX) / 2, FY: (g.minY + g.maxY) / 2, Clicks: g.clicks, LastMS: g.last}
 
 		z.FullMS = g.first - int64(opts.LeadMS)
 		z.StartMS = z.FullMS - ramp
@@ -162,13 +163,17 @@ func PlanZooms(clicks []Click, opts ZoomOptions, vw, vh int, fromMS, toMS int64)
 
 		var prev *Zoom
 
-		prevEnd := int64(0)
+		var prevEnd, prevRelease int64
 
 		if n := len(zooms); n > 0 && z.StartMS < zooms[n-1].EndMS+chainGapMS {
 			prev = &zooms[n-1]
-			prevEnd = prev.EndMS
-			prev.ToNext, prev.EndMS = true, prev.ReleaseMS
-			z.FromPrev, z.StartMS = true, prev.ReleaseMS
+			prevEnd, prevRelease = prev.EndMS, prev.ReleaseMS
+
+			// The pan ends at the full zoom of this one, before its first click when it can, and the first
+			// zoom is not let go before it was held the minimum after its last click.
+			release := max(prev.FullMS, prev.LastMS+MinHoldMS, min(prev.ReleaseMS, z.FullMS-minMoveMS))
+			prev.ToNext, prev.ReleaseMS, prev.EndMS = true, release, release
+			z.FromPrev, z.StartMS = true, release
 			z.FullMS = max(z.FullMS, z.StartMS+minMoveMS)
 		}
 
@@ -177,7 +182,7 @@ func PlanZooms(clicks []Click, opts ZoomOptions, vw, vh int, fromMS, toMS int64)
 
 		if z.FullMS >= toMS {
 			if prev != nil {
-				prev.ToNext, prev.EndMS = false, prevEnd
+				prev.ToNext, prev.ReleaseMS, prev.EndMS = false, prevRelease, prevEnd
 			}
 
 			dropped += len(groups) - i

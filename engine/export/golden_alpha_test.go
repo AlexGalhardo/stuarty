@@ -110,6 +110,7 @@ var requiredCases = []string{
 	"outline",
 	"transparent",
 	"opaque-control",
+	"screen-take-effects",
 }
 
 const (
@@ -409,6 +410,8 @@ func flipCase(name string, fx, fy bool, edit func(it *timeline.Item)) alphaCase 
 
 // alphaCases are the builders of the cases, by folder name.
 var alphaCases = map[string]func() alphaCase{
+	// the screen take of epic 65, built in golden_epic65_test.go
+	"screen-take-effects": func() alphaCase { return screenTake(true, true) },
 	"contain-background": func() alphaCase {
 		b := newCase("contain with a background", rate(30, 1))
 		b.doc.Settings.Background = "#1E3A8A"
