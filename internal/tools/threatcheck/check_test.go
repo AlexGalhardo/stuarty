@@ -135,7 +135,10 @@ func TestTheRealModelParses(t *testing.T) {
 	// of epic 92 (ADR-0053); T-160 to T-163 are the threats of the MCP tool publication (VV-282, D-143).
 	// 109 + 15 - 6 removed + 1 + 7 + 4 = 130.
 	if len(threats) != 130 {
-		t.Errorf("the model has %d threats, want 130 (T-89, T-100 to T-125, T-130 to T-136, T-160 to T-163)", len(threats))
+		t.Errorf(
+			"the model has %d threats, want 130 (T-89, T-100 to T-125, T-130 to T-136, T-160 to T-163)",
+			len(threats),
+		)
 	}
 }
 
