@@ -474,7 +474,7 @@ jobs:
       - run: bunx playwright install --with-deps chromium
         working-directory: web
       # The projects that need only Chromium; firefox and webkit have their own jobs below.
-      - run: bun run e2e -- --project=chromium --project=failing-encoder --project=desktop-detect --shard="$SHARD"/6
+      - run: bun run e2e -- --project=chromium --project=chromium-person --project=failing-encoder --project=desktop-detect --shard="$SHARD"/6
         working-directory: web
         env:
           SHARD: ${{ matrix.shard }}
