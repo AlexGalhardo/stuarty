@@ -376,12 +376,20 @@ func (r *imageRun) layerFor(l *plan.Layer, pic renderhost.Prepared) drawLayer {
 }
 
 // preparedKey is the key of the prepared picture of l in an ImageCache: a digest of the canvas size and of the
-// plan layer without what the preparation does not read, that is its opacity, blend mode, mask, clip and
-// position (SDD-021 section 6.2). A centre that is not a multiple of half a pixel stays in the key, because the
+// plan layer without what the preparation does not read, that is its opacity, blend mode, mask, clip, position
+// and the angle of its rotation (SDD-021 section 6.2). A centre that is not a multiple of half a pixel stays in the key, because the
 // rectangle that draws the picture is then not the same sum.
 func preparedKey(fp plan.FramePlan, l *plan.Layer) ([sha256.Size]byte, bool) {
 	one := *l
 	one.Opacity, one.Blend, one.Mask, one.Clip, one.Stencil = 0, "", nil, nil, false
+
+	// The module turns a prepared picture only when it draws it, so no look reads the rotation. The one place that
+	// does is the host: a photo that is not rotated is scaled down to its box before it is uploaded (imageTexture),
+	// so "rotated or not" stays in the key and the angle does not.
+	one.Rotation = 0
+	if l.Kind == plan.Media && l.Rotation != 0 {
+		one.Rotation = 1
+	}
 
 	if isHalfPixel(l.CX) && isHalfPixel(l.CY) {
 		one.CX, one.CY = 0, 0
