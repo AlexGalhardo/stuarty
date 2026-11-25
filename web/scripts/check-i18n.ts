@@ -359,6 +359,11 @@ const SAME_IN_PORTUGUESE: ReadonlySet<string> = new Set([
 	"ui.editor.keyframes.prop.y",
 	"ui.editor.keyframes.prop.volume",
 	"ui.editor.clip.volume",
+	// X and Y are the same letters in both languages; "Zoom" is the word the final design keeps in Portuguese.
+	"ui.editor.blur_region.x",
+	"ui.editor.blur_region.y",
+	"ui.editor.zoom_panel.zoom",
+	"ui.editor.zoom_lane.name",
 	"ui.editor.clip.hsl_range_name.magenta",
 	"ui.editor.keyframes.easing_name.linear",
 	// The final design keeps the product words Skills, Prompts and Webhooks in the Portuguese navigation.
