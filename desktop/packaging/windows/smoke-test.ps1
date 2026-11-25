@@ -2,11 +2,14 @@
 Installs the Windows desktop installer silently, checks what must hold (SDD-009 section 10.4), uninstalls
 and checks the uninstall. The window itself is not started: a CI runner has no desktop to show it.
 
-  smoke-test.ps1 -Installer <path of the setup .exe>
+  smoke-test.ps1 -Installer <path of the setup .exe> [-FFmpegDir <folder made by scripts/stage-ffmpeg-installer.sh>]
+
+With -FFmpegDir the installed ffmpeg.exe, ffprobe.exe and licence texts must have the staged digests and ffmpeg must
+report the stuarty marker (epic 98).
 
 It uses a temporary install folder and a temporary workspace.
 #>
-param([Parameter(Mandatory = $true)][string]$Installer)
+param([Parameter(Mandatory = $true)][string]$Installer, [string]$FFmpegDir = '')
 $ErrorActionPreference = 'Stop'
 
 function Assert([bool]$Condition, [string]$Message) {
@@ -28,6 +31,17 @@ try {
 	Assert (Test-Path (Join-Path $app 'stuarty-desktop.exe')) 'stuarty-desktop.exe is installed'
 	Assert (Test-Path (Join-Path $app 'stuarty.exe')) 'stuarty.exe is installed next to it'
 	Assert (Test-Path $lnk) 'the Start menu shortcut exists'
+
+	if ($FFmpegDir) {
+		foreach ($name in 'ffmpeg.exe', 'ffprobe.exe') {
+			$want = (Get-FileHash -Algorithm SHA256 (Join-Path $FFmpegDir $name)).Hash
+			Assert (Test-Path (Join-Path $app $name)) "$name is installed next to stuarty.exe"
+			Assert ((Get-FileHash -Algorithm SHA256 (Join-Path $app $name)).Hash -eq $want) "the installed $name has the pinned digest"
+		}
+		Assert (Test-Path (Join-Path $app 'licenses\ffmpeg-build\ffmpeg\COPYING.LGPLv3')) 'the licence texts of the FFmpeg build are installed'
+		$banner = & (Join-Path $app 'ffmpeg.exe') -hide_banner -version | Out-String
+		Assert ($banner -match '--extra-version=stuarty') 'the installed ffmpeg reports the stuarty marker'
+	}
 
 	$shortcut = (New-Object -ComObject WScript.Shell).CreateShortcut($lnk)
 	Assert ($shortcut.TargetPath -eq (Join-Path $app 'stuarty-desktop.exe')) 'the shortcut targets stuarty-desktop.exe'

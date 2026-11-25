@@ -3,7 +3,7 @@
 ;
 ; Build:  ISCC.exe /DAppVersion=0.15.0 /DFileVersion=0-15-0 /DDesktopBinary=<stuarty-desktop.exe>
 ;                  /DServerBinary=<stuarty.exe> /DOutputDir=<dir> [/DCaptureBinary=<stuarty-capture.exe>]
-;                  stuarty-desktop.iss
+;                  [/DFFmpegDir=<folder made by scripts/stage-ffmpeg-installer.sh>] stuarty-desktop.iss
 ; FileVersion is AppVersion with dots replaced by dashes, so the download is
 ; stuarty-desktop-0-15-0.exe.
 ;
@@ -83,6 +83,14 @@ Source: "{#ServerBinary}"; DestDir: "{app}"; DestName: "{#ServerExe}"; Flags: ig
 ; scripts/build-capture.sh and pass /DCaptureBinary=<stuarty-capture.exe>; without it the app answers that recording
 ; is not available.
 Source: "{#CaptureBinary}"; DestDir: "{app}"; DestName: "stuarty-capture.exe"; Flags: ignoreversion
+#endif
+#ifdef FFmpegDir
+; The own LGPL FFmpeg build (epic 98, D-152, ADR-0011): a separate process, next to stuarty.exe, where discovery
+; looks for it before the PATH (SDD-011 section 8.1). The folder is made by scripts/stage-ffmpeg-installer.sh, which
+; checks every digest; this script copies it and nothing is fetched at install time. OpenH264 is never carried (D-087).
+Source: "{#FFmpegDir}\ffmpeg.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#FFmpegDir}\ffprobe.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#FFmpegDir}\licenses\*"; DestDir: "{app}\licenses\ffmpeg-build"; Flags: ignoreversion recursesubdirs createallsubdirs
 #endif
 Source: "..\..\..\.config\installers\assets\stuarty.ico"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\..\..\LICENSE.md"; DestDir: "{app}"; Flags: ignoreversion
