@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { type Failure, failureOf } from "@/components/Failure";
 import type { ProjectSummary } from "@/types";
@@ -21,9 +21,15 @@ export type HomeState =
 			workflows: Record<string, Workflow | null>;
 	  };
 
-export function useHome(): HomeState {
+export function useHome(): HomeState & { retry(): void } {
 	const [home, setHome] = useState<HomeState>({ state: "loading" });
+	const [attempt, setAttempt] = useState(0);
+	const retry = useCallback(() => {
+		setHome({ state: "loading" });
+		setAttempt((n) => n + 1);
+	}, []);
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies: `attempt` only restarts the read (Try again)
 	useEffect(() => {
 		let live = true;
 		const api = createClient(new HttpTransport("/api/v1"));
@@ -49,7 +55,7 @@ export function useHome(): HomeState {
 		return () => {
 			live = false;
 		};
-	}, []);
+	}, [attempt]);
 
-	return home;
+	return { ...home, retry };
 }
