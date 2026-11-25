@@ -1,6 +1,6 @@
 # SDD-025: Screen recording
 
-- Status: Draft (2026-11-24). Written by epic 61 before its code; extended by epic 62 (section 16: audio, webcam, pause, pointer events), epic 65 (section 17: automatic zoom, smooth cursor, click highlight) and epic 63 (section 18: basic recording in the browser).
+- Status: Draft (2026-11-24). Written by epic 61 before its code; extended by epic 62 (section 16: audio, webcam, pause, pointer events), epic 65 (section 17: automatic zoom, smooth cursor, click highlight) epic 63 (section 18: basic recording in the browser) and epic 64 (section 19: agents in the recording flow).
 - Depends on: ADR-0049 (the native capture helper), ADR-0051 (agents never start a capture), ADR-0011, ADR-0032, ADR-0052, SDD-000 (names), SDD-003 (surfaces), SDD-005 (persistence), SDD-007 (threats, section 6 process policy), SDD-011 (import), SDD-013 section 4.9 (the precedent of a native child).
 - Implements: PRD-004 section 4.11 (RF-430 to RF-442), NFR-067, NFR-068.
 - Owner area: epic 61 (`capture/`, `core/recording/`, `engine/capturehost/`, `service/recording*.go`, the `recordings` table, the adapters, the record dialog).
@@ -25,6 +25,7 @@
 16. Audio, webcam, pause and pointer events (epic 62)
 17. Finishing a take: automatic zoom, smooth cursor and click highlight (epic 65)
 18. Basic recording in the browser (epic 63)
+19. Agents in the recording flow (epic 64)
 
 ## 1. Overview
 
@@ -156,7 +157,7 @@ At start-up, before the server accepts requests, every row in `prepared`, `recor
 
 ## 11. Surfaces
 
-HTTP and CLI have every operation. MCP has no new tool (the tool list is at its byte budget, NFR-020): `job_get` with a `job_id` that starts `rec_` answers the recording as a job of kind `capture` (state `queued`, `running`, `succeeded`, `failed`, `cancelled` for `prepared`, `recording` and `finishing`, `ready`, `failed`, `cancelled`), and `job_cancel` with such an id is `RecordingStop`. The text of an added recording names its asset id, which is what an agent places with `edit`. No MCP route starts, confirms or dismisses a recording. The three upload operations of section 18 are HTTP only (no CLI command, no MCP tool): a browser capture cannot be driven from outside.
+HTTP and CLI have every operation. MCP has no new tool (the tool list is at its byte budget, NFR-020): `job_get` with a `job_id` that starts `rec_` answers the recording as a job of kind `capture` (state `queued`, `running`, `succeeded`, `failed`, `cancelled` for `prepared`, `recording` and `finishing`, `ready`, `failed`, `cancelled`), and `job_cancel` with such an id is `RecordingStop`. The text of an added recording names its asset id, which is what an agent places with `edit`. No MCP route starts, confirms or dismisses a recording. Epic 64 (section 19) adds no tool either: an agent over MCP reads the plan, the marks and the proposals of a recording with `job_get`, and prepares, marks and proposes through HTTP and the CLI. The three upload operations of section 18 are HTTP only (no CLI command, no MCP tool): a browser capture cannot be driven from outside.
 
 ## 12. The dialog
 
@@ -182,6 +183,9 @@ The threats of this domain, with their tests, are rows T-118 to T-122 of SDD-007
 | T-121 | A capture that nobody sees or stops, or a disk filled by it |
 | T-122 | Window titles in clear text in `db.sqlite` |
 | T-137 | A recording uploaded from a browser: who sends it, how much, in what order, under what name, and what it becomes (section 18) |
+| T-138 | An agent starts or resumes a capture by any path, through a prepared recording or through an approval rule (section 19.3) |
+| T-139 | An agent applies a cut, or a proposal changes a timeline before a person decides (section 19.5) |
+| T-140 | A capture that is on and cannot be seen (section 19.4) |
 
 ## 14. Measures
 
@@ -390,3 +394,56 @@ The dialog is the one of section 12. Where native capture is unavailable it show
 ### 18.8 Threats and tests
 
 T-137 (SDD-007 section 2) covers the upload: who may send, how much, in what order, with what name, and what the bytes may become. The service tests cover the order, the checksum, the limits, the retry and the resume, the closed tab, the restart and the assembly with a real FFmpeg; the security tests of T-137 cover the privilege of each route, the refusals, the generated names and the body limit; the dialog is covered by the unit tests of the recorder module and by an end-to-end test in Chromium with fake media devices that records 30 seconds, uploads, finishes and places the clip. Firefox and WebKit are reported as run or not run by the hand-off of the epic.
+
+## 19. Agents in the recording flow (epic 64)
+
+ADR-0051 decides what an agent may do with capture; this section is how. An agent prepares a recording, reads it, marks takes and mistakes and proposes cuts. It never starts, resumes or confirms a capture, and a person decides every cut.
+
+### 19.1 Names
+
+| Name | Meaning |
+| --- | --- |
+| prepared recording | a `recordings` row in state `prepared` whose `plan` column is not empty: what a person will record, with the helper not started. It holds no file, opens no process and is not "in progress" (section 9: it does not count against the one recording at a time) |
+| plan | the stored request: the source (`kind`, `id`, optional `name`), `fps`, `microphone`, `system_audio`, `camera`, `events`, the id of a written script (`script_id`, optional) and notes |
+| mark | a point or a stretch of a take, in active milliseconds of the recording, tagged `good`, `bad` or `mistake`, with an optional note |
+| proposal | a list of ranges to cut out of a take, each with a reason, made by any caller and decided by a person. Its id starts `prp_` |
+
+### 19.2 Operations
+
+| Operation | Scope | Caller | Rule |
+| --- | --- | --- | --- |
+| `RecordingPrepare` | `media` | any | validates the plan like `RecordingStart` does (`core/recording`), checks the project, and inserts a row in `prepared` with the plan. **It never reaches the helper**: the code path has no capturer. `E_VALIDATION`, `E_PROJECT_NOT_FOUND`, or `E_LIMIT_EXCEEDED` (`details.limit` `prepared_recordings`: 20 per project) |
+| `RecordingStart` | `media` | **a person** | takes an optional `recording_id`. With it, the check of a person is still the first thing done, then the plan of that prepared recording is used (the other members of the request must be empty, else `E_VALIDATION`) and the same row goes `prepared` to `recording`; a recording that is not prepared with a plan is `E_INVALID_STATE`. Without it nothing changes |
+| `RecordingCancel` | `media` | any | a prepared recording may be cancelled by any caller with `media`: it only removes a plan |
+| `RecordingMark` | `edit` | any | adds a mark to a recording that is `recording`, `paused`, `finishing` or `ready` (`E_INVALID_STATE` otherwise); `at_ms` is 0 or more, `end_ms` is empty or after it, at most 500 marks (`E_LIMIT_EXCEEDED`, `details.limit` `recording_marks`), a note is cleaned text of at most 200 characters. A mark changes no file and no timeline |
+| `RecordingProposeCuts` | `edit` | any | adds a proposal to a `ready` recording: 1 to 200 ranges in active ms, sorted, not overlapping, each at least 100 ms long and inside `duration_ms`, each with a reason of 1 to 200 characters; at most 5 pending proposals per recording (`E_LIMIT_EXCEEDED`, `details.limit` `recording_proposals`). **It changes no timeline**: no revision moves and nothing is written to a document |
+| `RecordingProposalDecide` | `edit` | **a person** | `E_PRIVILEGED_SESSION` first, before anything is read. Takes `recording_id`, `proposal_id`, a decision for every range (`accept` true or false) and optionally `timeline_id`. A proposal that is not pending is `E_INVALID_STATE`. With no range accepted the proposal becomes `rejected` and no timeline is touched. Otherwise the accepted ranges become **one batch** of existing commands on the timeline where the recording was placed (19.5) and the proposal becomes `accepted` |
+| `RecordingGet`, `RecordingList` | `read` | any | also `plan` (when prepared), `marks` and `proposals` (with the decision of each range). `RecordingGet` is what `job_get` shows for a `rec_` id, so an agent over MCP reads them with no new tool |
+
+A dismissed recording stays invisible to everyone but a person (section 4), for every operation of this section.
+
+### 19.3 Start and resume are for a person, on every path
+
+The paths that start or resume a capture are `RecordingStart`, `RecordingResume` and the three upload operations of section 18 (`RecordingUploadBegin`, `RecordingUploadChunk`, `RecordingUploadFinish`), which start or continue a capture of a person's browser. Each answers `E_PRIVILEGED_SESSION` to anyone who is not a person before the project, the row or the disk is looked at. `RecordingPrepare` is not one of them, and neither is any other operation of this section: the tests prove that after any sequence of them by an agent the helper was never started.
+
+**No approval rule authorizes a capture.** A rule is matched by the kind of an action (`core/approval`). The kinds of a capture (`capture` and every name that starts `recording.` or `recording:`) are never covered by a rule: `approval.NeverAuto` is checked before a rule is written (`ApprovalRuleSet` answers `E_VALIDATION`, path `kind`) and again when a rule is matched, so a rule that already exists, written by hand into the database or by another version, still authorizes nothing. `RecordingStart` does not call the approval queue at all: there is nothing to approve, because there is no standing or automatic yes for a capture. A test walks every shape of a rule (any kind, with and without a connection, a project, a limit per item and per day, enabled or not) against `Decide` for the capture kinds.
+
+### 19.4 The indicator
+
+The indicator is driven by the host. `capturehost` keeps an `Indicator`: a count of the helper processes that were asked to capture (`Helper.Begin`) and have not exited. It rises when the host sends the start request and falls when the process has ended, by whatever way (a stop, a kill, a crash, the deadline); a helper that only lists sources never raises it. It does not read the recording row, the window or the page, so none of them can hide it.
+
+The server tells the shell: `GET /api/v1/system/capture` (local mode, `admin` scope like `system/scheduler`; in network mode 404) answers `{"active": bool, "since_ms": n, "helpers": n}`. The desktop shell asks it once a second while its server runs and draws the answer in the system tray: **a red icon and the tooltip "Stuarty is recording the screen"**, which exists whether the window is open, hidden or closed (the tray is created for it even when the background mode is off). If the server stops answering while the indicator is on, the shell keeps it on for five seconds and then removes it, since the helper dies with its server. On the web, the browser's own indicator is the system one, and the page also shows a banner, "Recording", at the top of the editor from the moment a recording of the project is in `recording` or `paused`, on every page of the editor and not only in the dialog.
+
+Limit [open, for the author]: Windows Graphics Capture draws its own border around what it captures; the host does not and cannot hide it, and the tray icon is the second, independent signal. The drawing of the tray is checked by hand on a desktop (start a recording, close the window, watch the tray); the test of the epic proves the signal with a fake helper.
+
+### 19.5 Applying a proposal
+
+Only a ready recording that a person added and that is on a timeline has something to cut. The service finds the clips whose assets are the tracks of the recording on the timeline (`timeline_id`, or the default) and builds the batch from the accepted ranges, last range first, with `item.split` and `item.delete` (ripple `track`) only: no command is new and one `Undo` restores the timeline. A range is in the clock of the recording; the start of each track on that clock (section 16.2) moves it into the source of each asset. The plan is a pure function of the ranges, the clips and the frame rate (`core/recording`). A clip with a speed other than 1 is `E_INVALID_STATE` (cut it by hand), and so is a recording that is not on the timeline (the hint says to place it first). The batch is sent through `Edit` with the revision read just before, so a person who edited meanwhile gets the conflict and nothing is applied; the proposal stays pending.
+
+### 19.6 Storage
+
+The table `recordings` gets three columns (SDD-005 section 5.18): `plan`, `marks` and `proposals`, JSON text, empty or `[]` by default. A plan holds no window title (the sealed `source_label` keeps the one the person saw), no device name and no pointer position; marks and proposals hold the text of an agent, cleaned and bounded, and are not sealed because they are neither the user's own words about the screen nor what was on it. They are deleted with the row.
+
+### 19.7 Tests
+
+`core/recording` tests the plan, the marks, the ranges and the batch planner. The service tests cover every operation and limit, the unchanged revision after a proposal, one batch and one undo after a decision, and a revision conflict. The security tests (T-138 to T-140 of SDD-007) cover: no sequence of agent operations over any surface starts the helper; each start-or-resume path (the five operations of 19.3) is refused for an agent; no rule shape authorizes a capture; an agent never decides a proposal; and the indicator follows a fake helper's process. The tray drawing is checked by hand (19.4).

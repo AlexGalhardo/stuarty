@@ -58,7 +58,7 @@ Names are proposals until task 1 writes them to SDD-000.
 
 ## Tasks
 
-- [ ] 1. SDD-025, SDD-000, SDD-007 and the agent docs. Verify: `task lint:md` and `go run ./internal/tools/threatcheck` exit 0.
+- [x] 1. SDD-025, SDD-000, SDD-007 and the agent docs. Verify: `task lint:md` and `go run ./internal/tools/threatcheck` exit 0.
 - [ ] 2. Prepare, mark and the proposal rules in the core. Verify: `go test ./core/recording/...` passes.
 - [ ] 3. Service operations and the person rule, including approval rules. Verify: `go test ./service/...` and `go test -run TestSecurity_ ./...` pass.
 - [ ] 4. The host-driven indicator on Windows. Verify: a test with a fake helper that the indicator signal starts and ends with the process, and a manual check recorded in the hand-off.
