@@ -917,7 +917,8 @@
         "back": "Voltar para Editor de imagem",
         "size": "{w} × {h} px",
         "revision": "revisão {revision}",
-        "saved_auto": "Salvo automaticamente: {time}"
+        "saved_auto": "Salvo automaticamente: {time}",
+        "rev_short": "Rev. {revision}"
       },
       "canvas": {
         "label": "Tela da imagem",
@@ -946,7 +947,7 @@
       "layers": {
         "title": "Camadas",
         "label": "Camadas, a de cima primeiro",
-        "empty_title": "A imagem não tem camadas",
+        "empty_title": "Nenhuma camada ainda",
         "empty_body": "Adicione um texto, uma forma ou uma foto pela barra de ferramentas.",
         "hidden": "oculta",
         "locked": "bloqueada",
@@ -1152,7 +1153,8 @@
         "radius": "Raio dos cantos",
         "bad_number": "Digite um número inteiro de pixels, como 120, 120px ou 50%.",
         "pick_color": "Escolher {label}",
-        "none": "nenhum"
+        "none": "nenhum",
+        "title_layer": "Filtros e texto"
       },
       "look": {
         "adjust": "Ajustes",
@@ -1313,6 +1315,17 @@
         "no_image": "Nenhuma imagem",
         "create": "Criar a partir do modelo",
         "slot_hint": "Preencha os campos marcados como obrigatórios e crie de novo."
+      },
+      "empty": {
+        "title": "A imagem não tem camadas",
+        "lead": "Comece por uma foto, um texto ou um modelo pronto de thumbnail.",
+        "step_photo": "Adicione uma foto",
+        "step_photo_body": "Ou escolha um modelo.",
+        "step_title": "Escreva o título",
+        "step_title_body": "Texto curto e grande funciona melhor.",
+        "step_background": "Remova o fundo",
+        "step_background_body": "Com um provedor conectado.",
+        "ask_agent": "Pedir ao agente"
       }
     },
     "editor": {
@@ -4660,7 +4673,7 @@
         "step_tool": "operação {tool}"
       },
       "draft": {
-        "heading":"Rascunho com um modelo",
+        "heading": "Rascunho com um modelo",
         "intro": "Um modelo escreve um rascunho como uma nova revisão. Você vê o custo estimado antes, e o rascunho espera a sua aprovação.",
         "connection": "Conexão",
         "model": "Modelo",

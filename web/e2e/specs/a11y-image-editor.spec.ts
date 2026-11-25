@@ -148,7 +148,7 @@ test.describe("a11y image editor", () => {
 		await tabTo(
 			page,
 			(el) => el.getAttribute("data-testid") === "image-add-text",
-			"ArrowRight",
+			"ArrowDown",
 		);
 		await page.keyboard.press("Enter");
 		await expect.poll(async () => (await layer("Text"))?.kind).toBe("text");
@@ -203,11 +203,11 @@ test.describe("a11y image editor", () => {
 		await page.getByTestId("image-stage").focus();
 		await page.keyboard.press("Control+z");
 		await expect.poll(async () => (await layer("Title"))?.opacity).toBe(100);
-		await tabTo(page, (el) => el.hasAttribute("data-tool"), "Shift+Tab");
+		// Export is the primary button of the top bar, before the tool rail in the order of the keys
 		await tabTo(
 			page,
 			(el) => el.getAttribute("data-testid") === "image-export-open",
-			"ArrowRight",
+			"Shift+Tab",
 		);
 		await page.keyboard.press("Enter");
 		await expect(page.getByTestId("image-export-dialog")).toBeVisible();

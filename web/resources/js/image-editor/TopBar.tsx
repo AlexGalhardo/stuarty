@@ -1,11 +1,15 @@
 import { Link } from "@inertiajs/react";
-import { ArrowLeft, Check } from "lucide-react";
+import { ArrowLeft, Check, History, MessagesSquare } from "lucide-react";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 
 import UntrustedText from "@/components/UntrustedText";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useLocale, useT } from "@/lib/i18n";
+import NotificationBell from "../shell/NotificationBell";
+import { useShell } from "../shell/ShellContext";
 import type { ImageDocument } from "./api/types";
+import { ExportTool } from "./export/ExportDialog";
 
 // "Saved automatically: 14:32": the core stores every edit before its answer arrives, so the time is the
 // moment the open revision reached the screen. It says nothing until a document is on screen.
@@ -41,16 +45,40 @@ export function SavedIndicator({
 	);
 }
 
-// The bar over the toolbar, as in the video editor (SDD-012 section 24): the way back, the name of the image,
-// its size and revision as text, and the saved check at the right.
+// The Chat button of the shell, in the bar of the editor: it opens the same panel of the right dock.
+function ChatButton(): ReactNode {
+	const t = useT();
+	const { chatOpen, openChat, chatButton } = useShell();
+	return (
+		<Button
+			ref={chatButton}
+			type="button"
+			variant="outline"
+			size="sm"
+			aria-label={t("ui.chat.open")}
+			aria-expanded={chatOpen}
+			aria-controls="chat-panel"
+			onClick={openChat}
+			data-testid="chat-toggle"
+		>
+			<MessagesSquare aria-hidden="true" />
+			{t("ui.shell.chat")}
+		</Button>
+	);
+}
+
+// The top bar of the final design (SDD-012 section 24): the way back, the name of the image, its revision in a
+// badge, its size and the saved check, and at the right the bell, Chat and the primary Export.
 export default function TopBar({
 	doc,
+	failed = false,
 }: {
 	doc: ImageDocument | null;
+	failed?: boolean;
 }): ReactNode {
 	const t = useT();
 	return (
-		<header className="flex items-center gap-2 border-b border-border bg-ed-panel px-2 py-1">
+		<header className="flex h-11 shrink-0 items-center gap-3 border-b border-border bg-ed-panel px-3">
 			<Button asChild variant="ghost" size="icon-sm">
 				<Link href="/edit-image" aria-label={t("ui.image.editor.back")}>
 					<ArrowLeft aria-hidden="true" />
@@ -58,20 +86,27 @@ export default function TopBar({
 			</Button>
 			<h1 id="image-title" className="min-w-0 truncate text-sm font-semibold">
 				{doc === null ? (
-					t("ui.image.editor.loading")
+					t(failed ? "ui.image.editor.title" : "ui.image.editor.loading")
 				) : (
 					<UntrustedText>{doc.name}</UntrustedText>
 				)}
 			</h1>
 			{doc !== null && (
-				<span className="text-xs text-muted-foreground tabular-nums">
-					{t("ui.image.editor.size", { w: doc.width, h: doc.height })}
-					{" · "}
-					{t("ui.image.editor.revision", { revision: doc.revision })}
-				</span>
+				<>
+					<Badge variant="secondary" className="tabular-nums">
+						<History aria-hidden="true" />
+						{t("ui.image.editor.rev_short", { revision: doc.revision })}
+					</Badge>
+					<span className="text-xs text-muted-foreground tabular-nums">
+						{t("ui.image.editor.size", { w: doc.width, h: doc.height })}
+					</span>
+				</>
 			)}
-			<span className="ml-auto" />
 			<SavedIndicator revision={doc?.revision ?? null} />
+			<span className="ml-auto" />
+			<NotificationBell />
+			<ChatButton />
+			<ExportTool />
 		</header>
 	);
 }

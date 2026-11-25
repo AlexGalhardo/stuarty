@@ -1,8 +1,16 @@
 import { Maximize, Minus, Plus, ScanSearch } from "lucide-react";
-import { type KeyboardEvent, type ReactNode, useEffect, useRef } from "react";
+import {
+	createContext,
+	type KeyboardEvent,
+	type ReactNode,
+	useContext,
+	useEffect,
+	useRef,
+} from "react";
 
+import { cn } from "@/lib/cn";
 import { useT } from "@/lib/i18n";
-import { ZOOM_STEP } from "../canvas/viewport";
+import { effectiveZoom, ZOOM_STEP } from "../canvas/viewport";
 import { useImage, useImageStore } from "../state/context";
 import ToolButton from "./ToolButton";
 
@@ -13,15 +21,27 @@ function items(root: HTMLElement): HTMLElement[] {
 	);
 }
 
-// The toolbar of design system 4.3.1: one tab stop, Left and Right between the buttons, Home and End to the
-// ends. The tab stop is kept by hand because a button becomes disabled and enabled as the selection changes.
+type Orientation = "horizontal" | "vertical";
+
+const OrientationContext = createContext<Orientation>("horizontal");
+
+// The toolbar of design system 4.3.1: one tab stop, the arrows of its axis between the buttons, Home and End to
+// the ends. The tab stop is kept by hand because a button becomes disabled and enabled as the selection changes.
+// The tool rail of the final design is a vertical one (Up and Down); the strip under the stage is horizontal.
 export function Toolbar({
 	label,
 	children,
+	orientation = "horizontal",
+	testId = "image-toolbar",
+	className,
 }: {
 	label: string;
 	children: ReactNode;
+	orientation?: Orientation;
+	testId?: string;
+	className?: string;
 }): ReactNode {
+	const vertical = orientation === "vertical";
 	const ref = useRef<HTMLDivElement>(null);
 
 	useEffect(() => {
@@ -55,10 +75,10 @@ export function Toolbar({
 		if (at < 0) return;
 		let next: number;
 		switch (event.key) {
-			case "ArrowRight":
+			case vertical ? "ArrowDown" : "ArrowRight":
 				next = (at + 1) % list.length;
 				break;
-			case "ArrowLeft":
+			case vertical ? "ArrowUp" : "ArrowLeft":
 				next = (at - 1 + list.length) % list.length;
 				break;
 			case "Home":
@@ -80,16 +100,25 @@ export function Toolbar({
 	};
 
 	return (
-		<div
-			ref={ref}
-			role="toolbar"
-			aria-label={label}
-			data-testid="image-toolbar"
-			onKeyDown={onKeyDown}
-			className="flex flex-wrap items-center gap-1 border-b border-border bg-ed-panel px-2 py-1"
-		>
-			{children}
-		</div>
+		<OrientationContext.Provider value={orientation}>
+			<div
+				ref={ref}
+				role="toolbar"
+				aria-label={label}
+				aria-orientation={orientation}
+				data-testid={testId}
+				onKeyDown={onKeyDown}
+				className={cn(
+					"flex items-center gap-1 bg-ed-panel",
+					vertical
+						? "w-11 shrink-0 flex-col overflow-y-auto border-r border-border px-1 py-2"
+						: "px-2 py-1",
+					className,
+				)}
+			>
+				{children}
+			</div>
+		</OrientationContext.Provider>
 	);
 }
 
@@ -102,15 +131,25 @@ export function ToolGroup({
 	label: string;
 	children: ReactNode;
 }): ReactNode {
+	const vertical = useContext(OrientationContext) === "vertical";
 	return (
 		<>
 			<fieldset
 				aria-label={label}
-				className="m-0 flex min-w-0 items-center gap-0.5 border-0 p-0"
+				className={cn(
+					"m-0 flex min-w-0 items-center gap-0.5 border-0 p-0",
+					vertical && "flex-col",
+				)}
 			>
 				{children}
 			</fieldset>
-			<span aria-hidden="true" className="mx-1 h-5 w-px bg-border" />
+			<span
+				aria-hidden="true"
+				className={cn(
+					"bg-border last:hidden",
+					vertical ? "my-1 h-px w-5" : "mx-1 h-5 w-px",
+				)}
+			/>
 		</>
 	);
 }
@@ -120,7 +159,15 @@ export function ViewTools(): ReactNode {
 	const t = useT();
 	const store = useImageStore();
 	const doc = useImage((s) => s.doc);
+	const view = useImage((s) => s.view);
+	const stage = useImage((s) => s.stage);
 	const off = doc === null;
+	const percent =
+		doc === null
+			? null
+			: Math.round(
+					effectiveZoom(view, stage, { w: doc.width, h: doc.height }) * 100,
+				);
 
 	return (
 		<ToolGroup label={t("ui.image.toolbar.view")}>
@@ -156,6 +203,14 @@ export function ViewTools(): ReactNode {
 				onClick={() => store.getState().actualSize()}
 				testId="image-zoom-100"
 			/>
+			{percent !== null && (
+				<output
+					data-testid="image-zoom-percent"
+					className="min-w-10 text-center text-xs tabular-nums text-muted-foreground"
+				>
+					{percent}%
+				</output>
+			)}
 		</ToolGroup>
 	);
 }

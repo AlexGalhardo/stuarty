@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import { type ReactNode, useEffect, useId, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -50,6 +50,12 @@ function useDraft<T>(value: T): {
 
 const labelClass = "text-xs font-normal text-muted-foreground";
 
+// A field is a row in the final design: the label at the start, the control in a column of its own width.
+// The error, the swatches and a multiline text take the whole row.
+const rowClass =
+	"grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,9.5rem)] items-center gap-x-2 gap-y-1";
+const stackClass = "flex min-w-0 flex-col gap-1";
+
 export function NumberField({
 	label,
 	value,
@@ -89,7 +95,7 @@ export function NumberField({
 	};
 
 	return (
-		<div className="flex min-w-0 flex-col gap-1">
+		<div className={rowClass}>
 			<Label htmlFor={id} className={labelClass}>
 				{label}
 			</Label>
@@ -113,7 +119,10 @@ export function NumberField({
 							revert();
 						}
 					}}
-					className={cn("tabular-nums", unit !== undefined && "pr-8")}
+					className={cn(
+						"font-mono text-xs tabular-nums",
+						unit !== undefined && "pr-8",
+					)}
 				/>
 				{unit !== undefined && (
 					<span
@@ -125,7 +134,11 @@ export function NumberField({
 				)}
 			</div>
 			{bad && (
-				<p id={`${id}-bad`} role="alert" className="text-xs text-destructive">
+				<p
+					id={`${id}-bad`}
+					role="alert"
+					className="col-span-2 text-xs text-destructive"
+				>
 					{t("ui.image.inspector.bad_number")}
 				</p>
 			)}
@@ -167,7 +180,7 @@ export function TextField({
 	};
 
 	return (
-		<div className="flex min-w-0 flex-col gap-1">
+		<div className={multiline ? stackClass : rowClass}>
 			<Label htmlFor={id} className={labelClass}>
 				{label}
 			</Label>
@@ -186,6 +199,7 @@ export function TextField({
 			) : (
 				<Input
 					{...common}
+					className="font-mono text-xs"
 					onKeyDown={(event) => {
 						if (event.key === "Enter") {
 							event.preventDefault();
@@ -215,7 +229,7 @@ export function SelectField({
 }): ReactNode {
 	const id = useId();
 	return (
-		<div className="flex min-w-0 flex-col gap-1">
+		<div className={rowClass}>
 			<Label htmlFor={id} className={labelClass}>
 				{label}
 			</Label>
@@ -262,7 +276,7 @@ export function ToggleField({
 				onChange={(event) => void onCommit(event.target.checked)}
 				className="size-4 accent-[var(--primary)]"
 			/>
-			<Label htmlFor={id} className="text-sm font-normal">
+			<Label htmlFor={id} className="text-xs font-normal">
 				{label}
 			</Label>
 		</div>
@@ -299,18 +313,18 @@ export function ColorField({
 	const picked = /^#[0-9a-fA-F]{6}/.test(value) ? value.slice(0, 7) : "#000000";
 
 	return (
-		<div className="flex min-w-0 flex-col gap-1">
+		<div className={rowClass}>
 			<Label htmlFor={id} className={labelClass}>
 				{label}
 			</Label>
-			<div className="flex items-center gap-1">
+			<div className="flex min-w-0 items-center gap-1">
 				<input
 					type="color"
 					aria-label={t("ui.image.inspector.pick_color", { label })}
 					value={picked}
 					disabled={disabled}
 					onChange={(event) => void onCommit(event.target.value.toUpperCase())}
-					className="size-8 shrink-0 cursor-pointer rounded border bg-transparent p-0.5"
+					className="size-8 shrink-0 cursor-pointer rounded-md border border-input bg-transparent p-0.5"
 				/>
 				<Input
 					id={id}
@@ -326,11 +340,11 @@ export function ColorField({
 							commit();
 						}
 					}}
-					className="font-mono text-sm"
+					className="min-w-0 font-mono text-xs"
 				/>
 			</div>
 			{swatches !== undefined && swatches.length > 0 && (
-				<fieldset className="m-0 flex min-w-0 flex-wrap gap-1 border-0 p-0">
+				<fieldset className="col-span-2 m-0 flex min-w-0 flex-wrap gap-1 border-0 p-0">
 					<legend className="sr-only">
 						{t("ui.image.brand.swatches", { label })}
 					</legend>
@@ -376,7 +390,7 @@ export function Section({
 	const id = useId();
 	const bodyId = useId();
 	const [open, setOpen] = useState(defaultOpen);
-	const Chevron = open ? ChevronDown : ChevronRight;
+	const Chevron = open ? ChevronUp : ChevronDown;
 	return (
 		<section
 			aria-labelledby={id}
@@ -388,10 +402,9 @@ export function Section({
 					type="button"
 					aria-expanded={open}
 					aria-controls={bodyId}
-					className="flex h-8 w-full items-center gap-1 rounded-sm text-left hover:bg-surface-hover"
+					className="flex h-8 w-full items-center gap-2 rounded-sm text-left hover:bg-surface-hover"
 					onClick={() => setOpen((was) => !was)}
 				>
-					<Chevron aria-hidden="true" className="size-4 shrink-0" />
 					<span className="min-w-0 flex-1 truncate">{title}</span>
 					{badge !== undefined && (
 						<span
@@ -401,9 +414,10 @@ export function Section({
 							{badge}
 						</span>
 					)}
+					<Chevron aria-hidden="true" className="size-4 shrink-0" />
 				</button>
 			</h3>
-			<div id={bodyId} hidden={!open} className="flex flex-col gap-2 pl-1">
+			<div id={bodyId} hidden={!open} className="flex flex-col gap-2">
 				{children}
 			</div>
 		</section>

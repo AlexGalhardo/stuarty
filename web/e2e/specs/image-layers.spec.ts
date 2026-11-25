@@ -194,7 +194,12 @@ test.describe("image layers", () => {
 		await row(page, "Only").click();
 		await page.keyboard.press("Delete");
 		await expect(page.getByTestId("image-layers-empty")).toBeVisible();
-		await expect(page.getByText("The image has no layers")).toBeVisible();
+		await expect(page.getByTestId("image-layers-empty")).toContainText(
+			"No layers yet",
+		);
+		await expect(
+			page.getByRole("heading", { name: "The image has no layers" }),
+		).toBeVisible();
 	});
 
 	test("the toolbar groups, duplicates, reorders and removes the selection", async ({
