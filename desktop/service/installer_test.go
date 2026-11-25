@@ -86,7 +86,7 @@ func TestInstallerCarriesTheOwnFFmpeg(t *testing.T) {
 
 	for _, banned := range []string{"openh264", "OpenH264", "DownloadTemporaryFile", "idp", "InetGet", "curl", "Invoke-WebRequest"} {
 		// The comment of the section names OpenH264 to say it is not carried.
-		for _, line := range strings.SplitSeq(src, "\n") {
+		for line := range strings.SplitSeq(src, "\n") {
 			if strings.HasPrefix(strings.TrimSpace(line), ";") {
 				continue
 			}
