@@ -236,9 +236,22 @@ const EXAMPLES: Record<string, Example> = {
 			project_id: PROJECT,
 			title: "Launch teaser",
 			export: "job_0123456789",
-			targets: [{ id: "tgt_3c5v8n2w6d", connection_id: "con_0123456789", network: "youtube", state: "draft", zone: "America/Sao_Paulo" }],
+			targets: [
+				{
+					id: "tgt_3c5v8n2w6d",
+					connection_id: "con_0123456789",
+					network: "youtube",
+					state: "draft",
+					scheduled_at: "2026-12-01T12:00:00Z",
+					zone: "America/Sao_Paulo",
+					local_time: "2026-12-01 09:00",
+				},
+			],
 		},
-		text: "pub_7k2m9x4q1b  Launch teaser  project prj_7k2m9x4q1b  1 target(s)",
+		// service.PublicationText: the title is delimited as untrusted, and each target has its own line.
+		text:
+			'pub_7k2m9x4q1b  <untrusted_media_text source="project_text" inline="true" truncated="false">Launch teaser</untrusted_media_text>  project prj_7k2m9x4q1b  1 target(s)\n' +
+			"  tgt_3c5v8n2w6d  youtube  con_0123456789  draft  2026-12-01 09:00 America/Sao_Paulo (2026-12-01T12:00:00Z)",
 	},
 };
 
