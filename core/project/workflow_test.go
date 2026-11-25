@@ -554,3 +554,35 @@ func TestSkippedColumnRoundTrip(t *testing.T) {
 		t.Fatal("an empty column holds no step")
 	}
 }
+
+// A trail is read in order: no step stands done after one that is the current step.
+func TestNoStepIsDoneAfterTheCurrentOne(t *testing.T) {
+	t.Parallel()
+
+	post := item(Text, TextKindPost, "words here")
+	cases := map[string]Workflow{
+		"a text written with no brief":     ComputeWorkflow(KindText, &Facts{Items: []Item{post}, PublicationsKnown: true}),
+		"a video with a clip and no brief": ComputeWorkflow(KindVideo, &Facts{TimelineAssets: 1, TimelineItems: 1, PublicationsKnown: true}),
+	}
+
+	for name, w := range cases {
+		current := -1
+
+		for i := range w.Steps {
+			if w.Steps[i].ID == w.Current {
+				current = i
+			}
+		}
+
+		for i := range w.Steps {
+			if current >= 0 && i > current && w.Steps[i].State == StepDone {
+				t.Errorf("%s: %s is done after the current step %s", name, w.Steps[i].ID, w.Current)
+			}
+		}
+	}
+
+	w := cases["a text written with no brief"]
+	if got := states(&w); got[StepBriefing] != StepDone || got[StepWriting] != StepDone || w.Current != StepReview {
+		t.Errorf("a text with no brief: %v, current %q", got, w.Current)
+	}
+}

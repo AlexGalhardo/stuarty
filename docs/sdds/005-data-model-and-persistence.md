@@ -1195,9 +1195,10 @@ The workflow of each kind is therefore: `video`: briefing, script, recording, ed
 
 | Step | `done` when | `unknown` when |
 | --- | --- | --- |
-| `briefing` | the brief has text | never |
+| `briefing` | the brief has text, or work already stands behind it: an active text, a clip on the first timeline, an `output` item or a publication (a trail never shows a later step done under a briefing that is still current) | never |
 | `choice` | never: it leaves the workflow when the kind is known | never |
-| `script`, `writing` | an active text that is not a caption has text | never |
+| `script` | an active text that is not a caption has text, or the first timeline holds an asset | never |
+| `writing` | an active text that is not a caption has text | never |
 | `recording` | the first timeline holds an asset | never |
 | `editing` | the first timeline holds an item, in a project that is not an image and holds a video | an `image` project: always, even with a timeline (no image document belongs to a project yet, and a timeline says nothing about the image); a project with no video that holds an image: always |
 | `finishing` | an `output` item exists | never |

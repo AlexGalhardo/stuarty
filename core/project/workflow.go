@@ -192,10 +192,16 @@ func baseState(id StepID, kind Intent, h holdings, f *Facts) StepState {
 
 	switch id {
 	case StepBriefing:
-		return doneIf(h.hasBrief)
+		// The briefing says what to make, for whom and by when. Work that already stands behind it (a text, a
+		// clip on the timeline, an output, a publication) means the project went past it, so the trail never
+		// shows later steps done under a briefing that is still the current step.
+		return doneIf(h.hasBrief || h.writing || f.TimelineAssets > 0 || h.outputs > 0 || h.publications > 0)
 	case StepChoice:
 		return stepOpen
-	case StepScript, StepWriting:
+	case StepScript:
+		// A clip already on the timeline means the video went past its script (see the briefing).
+		return doneIf(h.writing || f.TimelineAssets > 0)
+	case StepWriting:
 		return doneIf(h.writing)
 	case StepRecording:
 		return doneIf(f.TimelineAssets > 0)
