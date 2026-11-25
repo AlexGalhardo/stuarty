@@ -4,17 +4,19 @@ import keys from "../keys.ts?raw";
 import operations from "./operations.tsx?raw";
 import { SHORTCUTS } from "./shortcuts";
 import toolbar from "./Toolbar.tsx?raw";
+import rail from "./ToolRail.tsx?raw";
+import zoom from "./ZoomBar.tsx?raw";
 
 // The keymap of SDD-012 section 24.10, as the toolbar names it in its tooltips.
 describe("toolbar shortcuts", () => {
 	test("no button writes its key as a literal: it names a row of the table", () => {
-		for (const source of [operations, toolbar]) {
+		for (const source of [operations, toolbar, rail, zoom]) {
 			expect(source).not.toMatch(/shortcut(=|: )"[^"]*[^a-zA-Z"][^"]*"/);
 		}
 	});
 
 	test("every row a button names exists in the table", () => {
-		const rows = [operations, toolbar].flatMap((source) =>
+		const rows = [operations, toolbar, rail, zoom].flatMap((source) =>
 			[...source.matchAll(/shortcut(?:=|: )"([a-zA-Z]+)"/g)].map(
 				(m) => m[1] ?? "",
 			),
