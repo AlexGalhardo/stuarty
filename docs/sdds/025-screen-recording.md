@@ -404,7 +404,7 @@ ADR-0051 decides what an agent may do with capture; this section is how. An agen
 | Name | Meaning |
 | --- | --- |
 | prepared recording | a `recordings` row in state `prepared` whose `plan` column is not empty: what a person will record, with the helper not started. It holds no file, opens no process and is not "in progress" (section 9: it does not count against the one recording at a time) |
-| plan | the stored request: the source (`kind`, `id`, optional `name`), `fps`, `microphone`, `system_audio`, `camera`, `events`, the id of a written script (`script_id`, optional) and notes |
+| plan | the stored request: the source (`kind` and `id`; a `name` the caller sends is not kept, because it would be shown to the person as the title of what they record), `fps`, `microphone`, `system_audio`, `camera`, `events`, the id of a written script (`script_id`, optional) and notes |
 | mark | a point or a stretch of a take, in active milliseconds of the recording, tagged `good`, `bad` or `mistake`, with an optional note |
 | proposal | a list of ranges to cut out of a take, each with a reason, made by any caller and decided by a person. Its id starts `prp_` |
 
@@ -413,12 +413,12 @@ ADR-0051 decides what an agent may do with capture; this section is how. An agen
 | Operation | Scope | Caller | Rule |
 | --- | --- | --- | --- |
 | `RecordingPrepare` | `media` | any | validates the plan like `RecordingStart` does (`core/recording`), checks the project, and inserts a row in `prepared` with the plan. **It never reaches the helper**: the code path has no capturer. `E_VALIDATION`, `E_PROJECT_NOT_FOUND`, or `E_LIMIT_EXCEEDED` (`details.limit` `prepared_recordings`: 20 per project) |
-| `RecordingStart` | `media` | **a person** | takes an optional `recording_id`. With it, the check of a person is still the first thing done, then the plan of that prepared recording is used (the other members of the request must be empty, else `E_VALIDATION`) and the same row goes `prepared` to `recording`; a recording that is not prepared with a plan is `E_INVALID_STATE`. Without it nothing changes |
+| `RecordingStart` | `media` | **a person** | takes an optional `recording_id`. With it, the check of a person is still the first thing done, then the plan of that prepared recording is used (the other members of the request must be empty, else `E_VALIDATION`) and the same row goes `prepared` to `recording`; a recording that is not prepared with a plan is `E_INVALID_STATE`, and so is a plan whose display or window the helper does not list now (the helper is asked, since the caller is a person; nothing starts). Without it nothing changes |
 | `RecordingCancel` | `media` | any | a prepared recording may be cancelled by any caller with `media`: it only removes a plan |
 | `RecordingMark` | `edit` | any | adds a mark to a recording that is `recording`, `paused`, `finishing` or `ready` (`E_INVALID_STATE` otherwise); `at_ms` is 0 or more, `end_ms` is empty or after it, at most 500 marks (`E_LIMIT_EXCEEDED`, `details.limit` `recording_marks`), a note is cleaned text of at most 200 characters. A mark changes no file and no timeline |
 | `RecordingProposeCuts` | `edit` | any | adds a proposal to a `ready` recording: 1 to 200 ranges in active ms, sorted, not overlapping, each at least 100 ms long and inside `duration_ms`, each with a reason of 1 to 200 characters; at most 5 pending proposals per recording (`E_LIMIT_EXCEEDED`, `details.limit` `recording_proposals`). **It changes no timeline**: no revision moves and nothing is written to a document |
 | `RecordingProposalDecide` | `edit` | **a person** | `E_PRIVILEGED_SESSION` first, before anything is read. Takes `recording_id`, `proposal_id`, a decision for every range (`accept` true or false) and optionally `timeline_id`. A proposal that is not pending is `E_INVALID_STATE`. With no range accepted the proposal becomes `rejected` and no timeline is touched. Otherwise the accepted ranges become **one batch** of existing commands on the timeline where the recording was placed (19.5) and the proposal becomes `accepted` |
-| `RecordingGet`, `RecordingList` | `read` | any | also `plan` (when prepared), `marks` and `proposals` (with the decision of each range). `RecordingGet` is what `job_get` shows for a `rec_` id, so an agent over MCP reads them with no new tool |
+| `RecordingGet`, `RecordingList` | `read` | any | also `plan` (when prepared, with its `source_id`), `marks` and `proposals` (with the decision of each range). `RecordingGet` is what `job_get` shows for a `rec_` id, so an agent over MCP reads them with no new tool |
 
 A dismissed recording stays invisible to everyone but a person (section 4), for every operation of this section.
 
@@ -442,7 +442,7 @@ Only a ready recording that a person added and that is on a timeline has somethi
 
 ### 19.6 Storage
 
-The table `recordings` gets three columns (SDD-005 section 5.18): `plan`, `marks` and `proposals`, JSON text, empty or `[]` by default. A plan holds no window title (the sealed `source_label` keeps the one the person saw), no device name and no pointer position; marks and proposals hold the text of an agent, cleaned and bounded, and are not sealed because they are neither the user's own words about the screen nor what was on it. They are deleted with the row.
+The table `recordings` gets three columns (SDD-005 section 5.18): `plan`, `marks` and `proposals`, JSON text, empty or `[]` by default. A plan holds no window title, no device name and no pointer position. The sealed `source_label` of a prepared recording is empty: the dialog shows the person the title the helper gives the `source_id` of the plan, with every track the plan adds to the screen (microphone, camera, computer sound, pointer), so what a person consents to is never text an agent wrote. Marks and proposals hold the text of an agent, cleaned and bounded, and are not sealed because they are neither the user's own words about the screen nor what was on it. They are deleted with the row.
 
 ### 19.7 Tests
 

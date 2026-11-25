@@ -1575,6 +1575,8 @@ export interface RecordingStartRequest {
 // What a person has still to start: the plan of a prepared recording (SDD-025 section 19.1). The notes are the
 // text of whoever prepared it.
 export interface RecordingPlan {
+	// The display or window to record. The plan keeps no title: the dialog shows the one the helper gives this id.
+	source_id: string;
 	fps: number;
 	microphone?: string;
 	system_audio?: boolean;

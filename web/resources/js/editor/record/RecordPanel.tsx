@@ -83,7 +83,11 @@ function Step({
 				<>
 					<Decided notice={flow.notice} />
 					<ProposalList recordings={view.proposals ?? []} flow={flow} />
-					<PreparedList prepared={view.prepared ?? []} flow={flow} />
+					<PreparedList
+						prepared={view.prepared ?? []}
+						sources={view.sources}
+						flow={flow}
+					/>
 					{view.kept.length > 0 && (
 						<Kept kept={view.kept} busy={flow.busy} flow={flow} />
 					)}
@@ -362,15 +366,30 @@ function Decided({ notice }: { notice: string | null }): ReactNode {
 
 // The plans an agent or a person prepared (SDD-025 section 19.1). Nothing records until a person presses Record:
 // the button here is that press, and it is the only way a prepared recording starts.
+// The person sees what pressing Record captures: the title the helper gives the source of the plan (never a name
+// the agent wrote) and every track besides the screen.
 function PreparedList({
 	prepared,
+	sources,
 	flow,
 }: {
 	prepared: Recording[];
+	sources: RecordingSourcesResult;
 	flow: RecordFlow;
 }): ReactNode {
 	const t = useT();
 	if (prepared.length === 0) return null;
+	const titleOf = (r: Recording): string => {
+		const list =
+			r.source.kind === "window" ? sources.windows : sources.displays;
+		return list.find((s) => s.id === r.plan?.source_id)?.name ?? r.source.kind;
+	};
+	const extras = (r: Recording): string[] => [
+		...(r.plan?.microphone ? [t("ui.editor.record.microphone")] : []),
+		...(r.plan?.camera ? [t("ui.editor.record.camera")] : []),
+		...(r.plan?.system_audio ? [t("ui.editor.record.system_audio")] : []),
+		...(r.plan?.events ? [t("ui.editor.record.events")] : []),
+	];
 	return (
 		<section className="flex flex-col gap-2" data-record-prepared="">
 			<h3 className="text-xs font-medium text-muted-foreground uppercase">
@@ -387,12 +406,18 @@ function PreparedList({
 						data-record-prepared-item={r.recording_id}
 					>
 						<span className="min-w-0 truncate">
-							<UntrustedText>
-								{r.source.name !== undefined && r.source.name !== ""
-									? r.source.name
-									: r.source.kind}
-							</UntrustedText>
+							<UntrustedText>{titleOf(r)}</UntrustedText>
 						</span>
+						{extras(r).length > 0 && (
+							<ul
+								className="flex flex-col text-xs"
+								data-record-prepared-tracks=""
+							>
+								{extras(r).map((label) => (
+									<li key={label}>{label}</li>
+								))}
+							</ul>
+						)}
 						<span className="text-xs text-muted-foreground">
 							{t("ui.editor.record.prepared_by", { actor: r.actor })}
 						</span>

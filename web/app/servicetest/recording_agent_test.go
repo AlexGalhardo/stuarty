@@ -93,7 +93,9 @@ func TestRecordingPrepareStartsNothingAndAPersonStartsIt(t *testing.T) {
 		t.Fatalf("prepared = %+v", rec)
 	}
 
-	if len(rec.Tracks) != 2 || rec.Source.Name != "Main" || !strings.Contains(rec.Text, "a person presses record") {
+	// the name the caller gave is not kept: the dialog shows the title the helper gives the source id
+	if len(rec.Tracks) != 2 || rec.Source.Name != "" || rec.Plan.SourceID != "d1" ||
+		!strings.Contains(rec.Text, "a person presses record") {
 		t.Errorf("tracks %v, source %+v, text %q", rec.Tracks, rec.Source, rec.Text)
 	}
 
@@ -137,7 +139,7 @@ func TestRecordingPrepareStartsNothingAndAPersonStartsIt(t *testing.T) {
 
 	t.Cleanup(func() { r.cap.last().end(capturehost.Lost{Err: capturehost.ErrLost}) })
 
-	if started.ID != rec.ID || started.State != "recording" || started.Plan != nil || started.Source.Name != "Main" {
+	if started.ID != rec.ID || started.State != "recording" || started.Plan != nil || started.Source.Name != "" {
 		t.Fatalf("started = %+v", started)
 	}
 
@@ -153,6 +155,37 @@ func TestRecordingPrepareStartsNothingAndAPersonStartsIt(t *testing.T) {
 	) != "E_INVALID_STATE" &&
 		code(serr) != "E_QUEUE_FULL" {
 		t.Errorf("the same plan started twice: %v", serr)
+	}
+}
+
+// A plan names a display or a window by the id the helper gave it. A person's start records that source only while
+// the helper still lists it: an id that is gone, or one an agent made up, starts nothing.
+func TestRecordingStartOfAPlanNeedsItsSourceListed(t *testing.T) {
+	r := newRecEnv(t)
+	project := r.newProject("p")
+
+	for _, src := range []service.RecordingSource{{Kind: "display", ID: "d7"}, {Kind: "window", ID: "d1"}} {
+		req := prepareReq(project)
+		req.Source = src
+
+		plan, err := r.svc.RecordingPrepare(r.as(agent), req)
+		if err != nil {
+			t.Fatalf("RecordingPrepare %+v: %v", src, err)
+		}
+
+		_, err = r.svc.RecordingStart(personCtx(), service.RecordingStartRequest{RecordingID: plan.ID})
+		if code(err) != "E_INVALID_STATE" {
+			t.Errorf("the start of a plan of %+v = %v, want E_INVALID_STATE", src, err)
+		}
+
+		read, err := r.svc.RecordingGet(r.as(agent), service.RecordingRef{ID: plan.ID})
+		if err != nil || read.State != "prepared" || read.Plan == nil {
+			t.Errorf("the plan after a refused start: %+v %v", read, err)
+		}
+	}
+
+	if n := r.cap.starts.Load(); n != 0 {
+		t.Fatalf("a plan of a source that is not listed started the helper %d times", n)
 	}
 }
 
