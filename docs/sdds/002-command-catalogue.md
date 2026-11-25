@@ -3,7 +3,7 @@
 - Amended (2026-11-18) for Stuarty: this is the catalogue of the video domain. Other domains get their own catalogue (ADR-0031, ADR-0038).
 - Amended (2026-11-24, epic 65): three commands, `recording.auto_zoom`, `recording.set_cursor` and `recording.set_click_highlight` (C.93 to C.95); names in SDD-000 section 18, the design in SDD-025 section 17.
 - Amended (2026-11-24, epic 71): four commands, `caption.apply_style` and `caption.list_styles` (C.88, C.89), `clip.blur_region` (C.90) and `audio.apply_voice_preset` (C.91); names in SDD-000 section 17.
-- Status: Draft for freeze (2026-11-14). Parts A and B are the contract; Part C details each command. Part C is frozen: all 92 commands have golden cases and pass the registry-wide gates. The binary exposes all 92 commands, 91 of them public (epic 32 added three, C.84 to C.86, epic 69 one, C.87, epic 71 four, C.88 to C.91, and epic 70 one, C.92); `font.add` and `font.remove` have scope `media` like `asset.add` and `asset.remove`.
+- Status: Draft for freeze (2026-11-14). Parts A and B are the contract; Part C details each command. Part C is frozen: all 93 commands have golden cases and pass the registry-wide gates. The binary exposes all 93 commands, 92 of them public (epic 32 added three, C.84 to C.86, epic 69 one, C.87, epic 71 four, C.88 to C.91, epic 70 one, C.92, and epic 65 one so far, C.93); `font.add` and `font.remove` have scope `media` like `asset.add` and `asset.remove`.
 - Depends on: SDD-001 (document), ADR-0002 (command core), ADR-0004 (time), ADR-0006 (log, concurrency, undo), ADR-0014 (JSON Schema)
 - Implements: RF-010 to RF-016, RF-020 to RF-026, RF-030 to RF-036, RF-040, RF-041, RF-050, RF-051, RF-100, RF-105, RF-107, RF-112 to RF-115, RF-119, NFR-001, NFR-025
 - Owner area: senior-a (command core and schema)
@@ -7124,3 +7124,58 @@ Keyframes the crop of a clip so the visible window follows the face of the speak
 - `err_not_found`
 - `err_type_mismatch_not_a_clip`
 - `err_invalid_state_reversed_clip`
+
+### C.93 `recording.auto_zoom`
+
+Zooms a screen take in on its clicks (epic 65, SDD-025 section 17). The planner is the pure, integer code of `core/recording`, so the same clicks and options always give the same keyframes.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `item_id` | item id | yes | none | a `clip` of the screen track of a recording; the clip plays forward at a constant speed |
+| `level` | number | no | 1.6 | 1.1 to 3, how far the view zooms in (the scale is multiplied by it) |
+| `lead_ms` | integer | no | 400 | 0 to 3000 |
+| `ramp_ms` | integer | no | 700 | 200 to 3000, the length of the ease in and of the ease out |
+| `hold_ms` | integer | no | 1200 | 500 to 10000, the least time a zoom is held after its last click |
+| `merge_ms` | integer | no | 2500 | 0 to 10000, clicks closer than this and in one window are one zoom |
+| `max_zooms` | integer | no | 24 | 1 to 24 |
+| `resolved` | `{"width", "height", "events"}` | filled by the service (A.9) | none | the clicks of the recording that fall in the source range of the clip, validated; required by `Apply` (`E_VALIDATION`) |
+
+**Preconditions.**
+
+1. Options are in range and `resolved` is valid: the size from 1 to 16384, every event inside it, times not decreasing, at most 30,000 events (`E_VALIDATION`).
+2. The item exists (`E_NOT_FOUND`) and is a clip (`E_TYPE_MISMATCH`) of an asset with a width and a height.
+3. The clip is not a freeze frame, does not play backwards, has no speed curve and no static crop, is not rotated or flipped (`E_INVALID_STATE`).
+4. At least one click falls in the range the clip plays (`E_INVALID_STATE`, hint: the take has no clicks there, or was recorded without pointer events).
+
+**Postconditions.** The zooms are planned (SDD-025 section 17.4). The `x`, `y` and `scale` keyframes of the clip are replaced; no other property and no static value changes. For each zoom the keyframes are, at the item frames of the plan: the rest state at the start of the ease in, the zoomed state at its end, the zoomed state at the end of the hold, and the rest state at the end of the ease out (a chained zoom has no rest state before it and the one before it none after it, so the view moves from one focus to the next). The rest state is the static `scale`, `x` and `y` of the clip (the frame centre when absent); the zoomed `scale` is the rest scale times `level`, and `x` and `y` put the focus at the centre of the frame, held so the scaled picture still covers the frame. The keyframes that start a move use `ease_in_out`. Values are rounded to three decimals; frames are strictly increasing and inside the item. `effective` has `zooms`, `dropped`, `level` and `keyframes` (per property).
+
+**Errors.** `E_VALIDATION` (an option out of its range, `resolved` missing or invalid), `E_NOT_FOUND`, `E_TYPE_MISMATCH` (not a clip), `E_INVALID_STATE` (preconditions 3 and 4).
+
+**Inverse.** `patch` of `keyframes`. **Idempotency.** The same result with the same `resolved` and options.
+
+**Example.**
+
+```json
+{"op": "recording.auto_zoom", "args": {"item_id": "itm_m1n2p3q4r5", "level": 1.8}}
+```
+
+**Golden cases.**
+
+- `ok_five_separated_clicks`
+- `ok_clicks_in_one_place_make_one_zoom`
+- `ok_close_clicks_chain_into_a_pan`
+- `ok_options_given`
+- `ok_starts_inside_the_source`
+- `ok_replaces_zoom_keyframes`
+- `ok_vertical_frame`
+- `ok_more_zooms_than_max_drops_the_rest`
+- `err_validation_resolved_missing`
+- `err_validation_option_out_of_range`
+- `err_validation_resolved_invalid`
+- `err_not_found`
+- `err_type_mismatch_not_a_clip`
+- `err_invalid_state_no_clicks`
+- `err_invalid_state_reversed_clip`
+- `err_invalid_state_cropped_clip`

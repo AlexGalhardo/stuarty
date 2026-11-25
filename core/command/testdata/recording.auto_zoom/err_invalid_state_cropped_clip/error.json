@@ -1,0 +1,7 @@
+{
+  "code": "E_INVALID_STATE",
+  "message": "Item itm_m1n2p3q4r5 is cropped, rotated or flipped.",
+  "hint": "Remove the crop, rotation and flip first (clip.set_framing, item.set_transform, clip.set_flip); the effects of a screen take assume the picture is not moved.",
+  "retryable": false,
+  "path": "args.item_id"
+}

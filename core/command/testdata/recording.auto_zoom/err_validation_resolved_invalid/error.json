@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.resolved is not valid: recording: invalid pointer track: event 0 is outside the source.",
+  "hint": "Do not send resolved: the service fills it.",
+  "retryable": false,
+  "path": "args.resolved"
+}

@@ -5661,6 +5661,75 @@
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "additionalProperties": false,
       "properties": {
+        "hold_ms": {
+          "description": "The least time a zoom is held after its last click, 500 to 10000 ms. Default 1200.",
+          "maximum": 10000,
+          "minimum": 500,
+          "type": "integer"
+        },
+        "item_id": {
+          "description": "A clip of a screen recording.",
+          "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+          "type": "string"
+        },
+        "lead_ms": {
+          "description": "The full zoom is reached this long before the first click, 0 to 3000 ms. Default 400.",
+          "maximum": 3000,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "level": {
+          "description": "How far the view zooms in, 1.1 to 3. Default 1.6.",
+          "maximum": 3,
+          "minimum": 1.1,
+          "type": "number"
+        },
+        "max_zooms": {
+          "description": "The most zooms made, the first in time, 1 to 24. Default 24.",
+          "maximum": 24,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "merge_ms": {
+          "description": "Clicks closer than this, in one window, make one zoom, 0 to 10000 ms. Default 2500.",
+          "maximum": 10000,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "ramp_ms": {
+          "description": "The length of the ease in and of the ease out, 200 to 3000 ms. Default 700.",
+          "maximum": 3000,
+          "minimum": 200,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "item_id"
+      ],
+      "type": "object"
+    },
+    "description": "Plans zooms from the clicks of the recording of the clip's asset and writes them as keyframes of x, y and scale of the clip, in one undoable step; any x, y and scale keyframes the clip already has are replaced. Clicks close in time and in space make one zoom, the view eases in before the first click, is held after the last one and eases out; zooms that would rest for under a second between them become a pan. The level is at most 3x and a zoom is held at least 0.5 s, so the defaults are gentle. The picture never leaves the frame. The clicks come from the pointer events of the recording and are supplied by the service in resolved; the command never starts a capture. The same clicks and options always give the same keyframes. The clip must play at a constant speed, forward, and be neither cropped, rotated nor flipped. Run recording.set_cursor and recording.set_click_highlight again after changing the zoom by hand.",
+    "domain": "video",
+    "errors": [
+      "E_VALIDATION",
+      "E_NOT_FOUND",
+      "E_TYPE_MISMATCH",
+      "E_INVALID_STATE"
+    ],
+    "example": {
+      "item_id": "itm_m1n2p3q4r5",
+      "level": 1.8
+    },
+    "internal": false,
+    "name": "recording.auto_zoom",
+    "scope": "edit",
+    "summary": "Zooms a screen recording in on its clicks."
+  },
+  {
+    "args_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
         "aspect": {
           "description": "A preset frame size, or give width and height.",
           "enum": [

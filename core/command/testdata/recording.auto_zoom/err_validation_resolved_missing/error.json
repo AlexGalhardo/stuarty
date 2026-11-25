@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.resolved is missing: the pointer events of the recording are not known.",
+  "hint": "The service fills it from the recording of the clip's asset; a recording made without pointer events cannot be finished this way.",
+  "retryable": false,
+  "path": "args.resolved"
+}

@@ -1,0 +1,79 @@
+[
+  {
+    "kind": "item.updated",
+    "id": "itm_m1n2p3q4r5",
+    "changes": {
+      "keyframes": [
+        null,
+        {
+          "scale": [
+            {
+              "easing": "ease_in_out",
+              "t": 87,
+              "value": 1
+            },
+            {
+              "easing": "linear",
+              "t": 108,
+              "value": 1.6
+            },
+            {
+              "easing": "ease_in_out",
+              "t": 222,
+              "value": 1.6
+            },
+            {
+              "easing": "linear",
+              "t": 243,
+              "value": 1
+            }
+          ],
+          "x": [
+            {
+              "easing": "ease_in_out",
+              "t": 87,
+              "value": 960
+            },
+            {
+              "easing": "linear",
+              "t": 108,
+              "value": 975.36
+            },
+            {
+              "easing": "ease_in_out",
+              "t": 222,
+              "value": 975.36
+            },
+            {
+              "easing": "linear",
+              "t": 243,
+              "value": 960
+            }
+          ],
+          "y": [
+            {
+              "easing": "ease_in_out",
+              "t": 87,
+              "value": 540
+            },
+            {
+              "easing": "linear",
+              "t": 108,
+              "value": 587.347
+            },
+            {
+              "easing": "ease_in_out",
+              "t": 222,
+              "value": 587.347
+            },
+            {
+              "easing": "linear",
+              "t": 243,
+              "value": 540
+            }
+          ]
+        }
+      ]
+    }
+  }
+]

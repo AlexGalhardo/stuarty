@@ -1,0 +1,7 @@
+{
+  "code": "E_INVALID_STATE",
+  "message": "Item itm_m1n2p3q4r5 has no click in the part of the recording it plays.",
+  "hint": "Use a take recorded with pointer events and a clip that plays a part with clicks.",
+  "retryable": false,
+  "path": "args.item_id"
+}

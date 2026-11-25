@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "hold_ms": {
+      "description": "The least time a zoom is held after its last click, 500 to 10000 ms. Default 1200.",
+      "maximum": 10000,
+      "minimum": 500,
+      "type": "integer"
+    },
+    "item_id": {
+      "description": "A clip of a screen recording.",
+      "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+      "type": "string"
+    },
+    "lead_ms": {
+      "description": "The full zoom is reached this long before the first click, 0 to 3000 ms. Default 400.",
+      "maximum": 3000,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "level": {
+      "description": "How far the view zooms in, 1.1 to 3. Default 1.6.",
+      "maximum": 3,
+      "minimum": 1.1,
+      "type": "number"
+    },
+    "max_zooms": {
+      "description": "The most zooms made, the first in time, 1 to 24. Default 24.",
+      "maximum": 24,
+      "minimum": 1,
+      "type": "integer"
+    },
+    "merge_ms": {
+      "description": "Clicks closer than this, in one window, make one zoom, 0 to 10000 ms. Default 2500.",
+      "maximum": 10000,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "ramp_ms": {
+      "description": "The length of the ease in and of the ease out, 200 to 3000 ms. Default 700.",
+      "maximum": 3000,
+      "minimum": 200,
+      "type": "integer"
+    }
+  },
+  "required": [
+    "item_id"
+  ],
+  "type": "object"
+}
