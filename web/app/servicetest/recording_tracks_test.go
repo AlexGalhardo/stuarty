@@ -175,17 +175,13 @@ func TestRecordingPausesAndResumesAtOnceKeepTheRowAndTheHelperTogether(t *testin
 	var wg sync.WaitGroup
 
 	for i := range 40 {
-		wg.Add(1)
-
-		go func() {
-			defer wg.Done()
-
+		wg.Go(func() {
 			if i%2 == 0 {
 				_, _ = r.svc.RecordingPause(agentCtx, service.RecordingRef{ID: rec.ID})
 			} else {
 				_, _ = r.svc.RecordingResume(personCtx(), service.RecordingRef{ID: rec.ID})
 			}
-		}()
+		})
 	}
 
 	wg.Wait()
