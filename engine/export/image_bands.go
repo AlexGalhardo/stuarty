@@ -68,11 +68,12 @@ func (r *imageRun) acquireSlot() (func(), error) {
 }
 
 // drawLayer is a layer ready for the draw: the plan layer as a media layer of its prepared picture, the
-// picture, and the rows of the canvas that its draw can touch.
+// picture, and the rows and columns of the canvas that its draw can touch.
 type drawLayer struct {
 	layer  plan.Layer
 	pic    renderhost.Prepared
 	y0, y1 int
+	x0, x1 int
 }
 
 // preparedLayer is the plan layer to draw from the prepared picture of l: a media layer of the same item with
@@ -111,6 +112,19 @@ func rowsOf(l *plan.Layer, sz renderhost.PreparedSize, height int) (int, int) {
 	y1 := int(math.Ceil(cy+ey)) + rowMargin
 
 	return min(max(y0, 0), height), min(max(y1, 0), height)
+}
+
+// colsOf is the columns [x0, x1) of a canvas of the given width that a prepared layer placed as l can touch, as
+// rowsOf is for the rows.
+func colsOf(l *plan.Layer, sz renderhost.PreparedSize, width int) (int, int) {
+	sin, cos := math.Sincos(l.Rotation * math.Pi / 180)
+	cx := l.CX - sz.OffsetX
+	ex := sz.GrownW/2*math.Abs(cos) + sz.GrownH/2*math.Abs(sin)
+
+	x0 := int(math.Floor(cx-ex)) - rowMargin
+	x1 := int(math.Ceil(cx+ex)) + rowMargin
+
+	return min(max(x0, 0), width), min(max(x1, 0), width)
 }
 
 // workerCount is how many instances may work at once: the CPUs, never more than maxImageWorkers, and fewer
@@ -191,7 +205,7 @@ func fanOut(ctx context.Context, workers, count int, work func(i int) error) err
 // stage draws the layers over base, the picture of the layers below them, or over the background when base is
 // nil, and gives the pixels. The layers are prepared once and drawn in bands; a picture drawn first and the
 // layers over it are the same pixels as the layers drawn in one pass (SDD-021 sections 6.1 and 6.2).
-func (r *imageRun) stage(base *image.RGBA, layers []plan.Layer) (*image.RGBA, error) {
+func (r *imageRun) stage(base *image.RGBA, layers []plan.Layer, first int) (*image.RGBA, error) {
 	for i := range layers {
 		if layers[i].Kind == plan.Group {
 			// An image document has layers of its own kinds; a group is the plan of nested timelines (SDD-004 §3.16).
@@ -199,16 +213,43 @@ func (r *imageRun) stage(base *image.RGBA, layers []plan.Layer) (*image.RGBA, er
 		}
 	}
 
-	drawn, err := r.prepareAll(layers)
+	each, err := r.prepareEach(layers)
 	if err != nil {
 		return nil, err
 	}
 
-	return r.drawBands(base, drawn)
+	// The next render learns from here which pixels each layer can touch (SDD-021 section 6.3).
+	r.noteBounds(first, each)
+
+	return r.drawBands(base, nonEmpty(each))
 }
 
 // prepareAll prepares every layer, in parallel, and gives those that draw something, in plan order.
 func (r *imageRun) prepareAll(layers []plan.Layer) ([]drawLayer, error) {
+	each, err := r.prepareEach(layers)
+	if err != nil {
+		return nil, err
+	}
+
+	return nonEmpty(each), nil
+}
+
+// nonEmpty keeps the layers of each that draw something.
+func nonEmpty(each []drawLayer) []drawLayer {
+	kept := each[:0:0]
+
+	for i := range each {
+		if !each[i].pic.Empty() {
+			kept = append(kept, each[i])
+		}
+	}
+
+	return kept
+}
+
+// prepareEach prepares every layer, in parallel, and gives one entry per layer, empty for a layer that draws
+// nothing.
+func (r *imageRun) prepareEach(layers []plan.Layer) ([]drawLayer, error) {
 	out := make([]drawLayer, len(layers))
 	workers := workerCount(layers)
 
@@ -253,15 +294,7 @@ func (r *imageRun) prepareAll(layers []plan.Layer) ([]drawLayer, error) {
 		return nil, err
 	}
 
-	kept := out[:0]
-
-	for i := range out {
-		if !out[i].pic.Empty() {
-			kept = append(kept, out[i])
-		}
-	}
-
-	return kept, nil
+	return out, nil
 }
 
 // prepareCost is a measure of how long a layer takes to prepare, for ordering only: its pixels, once for the
@@ -371,6 +404,7 @@ func (r *imageRun) layerFor(l *plan.Layer, pic renderhost.Prepared) drawLayer {
 
 	d := drawLayer{layer: preparedLayer(l), pic: pic}
 	d.y0, d.y1 = rowsOf(&d.layer, pic.Size(), r.plan.Height)
+	d.x0, d.x1 = colsOf(&d.layer, pic.Size(), r.plan.Width)
 
 	return d
 }

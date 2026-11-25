@@ -12,9 +12,11 @@ import (
 	"github.com/AlexGalhardo/stuarty/engine/renderhost"
 )
 
-// DefaultImageCacheBytes is the memory the pictures of an ImageCache may hold: six pictures of a 4,000 by 4,000
-// pixel document (SDD-021 section 6.1).
-const DefaultImageCacheBytes = 384 << 20
+// DefaultImageCacheBytes is the memory the pictures and the prepared layers of an ImageCache may hold: eight
+// pictures of a 4,000 by 4,000 pixel document (SDD-021 section 6.1). The 30 prepared layers of the reference
+// document are about 260 MiB and the pictures an edit needs three of them, so the 384 MiB it had left one layer
+// to prepare again at every edit.
+const DefaultImageCacheBytes = 512 << 20
 
 // ImageCache keeps pictures that RenderImage composed, so that the render of an edited document starts from the
 // picture of the layers that did not change instead of drawing them again (SDD-021 section 6.1). A picture is
@@ -34,6 +36,10 @@ type ImageCache struct {
 	prepared, preparedBytes int
 	preparedHits            int
 	preparedMisses          int
+
+	// last is the latest render of each document shape: what the next edit starts from (SDD-021 section 6.3).
+	last    map[lastKey]*lastFrame
+	windows int
 }
 
 type cacheKey struct {
@@ -61,7 +67,9 @@ func NewImageCache(limit int64) *ImageCache {
 		limit = DefaultImageCacheBytes
 	}
 
-	return &ImageCache{limit: limit, order: list.New(), entries: map[cacheKey]*list.Element{}}
+	return &ImageCache{
+		limit: limit, order: list.New(), entries: map[cacheKey]*list.Element{}, last: map[lastKey]*lastFrame{},
+	}
 }
 
 // ImageCacheStats is what a cache holds and how often a render found its start in it. Pictures, Bytes, Hits
@@ -77,6 +85,9 @@ type ImageCacheStats struct {
 	PreparedBytes  int64
 	PreparedHits   int
 	PreparedMisses int
+
+	// Windows is the renders that drew only the window of an edit over the picture before (section 6.3).
+	Windows int
 }
 
 // Stats reports the state of the cache.
@@ -87,7 +98,7 @@ func (c *ImageCache) Stats() ImageCacheStats {
 	return ImageCacheStats{
 		Pictures: len(c.entries) - c.prepared, Bytes: c.used - int64(c.preparedBytes), Hits: c.hits, Misses: c.misses,
 		PreparedLayers: c.prepared, PreparedBytes: int64(c.preparedBytes),
-		PreparedHits: c.preparedHits, PreparedMisses: c.preparedMisses,
+		PreparedHits: c.preparedHits, PreparedMisses: c.preparedMisses, Windows: c.windows,
 	}
 }
 
@@ -261,10 +272,17 @@ func (c *ImageCache) putPrepared(scope string, digest [sha256.Size]byte, p rende
 type layerChain struct {
 	digest [][sha256.Size]byte
 	valid  []bool
+	// layer is the digest of each plan layer alone, and shape the digest of the canvas and of the item ids in
+	// order: two renders of one shape differ only in the content of some layers (SDD-021 section 6.3).
+	layer [][sha256.Size]byte
+	shape [sha256.Size]byte
 }
 
 func newLayerChain(fp plan.FramePlan, live []plan.Layer) *layerChain {
-	ch := &layerChain{digest: make([][sha256.Size]byte, len(live)+1), valid: make([]bool, len(live)+1)}
+	ch := &layerChain{
+		digest: make([][sha256.Size]byte, len(live)+1), valid: make([]bool, len(live)+1),
+		layer: make([][sha256.Size]byte, len(live)),
+	}
 
 	h := sha256.New()
 	_, _ = fmt.Fprintf(h, "stuarty image cache v1 %d %d %s %t", fp.Width, fp.Height, fp.Background, fp.Transparent)
@@ -283,7 +301,18 @@ func newLayerChain(fp plan.FramePlan, live []plan.Layer) *layerChain {
 		_, _ = h.Write(ch.digest[i][:])
 		_, _ = h.Write(body)
 		h.Sum(ch.digest[i+1][:0])
+
+		ch.layer[i] = sha256.Sum256(body)
 	}
+
+	shape := sha256.New()
+	_, _ = shape.Write(ch.digest[0][:])
+
+	for i := range live {
+		_, _ = fmt.Fprintf(shape, "|%d:%s", len(live[i].ItemID), live[i].ItemID)
+	}
+
+	shape.Sum(ch.shape[:0])
 
 	for k := range ch.valid {
 		ch.valid[k] = (k == 0 || ch.digest[k] != [sha256.Size]byte{}) && cutIsClean(live, position, k)
@@ -328,4 +357,63 @@ func cloneRGBA(img *image.RGBA) *image.RGBA {
 	out.Pix = append([]byte(nil), img.Pix...)
 
 	return &out
+}
+
+// lastKey names the latest render of a document shape: the owner, and the canvas and layer ids in order.
+type lastKey struct {
+	scope string
+	shape [sha256.Size]byte
+}
+
+// lastFrame is what the cache remembers of the latest render of a shape: the digest of its whole picture (kept
+// in the cache like any picture), the digest of each layer and the pixels each layer can touch. An edit of some
+// layers is then a window of that picture drawn again (image_window.go).
+type lastFrame struct {
+	whole  [sha256.Size]byte
+	layer  [][sha256.Size]byte
+	bounds []layerBounds
+}
+
+// maxLastFrames bounds the shapes remembered; past it the table starts again, which costs one full render.
+const maxLastFrames = 64
+
+// lastFrameOf gives the latest render of the shape and its picture, when the picture is still in the cache. The
+// picture is read only.
+func (c *ImageCache) lastFrameOf(scope string, shape [sha256.Size]byte) (*lastFrame, *image.RGBA) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	lf, ok := c.last[lastKey{scope, shape}]
+	if !ok {
+		return nil, nil
+	}
+
+	if el, ok := c.entries[cacheKey{scope, lf.whole}]; ok {
+		if e, ok := el.Value.(*cacheEntry); ok && e.img != nil {
+			c.order.MoveToFront(el)
+
+			return lf, e.img
+		}
+	}
+
+	return nil, nil
+}
+
+// setLastFrame remembers the render that just finished.
+func (c *ImageCache) setLastFrame(scope string, shape [sha256.Size]byte, lf *lastFrame) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if len(c.last) >= maxLastFrames {
+		clear(c.last)
+	}
+
+	c.last[lastKey{scope, shape}] = lf
+}
+
+// countWindow notes a render that drew the window of an edit.
+func (c *ImageCache) countWindow() {
+	c.mu.Lock()
+	c.windows++
+	c.mu.Unlock()
 }

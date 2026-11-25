@@ -64,6 +64,20 @@ func renderImagePasses(
 		chain = newLayerChain(fp, live)
 	}
 
+	// The run draws and prepares; it also learns which pixels each layer reaches (SDD-021 section 6.3).
+	run := &imageRun{ctx: ctx, cfg: cfg, plan: fp, raster: rasterize.NewCache(fonts, 0), bands: bands}
+
+	var (
+		prev *lastFrame
+		last *image.RGBA
+	)
+
+	if chain != nil {
+		run.cache = cfg.Cache
+		prev, last = cfg.Cache.lastFrameOf(cfg.CacheScope, chain.shape)
+		run.inheritBounds(chain, prev)
+	}
+
 	start, base := 0, (*image.RGBA)(nil)
 	if chain != nil {
 		// What the cache keeps was drawn from files the caller could read then, not necessarily now: an asset the
@@ -77,6 +91,16 @@ func renderImagePasses(
 		// with no layer to draw there is nothing cached (nearest starts at one layer): the canvas is drawn below
 		if base != nil && start == len(live) {
 			return cloneRGBA(base), nil
+		}
+
+		// An edit of some layers of the render before is a window of its picture drawn again.
+		img, ok, err := run.renderWindow(live, chain, prev, last, start, base)
+		if err != nil {
+			return nil, err
+		}
+
+		if ok {
+			return img, nil
 		}
 	}
 
@@ -97,13 +121,8 @@ func renderImagePasses(
 	// The instances that do not test the context at every loop back edge draw about three times faster
 	// (SDD-021 section 13.2); the cancellation is kept by checking the context between the layers and by
 	// not waiting for the work in flight (SDD-021 section 6.2).
-	run := &imageRun{ctx: ctx, cfg: cfg, plan: fp, raster: rasterize.NewCache(fonts, 0), bands: bands}
-	if chain != nil {
-		run.cache = cfg.Cache
-	}
-
 	for _, stop := range stops {
-		img, err := run.stage(base, live[start:stop])
+		img, err := run.stage(base, live[start:stop], start)
 		if err != nil {
 			return nil, err
 		}
@@ -118,6 +137,7 @@ func renderImagePasses(
 
 	if chain != nil {
 		cfg.Cache.put(cfg.CacheScope, chain.digest[len(live)], cloneRGBA(base))
+		run.remember(chain, len(live))
 	}
 
 	return base, nil
@@ -285,6 +305,8 @@ type imageRun struct {
 	bands  int
 	// cache keeps the prepared layers, when the render may use one (SDD-021 section 6.2).
 	cache *ImageCache
+	// bounds is, for each live layer, the pixels its draw can touch, when the render knows them.
+	bounds []layerBounds
 	// preparedLimit bounds the bytes of the prepared pictures the render holds; 0 is imageWorkMemory.
 	preparedLimit int64
 
