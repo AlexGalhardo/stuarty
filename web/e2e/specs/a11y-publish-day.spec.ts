@@ -44,18 +44,16 @@ async function scan(
 	found: Finding[],
 	include?: string,
 ): Promise<void> {
-	// A dialog that is still fading in has a text colour halfway to its final one, which axe reads as low contrast.
+	// A dialog that is still fading in has a text colour halfway to its final one, which axe reads as low contrast:
+	// every animation that ends is awaited (a spinner never ends and is left out).
 	await afterRender(page);
 	await page.evaluate(() =>
-		Promise.race([
-			Promise.all(
-				document
-					.getAnimations()
-					.filter((a) => a.effect?.getComputedTiming().iterations !== Infinity)
-					.map((a) => a.finished.catch(() => undefined)),
-			),
-			new Promise((resolve) => setTimeout(resolve, 3000)),
-		]),
+		Promise.all(
+			document
+				.getAnimations()
+				.filter((a) => a.effect?.getComputedTiming().iterations !== Infinity)
+				.map((a) => a.finished.catch(() => undefined)),
+		),
 	);
 	let builder = new AxeBuilder({ page }).withTags(TAGS);
 	if (include !== undefined) builder = builder.include(include);
