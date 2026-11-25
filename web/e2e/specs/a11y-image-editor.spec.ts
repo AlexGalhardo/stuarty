@@ -142,7 +142,7 @@ test.describe("a11y image editor", () => {
 
 		// The keys start at the first control of the editor: the sidebar before it is the dashboard's, and the
 		// focus of its language control raises a CSP violation that is not this editor's (VV-249).
-		await page.getByRole("link", { name: "Back to Edit Image" }).focus();
+		await page.getByRole("link", { name: "Back to Image editor" }).focus();
 		// the toolbar is one tab stop and the arrows walk it: add a text with Enter
 		await tabTo(page, (el) => el.hasAttribute("data-tool"));
 		await tabTo(

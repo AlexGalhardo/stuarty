@@ -25,10 +25,10 @@ test.describe("Sound Assets", () => {
 
 		await page.goto("/sound-assets");
 		await expect(
-			page.getByRole("heading", { name: "Sound Assets", level: 1 }),
+			page.getByRole("heading", { name: "Sounds", level: 1 }),
 		).toBeVisible();
 		await expect(
-			page.getByRole("link", { name: "Sound Assets" }),
+			page.getByRole("link", { name: "Sounds" }),
 		).toBeVisible();
 
 		const form = page.getByTestId("sound-import");

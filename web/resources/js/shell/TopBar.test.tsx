@@ -31,8 +31,8 @@ describe("TopBar", () => {
 	test("the last step is the current page and only it", () => {
 		const html = draw("/publish");
 		expect(html.match(/aria-current="page"/g)).toHaveLength(1);
-		expect(html).toMatch(/aria-current="page"[^>]*>Publish</);
-		expect(html).toMatch(/href="\/">Studio</);
+		expect(html).toMatch(/aria-current="page"[^>]*>Publishing</);
+		expect(html).toMatch(/href="\/approvals">Publish</);
 	});
 
 	test("shows the menu button only when the sidebar is a drawer", () => {

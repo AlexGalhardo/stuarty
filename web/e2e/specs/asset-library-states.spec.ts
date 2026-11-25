@@ -18,9 +18,9 @@ import {
 test.describe.configure({ timeout: 180_000 });
 
 const SECTIONS = [
-	{ path: "/video-assets", title: "Video Assets", empty: "No videos yet" },
-	{ path: "/visual-assets", title: "Visual Assets", empty: "No images yet" },
-	{ path: "/sound-assets", title: "Sound Assets", empty: "No sounds yet" },
+	{ path: "/video-assets", title: "Videos", empty: "No videos yet" },
+	{ path: "/visual-assets", title: "Images", empty: "No images yet" },
+	{ path: "/sound-assets", title: "Sounds", empty: "No sounds yet" },
 ] as const;
 
 const WIDTHS = [1440, 1280, 390, 320] as const;

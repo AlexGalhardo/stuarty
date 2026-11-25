@@ -13,16 +13,28 @@ describe("breadcrumbOf", () => {
 		]);
 	});
 
-	test("a section is the studio, then the section", () => {
+	test("a section is its group of the sidebar, then the section", () => {
 		expect(labels("/publish")).toEqual([
-			"ui.shell.breadcrumb.studio",
+			"ui.nav.group.publish",
 			"ui.nav.section.publish",
 		]);
+		expect(labels("/write")).toEqual([
+			"ui.nav.group.create",
+			"ui.nav.section.write",
+		]);
+	});
+
+	test("the step of a group links to the first item of the group", () => {
+		expect(breadcrumbOf("/approvals")[0]).toEqual({
+			label: "ui.nav.group.publish",
+			href: "/approvals",
+			current: false,
+		});
 	});
 
 	test("a page below an item belongs to the item", () => {
 		expect(labels("/projects/prj_1234567890?tab=x")).toEqual([
-			"ui.shell.breadcrumb.studio",
+			"ui.nav.group.create",
 			"ui.nav.section.projects",
 		]);
 	});
@@ -32,9 +44,9 @@ describe("breadcrumbOf", () => {
 		expect(labels("/settings/brand-kit")).toContain("ui.nav.brand_kit");
 	});
 
-	test("settings pages without an item are Settings", () => {
+	test("settings pages without an item are Settings, under the account", () => {
 		expect(labels("/settings/account")).toEqual([
-			"ui.shell.breadcrumb.studio",
+			"ui.shell.breadcrumb.account",
 			"ui.nav.settings",
 		]);
 	});

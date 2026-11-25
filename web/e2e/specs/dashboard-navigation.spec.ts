@@ -32,13 +32,13 @@ const SECTIONS = [
 const LABELS = {
 	en: [
 		"Projects",
-		"Edit Video",
-		"Edit Image",
-		"Write",
-		"Visual Assets",
-		"Video Assets",
-		"Sound Assets",
-		"Publish",
+		"Video editor",
+		"Image editor",
+		"Writing",
+		"Images",
+		"Videos",
+		"Sounds",
+		"Publishing",
 		"Skills",
 		"Prompts",
 		"Memory",
@@ -47,18 +47,18 @@ const LABELS = {
 	],
 	"pt-BR": [
 		"Projetos",
-		"Editar vídeo",
-		"Editar imagem",
-		"Escrever",
-		"Recursos visuais",
-		"Recursos de vídeo",
-		"Recursos de som",
-		"Publicar",
-		"Habilidades",
-		"Instruções",
+		"Editor de vídeo",
+		"Editor de imagem",
+		"Escrita",
+		"Visuais",
+		"Vídeos",
+		"Sons",
+		"Publicação",
+		"Skills",
+		"Prompts",
 		"Memória",
 		"Conexões",
-		"Webhooks de saída",
+		"Webhooks",
 	],
 } as const;
 
@@ -77,18 +77,18 @@ test.describe("dashboard-navigation", () => {
 		await expect(nav.getByRole("link")).toHaveText([
 			"Home",
 			"Projects",
-			"Write",
-			"Edit Video",
-			"Edit Image",
-			"Video Assets",
-			"Visual Assets",
-			"Sound Assets",
+			"Writing",
+			"Video editor",
+			"Image editor",
+			"Videos",
+			"Images",
+			"Sounds",
 			"Brand kit",
 			"Skills",
 			"Prompts",
 			"Memory",
 			/^Approvals/,
-			"Publish",
+			"Publishing",
 			"Connections",
 			"Webhooks",
 		]);
@@ -263,7 +263,7 @@ test.describe("dashboard-navigation", () => {
 		await expect(sidebar).toHaveAttribute("data-state", "collapsed");
 		await expect(page.getByTestId("nav-publish")).toBeVisible();
 		await expect(page.getByTestId("nav-publish")).toHaveAccessibleName(
-			"Publish",
+			"Publishing",
 		);
 		await page.reload();
 		await expect(sidebar).toHaveAttribute("data-state", "collapsed");
