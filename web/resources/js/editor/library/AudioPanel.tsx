@@ -100,6 +100,30 @@ export default function AudioPanel({
 					)}
 				</>
 			)}
+			{names.has("audio.apply_voice_preset") && (
+				<>
+					<Button
+						type="button"
+						variant="secondary"
+						size="sm"
+						aria-disabled={!canBeats}
+						aria-describedby={canBeats ? undefined : "audio-voice-why"}
+						data-testid="open-voice-stage"
+						onClick={() => {
+							const [id] = playable.ids;
+							if (!canBeats || id === undefined) return;
+							runtime.uiWriter.showStage({ kind: "voice", item: id });
+						}}
+					>
+						{t("ui.editor.library.studio_voice")}
+					</Button>
+					{!canBeats && (
+						<p id="audio-voice-why" className="text-xs text-muted-foreground">
+							{t("ui.editor.library.studio_voice_why")}
+						</p>
+					)}
+				</>
+			)}
 			{names.has("audio.mark_beats") && (
 				<>
 					<Button

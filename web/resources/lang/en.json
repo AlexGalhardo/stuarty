@@ -1878,7 +1878,9 @@
         "fonts": "Fonts",
         "captions_select_clip": "Select a video clip with audio to generate captions.",
         "select_clip_first": "Select a clip first.",
-        "templates_select": "Select one clip, audio, text or caption item to mark it as a slot."
+        "templates_select": "Select one clip, audio, text or caption item to mark it as a slot.",
+        "studio_voice": "Studio voice",
+        "studio_voice_why": "Select one clip or audio item to hear the studio voice before and after."
       },
       "menu": {
         "label": "Menu",
@@ -3559,6 +3561,21 @@
       "captions_inspector": {
         "no_track": "Select a caption track or a caption to choose a style.",
         "select_caption": "Select a caption on the timeline to edit it."
+      },
+      "stage": {
+        "close": "Back to the editor"
+      },
+      "voice_stage": {
+        "title": "Studio voice",
+        "label": "Studio voice, before and after",
+        "before": "Before",
+        "after": "After",
+        "play_before": "Play before",
+        "play_after": "Play after",
+        "wave_before": "Waveform before the chain",
+        "wave_after": "Waveform after the chain",
+        "no_chain": "No chain yet. Apply the studio voice preset at the right to hear the difference.",
+        "note": "The effect is editable and can be undone from the history."
       }
     },
     "account": {

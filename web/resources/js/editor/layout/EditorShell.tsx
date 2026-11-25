@@ -13,7 +13,12 @@ import UndoRedo from "../history/UndoRedo";
 import Inspector from "../inspector/Inspector";
 import Preview from "../preview/Preview";
 import RecordingBanner from "../record/RecordingBanner";
-import { useDocumentState, useUiState } from "../state/EditorContext";
+import VoiceStage from "../stages/VoiceStage";
+import {
+	useDocumentState,
+	useRuntime,
+	useUiState,
+} from "../state/EditorContext";
 import { selectFps } from "../state/selectors";
 import AddCaptionDialog from "../timeline/AddCaptionDialog";
 import { useCanvasPort } from "../timeline/gestures/transformDrag";
@@ -105,6 +110,15 @@ export default function EditorShell({
 	const loadError = useDocumentState((s) => s.loadError);
 	const viewport = useViewportWidth();
 	const panels = useUiState((s) => s.panels);
+	const runtime = useRuntime();
+	const stage = useUiState((s) => s.stage);
+	const stageItemGone = useDocumentState(
+		(s) => stage !== null && s.document?.items[stage.item] === undefined,
+	);
+	// A stage works on one item: when the item is gone the editor is the ordinary one again.
+	useEffect(() => {
+		if (stageItemGone && status !== "loading") runtime.uiWriter.showStage(null);
+	}, [stageItemGone, status, runtime]);
 	const full = panelSizes(viewport, panels.history);
 	const sizes = {
 		...full,
@@ -177,6 +191,11 @@ export default function EditorShell({
 					<p role="status" className="text-sm text-muted-foreground">
 						{t("ui.editor.loading")}
 					</p>
+				) : stage?.kind === "voice" ? (
+					<VoiceStage
+						itemId={stage.item}
+						onClose={() => runtime.uiWriter.showStage(null)}
+					/>
 				) : (
 					<Preview
 						port={canvasPort}

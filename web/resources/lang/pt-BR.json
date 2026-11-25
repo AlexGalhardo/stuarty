@@ -1878,7 +1878,9 @@
         "fonts": "Fontes",
         "captions_select_clip": "Selecione um clipe de vídeo com áudio para gerar legendas.",
         "select_clip_first": "Selecione um clipe antes.",
-        "templates_select": "Selecione um item de clipe, áudio, texto ou legenda para marcá-lo como slot."
+        "templates_select": "Selecione um item de clipe, áudio, texto ou legenda para marcá-lo como slot.",
+        "studio_voice": "Voz de estúdio",
+        "studio_voice_why": "Selecione um clipe ou item de áudio para ouvir a voz de estúdio antes e depois."
       },
       "menu": {
         "label": "Menu do editor",
@@ -3559,6 +3561,21 @@
       "captions_inspector": {
         "no_track": "Selecione uma faixa de legendas ou uma legenda para escolher um estilo.",
         "select_caption": "Selecione uma legenda na linha do tempo para editá-la."
+      },
+      "stage": {
+        "close": "Voltar ao editor"
+      },
+      "voice_stage": {
+        "title": "Voz de estúdio",
+        "label": "Voz de estúdio, antes e depois",
+        "before": "Antes",
+        "after": "Depois",
+        "play_before": "Ouvir antes",
+        "play_after": "Ouvir depois",
+        "wave_before": "Forma de onda antes da cadeia",
+        "wave_after": "Forma de onda depois da cadeia",
+        "no_chain": "Ainda sem cadeia. Aplique a voz de estúdio à direita para ouvir a diferença.",
+        "note": "O efeito é editável e dá para desfazer pelo histórico."
       }
     },
     "account": {
