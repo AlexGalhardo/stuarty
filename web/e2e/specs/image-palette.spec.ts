@@ -49,6 +49,22 @@ test.describe("image editor command palette", () => {
 		expect((await imageState(call, id)).layers.length).toBe(before + 1);
 	});
 
+	test("Ctrl K inside another dialog stays there: no palette over the import dialog", async ({
+		page,
+		request,
+	}) => {
+		const { id } = await newImage(request, { name: "Palette over dialog" });
+		await page.goto(`/edit-image/${id}`);
+		await expect(page.getByTestId("image-frame")).toBeVisible();
+		await page.getByTestId("image-import-open").click();
+		const importing = page.getByTestId("image-import-dialog");
+		await expect(importing).toBeVisible();
+		await importing.locator("input:not([type=file])").first().focus();
+		await page.keyboard.press("Control+k");
+		await expect(importing).toBeVisible();
+		await expect(page.getByTestId("image-palette")).toHaveCount(0);
+	});
+
 	test("the top bar button opens it and a click on an option runs it; focus stays inside while open", async ({
 		page,
 		request,
