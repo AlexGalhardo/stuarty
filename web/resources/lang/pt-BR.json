@@ -9,6 +9,7 @@
     "workflow": {
       "label": "Caminho até a publicação",
       "stage": "Etapa {number} de {total}: {step}",
+      "media_optional": "Mídia é opcional: um texto pode seguir sem imagem nem vídeo.",
       "go_current": "Ir para a etapa atual",
       "open_text": "Abrir o texto",
       "lead": {

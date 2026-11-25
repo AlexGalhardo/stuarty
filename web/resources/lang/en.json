@@ -9,6 +9,7 @@
     "workflow": {
       "label": "Path to publication",
       "stage": "Stage {number} of {total}: {step}",
+      "media_optional": "Media is optional: a text can go on with no image or video.",
       "go_current": "Go to the current stage",
       "open_text": "Open the text",
       "lead": {
