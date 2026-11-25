@@ -445,7 +445,7 @@ func (r *imageRun) drawBands(base *image.RGBA, drawn []drawLayer) (*image.RGBA, 
 	bands := r.bands
 	if bands <= 0 {
 		want := min(maxImageWorkers, runtime.GOMAXPROCS(0), max((hi-lo)/minBandRows, 1))
-		bands = bandCount(drawn, lo, hi, want, imageWorkMemory)
+		bands = bandCount(drawn, r.plan.Width, lo, hi, want, imageWorkMemory)
 	}
 
 	// A mask taken from another layer needs that layer in the same draw: one band holds them all, the source
@@ -456,10 +456,10 @@ func (r *imageRun) drawBands(base *image.RGBA, drawn []drawLayer) (*image.RGBA, 
 		bands = 1
 	}
 
-	step := (hi - lo + bands - 1) / bands
+	edges := bandEdges(drawn, r.plan.Width, lo, hi, bands)
 
 	err := fanOut(r.ctx, bands, bands, func(b int) error {
-		y0, y1 := lo+b*step, min(lo+(b+1)*step, hi)
+		y0, y1 := edges[b], edges[b+1]
 		if y0 >= y1 {
 			return nil
 		}
@@ -476,9 +476,9 @@ func (r *imageRun) drawBands(base *image.RGBA, drawn []drawLayer) (*image.RGBA, 
 // bandCount is the most bands, up to want, whose instances together hold at most budget bytes of prepared
 // pictures: each instance holds every picture that reaches its rows, so a stack of large layers would otherwise
 // be held once per band.
-func bandCount(drawn []drawLayer, lo, hi, want int, budget int64) int {
+func bandCount(drawn []drawLayer, width, lo, hi, want int, budget int64) int {
 	for n := want; n > 1; n-- {
-		if bandsHold(drawn, lo, hi, n) <= budget {
+		if bandsHold(drawn, width, lo, hi, n) <= budget {
 			return n
 		}
 	}
@@ -486,14 +486,87 @@ func bandCount(drawn []drawLayer, lo, hi, want int, budget int64) int {
 	return 1
 }
 
+// putCost is what handing one pixel of a prepared picture to an instance costs, against 1 for drawing a pixel of
+// it (measured: about an eighth, SDD-021 section 13.4).
+const putCost = 0.125
+
+// rowFill is the work of a row no layer reaches, in pixels drawn per pixel of width: the fill with the background.
+const rowFill = 0.05
+
+// bandEdges cuts the rows [lo, hi) into n bands of about the same work, and gives the n+1 rows that bound them.
+// The work of a row is the pixels the layers that reach it draw there, plus the pictures an instance receives to
+// draw it, spread over the rows of its layer. Equal rows were not equal work: a stack of layers in the middle of
+// the canvas took 1.2 to 1.6 s where the rows at its edges took 0.2 to 0.6 s, and the render waited for the slowest
+// band. The pixels never depend on where a band ends (a row is drawn alone, SDD-013 section 2.1).
+func bandEdges(drawn []drawLayer, width, lo, hi, n int) []int {
+	weight := rowWeights(drawn, width, lo, hi)
+
+	var total float64
+	for _, w := range weight {
+		total += w
+	}
+
+	edges := make([]int, n+1)
+	edges[n] = hi
+	edges[0] = lo
+
+	var run float64
+
+	b := 1
+
+	for y := range weight {
+		run += weight[y]
+
+		for b < n && run >= total*float64(b)/float64(n) {
+			edges[b] = lo + y + 1
+			b++
+		}
+	}
+
+	for ; b < n; b++ {
+		edges[b] = hi
+	}
+
+	return edges
+}
+
+// rowWeights is the work of each row of [lo, hi): see bandEdges.
+func rowWeights(drawn []drawLayer, width, lo, hi int) []float64 {
+	weight := make([]float64, hi-lo)
+
+	for i := range weight {
+		weight[i] = float64(width) * rowFill
+	}
+
+	for i := range drawn {
+		d := &drawn[i]
+		y0, y1 := max(d.y0, lo), min(d.y1, hi)
+
+		rows := d.y1 - d.y0
+		if y0 >= y1 || rows <= 0 {
+			continue
+		}
+
+		sz := d.pic.Size()
+		perRow := (math.Min(sz.GrownW*sz.GrownH, float64(width)*float64(rows)) + putCost*float64(sz.W)*float64(sz.H)) /
+			float64(rows)
+
+		for y := y0; y < y1; y++ {
+			weight[y-lo] += perRow
+		}
+	}
+
+	return weight
+}
+
 // bandsHold is the bytes of prepared pictures that n bands of the rows [lo, hi) hold together.
-func bandsHold(drawn []drawLayer, lo, hi, n int) int64 {
-	step := (hi - lo + n - 1) / n
+func bandsHold(drawn []drawLayer, width, lo, hi, n int) int64 {
+	edges := bandEdges(drawn, width, lo, hi, n)
 
 	var held int64
 
 	for b := range n {
-		y0, y1 := lo+b*step, min(lo+(b+1)*step, hi)
+		y0, y1 := edges[b], edges[b+1]
 
 		for i := range drawn {
 			if drawn[i].y0 < y1 && drawn[i].y1 > y0 {

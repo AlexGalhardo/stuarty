@@ -276,19 +276,21 @@ func TestImageBandCountBoundsWhatTheInstancesHold(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if n := bandCount(drawn, 0, fp.Height, 8, 1<<40); n != 8 {
+	if n := bandCount(drawn, fp.Width, 0, fp.Height, 8, 1<<40); n != 8 {
 		t.Fatalf("with memory to spare: %d bands, want 8", n)
 	}
 
-	if n := bandCount(drawn, 0, fp.Height, 8, 0); n != 1 {
+	if n := bandCount(drawn, fp.Width, 0, fp.Height, 8, 0); n != 1 {
 		t.Fatalf("with no memory to spare: %d bands, want 1", n)
 	}
 
-	budget := bandsHold(drawn, 0, fp.Height, 3)
+	budget := bandsHold(drawn, fp.Width, 0, fp.Height, 3)
 
-	n := bandCount(drawn, 0, fp.Height, 8, budget)
-	if n < 3 || bandsHold(drawn, 0, fp.Height, n) > budget {
-		t.Fatalf("%d bands hold %d bytes, over the budget of %d", n, bandsHold(drawn, 0, fp.Height, n), budget)
+	n := bandCount(drawn, fp.Width, 0, fp.Height, 8, budget)
+
+	held := bandsHold(drawn, fp.Width, 0, fp.Height, n)
+	if n < 3 || held > budget {
+		t.Fatalf("%d bands hold %d bytes, over the budget of %d", n, held, budget)
 	}
 }
 
@@ -401,5 +403,101 @@ func TestWorkerCountIsBoundedByCPUsAndByTheLargestLayer(t *testing.T) {
 	huge := []plan.Layer{{Kind: plan.Media, W: 100, H: 100, Crop: plan.Rect{W: 8192, H: 8192}}}
 	if n := workerCount(huge); n != 1 {
 		t.Fatalf("a layer of 8,192 by 8,192 pixels: %d workers, want 1", n)
+	}
+}
+
+// stackedDocument is a canvas with a stack of wide layers over its middle rows and nothing at its top and bottom:
+// the case where bands of equal rows were not bands of equal work.
+func stackedDocument() *coreimage.Document {
+	d := &coreimage.Document{
+		SchemaVersion: coreimage.SchemaVersion, ID: "img_aaaaaaaaaa", Name: "stacked", Width: 400, Height: 400,
+		Background: "#101820",
+	}
+
+	for i := range 8 {
+		d.Layers = append(d.Layers, coreimage.Layer{
+			ID: fmt.Sprintf("lyr_%010d", i), Kind: coreimage.KindShape, Shape: coreimage.ShapeRoundedRect, Radius: 10,
+			Name: "Bar", Visible: true, Opacity: 100, X: 20, Y: 140 + i*4, W: 360, H: 120, Fill: "#C0805A",
+		})
+	}
+
+	coreimage.ReorderAll(d)
+
+	return d
+}
+
+// TestImageBandEdgesCutTheWorkEvenly: the n bands cover [lo, hi) in order, with no gap and no overlap, and when the
+// layers are stacked in the middle of the canvas no band has more than its share of the work plus one row, where
+// bands of equal rows give the middle ones several times theirs. The pixels do not depend on the edges
+// (TestImageBandsEqualTheWholeRender).
+func TestImageBandEdgesCutTheWorkEvenly(t *testing.T) {
+	drawn, fp, err := preparedRun(t, stackedDocument(), 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	weight := rowWeights(drawn, fp.Width, 0, fp.Height)
+
+	var total, heaviest float64
+
+	for _, w := range weight {
+		total += w
+		heaviest = max(heaviest, w)
+	}
+
+	for n := 1; n <= 16; n++ {
+		edges := bandEdges(drawn, fp.Width, 0, fp.Height, n)
+
+		if len(edges) != n+1 || edges[0] != 0 || edges[n] != fp.Height {
+			t.Fatalf("%d bands: edges %v do not cover the canvas", n, edges)
+		}
+
+		share := total / float64(n)
+
+		for b := range n {
+			if edges[b] > edges[b+1] {
+				t.Fatalf("%d bands: edges %v go backwards", n, edges)
+			}
+
+			var band float64
+			for _, w := range weight[edges[b]:edges[b+1]] {
+				band += w
+			}
+
+			if band > share+heaviest+1e-6 {
+				t.Fatalf("%d bands: band %d does %.0f of work, a share is %.0f (rows %d to %d)",
+					n, b, band, share, edges[b], edges[b+1])
+			}
+		}
+	}
+
+	// the equal rows the export used to cut: the middle band holds far more than its share
+	equal := func(b, n int) float64 {
+		var band float64
+		for _, w := range weight[b*fp.Height/n : (b+1)*fp.Height/n] {
+			band += w
+		}
+
+		return band
+	}
+
+	if worst := max(equal(2, 8), equal(3, 8), equal(4, 8), equal(5, 8)); worst < 2*total/8 {
+		t.Fatalf("the stacked document does not make equal rows uneven (%.0f against a share of %.0f)", worst, total/8)
+	}
+}
+
+// TestImageBandEdgesWithOneBandAreTheWholeRange: one band is the whole range, and rows no layer reaches are shared equally.
+func TestImageBandEdgesWithOneBandAreTheWholeRange(t *testing.T) {
+	drawn, fp, err := preparedRun(t, lookBase(), 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if edges := bandEdges(drawn, fp.Width, 10, 50, 1); len(edges) != 2 || edges[0] != 10 || edges[1] != 50 {
+		t.Fatalf("edges of one band: %v", edges)
+	}
+
+	if edges := bandEdges(nil, fp.Width, 0, 100, 4); edges[0] != 0 || edges[4] != 100 || edges[2] != 50 {
+		t.Fatalf("with no layer the rows are shared equally: %v", edges)
 	}
 }
