@@ -14,6 +14,7 @@ import type { ReactNode } from "react";
 import UntrustedText from "@/components/UntrustedText";
 import { useT } from "@/lib/i18n";
 import { useCommandsExposed } from "../commands/useExposedCommands";
+import CaptionsInspector from "../stages/CaptionsInspector";
 import ZoomPanel from "../stages/ZoomPanel";
 import { useDocumentState, useUiState } from "../state/EditorContext";
 import { selectOrderedTrackIds } from "../state/selectors";
@@ -104,11 +105,18 @@ export default function Inspector(): ReactNode {
 		(s) => s.activePanelTab === "effects" && s.panels.left,
 	);
 	const zoomExposed = useCommandsExposed("recording.auto_zoom");
+	const captionsTab = useUiState(
+		(s) => s.activePanelTab === "captions" && s.panels.left,
+	);
 
 	let title: ReactNode;
 	let Icon: LucideIcon = SlidersHorizontal;
 	let body: ReactNode;
-	if (
+	if (captionsTab && selected.length <= 1) {
+		Icon = Captions;
+		title = t("ui.editor.panels.captions");
+		body = <CaptionsInspector />;
+	} else if (
 		selected.length === 1 &&
 		item?.type === "clip" &&
 		effectsTab &&

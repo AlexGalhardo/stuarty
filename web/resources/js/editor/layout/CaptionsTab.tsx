@@ -3,9 +3,7 @@ import type { ReactNode } from "react";
 import { useT } from "@/lib/i18n";
 import { magnetTrackId } from "../commands/magnet";
 import AutoCaptions from "../inspector/panels/AutoCaptions";
-import CaptionStyle from "../inspector/panels/CaptionStyle";
 import ImportSubtitles from "../inspector/panels/ImportSubtitles";
-import TrackCaptionStyle from "../inspector/panels/TrackCaptionStyle";
 import TranscriptPanel from "../inspector/panels/TranscriptPanel";
 import PanelFrame from "../library/PanelFrame";
 import { useDocumentState, useUiState } from "../state/EditorContext";
@@ -42,11 +40,6 @@ export default function CaptionsTab(): ReactNode {
 			)}
 			{trackId !== null && trackKind === "visual" && (
 				<ImportSubtitles trackId={trackId} />
-			)}
-			{only !== undefined && type === "caption" ? (
-				<CaptionStyle itemId={only} />
-			) : (
-				trackId !== null && <TrackCaptionStyle trackId={trackId} />
 			)}
 		</PanelFrame>
 	);

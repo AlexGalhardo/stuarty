@@ -92,7 +92,10 @@ export type InspectorTab =
 	| "speed"
 	| "animation"
 	| "adjust"
-	| "text";
+	| "text"
+	| "style"
+	| "words"
+	| "timing";
 
 export interface UiWriter {
 	select(items: readonly string[], anchor?: string | null): void;

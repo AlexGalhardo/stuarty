@@ -38,8 +38,11 @@ test.describe("library captions tab", () => {
 
 		// With a clip selected the style is the one of the track of the clip.
 		await page.locator(`[data-item-id="${seeded.itemIds[0]}"]`).click();
+		// The style is in the inspector of the Captions screen, under its Style tab.
 		await expect(
-			panel.getByRole("button", { name: "Caption style" }),
+			page
+				.getByRole("complementary", { name: "Inspector" })
+				.getByRole("button", { name: "Caption style" }),
 		).toBeVisible();
 	});
 });

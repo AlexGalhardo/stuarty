@@ -3067,7 +3067,10 @@
           "speed": "Speed",
           "animation": "Animation",
           "adjust": "Adjust",
-          "text": "Text"
+          "text": "Text",
+          "style": "Style",
+          "words": "Text",
+          "timing": "Time"
         }
       },
       "history": {
@@ -3552,6 +3555,10 @@
       "zoom_lane": {
         "name": "Z1 Zoom",
         "label": "Zoom lane Z1, {count} zooms"
+      },
+      "captions_inspector": {
+        "no_track": "Select a caption track or a caption to choose a style.",
+        "select_caption": "Select a caption on the timeline to edit it."
       }
     },
     "account": {
