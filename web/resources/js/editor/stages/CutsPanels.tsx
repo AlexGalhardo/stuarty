@@ -1,4 +1,4 @@
-import { Info, ScanFace, ShieldCheck, Users } from "lucide-react";
+import { Check, Info, ScanFace, ShieldCheck, Users, X } from "lucide-react";
 import type { ReactNode } from "react";
 
 import UntrustedText from "@/components/UntrustedText";
@@ -103,16 +103,20 @@ export function CutsReview(): ReactNode {
 					</Section>
 					<Button
 						type="button"
+						className="min-h-10"
 						disabled={!state.canEdit || state.busy}
 						onClick={() => void state.accept(reviewing.n)}
 					>
+						<Check aria-hidden="true" />
 						{t("ui.editor.cuts_stage.accept_this")}
 					</Button>
 					<Button
 						type="button"
 						variant="outline"
+						className="min-h-10"
 						onClick={() => state.refuse(reviewing.n)}
 					>
+						<X aria-hidden="true" />
 						{t("ui.editor.cuts_stage.refuse")}
 					</Button>
 				</>
