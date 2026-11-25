@@ -19,6 +19,7 @@ const (
 	CodeTextSmall   = "L_IMAGE_TEXT_SMALL"
 	CodeLowContrast = "L_IMAGE_LOW_CONTRAST"
 	CodeUpscaled    = "L_IMAGE_UPSCALED"
+	CodeNoGlyph     = "L_IMAGE_TEXT_NO_GLYPH"
 )
 
 // MinContrast is the contrast ratio under which a text is hard to read (WCAG, large text).
@@ -42,15 +43,23 @@ func LintCatalog() []LintRule {
 		{CodeTextSmall, "warning", false},
 		{CodeLowContrast, "warning", false},
 		{CodeUpscaled, "warning", false},
+		{CodeNoGlyph, "warning", false},
 	}
 }
 
 // Blocking reports whether a finding refuses an export.
 func Blocking(code string) bool { return code == CodeEmptySlot }
 
-// LintEnv is what the rules read besides the document: the text measurer, to know how tall a text is.
+// MaxNoGlyphListed is how many code points the message of L_IMAGE_TEXT_NO_GLYPH names.
+const MaxNoGlyphListed = 5
+
+// LintEnv is what the rules read besides the document: the text measurer, to know how tall a text is, and what
+// the font set knows about the glyphs of a family.
 type LintEnv struct {
 	Measure plan.Measurer
+	// Missing returns the runes of text that the family has no glyph for (rasterize.FontSet.Missing). An error
+	// (an unknown family) and a nil Missing both silence L_IMAGE_TEXT_NO_GLYPH: the render reports the family.
+	Missing func(family string, weight int, text string) ([]rune, error)
 }
 
 // entry is a layer that is drawn: the layer, its box on the canvas and its place in the stacking order.
@@ -89,7 +98,7 @@ func drawn(d *Document) []entry {
 
 // Lint runs the rules on a document. Findings come errors first, then in the stacking order of their layers
 // (top of a document's list last), then by code, so the same document always gives the same list.
-func Lint(d *Document, _ LintEnv) []lint.Finding {
+func Lint(d *Document, env LintEnv) []lint.Finding {
 	type found struct {
 		f     lint.Finding
 		order int
@@ -104,7 +113,7 @@ func Lint(d *Document, _ LintEnv) []lint.Finding {
 		)
 	}
 
-	r := &linter{d: d, es: drawn(d), floor: minText(d), add: add}
+	r := &linter{d: d, es: drawn(d), floor: minText(d), add: add, missing: env.Missing}
 
 	Walk(d, func(l, _ *Layer, _ int) {
 		if l.Slot != "" && empty(l) {
@@ -280,6 +289,8 @@ type linter struct {
 	es    []entry
 	floor int
 	add   func(order int, code, severity, layer, message, hint string)
+
+	missing func(family string, weight int, text string) ([]rune, error)
 }
 
 func (r *linter) text(e entry) {
@@ -306,6 +317,8 @@ func (r *linter) text(e entry) {
 			fmt.Sprintf("Raise the size to at least %d with layer.set_text.", r.floor),
 		)
 	}
+
+	r.noGlyph(e)
 
 	if ratio, ok := contrast(r.d, r.es, e); ok && ratio < MinContrast {
 		r.add(
@@ -347,4 +360,34 @@ func (r *linter) image(e entry) {
 			"Use a larger image, or make the layer smaller with layer.transform.",
 		)
 	}
+}
+
+// noGlyph reports the characters of a text layer that its font cannot draw: they come out as boxes (SDD-004
+// section 5.1 item 9, ADR-0012).
+func (r *linter) noGlyph(e entry) {
+	if r.missing == nil || e.l.Text == "" {
+		return
+	}
+
+	st := textSpec(r.d, e.l, 1).Style
+
+	lacking, err := r.missing(st.FontFamily, st.FontWeight, e.l.Text)
+	if err != nil || len(lacking) == 0 {
+		return
+	}
+
+	points := make([]string, 0, MaxNoGlyphListed)
+	for _, c := range lacking[:min(len(lacking), MaxNoGlyphListed)] {
+		points = append(points, fmt.Sprintf("U+%04X", c))
+	}
+
+	more := ""
+	if len(lacking) > MaxNoGlyphListed {
+		more = fmt.Sprintf(" and %d more", len(lacking)-MaxNoGlyphListed)
+	}
+
+	r.add(e.order, CodeNoGlyph, "warning", e.l.ID,
+		fmt.Sprintf("The text of layer %s has characters that the font %s has no glyph for (%s%s); they are drawn as boxes.",
+			e.l.ID, st.FontFamily, strings.Join(points, ", "), more),
+		"Remove them with layer.set_text; no bundled font draws emoji or CJK text.")
 }

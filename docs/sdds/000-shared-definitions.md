@@ -622,7 +622,7 @@ The operations of the registry of domain `image` (`core/command` registry built 
 | `rect`, `rounded_rect`, `ellipse`, `layer` | image mask kind | the `kind` of the mask of a layer |
 | `normal`, `multiply`, `screen`, `overlay`, `soft_light`, `hard_light`, `darken`, `lighten`, `color_dodge`, `color_burn`, `difference` | image blend mode | the `mode` of `layer.blend`; the renderer also reads `add` (SDD-013 section 3.11) |
 | `video_thumbnail`, `square_post`, `vertical_cover` | preset | 1280 x 720, 1080 x 1080, 1080 x 1920 |
-| `L_IMAGE_EMPTY_SLOT`, `L_IMAGE_TEXT_OUTSIDE`, `L_IMAGE_TEXT_SMALL`, `L_IMAGE_LOW_CONTRAST`, `L_IMAGE_UPSCALED` | lint code | the rules of SDD-021 section 8; the first blocks an export |
+| `L_IMAGE_EMPTY_SLOT`, `L_IMAGE_TEXT_OUTSIDE`, `L_IMAGE_TEXT_SMALL`, `L_IMAGE_LOW_CONTRAST`, `L_IMAGE_UPSCALED`, `L_IMAGE_TEXT_NO_GLYPH` | lint code | the rules of SDD-021 section 8; the first blocks an export |
 | `png`, `jpeg`, `webp` | image export format | the formats of `ImageExport` |
 | `E_SLOT` `details.reason` `unknown_slot`, `wrong_kind`, `invalid_value`, `missing` | error detail | a template filled badly (SDD-021 section 7) |
 | `E_EXPORT_FAILED` `details.reason` `webp_unavailable` | error detail | the FFmpeg in use has no `libwebp` encoder, or there is no FFmpeg (SDD-021 §6) |

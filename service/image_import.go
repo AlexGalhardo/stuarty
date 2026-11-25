@@ -446,7 +446,7 @@ func (s *svc) importNewImage(
 		}
 
 		doc := out.Doc
-		findings := coreimage.Lint(doc, coreimage.LintEnv{})
+		findings := coreimage.Lint(doc, imageLintEnv())
 
 		res = &ImageImportResult{
 			UntrustedNotice: UntrustedNotice, State: ImageImportReady, ImageID: id, Revision: 1,
