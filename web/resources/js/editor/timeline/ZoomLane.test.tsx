@@ -27,6 +27,18 @@ describe("the zoom lane (final design 25)", () => {
 		expect(html).toContain('data-zoom="2"');
 		expect(html).toContain("left:60px;width:180px");
 	});
+
+	test("names one zoom in the singular", () => {
+		const html = renderToString(
+			<I18nProvider locale="en" messages={messages}>
+				<ZoomLane
+					ppf={2}
+					zooms={[{ item_id: "itm_a", n: 1, start: time(0), end: time(30) }]}
+				/>
+			</I18nProvider>,
+		);
+		expect(html).toContain('aria-label="Zoom lane Z1, 1 zoom"');
+	});
 });
 
 describe("the zoom switch off", () => {

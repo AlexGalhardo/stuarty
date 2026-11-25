@@ -3543,13 +3543,19 @@
         "on": "On",
         "off": "Off",
         "hint": "Each zoom is a keyframe. You can edit or delete it.",
-        "list": "{count} zooms on lane Z1",
+        "list": {
+          "one": "{count} zoom on lane Z1",
+          "other": "{count} zooms on lane Z1"
+        },
         "none": "This clip has no zoom yet. Turn on Use the clicks to make them from the clicks of the take.",
         "zoom": "Zoom {n}"
       },
       "zoom_lane": {
         "name": "Z1 Zoom",
-        "label": "Zoom lane Z1, {count} zooms"
+        "label": {
+          "one": "Zoom lane Z1, {count} zoom",
+          "other": "Zoom lane Z1, {count} zooms"
+        }
       },
       "captions_inspector": {
         "no_track": "Select a caption track or a caption to choose a style.",

@@ -3543,13 +3543,19 @@
         "on": "Ligado",
         "off": "Desligado",
         "hint": "Cada zoom é um quadro-chave. Você pode editar ou apagar.",
-        "list": "{count} zooms na faixa Z1",
+        "list": {
+          "one": "{count} zoom na faixa Z1",
+          "other": "{count} zooms na faixa Z1"
+        },
         "none": "Este clipe ainda não tem zoom. Ligue Usar os cliques para criá-los a partir dos cliques da gravação.",
         "zoom": "Zoom {n}"
       },
       "zoom_lane": {
         "name": "Z1 Zoom",
-        "label": "Faixa de zoom Z1, {count} zooms"
+        "label": {
+          "one": "Faixa de zoom Z1, {count} zoom",
+          "other": "Faixa de zoom Z1, {count} zooms"
+        }
       },
       "captions_inspector": {
         "no_track": "Selecione uma faixa de legendas ou uma legenda para escolher um estilo.",
