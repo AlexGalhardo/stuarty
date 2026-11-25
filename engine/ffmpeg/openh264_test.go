@@ -80,9 +80,10 @@ func TestNoEncoderNamesTheOpenH264Install(t *testing.T) {
 		e.Details["tool"] != OpenH264Tool || !strings.Contains(e.Message, "libopenh264") {
 		t.Errorf("%+v", e)
 	}
-	// Without the library problem the older hint stays.
+	// Without the library problem the general hint stays: it names the install command in words (VV-430)
+	// but the details carry no install_command.
 	plain := noEncoderError(&EncoderDetection{Candidates: []Candidate{{Name: "libopenh264", Status: EncoderNotListed}}})
-	if strings.Contains(plain.Hint, "tools:install") || plain.Details["install_command"] != nil {
+	if !strings.Contains(plain.Hint, "tools:install") || plain.Details["install_command"] != nil {
 		t.Errorf("%+v", plain)
 	}
 }

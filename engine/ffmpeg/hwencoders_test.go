@@ -176,6 +176,15 @@ func TestForcedHardwareEncoderIsNeverReplaced(t *testing.T) {
 		!strings.Contains(e.Message, "h264_amf (failed") {
 		t.Fatalf("%v %+v", err, det)
 	}
+	// VV-430: the hint never promises an FFmpeg that includes OpenH264 (D-087).
+	for _, want := range []string{"OpenH264 installed by you", OpenH264InstallCommand, "hardware encoder", "never includes it"} {
+		if !strings.Contains(e.Hint, want) {
+			t.Errorf("hint lacks %q: %s", want, e.Hint)
+		}
+	}
+	if strings.Contains(e.Hint, "which includes OpenH264") {
+		t.Errorf("hint promises a bundled OpenH264: %s", e.Hint)
+	}
 
 	det, err = r.DetectEncoder(context.Background(), caps, DetectOptions{Forced: "h264_nvenc", Refresh: true})
 	if err != nil || det.Chosen != "h264_nvenc" || !det.Forced {
