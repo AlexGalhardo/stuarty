@@ -82,3 +82,23 @@ func TestPinnedBuildIsRecognised(t *testing.T) {
 
 func TestOwnBuildHasNoGPLFlags(t *testing.T)              { ownBuildHasNoGPLFlags(t) }
 func TestSecurity_T27_OwnBuildHasNoGPLFlags(t *testing.T) { ownBuildHasNoGPLFlags(t) }
+
+// TestFlavourAcceptsBothMarkersOfTheOwnBuild pins VV-231: the build ffmpeg-9.0.2-3 says stuarty<N>, the
+// builds installed before it say vukem<N>, and both are the own build; any other marker is not.
+func TestFlavourAcceptsBothMarkersOfTheOwnBuild(t *testing.T) {
+	for marker, want := range map[string]FlavourName{
+		"stuarty3": FlavourOwn, "vukem2": FlavourOwn, "other1": FlavourOther, "": FlavourOther,
+	} {
+		line := "configuration: --enable-version3 --disable-libx264"
+		if marker != "" {
+			line += " --extra-version=" + marker
+		}
+		v, ok := ParseVersion("ffmpeg", "ffmpeg version n9.0.2 Copyright\n"+line+"\n")
+		if !ok {
+			t.Fatalf("%q: not parsed", marker)
+		}
+		if got := v.Flavour().Name; got != want {
+			t.Errorf("marker %q: flavour %s, want %s", marker, got, want)
+		}
+	}
+}

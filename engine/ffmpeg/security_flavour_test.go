@@ -74,7 +74,7 @@ func ownWithFake(t *testing.T, build string) string {
 }
 
 // TestSecurity_T26_OpenH264DirOnlyForTheOwnBuild: a build that is not the own one never receives
-// VUKEM_VIDEO_OPENH264_DIR, not even from the environment of the process, and the own build gets it only
+// STUARTY_OPENH264_DIR, not even from the environment of the process, and the own build gets it only
 // from a library that verified.
 func TestSecurity_T26_OpenH264DirOnlyForTheOwnBuild(t *testing.T) {
 	ctx := context.Background()

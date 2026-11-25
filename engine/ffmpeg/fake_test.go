@@ -28,7 +28,8 @@ func fakeTool() bool {
 		// runner passed, so a test can see the environment of the tool.
 		if strings.HasPrefix(version, "ffmpeg version ") {
 			fmt.Println(strings.Replace(version, "ffmpeg version ", base+" version ", 1))
-			fmt.Println("openh264dir:", os.Getenv("VUKEM_VIDEO_OPENH264_DIR"))
+			fmt.Println("openh264dir:", os.Getenv("STUARTY_OPENH264_DIR"))
+			fmt.Println("openh264dir-legacy:", os.Getenv("VUKEM_VIDEO_OPENH264_DIR"))
 			return true
 		}
 		fmt.Printf(

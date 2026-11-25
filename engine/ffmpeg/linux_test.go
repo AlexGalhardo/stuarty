@@ -8,6 +8,7 @@ import (
 	"net"
 	"os"
 	"os/exec"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -187,7 +188,8 @@ func TestSandboxCarriesTheOpenH264Library(t *testing.T) {
 	own := fakeBuild(t, "own")
 	r := &Runner{In: &Installation{Info: own, OpenH264: OpenH264State{Installed: true, Dir: lib}}}
 
-	if env := r.libraryEnv(); len(env) != 1 || env[0] != EnvOpenH264Dir+"="+lib {
+	want := []string{EnvOpenH264Dir + "=" + lib, EnvOpenH264DirLegacy + "=" + lib}
+	if env := r.libraryEnv(); !slices.Equal(env, want) {
 		t.Errorf("env = %v", env)
 	}
 

@@ -27,9 +27,11 @@ const (
 	OpenH264Tool = "openh264"
 	// EnvOpenH264Dir is the variable that tells the own build where the verified library is. It is set
 	// only for the tools of an installation whose library passed verification, and only the own build reads it.
-	// The name is the one the pinned build ffmpeg-9.0.2-2 reads (.config/ffmpeg-build/patches/); it
-	// changes with the next rebuild of that build, not before.
-	EnvOpenH264Dir = "VUKEM_VIDEO_OPENH264_DIR"
+	// The name is the one the build ffmpeg-9.0.2-3 and later read (.config/ffmpeg-build/patches/).
+	EnvOpenH264Dir = "STUARTY_OPENH264_DIR"
+	// EnvOpenH264DirLegacy is the name the builds up to ffmpeg-9.0.2-2 read (VV-231). Those builds are still
+	// installed on machines, so the runner sets it next to EnvOpenH264Dir, to the same folder, until release 1.0.0.
+	EnvOpenH264DirLegacy = "VUKEM_VIDEO_OPENH264_DIR"
 	// OpenH264InstallCommand is what an error says to run.
 	OpenH264InstallCommand = "stuarty tools:install " + OpenH264Tool
 )

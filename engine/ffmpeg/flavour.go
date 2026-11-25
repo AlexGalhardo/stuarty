@@ -2,6 +2,7 @@ package ffmpeg
 
 import (
 	"regexp"
+	"slices"
 	"strings"
 )
 
@@ -11,17 +12,19 @@ type FlavourName string
 // The builds the product knows by their configure line.
 const (
 	// FlavourOwn is the build this project makes (P3-REL-001): LGPL, no OpenH264 compiled in, the Cisco
-	// library loaded at run time. Its configure line carries --extra-version=vukem<N>.
-	FlavourOwn FlavourName = "vukem"
+	// library loaded at run time. Its configure line carries --extra-version=stuarty<N>
+	// (vukem<N> up to the build ffmpeg-9.0.2-2, VV-231).
+	FlavourOwn FlavourName = "stuarty"
 	// FlavourBtbN is the BtbN lgpl build pinned through the Prototype and ALPHA.
 	FlavourBtbN FlavourName = "btbn"
 	// FlavourOther is any other FFmpeg: the user's own.
 	FlavourOther FlavourName = "other"
 )
 
-// ownExtraVersion is the prefix of --extra-version that marks the own build. The build pipeline must
-// set it (SDD-011 8.2); an FFmpeg without it is never taken for the own build.
-const ownExtraVersion = "vukem"
+// ownExtraVersions are the prefixes of --extra-version that mark the own build. The build pipeline must
+// set one (SDD-011 8.2); an FFmpeg without it is never taken for the own build. "vukem" is the marker of the
+// builds installed before the rename (VV-231), accepted until release 1.0.0.
+var ownExtraVersions = []string{"stuarty", "vukem"}
 
 var extraVersionRe = regexp.MustCompile(`^--extra-version=(.*)$`)
 
@@ -59,7 +62,7 @@ func (v VersionInfo) Flavour() Flavour {
 		}
 	}
 	switch {
-	case strings.HasPrefix(f.ExtraVersion, ownExtraVersion):
+	case slices.ContainsFunc(ownExtraVersions, func(p string) bool { return strings.HasPrefix(f.ExtraVersion, p) }):
 		f.Name = FlavourOwn
 	case btbn:
 		f.Name = FlavourBtbN
