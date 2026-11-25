@@ -52,6 +52,7 @@ The teleprompter reads scripts with existing writing operations and adds no writ
 - Layouts are data in the core and resolve to ordinary framing, mask and position values, so they stay editable.
 - The teleprompter holds speed, size and mirror as a local preference of the UI; it computes no edit.
 - On Windows the window uses display affinity to stay out of a capture [to validate in task 4].
+- Delivered with less than the table above asks: `recording.set_background` sets a colour or an image and a shadow, with no gradient and no corner radius, because both need `renderer/`, which this epic must not touch; the padding is the `padding` of `recording.apply_layout` (SDD-025 section 20.2). Whether to add them in a later epic is a question for the author.
 
 ## Tasks
 
