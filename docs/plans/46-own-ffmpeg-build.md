@@ -37,7 +37,7 @@ A creator installs Stuarty and exporting just works, with hardware encoding wher
 
 - [x] 1. Record author decision D-087 and the release that will carry the assets in the ADR that governs the build and in SDD-011; write the question for the author to run the OpenH264 install, and wait for it before task 4. Verify: `task lint:md` exits 0 and the install is confirmed in the hand-off. Done: the decisions are recorded and the question is written; the author's install is still owed (the H.264 software part of task 4).
 - [x] 2. Update pins and the configure line for the encoders and filters the product now needs. Verify: `go test ./internal/tools/ffmpegconf/... ./internal/tools/ffmpegpins/...` passes.
-- [ ] 3. Build for Windows and for the Linux image, twice each. Verify: `bash scripts/ffmpeg-build.sh` gives the same digest on both runs; `bash scripts/ffmpeg-verify.sh` passes.
+- [x] 3. Build for Windows and for the Linux image, twice each. Verify: `bash scripts/ffmpeg-build.sh` gives the same digest on both runs; `bash scripts/ffmpeg-verify.sh` passes.
 - [ ] 4. Run the export and ingest suites against the own build. Verify: `go test ./engine/...` passes with the build forced.
 - [ ] 5. Make the installers and the image carry it. Verify: `task image:build && task image:smoke` and `bash scripts/desktop-verify.sh` pass.
 - [x] 6. Update notices and licences. Verify: `task notices:check` exits 0.
