@@ -23,7 +23,12 @@ The site is served under the base path of its address. `SITE_URL` (default `http
 | `bun run check:mdx` | every page compiles, its components exist, its `/docs/` links resolve |
 | `bun run build` then `bun run check:built` | only static files; no resource from another origin; every root-relative link carries the base path |
 | `bun run test:scripts`, `bun run test:site` | the script tests |
+| `bun run test:browser` (after `bun run build`; needs `bun install` in `web/`) | the landing in headless Chromium: every product image follows the theme, and the zoom dialog (mouse, keyboard, focus, blur, axe) |
 | `bun run check:last-updated` | every docs page has a "Last updated" date at least as new as its last commit |
+
+## Recapture the landing images
+
+The product images of the landing page are screenshots of a real `stuarty serve` on a throwaway demo workspace. Build the binary, then run `bun scripts/capture-landing.ts --bin <stuarty> --work <folder> [--port 9751]` from `site/` (set `STUARTY_FFMPEG` to the LGPL FFmpeg). It seeds the demo, shoots both themes and encodes `.webp` and `.avif` at 1600 and 960 px into `public/landing/`. Update `public/landing/CREDITS.txt` when a screen changes.
 
 ## Add a docs page
 
