@@ -225,7 +225,7 @@ test.describe("a11y-first-flow-keyboard @chromium-only", () => {
 			await expect(page).toHaveURL(/\/edit-image\/img_/);
 			// The toolbar is one tab stop and the arrows walk it.
 			await tabTo(page, page.locator("[data-tool]").first());
-			await arrowTo(page, page.getByTestId("image-add-text"), "ArrowRight");
+			await arrowTo(page, page.getByTestId("image-add-text"), "ArrowDown");
 			await page.keyboard.press("Enter");
 			await expect(page.getByRole("treeitem")).not.toHaveCount(0);
 		});

@@ -21,8 +21,6 @@ import {
 	useImageApi,
 	useImageStore,
 } from "../state/context";
-import ToolButton from "../toolbar/ToolButton";
-import { ToolGroup } from "../toolbar/Toolbar";
 import { withLayerName } from "./findingText";
 
 const FORMATS = ["png", "jpeg", "webp"] as const;
@@ -49,16 +47,20 @@ export function ExportTool(): ReactNode {
 	const [open, setOpen] = useState(false);
 
 	return (
-		<ToolGroup label={t("ui.image.toolbar.export")}>
-			<ToolButton
-				icon={Download}
-				label={t("ui.image.export.open")}
+		<>
+			<Button
+				type="button"
+				size="sm"
+				aria-label={t("ui.image.export.open")}
 				disabled={doc === null}
 				onClick={() => setOpen(true)}
-				testId="image-export-open"
-			/>
+				data-testid="image-export-open"
+			>
+				<Download aria-hidden="true" />
+				{t("ui.image.toolbar.export")}
+			</Button>
 			{open && <ExportDialog onClose={() => setOpen(false)} />}
-		</ToolGroup>
+		</>
 	);
 }
 

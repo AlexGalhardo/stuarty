@@ -183,7 +183,7 @@ function LutFields({
 	return (
 		<>
 			<p className="text-xs font-medium">{t("ui.image.look.lut")}</p>
-			<div className="grid grid-cols-2 gap-2">
+			<div className="flex flex-col gap-2">
 				<SelectField
 					label={t("ui.image.look.lut_file")}
 					value={lut?.asset ?? ""}
@@ -240,7 +240,7 @@ function AdjustFields({ layer }: { layer: Layer }): ReactNode {
 					: t("ui.image.look.badge_set", { count: adjustCount(layer.adjust) })
 			}
 		>
-			<div className="grid grid-cols-2 gap-2">
+			<div className="flex flex-col gap-2">
 				{ADJUST_KEYS.map((key) => (
 					<NumberField
 						key={key}
@@ -254,7 +254,7 @@ function AdjustFields({ layer }: { layer: Layer }): ReactNode {
 				))}
 			</div>
 			<p className="text-xs font-medium">{t("ui.image.look.levels")}</p>
-			<div className="grid grid-cols-3 gap-2">
+			<div className="flex flex-col gap-2">
 				<NumberField
 					label={t("ui.image.look.levels_black")}
 					value={levels.black}
@@ -457,7 +457,7 @@ function FilterParams({
 }): ReactNode {
 	const t = useT();
 	return (
-		<div className="grid grid-cols-2 gap-2">
+		<div className="flex flex-col gap-2">
 			{PARAMS[filter.kind].map(({ key, unit }) => (
 				<NumberField
 					key={`${layer.id}-${key}`}
@@ -569,7 +569,7 @@ function MaskFields({
 			/>
 			{mask !== undefined && mask.kind !== "layer" && (
 				<>
-					<div className="grid grid-cols-2 gap-2">
+					<div className="flex flex-col gap-2">
 						{(["x", "y", "w", "h"] as const).map((key) => (
 							<NumberField
 								key={key}

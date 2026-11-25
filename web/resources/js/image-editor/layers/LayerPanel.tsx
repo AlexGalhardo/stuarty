@@ -5,6 +5,7 @@ import {
 	EyeOff,
 	Folder,
 	Image as ImageIcon,
+	Layers,
 	Lock,
 	LockOpen,
 	PaintBucket,
@@ -22,11 +23,12 @@ import {
 	useState,
 } from "react";
 
-import PanelTitle from "@/components/PanelTitle";
 import UntrustedText from "@/components/UntrustedText";
+import { cn } from "@/lib/cn";
 import { useT } from "@/lib/i18n";
 import type { LayerKind } from "../api/types";
 import { isFinal, useModelJob } from "../modeledit/state";
+import PanelHeader from "../PanelHeader";
 import { useImage, useImageStore } from "../state/context";
 import { lockClass, rowClass } from "./rowStyle";
 import {
@@ -87,7 +89,9 @@ export default function LayerPanel(): ReactNode {
 	}, [selection]);
 
 	if (doc === null) {
-		return <PanelTitle>{t("ui.image.layers.title")}</PanelTitle>;
+		return (
+			<PanelHeader icon={Layers}>{t("ui.image.layers.title")}</PanelHeader>
+		);
 	}
 	const layers = doc.layers;
 
@@ -285,7 +289,7 @@ export default function LayerPanel(): ReactNode {
 
 	return (
 		<>
-			<PanelTitle>
+			<PanelHeader icon={Layers}>
 				{t("ui.image.layers.title")}
 				<span
 					data-testid="image-layers-count"
@@ -293,187 +297,195 @@ export default function LayerPanel(): ReactNode {
 				>
 					{countLayers(layers)}
 				</span>
-			</PanelTitle>
-			{rows.length === 0 ? (
-				<div className="text-sm" data-testid="image-layers-empty">
-					<p className="font-medium">{t("ui.image.layers.empty_title")}</p>
-					<p className="text-muted-foreground">
-						{t("ui.image.layers.empty_body")}
-					</p>
-				</div>
-			) : (
-				<div
-					ref={treeRef}
-					role="tree"
-					aria-label={t("ui.image.layers.label")}
-					aria-multiselectable="true"
-					data-testid="image-layers"
-					className="flex flex-col gap-px"
-				>
-					{rows.map((row) => {
-						const { layer } = row;
-						const Icon = ICONS[layer.kind];
-						const selected = selection.includes(layer.id);
-						const state = [
-							layer.visible ? null : t("ui.image.layers.hidden"),
-							layer.locked ? t("ui.image.layers.locked") : null,
-							working === layer.id ? t("ui.image.model.layer_working") : null,
-						]
-							.filter(Boolean)
-							.join(", ");
-						const mark = dropAt?.id === layer.id ? dropAt.where : null;
-						return (
-							<div
-								key={layer.id}
-								role="treeitem"
-								tabIndex={tabStop === layer.id ? 0 : -1}
-								aria-level={row.level}
-								aria-setsize={row.setSize}
-								aria-posinset={row.posInSet}
-								aria-selected={selected}
-								aria-expanded={row.expanded ?? undefined}
-								aria-label={`${layer.name}, ${t(`ui.image.kind.${layer.kind}`)}${state === "" ? "" : `, ${state}`}`}
-								data-layer={layer.id}
-								data-testid="image-layer-row"
-								draggable={renaming !== layer.id}
-								onClick={(event) => onRowClick(event, row)}
-								onDoubleClick={() => setRenaming(layer.id)}
-								onFocus={() => setFocusId(layer.id)}
-								onKeyDown={(event) => onKeyDown(event, row)}
-								onDragStart={(event) => {
-									setDragId(layer.id);
-									event.dataTransfer.setData("text/plain", layer.id);
-									event.dataTransfer.effectAllowed = "move";
-								}}
-								onDragEnd={() => {
-									setDragId(null);
-									setDropAt(null);
-								}}
-								onDragOver={(event) => {
-									if (dragId === null) return;
-									const where = zone(event, row);
-									if (dropMove(dragId, row, where, layers) === null) {
+			</PanelHeader>
+			<div className="min-h-0 flex-1 overflow-y-auto p-2">
+				{rows.length === 0 ? (
+					<div className="text-xs" data-testid="image-layers-empty">
+						<p className="font-medium">{t("ui.image.layers.empty_title")}</p>
+						<p className="text-muted-foreground">
+							{t("ui.image.layers.empty_body")}
+						</p>
+					</div>
+				) : (
+					<div
+						ref={treeRef}
+						role="tree"
+						aria-label={t("ui.image.layers.label")}
+						aria-multiselectable="true"
+						data-testid="image-layers"
+						className="flex flex-col gap-px"
+					>
+						{rows.map((row) => {
+							const { layer } = row;
+							const Icon = ICONS[layer.kind];
+							const selected = selection.includes(layer.id);
+							const state = [
+								layer.visible ? null : t("ui.image.layers.hidden"),
+								layer.locked ? t("ui.image.layers.locked") : null,
+								working === layer.id ? t("ui.image.model.layer_working") : null,
+							]
+								.filter(Boolean)
+								.join(", ");
+							const mark = dropAt?.id === layer.id ? dropAt.where : null;
+							return (
+								<div
+									key={layer.id}
+									role="treeitem"
+									tabIndex={tabStop === layer.id ? 0 : -1}
+									aria-level={row.level}
+									aria-setsize={row.setSize}
+									aria-posinset={row.posInSet}
+									aria-selected={selected}
+									aria-expanded={row.expanded ?? undefined}
+									aria-label={`${layer.name}, ${t(`ui.image.kind.${layer.kind}`)}${state === "" ? "" : `, ${state}`}`}
+									data-layer={layer.id}
+									data-testid="image-layer-row"
+									draggable={renaming !== layer.id}
+									onClick={(event) => onRowClick(event, row)}
+									onDoubleClick={() => setRenaming(layer.id)}
+									onFocus={() => setFocusId(layer.id)}
+									onKeyDown={(event) => onKeyDown(event, row)}
+									onDragStart={(event) => {
+										setDragId(layer.id);
+										event.dataTransfer.setData("text/plain", layer.id);
+										event.dataTransfer.effectAllowed = "move";
+									}}
+									onDragEnd={() => {
+										setDragId(null);
 										setDropAt(null);
-										return;
-									}
-									event.preventDefault();
-									setDropAt({ id: layer.id, where });
-								}}
-								onDrop={(event) => {
-									event.preventDefault();
-									if (dragId !== null) {
-										sendMove(dropMove(dragId, row, zone(event, row), layers));
-									}
-									setDragId(null);
-									setDropAt(null);
-								}}
-								className={rowClass({
-									selected,
-									visible: layer.visible,
-									mark,
-								})}
-								style={{ paddingLeft: (row.level - 1) * 16 + 4 }}
-							>
-								<span
-									aria-hidden="true"
-									className="flex size-5 shrink-0 items-center justify-center"
-									data-testid="image-layer-disclosure"
-									onClick={(event) => {
-										if (row.expanded === null) return;
-										event.stopPropagation();
-										toggle(layer.id);
 									}}
-								>
-									{row.expanded === null ? null : row.expanded ? (
-										<ChevronDown className="size-4" />
-									) : (
-										<ChevronRight className="size-4" />
-									)}
-								</span>
-								<Icon
-									aria-hidden="true"
-									className="size-4 shrink-0 text-muted-foreground"
-								/>
-								{renaming === layer.id ? (
-									<RenameField
-										value={layer.name}
-										label={t("ui.image.layers.rename")}
-										onDone={(name) => {
-											setRenaming(null);
-											if (name !== null && name !== layer.name) {
-												send([
-													{
-														op: "layer.set",
-														args: { layer_id: layer.id, name },
-													},
-												]);
-											}
-											focusRow(layer.id);
-										}}
-									/>
-								) : (
-									<span className="min-w-0 flex-1 truncate" aria-hidden="true">
-										<UntrustedText>{layer.name}</UntrustedText>
-									</span>
-								)}
-								<span
-									aria-hidden="true"
-									title={
-										layer.visible
-											? t("ui.image.layers.hide")
-											: t("ui.image.layers.show")
-									}
-									data-testid="image-layer-visible"
-									className="flex size-6 shrink-0 items-center justify-center rounded hover:bg-background"
-									onClick={(event) => {
-										event.stopPropagation();
-										send([
-											{
-												op: "layer.set",
-												args: { layer_id: layer.id, visible: !layer.visible },
-											},
-										]);
+									onDragOver={(event) => {
+										if (dragId === null) return;
+										const where = zone(event, row);
+										if (dropMove(dragId, row, where, layers) === null) {
+											setDropAt(null);
+											return;
+										}
+										event.preventDefault();
+										setDropAt({ id: layer.id, where });
 									}}
+									onDrop={(event) => {
+										event.preventDefault();
+										if (dragId !== null) {
+											sendMove(dropMove(dragId, row, zone(event, row), layers));
+										}
+										setDragId(null);
+										setDropAt(null);
+									}}
+									className={rowClass({
+										selected,
+										visible: layer.visible,
+										mark,
+									})}
+									style={{ paddingLeft: (row.level - 1) * 16 + 4 }}
 								>
-									{layer.visible ? (
-										<Eye className="size-4" />
-									) : (
-										<EyeOff className="size-4" />
-									)}
-								</span>
-								<span
-									aria-hidden="true"
-									title={
-										layer.locked
-											? t("ui.image.layers.unlock")
-											: t("ui.image.layers.lock")
-									}
-									data-testid="image-layer-lock"
-									className="flex size-6 shrink-0 items-center justify-center rounded hover:bg-background"
-									onClick={(event) => {
-										event.stopPropagation();
-										send([
-											{
-												op: "layer.set",
-												args: {
-													layer_id: layer.id,
-													locked: layer.locked !== true,
+									<span
+										aria-hidden="true"
+										title={
+											layer.visible
+												? t("ui.image.layers.hide")
+												: t("ui.image.layers.show")
+										}
+										data-testid="image-layer-visible"
+										className="flex size-6 shrink-0 items-center justify-center rounded hover:bg-background"
+										onClick={(event) => {
+											event.stopPropagation();
+											send([
+												{
+													op: "layer.set",
+													args: { layer_id: layer.id, visible: !layer.visible },
 												},
-											},
-										]);
-									}}
-								>
-									{layer.locked ? (
-										<Lock className={lockClass(true)} />
+											]);
+										}}
+									>
+										{layer.visible ? (
+											<Eye className="size-4" />
+										) : (
+											<EyeOff className="size-4" />
+										)}
+									</span>
+									<span
+										aria-hidden="true"
+										className={cn(
+											"flex h-5 shrink-0 items-center justify-center",
+											row.expanded === null ? "w-0" : "w-5",
+										)}
+										data-testid="image-layer-disclosure"
+										onClick={(event) => {
+											if (row.expanded === null) return;
+											event.stopPropagation();
+											toggle(layer.id);
+										}}
+									>
+										{row.expanded === null ? null : row.expanded ? (
+											<ChevronDown className="size-4" />
+										) : (
+											<ChevronRight className="size-4" />
+										)}
+									</span>
+									<Icon
+										aria-hidden="true"
+										className="size-4 shrink-0 text-muted-foreground"
+									/>
+									{renaming === layer.id ? (
+										<RenameField
+											value={layer.name}
+											label={t("ui.image.layers.rename")}
+											onDone={(name) => {
+												setRenaming(null);
+												if (name !== null && name !== layer.name) {
+													send([
+														{
+															op: "layer.set",
+															args: { layer_id: layer.id, name },
+														},
+													]);
+												}
+												focusRow(layer.id);
+											}}
+										/>
 									) : (
-										<LockOpen className={lockClass(false)} />
+										<span
+											className="min-w-0 flex-1 truncate"
+											aria-hidden="true"
+										>
+											<UntrustedText>{layer.name}</UntrustedText>
+										</span>
 									)}
-								</span>
-							</div>
-						);
-					})}
-				</div>
-			)}
+									<span
+										aria-hidden="true"
+										title={
+											layer.locked
+												? t("ui.image.layers.unlock")
+												: t("ui.image.layers.lock")
+										}
+										data-testid="image-layer-lock"
+										className="flex size-6 shrink-0 items-center justify-center rounded hover:bg-background"
+										onClick={(event) => {
+											event.stopPropagation();
+											send([
+												{
+													op: "layer.set",
+													args: {
+														layer_id: layer.id,
+														locked: layer.locked !== true,
+													},
+												},
+											]);
+										}}
+									>
+										{layer.locked ? (
+											<Lock className={lockClass(true)} />
+										) : (
+											<LockOpen className={lockClass(false)} />
+										)}
+									</span>
+								</div>
+							);
+						})}
+					</div>
+				)}
+			</div>
 		</>
 	);
 }

@@ -917,7 +917,8 @@
         "back": "Back to Image editor",
         "size": "{w} x {h} px",
         "revision": "revision {revision}",
-        "saved_auto": "Saved automatically: {time}"
+        "saved_auto": "Saved automatically: {time}",
+        "rev_short": "Rev {revision}"
       },
       "canvas": {
         "label": "Image canvas",
@@ -946,7 +947,7 @@
       "layers": {
         "title": "Layers",
         "label": "Layers, top first",
-        "empty_title": "The image has no layers",
+        "empty_title": "No layers yet",
         "empty_body": "Add a text, a shape or a photo from the toolbar.",
         "hidden": "hidden",
         "locked": "locked",
@@ -1152,7 +1153,8 @@
         "radius": "Corner radius",
         "bad_number": "Type a whole number of pixels, such as 120, 120px or 50%.",
         "pick_color": "Pick {label}",
-        "none": "none"
+        "none": "none",
+        "title_layer": "Filters and text"
       },
       "look": {
         "adjust": "Adjustments",
@@ -1313,6 +1315,17 @@
         "no_image": "No image",
         "create": "Create from template",
         "slot_hint": "Fill the slots marked required, then create again."
+      },
+      "empty": {
+        "title": "The image has no layers",
+        "lead": "Start with a photo, a text or a ready thumbnail template.",
+        "step_photo": "Add a photo",
+        "step_photo_body": "Or pick a template.",
+        "step_title": "Write the title",
+        "step_title_body": "Short, large text works best.",
+        "step_background": "Remove the background",
+        "step_background_body": "With a connected provider.",
+        "ask_agent": "Ask the agent"
       }
     },
     "editor": {

@@ -5,14 +5,15 @@ import {
 	AlignEndVertical,
 	AlignStartHorizontal,
 	AlignStartVertical,
+	SlidersHorizontal,
 } from "lucide-react";
 import { type ReactNode, useState } from "react";
 
-import PanelTitle from "@/components/PanelTitle";
 import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n";
 import type { ImageDocument, Layer } from "../api/types";
+import PanelHeader from "../PanelHeader";
 import { findLayer, useImage } from "../state/context";
 import { useLibrary } from "../state/library";
 import ToolButton from "../toolbar/ToolButton";
@@ -37,8 +38,10 @@ export default function Inspector(): ReactNode {
 	const selection = useImage((s) => s.selection);
 	if (doc === null) {
 		return (
-			<div className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-ed-panel p-3">
-				<PanelTitle>{t("ui.image.inspector.title")}</PanelTitle>
+			<div className="flex min-h-0 flex-1 flex-col bg-ed-panel">
+				<PanelHeader icon={SlidersHorizontal}>
+					{t("ui.image.inspector.title")}
+				</PanelHeader>
 			</div>
 		);
 	}
@@ -50,10 +53,12 @@ export default function Inspector(): ReactNode {
 	return (
 		<div
 			data-testid="image-inspector"
-			className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto bg-ed-panel p-3"
+			className="flex min-h-0 flex-1 flex-col bg-ed-panel"
 		>
-			<PanelTitle>
-				{t("ui.image.inspector.title")}
+			<PanelHeader icon={SlidersHorizontal}>
+				{layers.length === 0
+					? t("ui.image.inspector.title")
+					: t("ui.image.inspector.title_layer")}
 				<span
 					data-testid="image-inspector-target"
 					className="min-w-0 flex-1 truncate font-normal text-muted-foreground"
@@ -66,21 +71,23 @@ export default function Inspector(): ReactNode {
 						t("ui.image.inspector.document")
 					)}
 				</span>
-			</PanelTitle>
-			{layers.length === 0 && <DocumentFields doc={doc} />}
-			{layers.length > 1 && (
-				<>
-					<Section title={t("ui.image.inspector.selection")}>
-						<p className="text-sm">
-							{t("ui.image.canvas.many_selected", { count: layers.length })}
-						</p>
-					</Section>
-					<AlignFields doc={doc} layers={layers} />
-				</>
-			)}
-			{layers.length === 1 && layers[0] !== undefined && (
-				<LayerFields doc={doc} layer={layers[0]} />
-			)}
+			</PanelHeader>
+			<div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-3">
+				{layers.length === 0 && <DocumentFields doc={doc} />}
+				{layers.length > 1 && (
+					<>
+						<Section title={t("ui.image.inspector.selection")}>
+							<p className="text-sm">
+								{t("ui.image.canvas.many_selected", { count: layers.length })}
+							</p>
+						</Section>
+						<AlignFields doc={doc} layers={layers} />
+					</>
+				)}
+				{layers.length === 1 && layers[0] !== undefined && (
+					<LayerFields doc={doc} layer={layers[0]} />
+				)}
+			</div>
 		</div>
 	);
 }
@@ -94,7 +101,7 @@ function DocumentFields({ doc }: { doc: ImageDocument }): ReactNode {
 
 	return (
 		<Section title={t("ui.image.inspector.document")} testId="image-doc-fields">
-			<div className="grid grid-cols-2 gap-2">
+			<div className="flex flex-col gap-2">
 				<NumberField
 					label={t("ui.image.inspector.canvas_width")}
 					value={doc.width}
@@ -277,7 +284,7 @@ function LayerFields({
 				)}
 			</Section>
 			<Section title={t("ui.image.inspector.box")} testId="image-box-fields">
-				<div className="grid grid-cols-2 gap-2">
+				<div className="flex flex-col gap-2">
 					<NumberField
 						label={t("ui.image.inspector.x")}
 						value={layer.x}
@@ -414,7 +421,7 @@ function ImageFields({
 			{crop !== undefined && (
 				<>
 					<p className="text-xs font-medium">{t("ui.image.inspector.crop")}</p>
-					<div className="grid grid-cols-2 gap-2">
+					<div className="flex flex-col gap-2">
 						<NumberField
 							label={t("ui.image.inspector.x")}
 							value={crop.x}
@@ -517,7 +524,7 @@ function TextFields({ layer }: { layer: Layer }): ReactNode {
 					font_family === "" ? undefined : setStyle({ font_family })
 				}
 			/>
-			<div className="grid grid-cols-2 gap-2">
+			<div className="flex flex-col gap-2">
 				<SelectField
 					label={t("ui.image.inspector.weight")}
 					value={String(style.font_weight ?? 400)}

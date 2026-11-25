@@ -15,7 +15,7 @@ export function rowClass({
 	mark: Drop | null;
 }): string {
 	return cn(
-		"group relative flex h-8 scroll-mt-12 cursor-default items-center gap-1 rounded-md pr-1 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring",
+		"group relative flex h-8 scroll-mt-12 cursor-default items-center gap-1 rounded-md pr-1 text-xs outline-none focus-visible:ring-2 focus-visible:ring-ring",
 		selected
 			? "bg-surface-selected text-foreground shadow-[inset_2px_0_0_var(--color-accent)]"
 			: "hover:bg-surface-hover",
