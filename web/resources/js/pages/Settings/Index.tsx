@@ -11,9 +11,9 @@ import {
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 
 import { DataList, DataRow } from "@/components/DataRow";
-import LocaleSwitcher from "@/components/LocaleSwitcher";
 import { ErrorState } from "@/components/ErrorState";
 import { LoadingState } from "@/components/LoadingState";
+import LocaleSwitcher from "@/components/LocaleSwitcher";
 import { OptionSelect } from "@/components/OptionSelect";
 import { PageHeader } from "@/components/PageHeader";
 import ThemeToggle from "@/components/ThemeToggle";
