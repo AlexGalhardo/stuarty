@@ -28,7 +28,7 @@ Edit video by commands: CLI `stuarty` or MCP (`stuarty mcp`). `--json` for JSON.
 
 ## Command reference
 
-`command_help [name]` shows the arguments of one command. `asset.remove` and `font.*` need media scope.
+`command_help` lists the operations and the domains (`domain=<name>` for one domain); with a name it shows the arguments of one. `asset.remove` and `font.*` need media scope.
 
 Every operation is listed by the guide of its domain: `agent:docs --print guide:<domain>` (the timeline edits, such as `clip.*`, `caption.*` and `item.*`, are in `guide:video`).
 
