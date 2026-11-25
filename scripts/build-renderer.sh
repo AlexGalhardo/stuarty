@@ -16,7 +16,9 @@
 # (--locked), the build path is fixed (renderer/target), SOURCE_DATE_EPOCH defaults to the commit time
 # of HEAD and --remap-path-prefix, with one remap per source folder, hides the machine paths and the
 # separators of the system in the source paths; the module fails to build when a path of the machine or a
-# backslash is left in a source path. The memory of the module is capped at 16,384 pages (1 GiB).
+# backslash is left in a source path. The memory of the module is capped at 16,384 pages (1 GiB). Off
+# x86-64 Linux the build goes through internal/tools/rustchost (needs go), so the module is the same
+# one the Linux runner builds (see use_the_host_of_the_runner).
 # Runs on bash 3.2 (macOS).
 set -euo pipefail
 
@@ -91,8 +93,38 @@ source_remaps() {
 	done
 }
 
+# Cargo hashes the text of `rustc -vV`, host triple included, into the `-C metadata` of every crate it
+# builds, and that value is in the mangled symbol of every item of those crates. The linker orders the
+# functions and the panic locations by symbol, so the same source built with the same toolchain gave a
+# different module on Windows than on the Linux runner (VV-276, VV-343; epic 93). On a host other than
+# x86-64 Linux, internal/tools/rustchost wraps rustc and reports the host of the runner in that one
+# line, so that every system builds the module the runner builds.
+linux_host=x86_64-unknown-linux-gnu
+
+same_host_as_the_runner() {
+	local host
+	host="$(rustc -vV | sed -n 's/^host: //p' | tr -d '\r')"
+	[ "$host" = "$linux_host" ]
+}
+
+use_the_host_of_the_runner() {
+	local exe=rustchost
+	unset RUSTC_WRAPPER
+	# A cached `rustc -vV` of an earlier build would keep the other host.
+	rm -f "$CARGO_TARGET_DIR/.rustc_info.json"
+	if same_host_as_the_runner; then
+		return
+	fi
+	command -v go >/dev/null 2>&1 || die "go is not installed: this machine is not x86-64 Linux, and the module is built with internal/tools/rustchost so that it equals the one of the runner"
+	case "$(uname -s)" in MINGW* | MSYS* | CYGWIN*) exe=rustchost.exe ;; esac
+	mkdir -p "$CARGO_TARGET_DIR"
+	(cd "$root" && go build -o "$CARGO_TARGET_DIR/$exe" ./internal/tools/rustchost)
+	export RUSTC_WRAPPER="$CARGO_TARGET_DIR/$exe"
+}
+
 wasm_build() {
 	local remaps
+	use_the_host_of_the_runner
 	remaps="$(source_remaps)"
 	# 16,384 pages of 64 KiB: the memory limit of SDD-013 section 4.1, also set in wazero.
 	RUSTFLAGS="$remap$remaps -C link-arg=--max-memory=1073741824" \
@@ -132,6 +164,9 @@ verify_build() {
 	clean_wasm
 	wasm_build
 	first="$(cat "$dist/stuarty_renderer.wasm.sha256")"
+	# Kept for a diff (internal/tools/wasmdiff) when the second build differs; CI uploads it then.
+	mkdir -p "$CARGO_TARGET_DIR/verify-first"
+	cp "$dist/stuarty_renderer.wasm" "$CARGO_TARGET_DIR/verify-first/stuarty_renderer.wasm"
 	clean_wasm
 	wasm_build
 	second="$(cat "$dist/stuarty_renderer.wasm.sha256")"
