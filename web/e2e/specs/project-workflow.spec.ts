@@ -138,7 +138,7 @@ test.describe("project workflow", () => {
 		await expect(page.getByTestId("skip-recording")).toBeVisible();
 	});
 
-	test("the guided questions about a video are asked of a video and of no other kind", async ({
+	test("the guided questions follow the kind: a text and an image never ask about a video", async ({
 		page,
 		request,
 	}) => {
@@ -147,16 +147,26 @@ test.describe("project workflow", () => {
 		await expect(page.getByTestId("workflow")).toBeVisible();
 		await expect(
 			page.getByRole("heading", { name: "Guided briefing" }),
-		).toHaveCount(0);
+		).toBeVisible();
+		await expect(page.getByLabel("How long, in words?")).toBeVisible();
 		await expect(page.getByText(/this video/i)).toHaveCount(0);
-		// The brief is written by hand.
+		await expect(page.getByLabel("How long, in seconds?")).toHaveCount(0);
+		// The free-form brief stays below the form.
 		await expect(page.locator("#brief-text")).toBeVisible();
+
+		const image = await project(request, "image", "Flow ask image");
+		await page.goto(`/projects/${image.id}`);
+		await expect(
+			page.getByLabel("Which style: the look, the colours, the mood?"),
+		).toBeVisible();
+		await expect(page.getByText(/this video/i)).toHaveCount(0);
 
 		const video = await project(request, "video", "Flow ask video");
 		await page.goto(`/projects/${video.id}`);
 		await expect(
 			page.getByRole("heading", { name: "Guided briefing" }),
 		).toBeVisible();
+		await expect(page.getByLabel("How long, in seconds?")).toBeVisible();
 	});
 
 	test("a project not decided yet asks to choose and offers a video", async ({
@@ -169,5 +179,9 @@ test.describe("project workflow", () => {
 		await expect(trail.locator("[data-step]")).toHaveCount(2);
 		await expect(trail.locator('[data-step="choice"]')).toBeVisible();
 		await expect(page.getByRole("button", { name: "Add media" })).toBeVisible();
+		// It has no kind to take questions from, so it writes its brief by hand until it chooses.
+		await expect(
+			page.getByRole("heading", { name: "Guided briefing" }),
+		).toHaveCount(0);
 	});
 });

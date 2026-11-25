@@ -569,6 +569,57 @@
             "horizontal-16x9": "Horizontal, proporção 16:9"
           }
         },
+        "words_hint": "De {min} a {max} palavras",
+        "text": {
+          "intro": "Responda a algumas perguntas sobre o texto. As respostas viram o briefing deste projeto, e o seu agente as lê.",
+          "q": {
+            "audience": "Para quem é?",
+            "tone": "Qual tom de voz?",
+            "call_to_action": "O que o leitor deve fazer em seguida?",
+            "channel": "Onde ele vai aparecer?",
+            "length": "Qual o tamanho, em palavras?",
+            "deadline": "Para quando?"
+          },
+          "option": {
+            "channel": {
+              "blog": "Um blog",
+              "newsletter": "Uma newsletter",
+              "social-post": "Uma publicação em rede social",
+              "website": "Um site",
+              "email": "Um e-mail",
+              "other": "Outro lugar"
+            }
+          }
+        },
+        "image": {
+          "intro": "Responda a algumas perguntas sobre a imagem. As respostas viram o briefing deste projeto, e o seu agente as lê.",
+          "q": {
+            "audience": "Para quem é?",
+            "format": "Qual formato?",
+            "size": "Qual tamanho, em pixels (por exemplo 1080x1350)?",
+            "style": "Qual estilo: o visual, as cores, o clima?",
+            "channel": "Onde ela vai aparecer?",
+            "deadline": "Para quando?"
+          },
+          "option": {
+            "format": {
+              "square-1x1": "Quadrado, 1:1",
+              "portrait-4x5": "Retrato, 4:5",
+              "vertical-9x16": "Vertical, proporção 9:16",
+              "horizontal-16x9": "Horizontal, proporção 16:9",
+              "horizontal-3x2": "Horizontal, proporção 3:2"
+            },
+            "channel": {
+              "instagram-feed": "Feed do Instagram",
+              "instagram-story": "Story do Instagram",
+              "facebook-feed": "Feed do Facebook",
+              "youtube-thumbnail": "Miniatura do YouTube",
+              "blog": "Um blog",
+              "website": "Um site",
+              "other": "Outro lugar"
+            }
+          }
+        },
         "choose": "Escolha uma"
       },
       "overview": {
