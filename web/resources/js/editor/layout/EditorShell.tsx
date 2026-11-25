@@ -39,8 +39,11 @@ import Tour from "./tour/Tour";
 import { useDesktopMenu } from "./useDesktopMenu";
 import { usePanelShortcuts } from "./usePanelShortcuts";
 
-// The collapsed material region keeps its tab rail (docs/design-system.md 3.4.4).
-const RAIL_PX = 40;
+// The material region is a rail of RAIL_PX with the icon of every tool, and beside it a panel of LIBRARY_PX
+// (final design 05: 44 and 240); the inspector is INSPECTOR_PX wide.
+const RAIL_PX = 44;
+const LIBRARY_PX = 240;
+const INSPECTOR_PX = 340;
 
 // Panel sizes by viewport width (SDD-012 section 6.3); below 1280 the drawers
 // of the later phases are not built yet, so the compact sizes apply.
@@ -51,11 +54,10 @@ export interface PanelSizes {
 	timeline: number;
 }
 
-// The library is twice the width it had before epic 60 (D-125), kept so that the
-// preview still has PREVIEW_MIN_PX beside the open panels.
+// The preview keeps this much beside the open panels.
 const PREVIEW_MIN_PX = 360;
 
-// The history sidebar is a rail of RAIL_PX collapsed and this wide open; the
+// The history sidebar takes no room collapsed (its button is on the rail) and this wide open; the
 // library gives way to it before the preview does.
 const HISTORY_OPEN_PX = 320;
 
@@ -69,13 +71,13 @@ export function panelSizes(
 	wideLeft = false,
 ): PanelSizes {
 	const wide = viewportWidth >= 1600;
-	const inspector = wide ? 360 : 280;
+	const inspector = viewportWidth >= 1280 ? INSPECTOR_PX : 280;
 	const room = viewportWidth - inspector - PREVIEW_MIN_PX;
 	const history = historyOpen
 		? Math.min(HISTORY_OPEN_PX, Math.max(SIDEBAR_MIN_PX, room - SIDEBAR_MIN_PX))
-		: RAIL_PX;
+		: 0;
 	// The edit by text screen gives the transcript every pixel the preview and the inspector can spare.
-	const libraryMax = wideLeft ? room : wide ? 640 : 480;
+	const libraryMax = wideLeft ? room : RAIL_PX + LIBRARY_PX;
 	const library = Math.min(libraryMax, Math.max(RAIL_PX, room - history));
 	return { library, history, inspector, timeline: wide ? 300 : 240 };
 }
@@ -129,8 +131,11 @@ export default function EditorShell({
 		panels.history,
 		stage?.kind === "transcript",
 	);
+	// The edit by text and the vertical cuts screens use the whole height: the timeline is out of sight (final design 26, 27).
+	const fullHeight = stage?.kind === "transcript" || stage?.kind === "cuts";
 	const sizes = {
 		...full,
+		timeline: fullHeight ? 0 : full.timeline,
 		library: panels.left ? full.library : RAIL_PX,
 		inspector: panels.inspector ? full.inspector : 0,
 	};
@@ -221,7 +226,9 @@ export default function EditorShell({
 						)}
 					</main>
 					{panels.inspector ? <Inspector /> : <div />}
-					<div className="col-span-full min-h-0 border-t border-ed-track-line">
+					<div
+						className={`col-span-full min-h-0 border-t border-ed-track-line ${fullHeight ? "invisible overflow-hidden border-t-0" : ""}`}
+					>
 						<Timeline
 							onAddCaption={() => setCaptionOpen(true)}
 							undoRedo={<UndoRedo />}
