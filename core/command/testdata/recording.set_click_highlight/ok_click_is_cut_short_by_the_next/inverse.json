@@ -1,0 +1,27 @@
+[
+  {
+    "type": "remove",
+    "collection": "tracks",
+    "id": "trk_n3w7r4ck21"
+  },
+  {
+    "type": "remove",
+    "collection": "items",
+    "id": "itm_hg0000000a"
+  },
+  {
+    "type": "remove",
+    "collection": "items",
+    "id": "itm_hg0000000b"
+  },
+  {
+    "type": "remove",
+    "collection": "items",
+    "id": "itm_hg0000000c"
+  },
+  {
+    "type": "remove",
+    "collection": "items",
+    "id": "itm_hg0000000d"
+  }
+]

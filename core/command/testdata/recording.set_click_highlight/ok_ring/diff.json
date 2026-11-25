@@ -1,0 +1,196 @@
+[
+  {
+    "kind": "track.added",
+    "id": "trk_n3w7r4ck21",
+    "object": {
+      "id": "trk_n3w7r4ck21",
+      "kind": "visual",
+      "name": "Click highlight",
+      "order": "a0i"
+    }
+  },
+  {
+    "kind": "item.added",
+    "id": "itm_hg0000000a",
+    "object": {
+      "contrast": 1,
+      "duration": 18,
+      "fill": "#00000000",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
+      "height": 90,
+      "id": "itm_hg0000000a",
+      "keyframes": {
+        "opacity": [
+          {
+            "easing": "ease_out",
+            "t": 0,
+            "value": 1
+          },
+          {
+            "easing": "linear",
+            "t": 18,
+            "value": 0
+          }
+        ]
+      },
+      "name": "Click itm_m1n2p3q4r5 1",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "shape": "ellipse",
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
+      "start": 120,
+      "stroke_color": "#FFC400",
+      "stroke_width": 9,
+      "track": "trk_n3w7r4ck21",
+      "type": "shape",
+      "volume": 1,
+      "width": 90,
+      "x": -819,
+      "y": -379
+    }
+  },
+  {
+    "kind": "item.added",
+    "id": "itm_hg0000000b",
+    "object": {
+      "contrast": 1,
+      "duration": 18,
+      "fill": "#00000000",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
+      "height": 90,
+      "id": "itm_hg0000000b",
+      "keyframes": {
+        "opacity": [
+          {
+            "easing": "ease_out",
+            "t": 0,
+            "value": 1
+          },
+          {
+            "easing": "linear",
+            "t": 18,
+            "value": 0
+          }
+        ]
+      },
+      "name": "Click itm_m1n2p3q4r5 2",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "shape": "ellipse",
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
+      "start": 150,
+      "stroke_color": "#FFC400",
+      "stroke_width": 9,
+      "track": "trk_n3w7r4ck21",
+      "type": "shape",
+      "volume": 1,
+      "width": 90,
+      "x": 501,
+      "y": 301
+    }
+  },
+  {
+    "kind": "item.added",
+    "id": "itm_hg0000000c",
+    "object": {
+      "contrast": 1,
+      "duration": 7,
+      "fill": "#00000000",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
+      "height": 90,
+      "id": "itm_hg0000000c",
+      "keyframes": {
+        "opacity": [
+          {
+            "easing": "ease_out",
+            "t": 0,
+            "value": 1
+          },
+          {
+            "easing": "linear",
+            "t": 7,
+            "value": 0
+          }
+        ]
+      },
+      "name": "Click itm_m1n2p3q4r5 3",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "shape": "ellipse",
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
+      "start": 180,
+      "stroke_color": "#FFC400",
+      "stroke_width": 9,
+      "track": "trk_n3w7r4ck21",
+      "type": "shape",
+      "volume": 1,
+      "width": 90,
+      "x": 1581,
+      "y": 821
+    }
+  },
+  {
+    "kind": "item.added",
+    "id": "itm_hg0000000d",
+    "object": {
+      "contrast": 1,
+      "duration": 18,
+      "fill": "#00000000",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
+      "height": 90,
+      "id": "itm_hg0000000d",
+      "keyframes": {
+        "opacity": [
+          {
+            "easing": "ease_out",
+            "t": 0,
+            "value": 1
+          },
+          {
+            "easing": "linear",
+            "t": 18,
+            "value": 0
+          }
+        ]
+      },
+      "name": "Click itm_m1n2p3q4r5 4",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "shape": "ellipse",
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
+      "start": 187,
+      "stroke_color": "#FFC400",
+      "stroke_width": 9,
+      "track": "trk_n3w7r4ck21",
+      "type": "shape",
+      "volume": 1,
+      "width": 90,
+      "x": 1781,
+      "y": 921
+    }
+  }
+]

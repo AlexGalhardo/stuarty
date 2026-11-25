@@ -172,3 +172,76 @@ func init() {
 		}).manyItems("trk_fe00000001", timeline.MaxItems-1)
 	}, short)
 }
+
+// withHighlights adds the highlight items of a take made earlier: a track named Click highlight and two items.
+func withHighlights(b *B) *B {
+	return b.with(func(d *timeline.Document) {
+		d.Tracks["trk_hg00000001"] = timeline.Track{
+			ID:    "trk_hg00000001",
+			Kind:  timeline.TrackVisual,
+			Name:  HighlightTrackName,
+			Order: "a05",
+		}
+
+		for i, id := range []string{"itm_hg00000001", "itm_hg00000002"} {
+			it := timeline.NewItem(id, timeline.ItemShape, "trk_hg00000001", 100+i*200, 18)
+			it.Name, it.Shape, it.Width, it.Height = fmt.Sprintf("Click %s %d", itemA, i+1), "ellipse", 60, 60
+			d.Items[id] = it
+		}
+	})
+}
+
+func init() {
+	hl := func(name string, ids []string, b func() *B, rest ...string) {
+		gcIDs(
+			"recording.set_click_highlight",
+			name,
+			b,
+			op("recording.set_click_highlight", cmdArgs(itemA, rest...)),
+			ids...)
+	}
+	hlPlain := func(name, item string, b func() *B, rest ...string) {
+		gc("recording.set_click_highlight", name, b, op("recording.set_click_highlight", cmdArgs(item, rest...)))
+	}
+
+	ids := []string{
+		"trk_n3w7r4ck21",
+		"itm_hg0000000a",
+		"itm_hg0000000b",
+		"itm_hg0000000c",
+		"itm_hg0000000d",
+		"itm_hg0000000e",
+	}
+	// Three presses a second apart and a fourth, a quarter of a second after the third.
+	clicks := pointer(down(4000, 300, 200), down(5000, 960, 540), down(6000, 1500, 800), down(6250, 1600, 850))
+	zoomed := takeWith(func(it *timeline.Item) {
+		it.Keyframes = timeline.Keyframes{
+			"scale": {kf(0, 1), kf(60, 2, "ease_in_out"), kf(400, 2)},
+			"x":     {kf(0, 960), kf(60, 500, "ease_in_out"), kf(400, 500)},
+			"y":     {kf(0, 540), kf(60, 300, "ease_in_out"), kf(400, 300)},
+		}
+	})
+
+	hl("ok_ring", ids, zoomed, clicks)
+	hl("ok_wave", ids, takeWith(), `"style": "wave"`, `"color": "#33CCFF"`, `"size": 120`, clicks)
+	hl("ok_pulse", ids, takeWith(), `"style": "pulse"`, `"duration_ms": 1000`, clicks)
+	hl("ok_click_is_cut_short_by_the_next", ids, takeWith(), `"duration_ms": 2000`, clicks)
+	hl(
+		"ok_replaces_the_previous_highlights",
+		ids[1:],
+		func() *B { return withHighlights(takeDoc()) },
+		`"style": "ring"`,
+		pointer(down(4000, 300, 200), down(10000, 960, 540)),
+	)
+	hlPlain("ok_none_removes_the_highlights", itemA, func() *B { return withHighlights(takeDoc()) }, `"style": "none"`)
+	hlPlain("err_validation_resolved_missing", itemA, takeWith())
+	hlPlain("err_validation_option_out_of_range", itemA, takeWith(), `"duration_ms": 100`, clicks)
+	hlPlain("err_not_found", "itm_zzzzzzzzzz", takeWith(), clicks)
+	hlPlain("err_type_mismatch_not_a_clip", itemA, func() *B { return base().audio(itemA, 0, 90, 0) }, clicks)
+	hlPlain("err_invalid_state_no_clicks", itemA, takeWith(), pointer(move(1000, 10, 10)))
+	hl("err_limit_items", ids, func() *B {
+		return takeDoc().with(func(d *timeline.Document) {
+			d.Tracks["trk_fe00000001"] = timeline.Track{ID: "trk_fe00000001", Kind: timeline.TrackVisual, Order: "a9"}
+		}).manyItems("trk_fe00000001", timeline.MaxItems-2)
+	}, clicks)
+}

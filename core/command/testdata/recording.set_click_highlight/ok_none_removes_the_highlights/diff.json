@@ -1,0 +1,60 @@
+[
+  {
+    "kind": "item.removed",
+    "id": "itm_hg00000001",
+    "object": {
+      "contrast": 1,
+      "duration": 18,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
+      "height": 60,
+      "id": "itm_hg00000001",
+      "name": "Click itm_m1n2p3q4r5 1",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "shape": "ellipse",
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
+      "start": 100,
+      "stroke_color": "#000000",
+      "track": "trk_hg00000001",
+      "type": "shape",
+      "volume": 1,
+      "width": 60
+    }
+  },
+  {
+    "kind": "item.removed",
+    "id": "itm_hg00000002",
+    "object": {
+      "contrast": 1,
+      "duration": 18,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
+      "height": 60,
+      "id": "itm_hg00000002",
+      "name": "Click itm_m1n2p3q4r5 2",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "shape": "ellipse",
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
+      "start": 300,
+      "stroke_color": "#000000",
+      "track": "trk_hg00000001",
+      "type": "shape",
+      "volume": 1,
+      "width": 60
+    }
+  }
+]

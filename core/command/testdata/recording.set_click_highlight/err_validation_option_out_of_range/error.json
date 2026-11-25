@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "The value of args.duration_ms is 100, outside the accepted range.",
+  "hint": "Use a value between 200 and 2000.",
+  "retryable": false,
+  "path": "args.duration_ms"
+}

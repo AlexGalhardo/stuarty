@@ -50,7 +50,7 @@ CLI: `stuarty video` lists the commands of the domain and `stuarty video <verb>`
 
 ## Operations
 
-These 93 operations go in the `operations` of `edit` with `domain=video`, grouped by namespace; `command_help domain=video` lists them with their summaries and `command_help name=<operation> domain=video` gives the arguments of one.
+These 94 operations go in the `operations` of `edit` with `domain=video`, grouped by namespace; `command_help domain=video` lists them with their summaries and `command_help name=<operation> domain=video` gives the arguments of one.
 
 - `animation`: apply_preset, list_presets
 - `asset`: remove
@@ -63,7 +63,7 @@ These 93 operations go in the `operations` of `edit` with `domain=video`, groupe
 - `keyframe`: clear, remove, set, set_easing
 - `marker`: add, remove, set
 - `project`: rename
-- `recording`: auto_zoom, set_cursor
+- `recording`: auto_zoom, set_click_highlight, set_cursor
 - `settings`: reframe, set, set_fps
 - `shape`: add, set
 - `slot`: fill, mark, unmark

@@ -3,7 +3,7 @@
 - Amended (2026-11-18) for Stuarty: this is the catalogue of the video domain. Other domains get their own catalogue (ADR-0031, ADR-0038).
 - Amended (2026-11-24, epic 65): three commands, `recording.auto_zoom`, `recording.set_cursor` and `recording.set_click_highlight` (C.93 to C.95); names in SDD-000 section 18, the design in SDD-025 section 17.
 - Amended (2026-11-24, epic 71): four commands, `caption.apply_style` and `caption.list_styles` (C.88, C.89), `clip.blur_region` (C.90) and `audio.apply_voice_preset` (C.91); names in SDD-000 section 17.
-- Status: Draft for freeze (2026-11-14). Parts A and B are the contract; Part C details each command. Part C is frozen: all 94 commands have golden cases and pass the registry-wide gates. The binary exposes all 94 commands, 93 of them public (epic 32 added three, C.84 to C.86, epic 69 one, C.87, epic 71 four, C.88 to C.91, epic 70 one, C.92, and epic 65 two so far, C.93 and C.94); `font.add` and `font.remove` have scope `media` like `asset.add` and `asset.remove`.
+- Status: Draft for freeze (2026-11-14). Parts A and B are the contract; Part C details each command. Part C is frozen: all 95 commands have golden cases and pass the registry-wide gates. The binary exposes all 95 commands, 94 of them public (epic 32 added three, C.84 to C.86, epic 69 one, C.87, epic 71 four, C.88 to C.91, epic 70 one, C.92, and epic 65 three, C.93 to C.95); `font.add` and `font.remove` have scope `media` like `asset.add` and `asset.remove`.
 - Depends on: SDD-001 (document), ADR-0002 (command core), ADR-0004 (time), ADR-0006 (log, concurrency, undo), ADR-0014 (JSON Schema)
 - Implements: RF-010 to RF-016, RF-020 to RF-026, RF-030 to RF-036, RF-040, RF-041, RF-050, RF-051, RF-100, RF-105, RF-107, RF-112 to RF-115, RF-119, NFR-001, NFR-025
 - Owner area: senior-a (command core and schema)
@@ -7228,4 +7228,48 @@ Draws the pointer of a screen take, smoothed, as shape items (epic 65, SDD-025 s
 - `err_not_found`
 - `err_type_mismatch_not_a_clip`
 - `err_invalid_state_no_positions`
+- `err_limit_items`
+
+### C.95 `recording.set_click_highlight`
+
+Marks every click of a screen take with a short effect (epic 65, SDD-025 sections 17.3 and 17.6).
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `item_id` | item id | yes | none | as C.93 |
+| `style` | `"ring"`, `"wave"`, `"pulse"`, `"none"` | no | `"ring"` | `none` removes the highlights of the clip and needs no `resolved` |
+| `color` | colour | no | `#FFC400` | hex or `"$name"` |
+| `size` | number | no | one twelfth of the frame height | 16 to 400 pixels |
+| `duration_ms` | integer | no | 600 | 200 to 2000 |
+| `resolved` | `{"width", "height", "events"}` | filled by the service (A.9) | none | the clicks in the source range of the clip; required when `style` is not `none` |
+
+**Preconditions.** As C.93 preconditions 1 to 4 (a take with no click in the range is `E_INVALID_STATE`), and the items fit: fewer than 500 in all (`E_LIMIT`).
+
+**Postconditions.** The items named `Click <item id> <n>` are removed. Each click, in time order, becomes a shape item on the track `Click highlight` (found or made as the `Cursor` track, directly above the clip), starting at the item frame of the click and lasting `duration_ms` in frames, cut short at the frame of the next click (a click in the frame of the one before adds nothing). Its `x` and `y` are the click mapped to the frame with the transform of the clip at that frame. `ring`: an ellipse of `size`, no fill, stroke `color` of width `max(2, size/10)`, `opacity` 1 to 0. `wave`: the same ring with `scale` 0.4 to 1.6 and `opacity` 1 to 0. `pulse`: a disc filled with `color` (no stroke), `scale` 1.2 to 0.4 and `opacity` 0.6 to 0. The keyframes are at the first and the last frame of the item, `ease_out` on the first. `effective` has `highlights`, `track_id` and `size`.
+
+**Errors.** `E_VALIDATION`, `E_NOT_FOUND`, `E_TYPE_MISMATCH`, `E_INVALID_STATE`, `E_LIMIT`.
+
+**Inverse.** As C.94. **Idempotency.** The same result with the same `resolved`, options and clip.
+
+**Example.**
+
+```json
+{"op": "recording.set_click_highlight", "args": {"item_id": "itm_m1n2p3q4r5", "style": "wave", "color": "#33CCFF"}}
+```
+
+**Golden cases.**
+
+- `ok_ring`
+- `ok_wave`
+- `ok_pulse`
+- `ok_none_removes_the_highlights`
+- `ok_click_is_cut_short_by_the_next`
+- `ok_replaces_the_previous_highlights`
+- `err_validation_resolved_missing`
+- `err_validation_option_out_of_range`
+- `err_not_found`
+- `err_type_mismatch_not_a_clip`
+- `err_invalid_state_no_clicks`
 - `err_limit_items`
