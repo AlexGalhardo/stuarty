@@ -21,6 +21,13 @@ var recordingPersonOnly = []step{
 	{Call: "RecordingDismiss", Args: json.RawMessage(`{"recording_id":"rec_0000000001"}`)},
 	// resuming restarts the capture of the screen (SDD-025 section 16.4)
 	{Call: "RecordingResume", Args: json.RawMessage(`{"recording_id":"rec_0000000001"}`)},
+	// starting a recording that an agent prepared is a start like any other (SDD-025 section 19.3)
+	{Call: "RecordingStart", Args: json.RawMessage(`{"recording_id":"rec_0000000001"}`)},
+	// deciding the cuts of a proposal is a person's too (SDD-025 section 19.2)
+	{
+		Call: "RecordingProposalDecide",
+		Args: json.RawMessage(`{"recording_id":"rec_0000000001","proposal_id":"prp_0000000001","accept":[true]}`),
+	},
 }
 
 // SDD-007 T-118: an agent cannot start a capture, add a recording to the project or set it aside, on any surface:

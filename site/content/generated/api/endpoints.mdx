@@ -291,18 +291,22 @@ Every operation has its own page with the parameters, the body, the responses an
 | --- | --- | --- | --- |
 | `GET` | `/api/v1/projects/{id}/recordings` | [`projects.recordings`](/docs/api/projects.recordings) | List the recordings of a project |
 | `GET` | `/api/v1/recording/sources` | [`recording.sources`](/docs/api/recording.sources) | List the displays and windows that can be captured |
-| `POST` | `/api/v1/recordings` | [`recordings.start`](/docs/api/recordings.start) | Start recording a display or a window (a person in the browser only; the local token and keys get 403) |
+| `POST` | `/api/v1/recordings` | [`recordings.start`](/docs/api/recordings.start) | Start recording a display or a window, or a recording that was prepared (a person in the browser only; the local token and keys get 403) |
 | `GET` | `/api/v1/recordings/{id}` | [`recordings.get`](/docs/api/recordings.get) | Read one recording |
 | `POST` | `/api/v1/recordings/{id}/cancel` | [`recordings.cancel`](/docs/api/recordings.cancel) | Discard a recording in progress; delete a finished one (a person in the browser only) |
 | `POST` | `/api/v1/recordings/{id}/confirm` | [`recordings.confirm`](/docs/api/recordings.confirm) | Add a finished recording to the project (a person in the browser only; agents can then read it) |
 | `POST` | `/api/v1/recordings/{id}/dismiss` | [`recordings.dismiss`](/docs/api/recordings.dismiss) | Not now: keep a recording out of the project and out of sight of agents (a person in the browser only) |
 | `GET` | `/api/v1/recordings/{id}/events` | [`recordings.events`](/docs/api/recordings.events) | Read the pointer and click events of a finished recording, in pixels of the captured source |
 | `POST` | `/api/v1/recordings/{id}/finish` | [`recordings.upload.finish`](/docs/api/recordings.upload.finish) | Finish a browser recording: the server assembles the chunks into a file (a person in the browser only) |
+| `POST` | `/api/v1/recordings/{id}/marks` | [`recordings.marks`](/docs/api/recordings.marks) | Mark a point or a stretch of a take as good, bad or a mistake |
 | `POST` | `/api/v1/recordings/{id}/pause` | [`recordings.pause`](/docs/api/recordings.pause) | Pause a recording: every source stops writing and the paused time is cut from every file (anyone with media) |
 | `POST` | `/api/v1/recordings/{id}/place` | [`recordings.place`](/docs/api/recordings.place) | Place a recording the person added on the timeline, as one batch |
+| `POST` | `/api/v1/recordings/{id}/proposals` | [`recordings.proposals`](/docs/api/recordings.proposals) | Propose cuts of a ready take, each with a reason; changes no timeline until a person decides |
+| `POST` | `/api/v1/recordings/{id}/proposals/{proposal_id}/decide` | [`recordings.proposals.decide`](/docs/api/recordings.proposals.decide) | Accept or reject every range of a proposal (a person in the browser only); the accepted ones are one undoable batch |
 | `POST` | `/api/v1/recordings/{id}/resume` | [`recordings.resume`](/docs/api/recordings.resume) | Resume a paused recording (a person in the browser only: it restarts the capture of the screen) |
 | `POST` | `/api/v1/recordings/{id}/stop` | [`recordings.stop`](/docs/api/recordings.stop) | Stop a recording and keep what was written (anyone with media) |
 | `PUT` | `/api/v1/recordings/{id}/upload/{track}/{index}` | [`recordings.upload.chunk`](/docs/api/recordings.upload.chunk) | Upload one chunk of a track of a browser recording, in order, with its SHA-256 (a person in the browser only) |
+| `POST` | `/api/v1/recordings/prepare` | [`recordings.prepare`](/docs/api/recordings.prepare) | Prepare a recording: store its source, tracks, script and notes so that a person only presses record (starts nothing) |
 | `POST` | `/api/v1/recordings/upload` | [`recordings.upload.begin`](/docs/api/recordings.upload.begin) | Begin a recording that the browser captures and uploads (a person in the browser only) |
 
 ## Agent chat
@@ -329,6 +333,7 @@ Every operation has its own page with the parameters, the body, the responses an
 | --- | --- | --- | --- |
 | `GET` | `/api/v1/handshake` | [`handshake.get`](/docs/api/handshake.get) | Prove that the server knows the local token |
 | `GET` | `/api/v1/system` | [`system.get`](/docs/api/system.get) | Read the diagnostic report |
+| `GET` | `/api/v1/system/capture` | [`system.capture`](/docs/api/system.capture) | Whether a capture helper is running, for the recording indicator of the desktop shell |
 | `POST` | `/api/v1/system/launch` | [`system.launch`](/docs/api/system.launch) | Issue a one-time browser launch code |
 | `POST` | `/api/v1/system/scheduler` | [`system.scheduler`](/docs/api/system.scheduler) | Read, pause or resume the publication scheduler (pause and resume only for the desktop shell) |
 | `GET` | `/api/v1/system/tools` | [`system.tools`](/docs/api/system.tools) | List the installed helpers and the install progress |

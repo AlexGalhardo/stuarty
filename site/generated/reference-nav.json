@@ -290,11 +290,15 @@
         "recordings.dismiss",
         "recordings.events",
         "recordings.upload.finish",
+        "recordings.marks",
         "recordings.pause",
         "recordings.place",
+        "recordings.proposals",
+        "recordings.proposals.decide",
         "recordings.resume",
         "recordings.stop",
         "recordings.upload.chunk",
+        "recordings.prepare",
         "recordings.upload.begin"
       ]
     },
@@ -321,6 +325,7 @@
       "pages": [
         "handshake.get",
         "system.get",
+        "system.capture",
         "system.launch",
         "system.scheduler",
         "system.tools",

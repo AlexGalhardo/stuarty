@@ -313,6 +313,14 @@ func callService(ctx context.Context, svc service.Service, s step) (any, error) 
 		return invoke(ctx, s, svc.RecordingDismiss)
 	case "RecordingPlace":
 		return invoke(ctx, s, svc.RecordingPlace)
+	case "RecordingPrepare":
+		return invoke(ctx, s, svc.RecordingPrepare)
+	case "RecordingMark":
+		return invoke(ctx, s, svc.RecordingMark)
+	case "RecordingProposeCuts":
+		return invoke(ctx, s, svc.RecordingProposeCuts)
+	case "RecordingProposalDecide":
+		return invoke(ctx, s, svc.RecordingProposalDecide)
 	case "CostSummary":
 		return invoke(ctx, s, svc.CostSummary)
 	case "CostCeilingSet":
@@ -1039,6 +1047,10 @@ func command2argv(s step) (name string, argv []string, stdin string, err error) 
 }
 
 func commandOf(s step) (name string, argv []string, stdin string, err error) {
+	if name, argv, stdin, ok, err := recordingAgentCommand(s); ok {
+		return name, argv, stdin, err
+	}
+
 	if name, argv, ok, err := recordingCommand(s); ok {
 		return name, argv, "", err
 	}

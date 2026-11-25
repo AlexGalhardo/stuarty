@@ -45,8 +45,11 @@ Content type `application/json`. Schema: [`Recording`](/docs/api/schemas#recordi
 | `frames` | `integer (int64)` | no |  |
 | `height` | `integer` | no |  |
 | `levels` | [`RecordingLevels`](/docs/api/schemas#recordinglevels) or `any` or `null` or `null` | no |  |
+| `marks` | array of [`RecordingMark`](/docs/api/schemas#recordingmark) | no |  |
 | `pauses` | array of [`RecordingPause`](/docs/api/schemas#recordingpause) | no |  |
+| `plan` | [`RecordingPlan`](/docs/api/schemas#recordingplan) or `any` or `null` or `null` | no |  |
 | `project_id` | `string` | no |  |
+| `proposals` | array of [`RecordingProposal`](/docs/api/schemas#recordingproposal) | no |  |
 | `recording_id` | `string` | no |  |
 | `review` | `string` | no |  |
 | `source` | [`RecordingSource`](/docs/api/schemas#recordingsource) | no |  |
@@ -263,13 +266,45 @@ puts "#{response.code} #{response.body}"
     "microphone": 0,
     "system": 0
   },
+  "marks": [
+    {
+      "actor": "string",
+      "at_ms": 0,
+      "created_at": "2006-01-02T15:04:05Z",
+      "end_ms": 0,
+      "kind": "string",
+      "n": 0,
+      "note": "string"
+    }
+  ],
   "pauses": [
     {
       "from_ms": 0,
       "to_ms": 0
     }
   ],
+  "plan": {
+    "camera": "string",
+    "events": false,
+    "fps": 0,
+    "microphone": "string",
+    "notes": "string",
+    "script_id": "string",
+    "system_audio": false
+  },
   "project_id": "string",
+  "proposals": [
+    {
+      "actor": "string",
+      "created_at": "2006-01-02T15:04:05Z",
+      "decided_at": "2006-01-02T15:04:05Z",
+      "decided_by": "string",
+      "proposal_id": "string",
+      "ranges": [],
+      "revision": 0,
+      "state": "string"
+    }
+  ],
   "recording_id": "string",
   "review": "string",
   "source": {

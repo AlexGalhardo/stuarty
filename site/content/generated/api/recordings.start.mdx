@@ -1,6 +1,6 @@
 ---
-title: "Start recording a display or a window (a person in the browser only; the local token and keys get 403)"
-description: "POST /api/v1/recordings: Start recording a display or a window (a person in the browser only; the local token and keys get 403)"
+title: "Start recording a display or a window, or a recording that was prepared (a person in the browser only; the local token and keys get 403)"
+description: "POST /api/v1/recordings: Start recording a display or a window, or a recording that was prepared (a person in the browser only; the local token and keys get 403)"
 badge: "POST"
 wide: true
 ---
@@ -27,8 +27,9 @@ Content type `application/json`.
 | `events` | `boolean` | no | Save the pointer position and the clicks (never a key) beside the recording. |
 | `fps` | `integer` | no | 24, 30 (the default) or 60. |
 | `microphone` | `string` | no | A microphone id from GET /recording/sources, or default; empty records no microphone. |
-| `project_id` | `string` | yes | The project the recording will join once a person adds it.. min length 1 |
-| `source` | [`recordingSourceIn`](/docs/api/schemas#recordingsourcein) | yes |  |
+| `project_id` | `string` | no | The project the recording will join once a person adds it. Required unless recording_id is sent. |
+| `recording_id` | `string` | no | A recording that was prepared (POST /recordings/prepare): its stored plan is the request, and nothing else may be sent. |
+| `source` | `any` | no | What to capture. Required unless recording_id is sent. |
 | `system_audio` | `boolean` | no | Record the sound the computer plays on a track of its own. |
 
 ## Responses
@@ -53,8 +54,11 @@ Content type `application/json`. Schema: [`Recording`](/docs/api/schemas#recordi
 | `frames` | `integer (int64)` | no |  |
 | `height` | `integer` | no |  |
 | `levels` | [`RecordingLevels`](/docs/api/schemas#recordinglevels) or `any` or `null` or `null` | no |  |
+| `marks` | array of [`RecordingMark`](/docs/api/schemas#recordingmark) | no |  |
 | `pauses` | array of [`RecordingPause`](/docs/api/schemas#recordingpause) | no |  |
+| `plan` | [`RecordingPlan`](/docs/api/schemas#recordingplan) or `any` or `null` or `null` | no |  |
 | `project_id` | `string` | no |  |
+| `proposals` | array of [`RecordingProposal`](/docs/api/schemas#recordingproposal) | no |  |
 | `recording_id` | `string` | no |  |
 | `review` | `string` | no |  |
 | `source` | [`RecordingSource`](/docs/api/schemas#recordingsource) | no |  |
@@ -118,14 +122,7 @@ Content type `application/problem+json`. Schema: [`Problem`](/docs/api/schemas#p
 curl -X POST "http://127.0.0.1:7878/api/v1/recordings" \
   -H "Authorization: Bearer $STUARTY_KEY" \
   -H "Content-Type: application/json" \
-  -d '{
-  "project_id": "string",
-  "source": {
-    "id": "string",
-    "kind": "string",
-    "name": "string"
-  }
-}'
+  -d '{}'
 ```
 
 ```python title="Python"
@@ -136,14 +133,7 @@ import requests
 response = requests.post(
     "http://127.0.0.1:7878/api/v1/recordings",
     headers={"Authorization": f"Bearer {os.environ['STUARTY_KEY']}"},
-    json={
-        "project_id": "string",
-        "source": {
-            "id": "string",
-            "kind": "string",
-            "name": "string",
-        },
-    },
+    json={},
     timeout=30,
 )
 response.raise_for_status()
@@ -157,14 +147,7 @@ const response = await fetch("http://127.0.0.1:7878/api/v1/recordings", {
     Authorization: `Bearer ${process.env.STUARTY_KEY}`,
     "Content-Type": "application/json",
   },
-  body: JSON.stringify({
-    "project_id": "string",
-    "source": {
-      "id": "string",
-      "kind": "string",
-      "name": "string"
-    }
-  }),
+  body: JSON.stringify({}),
 });
 if (!response.ok) throw new Error(`${response.status} ${await response.text()}`);
 console.log(await response.json());
@@ -182,14 +165,7 @@ import (
 )
 
 func main() {
-	body := strings.NewReader(`{
-  "project_id": "string",
-  "source": {
-    "id": "string",
-    "kind": "string",
-    "name": "string"
-  }
-}`)
+	body := strings.NewReader(`{}`)
 	req, err := http.NewRequest("POST", "http://127.0.0.1:7878/api/v1/recordings", body)
 	if err != nil {
 		panic(err)
@@ -222,14 +198,7 @@ curl_setopt_array($ch, [
         "Authorization: Bearer " . getenv("STUARTY_KEY"),
         "Content-Type: application/json",
     ],
-    CURLOPT_POSTFIELDS => '{
-  "project_id": "string",
-  "source": {
-    "id": "string",
-    "kind": "string",
-    "name": "string"
-  }
-}',
+    CURLOPT_POSTFIELDS => '{}',
 ]);
 
 $response = curl_exec($ch);
@@ -252,14 +221,7 @@ public class Example {
             .header("Authorization", "Bearer " + System.getenv("STUARTY_KEY"))
             .header("Content-Type", "application/json")
             .method("POST", HttpRequest.BodyPublishers.ofString("""
-                {
-                  "project_id": "string",
-                  "source": {
-                    "id": "string",
-                    "kind": "string",
-                    "name": "string"
-                  }
-                }
+                {}
                 """))
             .build();
 
@@ -282,14 +244,7 @@ using var request = new HttpRequestMessage(
 request.Headers.Authorization = new AuthenticationHeaderValue(
     "Bearer", Environment.GetEnvironmentVariable("STUARTY_KEY"));
 request.Content = new StringContent("""
-{
-  "project_id": "string",
-  "source": {
-    "id": "string",
-    "kind": "string",
-    "name": "string"
-  }
-}
+{}
 """, Encoding.UTF8, "application/json");
 
 using var response = await client.SendAsync(request);
@@ -304,14 +259,7 @@ uri = URI("http://127.0.0.1:7878/api/v1/recordings")
 request = Net::HTTP::Post.new(uri)
 request["Authorization"] = "Bearer #{ENV.fetch('STUARTY_KEY')}"
 request["Content-Type"] = "application/json"
-request.body = '{
-  "project_id": "string",
-  "source": {
-    "id": "string",
-    "kind": "string",
-    "name": "string"
-  }
-}'
+request.body = '{}'
 
 response = Net::HTTP.start(uri.hostname, uri.port, use_ssl: uri.scheme == "https") do |http|
   http.request(request)
@@ -352,13 +300,45 @@ puts "#{response.code} #{response.body}"
     "microphone": 0,
     "system": 0
   },
+  "marks": [
+    {
+      "actor": "string",
+      "at_ms": 0,
+      "created_at": "2006-01-02T15:04:05Z",
+      "end_ms": 0,
+      "kind": "string",
+      "n": 0,
+      "note": "string"
+    }
+  ],
   "pauses": [
     {
       "from_ms": 0,
       "to_ms": 0
     }
   ],
+  "plan": {
+    "camera": "string",
+    "events": false,
+    "fps": 0,
+    "microphone": "string",
+    "notes": "string",
+    "script_id": "string",
+    "system_audio": false
+  },
   "project_id": "string",
+  "proposals": [
+    {
+      "actor": "string",
+      "created_at": "2006-01-02T15:04:05Z",
+      "decided_at": "2006-01-02T15:04:05Z",
+      "decided_by": "string",
+      "proposal_id": "string",
+      "ranges": [],
+      "revision": 0,
+      "state": "string"
+    }
+  ],
   "recording_id": "string",
   "review": "string",
   "source": {

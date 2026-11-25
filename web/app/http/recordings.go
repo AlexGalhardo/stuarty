@@ -20,11 +20,19 @@ type recordingSourceIn struct {
 	Name string `json:"name,omitempty"                     doc:"The title the person saw in the picker; optional, plain text."`
 }
 
+// recordingStartSourceIn is the source of a start. Nothing is required here: a recording that was prepared is
+// started by its id alone, and the Service checks the rest and answers with the field that is wrong.
+type recordingStartSourceIn struct {
+	Kind string `json:"kind,omitempty" doc:"display or window."`
+	ID   string `json:"id,omitempty"   doc:"An id from GET /recording/sources."`
+	Name string `json:"name,omitempty" doc:"The title the person saw in the picker; optional, plain text."`
+}
+
 type recordingStartIn struct {
-	ProjectID   string            `json:"project_id,omitempty"   doc:"The project the recording will join once a person adds it. Required unless recording_id is sent."`
-	Source      recordingSourceIn `json:"source"                 doc:"What to capture. Required unless recording_id is sent."`
-	FPS         int               `json:"fps,omitempty"          doc:"24, 30 (the default) or 60."`
-	RecordingID string            `json:"recording_id,omitempty" doc:"A recording that was prepared (POST /recordings/prepare): its stored plan is the request, and nothing else may be sent."`
+	ProjectID   string                 `json:"project_id,omitempty"   doc:"The project the recording will join once a person adds it. Required unless recording_id is sent."`
+	Source      recordingStartSourceIn `json:"source"                 doc:"What to capture. Required unless recording_id is sent."`
+	FPS         int                    `json:"fps,omitempty"          doc:"24, 30 (the default) or 60."`
+	RecordingID string                 `json:"recording_id,omitempty" doc:"A recording that was prepared (POST /recordings/prepare): its stored plan is the request, and nothing else may be sent."`
 
 	Microphone  string `json:"microphone,omitempty"   doc:"A microphone id from GET /recording/sources, or default; empty records no microphone."`
 	SystemAudio bool   `json:"system_audio,omitempty" doc:"Record the sound the computer plays on a track of its own."`

@@ -1678,10 +1678,13 @@ Start recording a display or a window (for a person in the app; the local token 
 
 ```text
 stuarty recording:start --project <id> --kind display|window --source <id> [--fps 24|30|60] [--microphone <id>|default] [--system-audio] [--camera <id>] [--events]
+stuarty recording:start --recording <id of a prepared recording>
 ```
 
 | Flag | Type | Default | Meaning |
 | --- | --- | --- | --- |
+| `--project` | string |  | the project (default $STUARTY_PROJECT); not with --recording |
+| `--recording` | string |  | a recording made with recording:prepare: its plan is the request |
 | `--kind` | string |  | display or window (required) |
 | `--source` | string |  | an id from recording:sources (required) |
 | `--name` | string |  | the title of the source, for the record |
@@ -1691,7 +1694,7 @@ stuarty recording:start --project <id> --kind display|window --source <id> [--fp
 | `--camera` | string |  | a camera id from recording:sources |
 | `--events` | boolean |  | save the pointer position and the clicks (never a key) |
 
-Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`.
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
 
 Example:
 
@@ -1867,6 +1870,100 @@ Example:
 
 ```bash
 stuarty recording:place rec_0123456789
+```
+
+## `recording:prepare`
+
+Prepare a recording for a person: source, tracks, script and notes; starts nothing
+
+```text
+stuarty recording:prepare --project <id> --kind display|window --source <id> [--fps 24|30|60] [--microphone <id>|default] [--system-audio] [--camera <id>] [--events] [--script <item id>] [--notes <text>|--notes-file <file|->]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--kind` | string |  | display or window (required) |
+| `--source` | string |  | an id from recording:sources (required) |
+| `--name` | string |  | the title of the source, for the record |
+| `--fps` | integer |  | 24, 30 (the default) or 60 |
+| `--microphone` | string |  | a microphone id from recording:sources, or default |
+| `--system-audio` | boolean |  | record the sound the computer plays on its own track |
+| `--camera` | string |  | a camera id from recording:sources |
+| `--events` | boolean |  | save the pointer position and the clicks (never a key) |
+| `--script` | string |  | the id of a script of the project the person will read |
+| `--notes` | string |  | a note for the person who presses record |
+| `--notes-file` | string |  | read the note from a file, or - for standard input |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`.
+
+Example:
+
+```bash
+stuarty recording:prepare --project prj_7k2m9x4q1b --kind display --source d1 --notes "Say the hook first"
+```
+
+## `recording:mark`
+
+Mark a point or a stretch of a take as good, bad or a mistake
+
+```text
+stuarty recording:mark <recording id> --kind good|bad|mistake --at-ms <n> [--end-ms <n>] [--note <text>]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--kind` | string |  | good, bad or mistake (required) |
+| `--at-ms` | integer |  | where in the take, in milliseconds of recording time |
+| `--end-ms` | integer |  | the end of a stretch; leave out for a point |
+| `--note` | string |  | a short note, plain text |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty recording:mark rec_0123456789 --kind mistake --at-ms 12500 --note "stumbled on the name"
+```
+
+## `recording:propose`
+
+Propose cuts of a ready take, each with a reason; changes no timeline until a person decides
+
+```text
+stuarty recording:propose <recording id> --ranges <file|->
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--ranges` | string |  | a JSON list of \{from_ms, to_ms, reason\}, from a file or - for standard input |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty recording:propose rec_0123456789 --ranges cuts.json
+```
+
+## `recording:decide`
+
+Decide a proposal of cuts, one yes or no per range (for a person in the app; the local token is refused)
+
+```text
+stuarty recording:decide <recording id> <proposal id> --accept <yes|no,...> [--timeline <id>]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--accept` | string |  | one yes or no for every range, in order, separated by commas |
+| `--timeline` | string |  | the timeline the recording was placed on, when the project has several |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty recording:decide rec_0123456789 prp_0123456789 --accept yes,no,yes
 ```
 
 ## `approval:list`

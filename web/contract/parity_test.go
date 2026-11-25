@@ -257,6 +257,16 @@ var parity = []row{
 	{method: "RecordingConfirm", command: "recording:confirm", route: "POST /recordings/{}/confirm"},
 	{method: "RecordingDismiss", command: "recording:dismiss", route: "POST /recordings/{}/dismiss"},
 	{method: "RecordingPlace", command: "recording:place", route: "POST /recordings/{}/place"},
+	// The agent flow of a recording (epic 64, SDD-025 section 19): no MCP tool, the tool list is at its byte budget.
+	// An agent over MCP reads the plan, the marks and the proposals with job_get; it prepares, marks and proposes
+	// through the CLI and HTTP, and a person decides.
+	{method: "RecordingPrepare", command: "recording:prepare", route: "POST /recordings/prepare"},
+	{method: "RecordingMark", command: "recording:mark", route: "POST /recordings/{}/marks"},
+	{method: "RecordingProposeCuts", command: "recording:propose", route: "POST /recordings/{}/proposals"},
+	{
+		method: "RecordingProposalDecide", command: "recording:decide",
+		route: "POST /recordings/{}/proposals/{}/decide",
+	},
 	// A capture of a browser cannot be driven from outside (SDD-025 section 18.3).
 	{method: "RecordingUploadBegin", route: "POST /recordings/upload", httpOnly: true},
 	{method: "RecordingUploadChunk", route: "PUT /recordings/{}/upload/{}/{}", httpOnly: true},

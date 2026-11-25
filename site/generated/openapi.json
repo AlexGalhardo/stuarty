@@ -7896,14 +7896,36 @@
               }
             ]
           },
+          "marks": {
+            "items": {
+              "$ref": "#/components/schemas/RecordingMark"
+            },
+            "type": "array"
+          },
           "pauses": {
             "items": {
               "$ref": "#/components/schemas/RecordingPause"
             },
             "type": "array"
           },
+          "plan": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RecordingPlan"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "project_id": {
             "type": "string"
+          },
+          "proposals": {
+            "items": {
+              "$ref": "#/components/schemas/RecordingProposal"
+            },
+            "type": "array"
           },
           "recording_id": {
             "type": "string"
@@ -7947,6 +7969,26 @@
             ]
           },
           "width": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "RecordingCutRange": {
+        "properties": {
+          "decision": {
+            "type": "string"
+          },
+          "from_ms": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "reason": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "to_ms": {
+            "format": "int64",
             "type": "integer"
           }
         },
@@ -8039,6 +8081,36 @@
         },
         "type": "object"
       },
+      "RecordingMark": {
+        "properties": {
+          "actor": {
+            "type": "string"
+          },
+          "at_ms": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "created_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "end_ms": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "n": {
+            "type": "integer"
+          },
+          "note": {
+            "type": "string",
+            "x-untrusted": true
+          }
+        },
+        "type": "object"
+      },
       "RecordingPause": {
         "properties": {
           "from_ms": {
@@ -8048,6 +8120,92 @@
           "to_ms": {
             "format": "int64",
             "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "RecordingPlan": {
+        "properties": {
+          "camera": {
+            "type": "string"
+          },
+          "events": {
+            "type": "boolean"
+          },
+          "fps": {
+            "type": "integer"
+          },
+          "microphone": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "script_id": {
+            "type": "string"
+          },
+          "system_audio": {
+            "type": "boolean"
+          }
+        },
+        "type": "object"
+      },
+      "RecordingProposal": {
+        "properties": {
+          "actor": {
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "decided_at": {
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "decided_by": {
+            "type": "string"
+          },
+          "proposal_id": {
+            "type": "string"
+          },
+          "ranges": {
+            "items": {
+              "$ref": "#/components/schemas/RecordingCutRange"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "state": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "RecordingProposalDecideResult": {
+        "properties": {
+          "edit": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EditResult"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "recording": {
+            "$ref": "#/components/schemas/Recording"
+          },
+          "text": {
+            "type": "string"
           }
         },
         "type": "object"
@@ -16361,6 +16519,24 @@
         ],
         "type": "object"
       },
+      "captureStatusOut": {
+        "properties": {
+          "active": {
+            "description": "Whether a capture helper that was asked to record is alive.",
+            "type": "boolean"
+          },
+          "helpers": {
+            "description": "How many such helper processes are alive.",
+            "type": "integer"
+          },
+          "since_ms": {
+            "description": "When the indicator went on, in Unix milliseconds; 0 while it is off.",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
       "command.Operation": {
         "properties": {
           "args": {},
@@ -16574,6 +16750,27 @@
         },
         "type": "object"
       },
+      "recordingCutRangeIn": {
+        "properties": {
+          "from_ms": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "reason": {
+            "description": "Why this stretch should go, plain text, at most 200 characters.",
+            "minLength": 1,
+            "type": "string"
+          },
+          "to_ms": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "reason"
+        ],
+        "type": "object"
+      },
       "recordingSourceIn": {
         "properties": {
           "id": {
@@ -16595,6 +16792,23 @@
           "kind",
           "id"
         ],
+        "type": "object"
+      },
+      "recordingStartSourceIn": {
+        "properties": {
+          "id": {
+            "description": "An id from GET /recording/sources.",
+            "type": "string"
+          },
+          "kind": {
+            "description": "display or window.",
+            "type": "string"
+          },
+          "name": {
+            "description": "The title the person saw in the picker; optional, plain text.",
+            "type": "string"
+          }
+        },
         "type": "object"
       },
       "recordingUploadCountIn": {
@@ -30582,8 +30796,108 @@
                     "type": "string"
                   },
                   "project_id": {
+                    "description": "The project the recording will join once a person adds it. Required unless recording_id is sent.",
+                    "type": "string"
+                  },
+                  "recording_id": {
+                    "description": "A recording that was prepared (POST /recordings/prepare): its stored plan is the request, and nothing else may be sent.",
+                    "type": "string"
+                  },
+                  "source": {
+                    "allOf": [
+                      {
+                        "$ref": "#/components/schemas/recordingStartSourceIn"
+                      }
+                    ],
+                    "description": "What to capture. Required unless recording_id is sent."
+                  },
+                  "system_audio": {
+                    "description": "Record the sound the computer plays on a track of its own.",
+                    "type": "boolean"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Recording"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Start recording a display or a window, or a recording that was prepared (a person in the browser only; the local token and keys get 403)"
+      }
+    },
+    "/api/v1/recordings/prepare": {
+      "post": {
+        "operationId": "recordings.prepare",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "camera": {
+                    "description": "A camera id from GET /recording/sources; empty records no camera.",
+                    "type": "string"
+                  },
+                  "events": {
+                    "description": "Save the pointer position and the clicks (never a key) beside the recording.",
+                    "type": "boolean"
+                  },
+                  "fps": {
+                    "description": "24, 30 (the default) or 60.",
+                    "type": "integer"
+                  },
+                  "microphone": {
+                    "description": "A microphone id from GET /recording/sources, or default; empty records no microphone.",
+                    "type": "string"
+                  },
+                  "notes": {
+                    "description": "A note for the person who presses record; at most 2000 characters, plain text.",
+                    "type": "string"
+                  },
+                  "project_id": {
                     "description": "The project the recording will join once a person adds it.",
                     "minLength": 1,
+                    "type": "string"
+                  },
+                  "script_id": {
+                    "description": "A script of the project (a text item of kind script) the person will read.",
                     "type": "string"
                   },
                   "source": {
@@ -30642,7 +30956,7 @@
             "bearer": []
           }
         ],
-        "summary": "Start recording a display or a window (a person in the browser only; the local token and keys get 403)"
+        "summary": "Prepare a recording: store its source, tracks, script and notes so that a person only presses record (starts nothing)"
       }
     },
     "/api/v1/recordings/upload": {
@@ -31151,6 +31465,99 @@
         "summary": "Finish a browser recording: the server assembles the chunks into a file (a person in the browser only)"
       }
     },
+    "/api/v1/recordings/{id}/marks": {
+      "post": {
+        "operationId": "recordings.marks",
+        "parameters": [
+          {
+            "description": "A recording id, rec_ and 10 characters.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "at_ms": {
+                    "description": "Where in the take, in milliseconds of recording time.",
+                    "format": "int64",
+                    "type": "integer"
+                  },
+                  "end_ms": {
+                    "description": "The end of a stretch; empty for a point.",
+                    "format": "int64",
+                    "type": "integer"
+                  },
+                  "kind": {
+                    "description": "good, bad or mistake.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "note": {
+                    "description": "A short note, plain text, at most 200 characters.",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Recording"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Mark a point or a stretch of a take as good, bad or a mistake"
+      }
+    },
     "/api/v1/recordings/{id}/pause": {
       "post": {
         "operationId": "recordings.pause",
@@ -31294,6 +31701,182 @@
           }
         ],
         "summary": "Place a recording the person added on the timeline, as one batch"
+      }
+    },
+    "/api/v1/recordings/{id}/proposals": {
+      "post": {
+        "operationId": "recordings.proposals",
+        "parameters": [
+          {
+            "description": "A recording id, rec_ and 10 characters.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "ranges": {
+                    "description": "1 to 200 ranges in milliseconds of recording time, sorted, not overlapping, each at least 100 ms.",
+                    "items": {
+                      "$ref": "#/components/schemas/recordingCutRangeIn"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "ranges"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Recording"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Propose cuts of a ready take, each with a reason; changes no timeline until a person decides"
+      }
+    },
+    "/api/v1/recordings/{id}/proposals/{proposal_id}/decide": {
+      "post": {
+        "operationId": "recordings.proposals.decide",
+        "parameters": [
+          {
+            "description": "A recording id, rec_ and 10 characters.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          {
+            "description": "A proposal id, prp_ and 10 characters.",
+            "in": "path",
+            "name": "proposal_id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "accept": {
+                    "description": "One yes or no for every range of the proposal, in order.",
+                    "items": {
+                      "type": "boolean"
+                    },
+                    "type": "array"
+                  },
+                  "timeline_id": {
+                    "description": "The timeline the recording was placed on; required when the project has several.",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "accept"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecordingProposalDecideResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Accept or reject every range of a proposal (a person in the browser only); the accepted ones are one undoable batch"
       }
     },
     "/api/v1/recordings/{id}/resume": {
@@ -32041,6 +32624,41 @@
           }
         ],
         "summary": "Read the diagnostic report"
+      }
+    },
+    "/api/v1/system/capture": {
+      "get": {
+        "operationId": "system.capture",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/captureStatusOut"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Whether a capture helper is running, for the recording indicator of the desktop shell"
       }
     },
     "/api/v1/system/launch": {
