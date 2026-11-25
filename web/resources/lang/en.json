@@ -2465,7 +2465,7 @@
       },
       "screen_take": {
         "title": "Screen recording",
-        "hint": "For a recording made with pointer events: zoom in on the clicks, draw a smooth cursor and mark every click. Each button makes items on the timeline that you can change or delete. Run them again after you change the zoom or move the clip.",
+        "hint": "For a recording made with pointer events: zoom in on the clicks, draw a smooth cursor and mark every click. Each button makes keyframes or items on the timeline that you can change or delete; Zoom on the clicks replaces the position and scale keyframes of the clip. The cursor and the highlights do not follow later changes: draw them again after you change the zoom by hand or move the clip.",
         "default": "Default",
         "zoom_level": "Zoom",
         "zoom_apply": "Zoom on the clicks",
