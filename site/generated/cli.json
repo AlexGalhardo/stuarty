@@ -776,7 +776,7 @@
           "name": "sections",
           "type": "string",
           "default": "probe",
-          "usage": "probe, transcript, silences, loudness, beats"
+          "usage": "probe, transcript, silences, loudness, beats, words, fillers, zooms"
         },
         {
           "name": "min-silence",

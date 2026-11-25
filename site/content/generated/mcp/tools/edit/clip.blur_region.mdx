@@ -24,6 +24,7 @@ Hides part of the picture (an e-mail, a key, an address): adds a copy of the cli
 | `new_track_id` | `string` | no | The id of the track when one is made.; pattern `^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$` |
 | `radius` | `number` | no | Blur radius in pixels at project resolution, 1.5% of the shorter side to 100. Default 4%.; max 100 |
 | `start` | `string` | no | Absolute start of the blur, inside the clip. Default the start of the clip. |
+| `strength` | `strong`, `medium` | no | A named blur strength instead of a radius; strong is the default. |
 | `track_id` | `string` | no | A visual track above the clip. Default a Blur track above it, made if there is none.; pattern `^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$` |
 | `width` | `number` | yes | Width of the region, a fraction of the picture.; min 0.001; max 1 |
 | `x` | `number` | yes | Left edge of the region, a fraction of the picture.; min 0; max 1 |

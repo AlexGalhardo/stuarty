@@ -480,6 +480,15 @@ The types named in the tables of the operations. The arguments of each editing c
 | `smoothness` | `number (double)` | no |  |
 | `spill` | `number (double)` | no |  |
 
+### ClipZoom
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `end` | [`TimeValue`](/docs/api/schemas#timevalue) | no |  |
+| `item_id` | `string` | no |  |
+| `n` | `integer` | no |  |
+| `start` | [`TimeValue`](/docs/api/schemas#timevalue) | no |  |
+
 ### CodecAvailability
 
 | Name | Type | Required | Description |
@@ -1910,6 +1919,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | `untrusted` | [`UntrustedData`](/docs/api/schemas#untrusteddata) or `any` or `null` or `null` | no |  |
 | `untrusted_notice` | `string` | no |  |
 | `words` | [`TranscriptViewResult`](/docs/api/schemas#transcriptviewresult) or `any` or `null` or `null` | no |  |
+| `zooms` | array of [`ClipZoom`](/docs/api/schemas#clipzoom) | no |  |
 
 ### MediaListResult
 

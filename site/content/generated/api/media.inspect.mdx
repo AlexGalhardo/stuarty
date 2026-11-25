@@ -59,6 +59,7 @@ Content type `application/json`. Schema: [`MediaInspectResult`](/docs/api/schema
 | `untrusted` | [`UntrustedData`](/docs/api/schemas#untrusteddata) or `any` or `null` or `null` | no |  |
 | `untrusted_notice` | `string` | no |  |
 | `words` | [`TranscriptViewResult`](/docs/api/schemas#transcriptviewresult) or `any` or `null` or `null` | no |  |
+| `zooms` | array of [`ClipZoom`](/docs/api/schemas#clipzoom) | no |  |
 
 ### 400
 
@@ -346,7 +347,15 @@ puts "#{response.code} #{response.body}"
     "words": [
       {}
     ]
-  }
+  },
+  "zooms": [
+    {
+      "end": {},
+      "item_id": "string",
+      "n": 0,
+      "start": {}
+    }
+  ]
 }
 ```
 
