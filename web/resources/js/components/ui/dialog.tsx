@@ -4,6 +4,7 @@ import * as React from "react"
 import { cn } from "@/lib/cn"
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog"
 import { Button } from "@/components/ui/button"
+import { trapFocusTab } from "@/components/ui/focus-trap"
 import { childRender } from "@/components/ui/slot"
 import { XIcon } from "lucide-react"
 import { useT } from "@/lib/i18n"
@@ -12,35 +13,41 @@ const DialogEscapeContext = React.createContext<React.MutableRefObject<
   ((event: KeyboardEvent) => void) | null
 > | null>(null)
 
+const DialogModalContext = React.createContext<boolean>(true)
+
 function Dialog({
   onOpenChange,
+  modal = true,
   children,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Root>) {
   const escape = React.useRef<((event: KeyboardEvent) => void) | null>(null)
   return (
-    <DialogEscapeContext.Provider value={escape}>
-      <DialogPrimitive.Root
-        onOpenChange={(open, details) => {
-          if (
-            !open &&
-            details.reason === "escape-key" &&
-            escape.current &&
-            details.event instanceof KeyboardEvent
-          ) {
-            escape.current(details.event)
-            if (details.event.defaultPrevented) {
-              details.cancel()
-              return
+    <DialogModalContext.Provider value={modal !== false}>
+      <DialogEscapeContext.Provider value={escape}>
+        <DialogPrimitive.Root
+          modal={modal}
+          onOpenChange={(open, details) => {
+            if (
+              !open &&
+              details.reason === "escape-key" &&
+              escape.current &&
+              details.event instanceof KeyboardEvent
+            ) {
+              escape.current(details.event)
+              if (details.event.defaultPrevented) {
+                details.cancel()
+                return
+              }
             }
-          }
-          onOpenChange?.(open, details)
-        }}
-        {...props}
-      >
-        {children}
-      </DialogPrimitive.Root>
-    </DialogEscapeContext.Provider>
+            onOpenChange?.(open, details)
+          }}
+          {...props}
+        >
+          {children}
+        </DialogPrimitive.Root>
+      </DialogEscapeContext.Provider>
+    </DialogModalContext.Provider>
   )
 }
 
@@ -111,12 +118,14 @@ function DialogContent({
   children,
   showCloseButton = true,
   onEscapeKeyDown,
+  onKeyDown,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Popup> & {
   showCloseButton?: boolean
   onEscapeKeyDown?: (event: KeyboardEvent) => void
 }) {
   const t = useT()
+  const isModal = React.useContext(DialogModalContext)
   const escape = React.useContext(DialogEscapeContext)
   React.useEffect(() => {
     if (!escape) return
@@ -134,6 +143,10 @@ function DialogContent({
           "fixed top-1/2 left-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-xl bg-surface-raised p-4 text-sm text-text shadow-lg border border-border duration-(--duration-fast) outline-none sm:max-w-sm data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
           className
         )}
+        onKeyDown={(event) => {
+          onKeyDown?.(event)
+          if (isModal) trapFocusTab(event)
+        }}
         {...props}
       >
         {children}
