@@ -67,11 +67,17 @@ var recordingStartCmd = &spec{
 	usage: []string{
 		"stuarty recording:start --project <id> --kind display|window --source <id> [--fps 24|30|60] " +
 			"[--microphone <id>|default] [--system-audio] [--camera <id>] [--events]",
+		"stuarty recording:start --recording <id of a prepared recording>",
 	},
 	example: "stuarty recording:start --project prj_7k2m9x4q1b --kind display --source d1",
-	project: true,
 	write:   true,
 	flags: []flagDef{
+		{Name: "project", Kind: kindString, Usage: "the project (default $" + EnvProject + "); not with --recording"},
+		{
+			Name:  "recording",
+			Kind:  kindString,
+			Usage: "a recording made with recording:prepare: its plan is the request",
+		},
 		{Name: "kind", Kind: kindString, Usage: "display or window (required)"},
 		{Name: "source", Kind: kindString, Usage: "an id from recording:sources (required)"},
 		{Name: "name", Kind: kindString, Usage: "the title of the source, for the record"},
@@ -82,8 +88,13 @@ var recordingStartCmd = &spec{
 		{Name: "events", Kind: kindBool, Usage: "save the pointer position and the clicks (never a key)"},
 	},
 	run: func(ctx context.Context, c *call) (*output, error) {
+		project := c.args.str("project")
+		if project == "" && c.args.str("recording") == "" {
+			project = c.rt.Getenv(EnvProject)
+		}
+
 		res, err := c.svc.RecordingStart(ctx, service.RecordingStartRequest{
-			ProjectID: c.projectID, FPS: c.args.integer("fps"),
+			RecordingID: c.args.str("recording"), ProjectID: project, FPS: c.args.integer("fps"),
 			Source: service.RecordingSource{
 				Kind: c.args.str("kind"), ID: c.args.str("source"), Name: c.args.str("name"),
 			},

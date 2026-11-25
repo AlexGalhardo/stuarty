@@ -2429,10 +2429,21 @@
       "domain": "video",
       "summary": "start recording a display or a window (for a person in the app; the local token is refused)",
       "usage": [
-        "stuarty recording:start --project <id> --kind display|window --source <id> [--fps 24|30|60] [--microphone <id>|default] [--system-audio] [--camera <id>] [--events]"
+        "stuarty recording:start --project <id> --kind display|window --source <id> [--fps 24|30|60] [--microphone <id>|default] [--system-audio] [--camera <id>] [--events]",
+        "stuarty recording:start --recording <id of a prepared recording>"
       ],
       "example": "stuarty recording:start --project prj_7k2m9x4q1b --kind display --source d1",
       "flags": [
+        {
+          "name": "project",
+          "type": "string",
+          "usage": "the project (default $STUARTY_PROJECT); not with --recording"
+        },
+        {
+          "name": "recording",
+          "type": "string",
+          "usage": "a recording made with recording:prepare: its plan is the request"
+        },
         {
           "name": "kind",
           "type": "string",
@@ -2478,8 +2489,7 @@
         "json",
         "workspace",
         "actor",
-        "key-file",
-        "project"
+        "key-file"
       ]
     },
     {
@@ -2648,6 +2658,165 @@
           "name": "timeline",
           "type": "string",
           "usage": "the timeline of the project, when it has several"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "recording:prepare",
+      "domain": "video",
+      "summary": "prepare a recording for a person: source, tracks, script and notes; starts nothing",
+      "usage": [
+        "stuarty recording:prepare --project <id> --kind display|window --source <id> [--fps 24|30|60] [--microphone <id>|default] [--system-audio] [--camera <id>] [--events] [--script <item id>] [--notes <text>|--notes-file <file|->]"
+      ],
+      "example": "stuarty recording:prepare --project prj_7k2m9x4q1b --kind display --source d1 --notes \"Say the hook first\"",
+      "flags": [
+        {
+          "name": "kind",
+          "type": "string",
+          "usage": "display or window (required)"
+        },
+        {
+          "name": "source",
+          "type": "string",
+          "usage": "an id from recording:sources (required)"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "usage": "the title of the source, for the record"
+        },
+        {
+          "name": "fps",
+          "type": "integer",
+          "usage": "24, 30 (the default) or 60"
+        },
+        {
+          "name": "microphone",
+          "type": "string",
+          "usage": "a microphone id from recording:sources, or default"
+        },
+        {
+          "name": "system-audio",
+          "type": "boolean",
+          "usage": "record the sound the computer plays on its own track"
+        },
+        {
+          "name": "camera",
+          "type": "string",
+          "usage": "a camera id from recording:sources"
+        },
+        {
+          "name": "events",
+          "type": "boolean",
+          "usage": "save the pointer position and the clicks (never a key)"
+        },
+        {
+          "name": "script",
+          "type": "string",
+          "usage": "the id of a script of the project the person will read"
+        },
+        {
+          "name": "notes",
+          "type": "string",
+          "usage": "a note for the person who presses record"
+        },
+        {
+          "name": "notes-file",
+          "type": "string",
+          "usage": "read the note from a file, or - for standard input"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project"
+      ]
+    },
+    {
+      "name": "recording:mark",
+      "domain": "video",
+      "summary": "mark a point or a stretch of a take as good, bad or a mistake",
+      "usage": [
+        "stuarty recording:mark <recording id> --kind good|bad|mistake --at-ms <n> [--end-ms <n>] [--note <text>]"
+      ],
+      "example": "stuarty recording:mark rec_0123456789 --kind mistake --at-ms 12500 --note \"stumbled on the name\"",
+      "flags": [
+        {
+          "name": "kind",
+          "type": "string",
+          "usage": "good, bad or mistake (required)"
+        },
+        {
+          "name": "at-ms",
+          "type": "integer",
+          "usage": "where in the take, in milliseconds of recording time"
+        },
+        {
+          "name": "end-ms",
+          "type": "integer",
+          "usage": "the end of a stretch; leave out for a point"
+        },
+        {
+          "name": "note",
+          "type": "string",
+          "usage": "a short note, plain text"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "recording:propose",
+      "domain": "video",
+      "summary": "propose cuts of a ready take, each with a reason; changes no timeline until a person decides",
+      "usage": [
+        "stuarty recording:propose <recording id> --ranges <file|->"
+      ],
+      "example": "stuarty recording:propose rec_0123456789 --ranges cuts.json",
+      "flags": [
+        {
+          "name": "ranges",
+          "type": "string",
+          "usage": "a JSON list of {from_ms, to_ms, reason}, from a file or - for standard input"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "recording:decide",
+      "domain": "video",
+      "summary": "decide a proposal of cuts, one yes or no per range (for a person in the app; the local token is refused)",
+      "usage": [
+        "stuarty recording:decide <recording id> <proposal id> --accept <yes|no,...> [--timeline <id>]"
+      ],
+      "example": "stuarty recording:decide rec_0123456789 prp_0123456789 --accept yes,no,yes",
+      "flags": [
+        {
+          "name": "accept",
+          "type": "string",
+          "usage": "one yes or no for every range, in order, separated by commas"
+        },
+        {
+          "name": "timeline",
+          "type": "string",
+          "usage": "the timeline the recording was placed on, when the project has several"
         }
       ],
       "globals": [

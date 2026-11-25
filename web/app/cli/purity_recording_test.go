@@ -75,3 +75,23 @@ func (s stub) RecordingDismiss(context.Context, service.RecordingRef) (*service.
 func (s stub) RecordingPlace(context.Context, service.RecordingPlaceRequest) (*service.EditResult, error) {
 	return reply[service.EditResult](s.err)
 }
+
+func (s stub) RecordingPrepare(context.Context, service.RecordingPrepareRequest) (*service.Recording, error) {
+	return reply[service.Recording](s.err)
+}
+
+func (s stub) RecordingMark(context.Context, service.RecordingMarkRequest) (*service.Recording, error) {
+	return reply[service.Recording](s.err)
+}
+
+func (s stub) RecordingProposeCuts(
+	context.Context, service.RecordingProposeCutsRequest,
+) (*service.Recording, error) {
+	return reply[service.Recording](s.err)
+}
+
+func (s stub) RecordingProposalDecide(
+	context.Context, service.RecordingProposalDecideRequest,
+) (*service.RecordingProposalDecideResult, error) {
+	return reply[service.RecordingProposalDecideResult](s.err)
+}

@@ -369,6 +369,14 @@ The types named in the tables of the operations. The arguments of each editing c
 | `unit` | `string` | no |  |
 | `words` | `integer` | no |  |
 
+### captureStatusOut
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `active` | `boolean` | no | Whether a capture helper that was asked to record is alive. |
+| `helpers` | `integer` | no | How many such helper processes are alive. |
+| `since_ms` | `integer (int64)` | no | When the indicator went on, in Unix milliseconds; 0 while it is off. |
+
 ### CeilingView
 
 | Name | Type | Required | Description |
@@ -2772,8 +2780,11 @@ The types named in the tables of the operations. The arguments of each editing c
 | `frames` | `integer (int64)` | no |  |
 | `height` | `integer` | no |  |
 | `levels` | [`RecordingLevels`](/docs/api/schemas#recordinglevels) or `any` or `null` or `null` | no |  |
+| `marks` | array of [`RecordingMark`](/docs/api/schemas#recordingmark) | no |  |
 | `pauses` | array of [`RecordingPause`](/docs/api/schemas#recordingpause) | no |  |
+| `plan` | [`RecordingPlan`](/docs/api/schemas#recordingplan) or `any` or `null` or `null` | no |  |
 | `project_id` | `string` | no |  |
+| `proposals` | array of [`RecordingProposal`](/docs/api/schemas#recordingproposal) | no |  |
 | `recording_id` | `string` | no |  |
 | `review` | `string` | no |  |
 | `source` | [`RecordingSource`](/docs/api/schemas#recordingsource) | no |  |
@@ -2784,6 +2795,23 @@ The types named in the tables of the operations. The arguments of each editing c
 | `tracks` | array of [`RecordingTrack`](/docs/api/schemas#recordingtrack) | no |  |
 | `upload` | [`RecordingUpload`](/docs/api/schemas#recordingupload) or `any` or `null` or `null` | no |  |
 | `width` | `integer` | no |  |
+
+### RecordingCutRange
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `decision` | `string` | no |  |
+| `from_ms` | `integer (int64)` | no |  |
+| `reason` | `string` | no |  |
+| `to_ms` | `integer (int64)` | no |  |
+
+### recordingCutRangeIn
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `from_ms` | `integer (int64)` | no |  |
+| `reason` | `string` | yes | Why this stretch should go, plain text, at most 200 characters.. min length 1 |
+| `to_ms` | `integer (int64)` | no |  |
 
 ### RecordingDevice
 
@@ -2828,12 +2856,57 @@ The types named in the tables of the operations. The arguments of each editing c
 | --- | --- | --- | --- |
 | `recordings` | array of [`Recording`](/docs/api/schemas#recording) | no |  |
 
+### RecordingMark
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `actor` | `string` | no |  |
+| `at_ms` | `integer (int64)` | no |  |
+| `created_at` | `string (date-time)` | no |  |
+| `end_ms` | `integer (int64)` | no |  |
+| `kind` | `string` | no |  |
+| `n` | `integer` | no |  |
+| `note` | `string` | no |  |
+
 ### RecordingPause
 
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
 | `from_ms` | `integer (int64)` | no |  |
 | `to_ms` | `integer (int64)` | no |  |
+
+### RecordingPlan
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `camera` | `string` | no |  |
+| `events` | `boolean` | no |  |
+| `fps` | `integer` | no |  |
+| `microphone` | `string` | no |  |
+| `notes` | `string` | no |  |
+| `script_id` | `string` | no |  |
+| `system_audio` | `boolean` | no |  |
+
+### RecordingProposal
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `actor` | `string` | no |  |
+| `created_at` | `string (date-time)` | no |  |
+| `decided_at` | `string (date-time)` or `null` | no |  |
+| `decided_by` | `string` | no |  |
+| `proposal_id` | `string` | no |  |
+| `ranges` | array of [`RecordingCutRange`](/docs/api/schemas#recordingcutrange) | no |  |
+| `revision` | `integer (int64)` | no |  |
+| `state` | `string` | no |  |
+
+### RecordingProposalDecideResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `edit` | [`EditResult`](/docs/api/schemas#editresult) or `any` or `null` or `null` | no |  |
+| `recording` | [`Recording`](/docs/api/schemas#recording) | no |  |
+| `text` | `string` | no |  |
 
 ### RecordingSource
 
@@ -2869,6 +2942,14 @@ The types named in the tables of the operations. The arguments of each editing c
 | `microphones` | array of [`RecordingDevice`](/docs/api/schemas#recordingdevice) | no |  |
 | `system_audio` | `boolean` | no |  |
 | `windows` | array of [`RecordingSourceInfo`](/docs/api/schemas#recordingsourceinfo) | no |  |
+
+### recordingStartSourceIn
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `id` | `string` | no | An id from GET /recording/sources. |
+| `kind` | `string` | no | display or window. |
+| `name` | `string` | no | The title the person saw in the picker; optional, plain text. |
 
 ### RecordingTrack
 

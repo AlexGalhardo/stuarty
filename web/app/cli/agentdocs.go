@@ -100,7 +100,8 @@ func AgentDocsInputs() agentdocs.Inputs {
 	// (12,400 characters, D-094), and an agent reads a recording and stops it through job_get and job_cancel.
 	for _, s := range []*spec{
 		recordingSourcesCmd, recordingStopCmd, recordingPauseCmd, recordingResumeCmd, recordingEventsCmd,
-		recordingCancelCmd, recordingShowCmd, recordingListCmd, recordingPlaceCmd,
+		recordingCancelCmd, recordingShowCmd, recordingListCmd, recordingPlaceCmd, recordingPrepareCmd, recordingMarkCmd,
+		recordingProposeCmd,
 	} {
 		inLibrary[s.name] = true
 	}
