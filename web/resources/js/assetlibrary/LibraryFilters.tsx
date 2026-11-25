@@ -7,7 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useT } from "@/lib/i18n";
-import type { AssetQuery, OriginKind } from "../editor/api/types";
+import type {
+	AssetQuery,
+	OriginKind,
+	SoundKind,
+	TagInUse,
+} from "../editor/api/types";
 
 const ORIGINS: readonly OriginKind[] = [
 	"imported",
@@ -16,23 +21,32 @@ const ORIGINS: readonly OriginKind[] = [
 	"rendered_externally",
 ];
 
+const SOUND_KINDS: readonly SoundKind[] = ["music", "voice", "effect"];
+
+// The "any tag" option cannot be a tag a person wrote.
+const ANY_TAG = "any";
+
 // A typed word is sent after this pause, so the service is asked once per word and not once per key.
 const TYPING_PAUSE_MS = 300;
 
 // The search and the filters of a library. They only collect what the person typed or chose and send it as a
 // query, as they change: which files match is the service's answer. Every library has the same filters, so
-// they are learned once (the tag is a word because the service has no list of tags to offer).
+// they are learned once. The tag is chosen from the tags the service says are in use, each with its count; the
+// sound kind filter is only on the sounds page.
 export function LibraryFilters({
 	section,
+	tagsInUse = [],
 	onApply,
 }: {
 	section: string;
+	tagsInUse?: readonly TagInUse[];
 	onApply(query: AssetQuery): void;
 }): ReactNode {
 	const t = useT();
 	const [text, setText] = useState("");
 	const [tag, setTag] = useState("");
 	const [origin, setOrigin] = useState<OriginKind | "">("");
+	const [soundKind, setSoundKind] = useState<SoundKind | "">("");
 	const [reusable, setReusable] = useState(false);
 	const first = useRef(true);
 	const apply = useRef(onApply);
@@ -47,14 +61,22 @@ export function LibraryFilters({
 			() =>
 				apply.current({
 					...(text.trim() === "" ? {} : { text: text.trim() }),
-					...(tag.trim() === "" ? {} : { tag: tag.trim() }),
+					...(tag === "" ? {} : { tag }),
+					...(soundKind === "" ? {} : { sound_kind: soundKind }),
 					...(origin === "" ? {} : { origin }),
 					...(reusable ? { reusable: true } : {}),
 				}),
 			TYPING_PAUSE_MS,
 		);
 		return () => window.clearTimeout(timer);
-	}, [text, tag, origin, reusable]);
+	}, [text, tag, origin, reusable, soundKind]);
+
+	// The chosen tag stays on the list even when the other filters leave no file with it.
+	const tagOptions = tagsInUse.some((entry) => entry.tag === tag)
+		? tagsInUse
+		: tag === ""
+			? tagsInUse
+			: [...tagsInUse, { tag, count: 0 }];
 
 	return (
 		<FilterBar label={t("ui.assets.filter.bar")} className="items-end gap-3">
@@ -72,16 +94,48 @@ export function LibraryFilters({
 				/>
 			</div>
 			<div className="flex min-w-36 flex-1 flex-col gap-1">
-				<Label htmlFor={`filter-tag-${section}`}>
+				<span className="text-sm font-medium text-text">
 					{t("ui.assets.filter.tag")}
-				</Label>
-				<Input
-					id={`filter-tag-${section}`}
-					autoComplete="off"
-					value={tag}
-					onChange={(event) => setTag(event.target.value)}
+				</span>
+				<OptionSelect
+					label={t("ui.assets.filter.tag")}
+					value={tag === "" ? ANY_TAG : tag}
+					onChange={(next) => setTag(next === ANY_TAG ? "" : next)}
+					className="w-full"
+					options={[
+						{ value: ANY_TAG, label: t("ui.assets.filter.any_tag") },
+						...tagOptions.map((entry) => ({
+							value: entry.tag,
+							label: t("ui.assets.filter.tag_option", {
+								tag: entry.tag,
+								count: entry.count,
+							}),
+						})),
+					]}
 				/>
 			</div>
+			{section === "audio" && (
+				<div className="flex min-w-36 flex-1 flex-col gap-1">
+					<span className="text-sm font-medium text-text">
+						{t("ui.assets.filter.sound_kind")}
+					</span>
+					<OptionSelect
+						label={t("ui.assets.filter.sound_kind")}
+						value={soundKind === "" ? "any" : soundKind}
+						onChange={(next) =>
+							setSoundKind(next === "any" ? "" : (next as SoundKind))
+						}
+						className="w-full"
+						options={[
+							{ value: "any", label: t("ui.assets.filter.any_kind") },
+							...SOUND_KINDS.map((kind) => ({
+								value: kind,
+								label: t(`ui.assets.sound.kind.${kind}`),
+							})),
+						]}
+					/>
+				</div>
+			)}
 			<div className="flex min-w-44 flex-1 flex-col gap-1">
 				<span className="text-sm font-medium text-text">
 					{t("ui.assets.filter.origin")}

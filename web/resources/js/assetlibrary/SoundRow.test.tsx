@@ -23,6 +23,8 @@ const messages = {
 	"ui.assets.state.importing": "Still importing",
 	"ui.assets.state.missing": "File missing",
 	"ui.assets.added": "Added {date}",
+	"ui.assets.sound.kind.music": "Music",
+	"ui.assets.sound.kind.voice": "Voice",
 };
 
 const sound = (extra: Partial<LibraryAsset> = {}): LibraryAsset => ({
@@ -89,6 +91,16 @@ describe("a row of Sound Assets", () => {
 		const html = markup(sound({ name: PAYLOAD, tags: [PAYLOAD] }));
 		expect(html).not.toContain("<img src=x");
 		expect(html).toContain("&lt;img src=x");
+	});
+});
+
+describe("the kind of a sound", () => {
+	test("is a word on the row when the service gives one, and nothing when it does not", () => {
+		expect(markup(sound({ sound_kind: "music" }))).toContain(
+			'data-testid="sound-kind-badge"',
+		);
+		expect(markup(sound({ sound_kind: "voice" }))).toContain("Voice");
+		expect(markup(sound())).not.toContain("sound-kind-badge");
 	});
 });
 

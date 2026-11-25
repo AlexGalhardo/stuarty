@@ -11,6 +11,7 @@ import {
 } from "react";
 
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
+import { OptionSelect } from "@/components/OptionSelect";
 import { PageHeaderAction } from "@/components/PageHeader";
 import RenameAssetDialog from "@/components/RenameAssetDialog";
 import UntrustedText from "@/components/UntrustedText";
@@ -27,6 +28,8 @@ import type {
 	AssetQuery,
 	AssetResult,
 	LibraryAsset,
+	SoundKind,
+	TagInUse,
 } from "../editor/api/types";
 import { thumbnailUrl } from "../editor/api/urls";
 import { AssetSize } from "./AssetSize";
@@ -65,6 +68,9 @@ const GENERATES: Record<Section, GenerateKind> = {
 	audio: "voice",
 };
 const PAGE = 48;
+const SOUND_KINDS: readonly SoundKind[] = ["music", "voice", "effect"];
+// The option that clears the kind of a sound.
+const NO_KIND = "none";
 
 function api() {
 	return createClient(new HttpTransport("/api/v1"));
@@ -458,6 +464,35 @@ export function AssetDetail({
 						<p className="text-sm text-text-muted">
 							{t("ui.assets.detail.rights_notice")}
 						</p>
+						{asset.kind === "audio" && (
+							<div className="flex flex-col gap-1">
+								<span className="text-sm font-medium text-text">
+									{t("ui.assets.detail.sound_kind")}
+								</span>
+								<OptionSelect
+									label={t("ui.assets.detail.sound_kind")}
+									value={asset.sound_kind ?? NO_KIND}
+									onChange={(next) =>
+										void change(
+											() =>
+												api().setAssetInfo(hash, {
+													sound_kind:
+														next === NO_KIND ? "" : (next as SoundKind),
+												}),
+											t("ui.assets.detail.saved"),
+										)
+									}
+									className="w-full"
+									options={[
+										{ value: NO_KIND, label: t("ui.assets.sound.kind.none") },
+										...SOUND_KINDS.map((kind) => ({
+											value: kind,
+											label: t(`ui.assets.sound.kind.${kind}`),
+										})),
+									]}
+								/>
+							</div>
+						)}
 						<label className="flex items-center gap-2 text-sm">
 							<input
 								type="checkbox"
@@ -661,6 +696,7 @@ export function AssetLibrary({ section }: { section: Section }): ReactNode {
 	const [items, setItems] = useState<LibraryAsset[] | null>(null);
 	const [total, setTotal] = useState(0);
 	const [next, setNext] = useState<string | null>(null);
+	const [tagsInUse, setTagsInUse] = useState<TagInUse[]>([]);
 	const [failure, setFailure] = useState<Failure | null>(null);
 	const [applied, setApplied] = useState<AssetQuery>({});
 	const [open, setOpen] = useState<string | null>(null);
@@ -705,6 +741,7 @@ export function AssetLibrary({ section }: { section: Section }): ReactNode {
 					unsized: result.unsized,
 				});
 				setNext(result.next_cursor);
+				setTagsInUse(result.tags_in_use ?? []);
 			} catch (error) {
 				setFailure(failureOf(error));
 			}
@@ -779,7 +816,11 @@ export function AssetLibrary({ section }: { section: Section }): ReactNode {
 			{section === "audio" && importing && (
 				<SoundImport onImported={() => void load(applied)} />
 			)}
-			<LibraryFilters section={section} onApply={setApplied} />
+			<LibraryFilters
+				section={section}
+				tagsInUse={tagsInUse}
+				onApply={setApplied}
+			/>
 			<FailureNote failure={failure} />
 			<div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
 				<section aria-labelledby={`files-${section}`}>
