@@ -45,6 +45,10 @@ To run the program from the clone, build the front end with `bun install` and `b
 | `task site:build` | builds the site and runs its checks |
 | `bun run check:thin-client` (in `web/`) | the rules of the thin client |
 
+### The agent harness
+
+`internal/tools/agentharness` is a release-checklist tool that runs a live agent against the recipes of the agent documents and counts how often it finishes them. It costs money, so it never runs by itself and never in CI, and no shipped binary contains it. It refuses to start unless `STUARTY_HARNESS=1` is set and `--runs` is given, and `--estimate` prints the estimated cost and exits. In the `first-flow` scenario the agent signs in to a local account, and the password of that account is read from `STUARTY_HARNESS_PASSWORD`, so that it is never on the command line. The `stuarty` process that the harness starts gets only an allow-list of variables: never the key of the model.
+
 ## Common mistakes
 
 - Running `npm install` in `web/` or in `site/`. Both folders use Bun and have one lockfile, `bun.lock`.
