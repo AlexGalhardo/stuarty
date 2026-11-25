@@ -29,12 +29,20 @@ func ReleasedBuild() bool {
 }
 
 // releaseVersion accepts a version that starts with a digit and names no development build: "dev",
-// "devel", "0.56.0-dev" and the empty string are not releases.
+// "devel", "0.56.0-dev" and the empty string are not releases, and neither is a snapshot, which is built
+// from a commit with no tag: goreleaser --snapshot stamps "0.56.1-next" (.config/goreleaser.yaml) and the
+// desktop workflow "0.0.0-snapshot".
 func releaseVersion(v string) bool {
 	if v == "" || v[0] < '0' || v[0] > '9' {
 		return false
 	}
-	return !strings.Contains(strings.ToLower(v), "dev")
+	v = strings.ToLower(v)
+	for _, mark := range []string{"dev", "next", "snapshot"} {
+		if strings.Contains(v, mark) {
+			return false
+		}
+	}
+	return true
 }
 
 // guardDefaultHome refuses the default workspace of home, and the folder of the former name, to a build that

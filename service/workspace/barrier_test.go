@@ -50,6 +50,7 @@ func TestResolveRefusesTheDefaultHomeToABuildThatIsNotARelease(t *testing.T) {
 		"a dev stamp":     "0.56.0-dev",
 		"a not-a-version": "(devel)",
 		"a leading v":     "v0.55.0",
+		"a snapshot":      "0.56.1-next",
 	} {
 		t.Run(name, func(t *testing.T) {
 			home := tempHome(t)
@@ -269,7 +270,8 @@ func TestTheReleaseBuildStampsWhatTheBarrierReads(t *testing.T) {
 func TestReleaseVersion(t *testing.T) {
 	for v, want := range map[string]bool{
 		"0.55.0": true, "1.0.0-rc.1": true, "": false, "dev": false, "devel": false,
-		"0.56.0-dev": false, "v1.0.0": false, "(devel)": false,
+		"0.56.0-dev": false, "v1.0.0": false, "(devel)": false, "0.56.1-next": false, "0.0.0-snapshot": false,
+		"0.56.1-SNAPSHOT-abc1234": false,
 	} {
 		if got := releaseVersion(v); got != want {
 			t.Errorf("releaseVersion(%q) = %v, want %v", v, got, want)
