@@ -1624,6 +1624,49 @@
           "ffmpeg_missing": "Recording needs FFmpeg, and none was found.",
           "helper_missing": "The capture helper is not installed with this copy of Stuarty.",
           "protocol_version": "The capture helper is from another version of Stuarty."
+        },
+        "browser": {
+          "title": "Record in your browser",
+          "intro": "This browser records the screen you choose and sends it to your Stuarty as it goes. Nothing leaves your own server.",
+          "codec": {
+            "vp9": "This browser records WebM with VP9 video and Opus sound.",
+            "vp8": "This browser records WebM with VP8 video and Opus sound.",
+            "av1": "This browser records WebM with AV1 video and Opus sound.",
+            "h264": "This browser records MP4 with H.264 video and AAC sound.",
+            "default-webm": "This browser records WebM.",
+            "default-mp4": "This browser records MP4."
+          },
+          "note_prompts": "Your browser asks your permission for the screen, the microphone and the camera, and shows you while it shares them. Stuarty cannot answer those questions for you.",
+          "note_audio": "The sound of the screen is shared only if your browser offers it in its own picker, usually for a tab and, on some systems, for the whole screen. Firefox and Safari record differently from Chrome. Pointer and click positions are not recorded in a browser.",
+          "sound_title": "Sound and camera",
+          "microphone": "Share the microphone",
+          "display_audio": "Ask to share the sound of the screen",
+          "camera": "Record the camera as a second track",
+          "no_user_media": "This browser cannot give the microphone or the camera to a page.",
+          "blocked": {
+            "insecure_context": "Your browser lets a page record the screen only on HTTPS or on localhost, and this page is neither. Open Stuarty through an HTTPS address, or on localhost, to record here.",
+            "no_display_capture": "This browser cannot capture the screen for a page.",
+            "no_media_recorder": "This browser cannot record what it captures.",
+            "no_codec": "This browser records in a format Stuarty cannot take.",
+            "no_digest": "This browser cannot check the files it sends, so it cannot send a recording."
+          },
+          "shared_title": "Sharing:",
+          "shared_screen": "the screen",
+          "shared_microphone": "the microphone",
+          "shared_display_audio": "the sound of the screen",
+          "shared_camera": "the camera",
+          "uploaded": "{size} MB saved on your server",
+          "retrying": "The connection dropped. Trying again: nothing is lost.",
+          "limit": {
+            "size": "The recording reached the size limit, so it was stopped. What was received is kept.",
+            "duration": "The recording reached the longest length allowed, so it was stopped. What was received is kept.",
+            "disk_low": "The server is low on disk space, so the recording was stopped. What was received is kept.",
+            "chunks": "The recording reached the limit of pieces it may have, so it was stopped. What was received is kept."
+          },
+          "upload_failed": "The upload stopped and could not go on. What your server received is kept.",
+          "stopped_by_browser": "You stopped sharing in the browser, so the recording ended.",
+          "interrupted": "A recording made in a browser was interrupted. Finish it to keep what your server received.",
+          "finish": "Finish it"
         }
       },
       "library": {

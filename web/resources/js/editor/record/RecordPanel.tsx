@@ -10,10 +10,17 @@ import type {
 	RecordingSourceInfo,
 	RecordingSourcesResult,
 } from "../api/types";
+import { blockedKey, type Capability, codecKey } from "./browserCapture";
+import {
+	type CaptureChoice,
+	endKey,
+	type RecorderState,
+} from "./browserRecorder";
 import {
 	DEFAULT_FPS,
 	FPS_CHOICES,
 	formatClock,
+	formatMegabytes,
 	meterValue,
 	NO_EXTRAS,
 	type RecordView,
@@ -80,6 +87,60 @@ function Step({
 							void flow.start(kind, id, name, fps, extras)
 						}
 					/>
+				</>
+			);
+		case "browser":
+			return (
+				<>
+					{view.kept.length > 0 && (
+						<Kept kept={view.kept} busy={flow.busy} flow={flow} />
+					)}
+					<BrowserPicker
+						capability={view.capability}
+						busy={flow.busy}
+						onStart={(choice) => void flow.startBrowser(choice)}
+						onClose={onClose}
+					/>
+				</>
+			);
+		case "browser_live":
+			return (
+				<BrowserLive
+					state={view.state}
+					busy={flow.busy}
+					onStop={() => void flow.stopBrowser()}
+				/>
+			);
+		case "interrupted":
+			return (
+				<>
+					<p role="status" className="text-sm" data-record-interrupted="">
+						{t("ui.editor.record.browser.interrupted")}
+					</p>
+					<p className="text-sm tabular-nums">
+						{t("ui.editor.record.browser.uploaded", {
+							size: formatMegabytes(view.recording.bytes),
+						})}
+					</p>
+					<div className="flex flex-wrap gap-2">
+						<Button
+							type="button"
+							disabled={flow.busy}
+							data-record-finish-interrupted=""
+							onClick={() => void flow.stop()}
+						>
+							{t("ui.editor.record.browser.finish")}
+						</Button>
+						<Button
+							type="button"
+							variant="ghost"
+							disabled={flow.busy}
+							data-record-delete=""
+							onClick={() => void flow.remove()}
+						>
+							{t("ui.editor.record.delete")}
+						</Button>
+					</div>
 				</>
 			);
 		case "recording":
@@ -334,6 +395,222 @@ function Kept({
 interface Choice {
 	kind: "display" | "window";
 	source: RecordingSourceInfo;
+}
+
+// The picker of a recording made in the browser (SDD-025 section 17.1): what this browser can do, said before the
+// person starts, and, when it cannot record here, why, with Start disabled.
+function BrowserPicker({
+	capability,
+	busy,
+	onStart,
+	onClose,
+}: {
+	capability: Capability;
+	busy: boolean;
+	onStart: (choice: CaptureChoice) => void;
+	onClose: () => void;
+}): ReactNode {
+	const t = useT();
+	const [choice, setChoice] = useState<CaptureChoice>({
+		microphone: true,
+		camera: false,
+		displayAudio: false,
+	});
+
+	if (!capability.ok) {
+		return (
+			<>
+				<h3 className="text-sm font-medium">
+					{t("ui.editor.record.browser.title")}
+				</h3>
+				<p
+					role="alert"
+					className="text-sm"
+					data-record-browser-blocked={capability.reason}
+				>
+					{t(blockedKey(capability.reason))}
+				</p>
+				<div className="flex flex-wrap gap-2">
+					<Button type="button" disabled data-record-start="">
+						{t("ui.editor.record.start")}
+					</Button>
+					<Button type="button" variant="outline" onClick={onClose}>
+						{t("ui.editor.record.close")}
+					</Button>
+				</div>
+			</>
+		);
+	}
+
+	return (
+		<form
+			className="flex flex-col gap-3"
+			data-record-browser=""
+			onSubmit={(event) => {
+				event.preventDefault();
+				onStart(choice);
+			}}
+		>
+			<h3 className="text-sm font-medium">
+				{t("ui.editor.record.browser.title")}
+			</h3>
+			<p className="text-sm">{t("ui.editor.record.browser.intro")}</p>
+			<p className="text-sm" data-record-browser-codec={capability.label}>
+				{t(codecKey(capability.label))}
+			</p>
+			<p className="text-xs text-muted-foreground">
+				{t("ui.editor.record.browser.note_prompts")}
+			</p>
+			<p className="text-xs text-muted-foreground">
+				{t("ui.editor.record.browser.note_audio")}
+			</p>
+			<fieldset className="flex flex-col gap-2">
+				<legend className="text-xs font-medium text-muted-foreground uppercase">
+					{t("ui.editor.record.browser.sound_title")}
+				</legend>
+				<label className="flex items-center gap-2 text-sm">
+					<input
+						type="checkbox"
+						checked={choice.microphone && capability.microphone}
+						disabled={!capability.microphone}
+						data-record-browser-microphone=""
+						onChange={(event) =>
+							setChoice({ ...choice, microphone: event.target.checked })
+						}
+					/>
+					{t("ui.editor.record.browser.microphone")}
+				</label>
+				<label className="flex items-center gap-2 text-sm">
+					<input
+						type="checkbox"
+						checked={choice.displayAudio}
+						data-record-browser-display-audio=""
+						onChange={(event) =>
+							setChoice({ ...choice, displayAudio: event.target.checked })
+						}
+					/>
+					{t("ui.editor.record.browser.display_audio")}
+				</label>
+				<label className="flex items-center gap-2 text-sm">
+					<input
+						type="checkbox"
+						checked={choice.camera && capability.camera}
+						disabled={!capability.camera}
+						data-record-browser-camera=""
+						onChange={(event) =>
+							setChoice({ ...choice, camera: event.target.checked })
+						}
+					/>
+					{t("ui.editor.record.browser.camera")}
+				</label>
+				{!capability.camera && (
+					<p className="text-xs text-muted-foreground">
+						{t("ui.editor.record.browser.no_user_media")}
+					</p>
+				)}
+			</fieldset>
+			<Button type="submit" disabled={busy} data-record-start="">
+				{busy ? t("ui.editor.record.starting") : t("ui.editor.record.start")}
+			</Button>
+		</form>
+	);
+}
+
+// A recording this tab is making in the browser: the clock of the recorder, what the browser is sharing, how much
+// the server confirmed, and, when it happens, that the connection dropped or a limit was reached.
+function BrowserLive({
+	state,
+	busy,
+	onStop,
+}: {
+	state: RecorderState;
+	busy: boolean;
+	onStop: () => void;
+}): ReactNode {
+	const t = useT();
+	const sharing = (
+		[
+			["screen", true, "ui.editor.record.browser.shared_screen"],
+			[
+				"microphone",
+				state.shared.microphone,
+				"ui.editor.record.browser.shared_microphone",
+			],
+			[
+				"display_audio",
+				state.shared.displayAudio,
+				"ui.editor.record.browser.shared_display_audio",
+			],
+			["camera", state.shared.camera, "ui.editor.record.browser.shared_camera"],
+		] as const
+	).filter(([, on]) => on);
+	const ending = endKey(state.upload.end);
+	const recording = state.phase === "recording";
+	return (
+		<>
+			<p
+				className="flex items-center gap-2 text-sm font-medium"
+				role="status"
+				data-record-browser-live={state.phase}
+			>
+				<span
+					aria-hidden="true"
+					className="size-2.5 rounded-full bg-destructive"
+				/>
+				{recording
+					? t("ui.editor.record.recording")
+					: t("ui.editor.record.finishing")}
+				<span data-record-clock="" className="tabular-nums">
+					{t("ui.editor.record.elapsed", {
+						time: formatClock(state.elapsedMs),
+					})}
+				</span>
+			</p>
+			<p
+				className="text-xs text-muted-foreground"
+				data-record-browser-shared=""
+			>
+				{t("ui.editor.record.browser.shared_title")}{" "}
+				{sharing.map(([key, , label], i) => (
+					<span key={key} data-record-browser-shared-item={key}>
+						{i > 0 ? ", " : ""}
+						{t(label)}
+					</span>
+				))}
+			</p>
+			<p className="text-xs tabular-nums" data-record-browser-bytes="">
+				{t("ui.editor.record.browser.uploaded", {
+					size: formatMegabytes(state.upload.bytes),
+				})}
+			</p>
+			{state.upload.phase === "retrying" && (
+				<p role="status" className="text-xs" data-record-browser-retrying="">
+					{t("ui.editor.record.browser.retrying")}
+				</p>
+			)}
+			{state.stoppedBy === "browser" && (
+				<p className="text-xs" data-record-browser-stopped-by-browser="">
+					{t("ui.editor.record.browser.stopped_by_browser")}
+				</p>
+			)}
+			{ending !== null && (
+				<p role="alert" className="text-xs" data-record-browser-ended="">
+					{t(ending)}
+				</p>
+			)}
+			<div className="flex flex-wrap gap-2">
+				<Button
+					type="button"
+					variant="destructive"
+					disabled={busy || !recording}
+					data-record-stop=""
+					onClick={onStop}
+				>
+					{t("ui.editor.record.stop")}
+				</Button>
+			</div>
+		</>
+	);
 }
 
 // The level of each sound track while the recording runs, drawn from the peaks the service reports.

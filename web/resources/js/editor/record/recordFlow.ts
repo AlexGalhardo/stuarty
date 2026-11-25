@@ -1,5 +1,7 @@
 import { ApiError } from "../api/errors";
 import type { Recording, RecordingSourcesResult } from "../api/types";
+import type { Capability } from "./browserCapture";
+import type { RecorderState } from "./browserRecorder";
 
 // What the record dialog shows. Every member comes from the service: the state of a recording, whether a person
 // added it, the elapsed time and the reason a capture is not available are the service's (SDD-025). The dialog
@@ -10,6 +12,13 @@ export type RecordView =
 	// kept: the recordings a person set aside with "Not now", which only a person can add or delete later
 	| { step: "pick"; sources: RecordingSourcesResult; kept: Recording[] }
 	| { step: "recording"; recording: Recording }
+	// where native capture does not exist the browser records and uploads (SDD-025 section 17): what this browser can
+	// do, read before the person starts, and the takes set aside
+	| { step: "browser"; capability: Capability; kept: Recording[] }
+	// a recording this tab is making in the browser: the state is the recorder's, until the server answers the finish
+	| { step: "browser_live"; state: RecorderState }
+	// a browser recording whose tab is gone: it can be finished with the chunks the server has, or deleted
+	| { step: "interrupted"; recording: Recording }
 	| { step: "review"; recording: Recording }
 	| { step: "added"; recording: Recording }
 	| { step: "failed"; recording: Recording }
@@ -18,8 +27,12 @@ export type RecordView =
 
 export function viewOf(recording: Recording): RecordView {
 	switch (recording.state) {
-		case "prepared":
 		case "recording":
+			// a browser recording that receives chunks and is not the one this tab is making has lost its tab
+			return recording.source.kind === "browser"
+				? { step: "interrupted", recording }
+				: { step: "recording", recording };
+		case "prepared":
 		case "paused":
 		case "finishing":
 			return { step: "recording", recording };
@@ -57,6 +70,12 @@ export function unavailableReason(error: unknown): string | null {
 	}
 	const reason = error.details?.reason;
 	return typeof reason === "string" ? reason : "platform";
+}
+
+// Whether the browser recorder is offered when native capture answered with this reason: every one but a missing
+// FFmpeg, which the server needs to assemble the file too.
+export function browserOffered(reason: string): boolean {
+	return reason !== "ffmpeg_missing";
 }
 
 const KNOWN_REASONS = [
@@ -103,6 +122,11 @@ export const NO_EXTRAS: StartOptions = {
 	camera: "",
 	events: true,
 };
+
+// The bytes the server confirmed, in megabytes with one decimal, for the eye.
+export function formatMegabytes(bytes: number): string {
+	return (Math.max(0, bytes) / (1024 * 1024)).toFixed(1);
+}
 
 // The peak the service reported, 0 to 1000, kept inside the range of the meter that draws it.
 export function meterValue(level: number | undefined): number {

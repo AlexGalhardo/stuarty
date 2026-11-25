@@ -1624,6 +1624,49 @@
           "ffmpeg_missing": "Gravar precisa do FFmpeg, e nenhum foi encontrado.",
           "helper_missing": "O auxiliar de captura não está instalado nesta cópia do Stuarty.",
           "protocol_version": "O auxiliar de captura é de outra versão do Stuarty."
+        },
+        "browser": {
+          "title": "Gravar no navegador",
+          "intro": "Este navegador grava a tela que você escolher e envia para o seu Stuarty enquanto grava. Nada sai do seu próprio servidor.",
+          "codec": {
+            "vp9": "Este navegador grava WebM com vídeo VP9 e som Opus.",
+            "vp8": "Este navegador grava WebM com vídeo VP8 e som Opus.",
+            "av1": "Este navegador grava WebM com vídeo AV1 e som Opus.",
+            "h264": "Este navegador grava MP4 com vídeo H.264 e som AAC.",
+            "default-webm": "Este navegador grava WebM.",
+            "default-mp4": "Este navegador grava MP4."
+          },
+          "note_prompts": "O navegador pede a sua permissão para a tela, o microfone e a câmera, e mostra quando está compartilhando. O Stuarty não pode responder a essas perguntas por você.",
+          "note_audio": "O som da tela só é compartilhado se o navegador o oferecer no seletor dele, em geral para uma aba e, em alguns sistemas, para a tela inteira. Firefox e Safari gravam de modo diferente do Chrome. As posições do ponteiro e os cliques não são gravados em um navegador.",
+          "sound_title": "Som e câmera",
+          "microphone": "Compartilhar o microfone",
+          "display_audio": "Pedir para compartilhar o som da tela",
+          "camera": "Gravar a câmera como uma segunda faixa",
+          "no_user_media": "Este navegador não consegue dar o microfone ou a câmera a uma página.",
+          "blocked": {
+            "insecure_context": "O navegador só deixa uma página gravar a tela em HTTPS ou em localhost, e esta página não é nenhum dos dois. Abra o Stuarty por um endereço HTTPS, ou em localhost, para gravar aqui.",
+            "no_display_capture": "Este navegador não consegue capturar a tela para uma página.",
+            "no_media_recorder": "Este navegador não consegue gravar o que captura.",
+            "no_codec": "Este navegador grava em um formato que o Stuarty não aceita.",
+            "no_digest": "Este navegador não consegue conferir os arquivos que envia, então não pode enviar uma gravação."
+          },
+          "shared_title": "Compartilhando:",
+          "shared_screen": "a tela",
+          "shared_microphone": "o microfone",
+          "shared_display_audio": "o som da tela",
+          "shared_camera": "a câmera",
+          "uploaded": "{size} MB salvos no seu servidor",
+          "retrying": "A conexão caiu. Tentando de novo: nada se perde.",
+          "limit": {
+            "size": "A gravação chegou ao limite de tamanho e foi parada. O que foi recebido foi mantido.",
+            "duration": "A gravação chegou ao maior tempo permitido e foi parada. O que foi recebido foi mantido.",
+            "disk_low": "O servidor está com pouco espaço em disco, então a gravação foi parada. O que foi recebido foi mantido.",
+            "chunks": "A gravação chegou ao limite de partes que pode ter e foi parada. O que foi recebido foi mantido."
+          },
+          "upload_failed": "O envio parou e não pôde continuar. O que o seu servidor recebeu foi mantido.",
+          "stopped_by_browser": "Você parou o compartilhamento no navegador, então a gravação terminou.",
+          "interrupted": "Uma gravação feita em um navegador foi interrompida. Termine-a para manter o que o seu servidor recebeu.",
+          "finish": "Terminar"
         }
       },
       "library": {
