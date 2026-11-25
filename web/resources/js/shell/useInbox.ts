@@ -16,8 +16,9 @@ export interface InboxState {
 	failure: Failure | null;
 	// the id of the row being answered
 	busyId: string | null;
-	// Answers the permission request of a chat row through the call of the chat (chat.sessions.answer), the
-	// one place a chat permission is decided. An approval is never decided here: Approvals does it.
+	// Answers a row that waits: a chat permission through the call of the chat (chat.sessions.answer), an approval
+	// through the same operation as the Approvals page (approvals.decide). Both are a person's call: the service
+	// refuses any other caller, and the stream carries the result back.
 	answer(row: InboxRow, choice: "allow" | "reject"): Promise<void>;
 }
 
@@ -73,15 +74,22 @@ export function useInbox(active = true): InboxState {
 	const answer = useCallback(
 		async (row: InboxRow, choice: "allow" | "reject"): Promise<void> => {
 			const http = transport.current;
-			if (http === null || row.source !== "chat") return;
+			if (http === null) return;
 			setFailure(null);
 			setBusyId(row.id);
 			try {
-				await createClient(http).answerChatPermission(
-					row.session_id,
-					row.source_id,
-					choice,
-				);
+				if (row.source === "chat") {
+					await createClient(http).answerChatPermission(
+						row.session_id,
+						row.source_id,
+						choice,
+					);
+				} else {
+					await createClient(http).decideApproval(
+						row.source_id,
+						choice === "allow" ? "approve" : "reject",
+					);
+				}
 			} catch (error) {
 				setFailure(failureOf(error));
 			} finally {

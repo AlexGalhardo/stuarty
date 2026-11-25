@@ -108,7 +108,10 @@ describe("CenterBody", () => {
 		expect(html).toMatch(
 			/data-testid="notification-undo"[^>]*>Cannot be undone</,
 		);
-		expect(html).not.toContain("notification-allow");
+		// a person decides it here too, through the same operation as the Approvals page
+		expect(html).toContain('data-testid="notification-allow"');
+		expect(html).toContain('data-testid="notification-deny"');
+		expect(html).not.toContain("notification-open-chat");
 	});
 
 	test("a chat permission is answered with Allow once and Deny, never always", () => {

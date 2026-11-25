@@ -226,7 +226,7 @@ function Row({
 					{t("ui.shell.notify.agent_reported")}
 				</p>
 			)}
-			{waiting && chat && (
+			{waiting && (
 				<div className="flex flex-wrap items-center gap-2">
 					<Button
 						type="button"
@@ -249,26 +249,27 @@ function Row({
 					>
 						{t("ui.shell.scene.allow")}
 					</Button>
-					<Button
-						type="button"
-						size="sm"
-						variant="ghost"
-						onClick={onOpenChat}
-						data-testid="notification-open-chat"
-					>
-						{t("ui.shell.notify.open_chat")}
-					</Button>
+					{chat ? (
+						<Button
+							type="button"
+							size="sm"
+							variant="ghost"
+							onClick={onOpenChat}
+							data-testid="notification-open-chat"
+						>
+							{t("ui.shell.notify.open_chat")}
+						</Button>
+					) : (
+						<Link
+							href="/approvals"
+							onClick={onNavigate}
+							data-testid="notification-review"
+							className="w-fit rounded text-sm font-medium text-accent-text underline underline-offset-2"
+						>
+							{t("ui.shell.notify.review")}
+						</Link>
+					)}
 				</div>
-			)}
-			{waiting && !chat && (
-				<Link
-					href="/approvals"
-					onClick={onNavigate}
-					data-testid="notification-review"
-					className="w-fit rounded text-sm font-medium text-accent-text underline underline-offset-2"
-				>
-					{t("ui.shell.notify.review")}
-				</Link>
 			)}
 		</li>
 	);
@@ -313,21 +314,50 @@ export function CenterBody({
 					{t("ui.shell.notify.empty")}
 				</p>
 			) : (
-				<ul className="flex flex-col gap-2">
-					{items.map((item) => (
-						<Row
-							key={item.id}
-							item={item}
-							project={projectName(item.project_id)}
-							place={placeOf(item.destination, connectionName, () => null)}
-							busy={busyId !== null}
-							disabledBy={privileged ? undefined : personOnlyId}
-							onAnswer={onAnswer}
-							onOpenChat={onOpenChat}
-							onNavigate={onNavigate}
-						/>
-					))}
-				</ul>
+				<>
+					{[
+						{
+							key: "waiting",
+							rows: items.filter((r) => r.state === "waiting"),
+						},
+						{
+							key: "history",
+							rows: items.filter((r) => r.state !== "waiting"),
+						},
+					].map(
+						(group) =>
+							group.rows.length > 0 && (
+								<section
+									key={group.key}
+									aria-label={t(`ui.shell.notify.group.${group.key}`)}
+									className="flex flex-col gap-2"
+								>
+									<h3 className="text-xs font-semibold uppercase tracking-wide text-text-subtle">
+										{t(`ui.shell.notify.group.${group.key}`)}
+									</h3>
+									<ul className="flex flex-col gap-2">
+										{group.rows.map((item) => (
+											<Row
+												key={item.id}
+												item={item}
+												project={projectName(item.project_id)}
+												place={placeOf(
+													item.destination,
+													connectionName,
+													() => null,
+												)}
+												busy={busyId !== null}
+												disabledBy={privileged ? undefined : personOnlyId}
+												onAnswer={onAnswer}
+												onOpenChat={onOpenChat}
+												onNavigate={onNavigate}
+											/>
+										))}
+									</ul>
+								</section>
+							),
+					)}
+				</>
 			)}
 			{waitingCount(items) > 0 && <PersonOnlyNote id={personOnlyId} />}
 		</>
