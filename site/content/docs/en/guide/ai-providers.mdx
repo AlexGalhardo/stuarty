@@ -25,6 +25,17 @@ Two rules keep the cost in your hands:
 - **The price is shown before anything runs.** A text is a job with an estimate. The estimate counts the largest answer you allowed, so it is an upper bound.
 - **A person says yes.** An agent can prepare a text; it waits on the Approvals page until you approve it or until a rule you wrote does. A cost ceiling you set always wins, and an approval does not lift it.
 
+## In the app
+
+**Connections** shows one card for each AI provider, with the status **Connected** or **Not connected**, a link to where to find the key, and these actions:
+
+- **Save the key** connects it with an API key (stored encrypted, never shown again); **Sign in with ChatGPT** or **Sign in with OpenRouter** connect without a key to copy.
+- **Check the key** tests it, and **Show the models** lists what the provider offers, with the limits of each and its price.
+- **Set the price** saves the price of a model, and the card shows what was **Spent today**.
+- A sign-in that the provider no longer accepts says **Needs sign-in**; nothing was deleted, and **Sign in again** fixes it.
+
+Below the providers are the cards for social networks and blog destinations, and the list **All connections**, with the exact hosts each one may reach, **Test** and **Remove**.
+
 ## Prices
 
 No price is built into Stuarty. When a provider publishes a price with its models, Stuarty uses it. OpenAI and Anthropic publish none, so you set the price of each model you use, from the provider's own price page, on the Connections page or with `provider:price`. A model with no price is refused with `E_PRICE_UNKNOWN`: Stuarty will not guess a price of zero.

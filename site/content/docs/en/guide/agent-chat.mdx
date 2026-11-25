@@ -22,7 +22,7 @@ The agent edits through Stuarty's own MCP server, with a token that reaches only
 
 ## Connect an agent
 
-1. Open the panel with **Chat with your agent**, the button on the right of every page of the dashboard. **Escape** closes it.
+1. Open the panel with **Chat**, the button at the top right of every page, including the video editor and the image editor, where it opens over the editor. **Escape** closes it.
 2. With no agent connected the panel says so and lists the agents Stuarty knows, with whether each was found on this machine. Choose **Fill the form with this agent**, or fill **Name**, **Program** and **Arguments, one per line** yourself.
 3. Read the full command the panel shows: it is a program that will run with your access. Then choose **Connect the agent**.
 
@@ -38,7 +38,10 @@ The first message tells the agent which project is open and asks it to read the 
 
 ## What the agent is doing
 
-The bar at the bottom of every page, and the top of the panel, tell what the agent does:
+The agent bar and the top of the panel tell what the agent does. In the dashboard the bar is under the top of the page ([The dashboard and the sidebar](/docs/guide/dashboard)); in the editors it is at the foot of the window.
+
+- **State.** Waiting for you, working, asks your permission, you denied it, finished or failed.
+- **Next.** The next step the agent reported, or "No next step reported".
 
 - **Skill.** A skill is "loaded in this session" when the agent read it through Stuarty. A skill you read yourself in the app counts for nothing, and a skill the agent uses inside its own program is invisible to Stuarty. "Loaded" says the text was read, not that the agent follows it. With none read, the bar says whether a reviewed skill is available.
 - **Tool.** The last tool the agent called, with its status. For a tool of Stuarty the bar adds a plain description and the tool's technical name; for any other tool it shows the agent's own title, marked as text from the agent.
@@ -56,7 +59,7 @@ stuarty chat:activity cht_4n8p2r6t1v
 
 ## Permissions and approvals
 
-An agent may ask before it runs a tool. The panel shows the request with **Allow once**, **Reject** and **Cancel**. Stuarty never chooses "always" for you: a permission that outlives one call is a rule, and rules are written on the **Approvals** page.
+An agent may ask before it runs a tool. The panel shows the request with **Allow once**, **Reject** and **Cancel**; the agent bar shows the same request with **Allow once** and **Deny**. Stuarty never chooses "always" for you: a permission that outlives one call is a rule, and rules are written on the **Approvals** page.
 
 A permission in the chat is the agent's own question. It is not an approval: a publication or a costly generation the agent prepares still waits on the **Approvals** page for you, or for a rule you wrote.
 

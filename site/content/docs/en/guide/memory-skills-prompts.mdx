@@ -21,7 +21,7 @@ The files are the truth: plain Markdown in the `library/` folder of your [worksp
 
 ## Quick start
 
-1. In the editor, open **Memory**, **Skills** or **Prompts** in the sidebar. Each lists what you have, searchable, and each has a place to write a new one.
+1. Open **Memory**, **Skills** or **Prompts** in the **Agent** group of the sidebar. Each page is a list on the left, with a search box, and the entry you choose on the right. **New note**, **New skill** or **New prompt** starts a new one. **Read the files again** rereads the folder if you changed a file by hand.
 2. Or from a terminal:
 
    ```bash
@@ -39,7 +39,11 @@ The files are the truth: plain Markdown in the `library/` folder of your [worksp
 
 ## A skill you did not write waits for you
 
-A skill you import (`stuarty skill:import <folder or archive>`) starts **unreviewed**. It is listed with a warning, and it is not offered to an agent until you open it in **Skills**, read it and mark it reviewed. Any change to its text takes the mark away. `stuarty skill:lint <name>` checks a skill's structure and names its findings.
+A skill you import (`stuarty skill:import <folder or archive>`, or **Import or export skills** on the page) starts **unreviewed**. It is listed as "Not reviewed: not offered to agents", and it is not offered to an agent until you open it in **Skills**, read its text and its files, and choose **Mark as read**. Any change to its text takes the mark away. `stuarty skill:lint <name>` checks a skill's structure and names its findings.
+
+## A note an agent wrote waits for you
+
+A memory note that an agent wrote is not offered to agents until you keep it. In **Memory**, the list has the tabs **All**, **Pending** and **Kept**. Open a pending note and choose **Keep this note**, or **Reject this note**, which removes it. A note you write yourself in the app is kept at once.
 
 ## What an agent sees
 

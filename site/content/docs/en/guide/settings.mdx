@@ -15,7 +15,16 @@ There are three levels of settings, and they are kept apart on purpose.
 
 **Project settings** are part of the project and its history, so every change can be undone: the frame `width` and `height` (even numbers, 16 to 4096), the frame rate, the `background` colour (a hex colour or a template colour such as `$paper`), and the `loudness_target` in LUFS (-30 to -5). Changing the frame rate rescales every time in the project and repairs what rounding breaks, such as a duration that became zero; the result lists every item it adjusted. The name of the project is changed with `project.rename`. New projects start from a preset: 9:16, 1:1, 16:9 or 4:5.
 
-**Editor preferences** are yours and live in the browser. The **Settings** page (the `/settings` address) holds the language (English or Brazilian Portuguese), the theme (light or dark; the top bar of the editor has a button too), the unit of a number typed without a unit in a time field (seconds or frames), and an **About** block with the version and the workspace folder. The language switch changes only the editor; the CLI and MCP text stays English.
+**Editor preferences** are yours and live in the browser. The **Settings** page (the `/settings` address, at the bottom of the sidebar) is one page with a list of sections on the side, in this order:
+
+1. **About**: the version and the workspace folder.
+2. **Preferences**: the language (English or Brazilian Portuguese), the theme (light or dark; the top bar of the editor has a button too) and the unit of a number typed without a unit in a time field (seconds or frames).
+3. **Brand kit**: your colours, fonts and logo ([Fonts and the brand kit](/docs/guide/brand-kit)).
+4. **Account**: the password of your account, when the account is unlocked ([Your account](/docs/account)).
+5. **Background**: keep Stuarty running in the tray so scheduled posts go out, in the desktop app only ([The desktop application](/docs/guide/desktop)).
+6. **Transcription**: install the local transcription helper and a model, once ([Transcription](/docs/guide/transcription)).
+
+The language switch changes only the editor; the CLI and MCP text stays English.
 
 **Server settings** are environment variables read at start-up, such as the encoder, the limits and the mode. They are listed in [Configuration variables](/docs/reference/configuration). Changing one needs a restart.
 
