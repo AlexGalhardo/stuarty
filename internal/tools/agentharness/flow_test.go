@@ -442,7 +442,10 @@ func newFakeAccountServer(t *testing.T, existing string) (*httptest.Server, *fak
 		w.WriteHeader(http.StatusSeeOther)
 	})
 	mux.HandleFunc("POST /auth/account/create", func(w http.ResponseWriter, r *http.Request) {
-		var in struct{ Password, Confirmation string }
+		var in struct {
+			Password     string `json:"password"`
+			Confirmation string `json:"confirmation"`
+		}
 
 		f.mu.Lock()
 		defer f.mu.Unlock()
@@ -460,7 +463,10 @@ func newFakeAccountServer(t *testing.T, existing string) (*httptest.Server, *fak
 		_, _ = w.Write([]byte(`{"recovery_key":"k"}`))
 	})
 	mux.HandleFunc("POST /auth/account/login", func(w http.ResponseWriter, r *http.Request) {
-		var in struct{ Identity, Password string }
+		var in struct {
+			Identity string `json:"identity"`
+			Password string `json:"password"`
+		}
 
 		f.mu.Lock()
 		defer f.mu.Unlock()
