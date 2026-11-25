@@ -1,0 +1,6348 @@
+[
+  {
+    "kind": "track.added",
+    "id": "trk_n3w7r4ck21",
+    "object": {
+      "id": "trk_n3w7r4ck21",
+      "kind": "visual",
+      "name": "Cursor",
+      "order": "a0i"
+    }
+  },
+  {
+    "kind": "item.added",
+    "id": "itm_cr00000001",
+    "object": {
+      "contrast": 1,
+      "duration": 267,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
+      "height": 27,
+      "id": "itm_cr00000001",
+      "keyframes": {
+        "x": [
+          {
+            "easing": "linear",
+            "t": 0,
+            "value": 10.5
+          },
+          {
+            "easing": "linear",
+            "t": 3,
+            "value": 10.5
+          },
+          {
+            "easing": "linear",
+            "t": 6,
+            "value": 10.5
+          },
+          {
+            "easing": "linear",
+            "t": 9,
+            "value": 10.5
+          },
+          {
+            "easing": "linear",
+            "t": 12,
+            "value": 10.5
+          },
+          {
+            "easing": "linear",
+            "t": 15,
+            "value": 11.562
+          },
+          {
+            "easing": "linear",
+            "t": 18,
+            "value": 19.137
+          },
+          {
+            "easing": "linear",
+            "t": 21,
+            "value": 23.11
+          },
+          {
+            "easing": "linear",
+            "t": 24,
+            "value": 25.194
+          },
+          {
+            "easing": "linear",
+            "t": 27,
+            "value": 26.287
+          },
+          {
+            "easing": "linear",
+            "t": 30,
+            "value": 27.923
+          },
+          {
+            "easing": "linear",
+            "t": 33,
+            "value": 35.802
+          },
+          {
+            "easing": "linear",
+            "t": 36,
+            "value": 39.935
+          },
+          {
+            "easing": "linear",
+            "t": 39,
+            "value": 42.101
+          },
+          {
+            "easing": "linear",
+            "t": 42,
+            "value": 43.238
+          },
+          {
+            "easing": "linear",
+            "t": 45,
+            "value": 44.898
+          },
+          {
+            "easing": "linear",
+            "t": 48,
+            "value": 52.789
+          },
+          {
+            "easing": "linear",
+            "t": 51,
+            "value": 56.927
+          },
+          {
+            "easing": "linear",
+            "t": 54,
+            "value": 59.099
+          },
+          {
+            "easing": "linear",
+            "t": 57,
+            "value": 60.237
+          },
+          {
+            "easing": "linear",
+            "t": 60,
+            "value": 61.96
+          },
+          {
+            "easing": "linear",
+            "t": 63,
+            "value": 70.297
+          },
+          {
+            "easing": "linear",
+            "t": 66,
+            "value": 74.67
+          },
+          {
+            "easing": "linear",
+            "t": 69,
+            "value": 76.964
+          },
+          {
+            "easing": "linear",
+            "t": 72,
+            "value": 78.165
+          },
+          {
+            "easing": "linear",
+            "t": 75,
+            "value": 79.859
+          },
+          {
+            "easing": "linear",
+            "t": 78,
+            "value": 87.77
+          },
+          {
+            "easing": "linear",
+            "t": 81,
+            "value": 91.917
+          },
+          {
+            "easing": "linear",
+            "t": 84,
+            "value": 94.093
+          },
+          {
+            "easing": "linear",
+            "t": 87,
+            "value": 95.235
+          },
+          {
+            "easing": "linear",
+            "t": 90,
+            "value": 96.896
+          },
+          {
+            "easing": "linear",
+            "t": 93,
+            "value": 104.787
+          },
+          {
+            "easing": "linear",
+            "t": 96,
+            "value": 108.925
+          },
+          {
+            "easing": "linear",
+            "t": 99,
+            "value": 111.098
+          },
+          {
+            "easing": "linear",
+            "t": 102,
+            "value": 112.237
+          },
+          {
+            "easing": "linear",
+            "t": 105,
+            "value": 113.897
+          },
+          {
+            "easing": "linear",
+            "t": 108,
+            "value": 121.788
+          },
+          {
+            "easing": "linear",
+            "t": 111,
+            "value": 125.926
+          },
+          {
+            "easing": "linear",
+            "t": 114,
+            "value": 128.098
+          },
+          {
+            "easing": "linear",
+            "t": 117,
+            "value": 129.237
+          },
+          {
+            "easing": "linear",
+            "t": 120,
+            "value": 130.96
+          },
+          {
+            "easing": "linear",
+            "t": 123,
+            "value": 139.297
+          },
+          {
+            "easing": "linear",
+            "t": 126,
+            "value": 143.67
+          },
+          {
+            "easing": "linear",
+            "t": 129,
+            "value": 145.964
+          },
+          {
+            "easing": "linear",
+            "t": 132,
+            "value": 147.165
+          },
+          {
+            "easing": "linear",
+            "t": 135,
+            "value": 148.859
+          },
+          {
+            "easing": "linear",
+            "t": 138,
+            "value": 156.77
+          },
+          {
+            "easing": "linear",
+            "t": 141,
+            "value": 160.917
+          },
+          {
+            "easing": "linear",
+            "t": 144,
+            "value": 163.093
+          },
+          {
+            "easing": "linear",
+            "t": 147,
+            "value": 164.235
+          },
+          {
+            "easing": "linear",
+            "t": 150,
+            "value": 165.896
+          },
+          {
+            "easing": "linear",
+            "t": 153,
+            "value": 173.787
+          },
+          {
+            "easing": "linear",
+            "t": 156,
+            "value": 177.925
+          },
+          {
+            "easing": "linear",
+            "t": 159,
+            "value": 180.098
+          },
+          {
+            "easing": "linear",
+            "t": 162,
+            "value": 181.237
+          },
+          {
+            "easing": "linear",
+            "t": 165,
+            "value": 182.96
+          },
+          {
+            "easing": "linear",
+            "t": 168,
+            "value": 191.297
+          },
+          {
+            "easing": "linear",
+            "t": 171,
+            "value": 195.67
+          },
+          {
+            "easing": "linear",
+            "t": 174,
+            "value": 197.964
+          },
+          {
+            "easing": "linear",
+            "t": 177,
+            "value": 199.165
+          },
+          {
+            "easing": "linear",
+            "t": 180,
+            "value": 200.859
+          },
+          {
+            "easing": "linear",
+            "t": 183,
+            "value": 208.77
+          },
+          {
+            "easing": "linear",
+            "t": 186,
+            "value": 212.917
+          },
+          {
+            "easing": "linear",
+            "t": 189,
+            "value": 215.093
+          },
+          {
+            "easing": "linear",
+            "t": 192,
+            "value": 216.235
+          },
+          {
+            "easing": "linear",
+            "t": 195,
+            "value": 217.896
+          },
+          {
+            "easing": "linear",
+            "t": 198,
+            "value": 225.787
+          },
+          {
+            "easing": "linear",
+            "t": 201,
+            "value": 229.925
+          },
+          {
+            "easing": "linear",
+            "t": 204,
+            "value": 232.098
+          },
+          {
+            "easing": "linear",
+            "t": 207,
+            "value": 233.237
+          },
+          {
+            "easing": "linear",
+            "t": 210,
+            "value": 234.897
+          },
+          {
+            "easing": "linear",
+            "t": 213,
+            "value": 242.788
+          },
+          {
+            "easing": "linear",
+            "t": 216,
+            "value": 246.926
+          },
+          {
+            "easing": "linear",
+            "t": 219,
+            "value": 249.098
+          },
+          {
+            "easing": "linear",
+            "t": 222,
+            "value": 250.237
+          },
+          {
+            "easing": "linear",
+            "t": 225,
+            "value": 251.96
+          },
+          {
+            "easing": "linear",
+            "t": 228,
+            "value": 260.297
+          },
+          {
+            "easing": "linear",
+            "t": 231,
+            "value": 264.67
+          },
+          {
+            "easing": "linear",
+            "t": 234,
+            "value": 266.964
+          },
+          {
+            "easing": "linear",
+            "t": 237,
+            "value": 268.165
+          },
+          {
+            "easing": "linear",
+            "t": 240,
+            "value": 269.859
+          },
+          {
+            "easing": "linear",
+            "t": 243,
+            "value": 277.77
+          },
+          {
+            "easing": "linear",
+            "t": 246,
+            "value": 281.917
+          },
+          {
+            "easing": "linear",
+            "t": 249,
+            "value": 284.093
+          },
+          {
+            "easing": "linear",
+            "t": 252,
+            "value": 285.235
+          },
+          {
+            "easing": "linear",
+            "t": 255,
+            "value": 286.896
+          },
+          {
+            "easing": "linear",
+            "t": 258,
+            "value": 294.787
+          },
+          {
+            "easing": "linear",
+            "t": 261,
+            "value": 298.925
+          },
+          {
+            "easing": "linear",
+            "t": 264,
+            "value": 301.098
+          },
+          {
+            "easing": "linear",
+            "t": 267,
+            "value": 302.237
+          }
+        ],
+        "y": [
+          {
+            "easing": "linear",
+            "t": 0,
+            "value": 10.5
+          },
+          {
+            "easing": "linear",
+            "t": 3,
+            "value": 10.5
+          },
+          {
+            "easing": "linear",
+            "t": 6,
+            "value": 10.5
+          },
+          {
+            "easing": "linear",
+            "t": 9,
+            "value": 10.5
+          },
+          {
+            "easing": "linear",
+            "t": 12,
+            "value": 10.5
+          },
+          {
+            "easing": "linear",
+            "t": 15,
+            "value": 11.062
+          },
+          {
+            "easing": "linear",
+            "t": 18,
+            "value": 15.071
+          },
+          {
+            "easing": "linear",
+            "t": 21,
+            "value": 17.174
+          },
+          {
+            "easing": "linear",
+            "t": 24,
+            "value": 18.276
+          },
+          {
+            "easing": "linear",
+            "t": 27,
+            "value": 18.855
+          },
+          {
+            "easing": "linear",
+            "t": 30,
+            "value": 19.783
+          },
+          {
+            "easing": "linear",
+            "t": 33,
+            "value": 24.4
+          },
+          {
+            "easing": "linear",
+            "t": 36,
+            "value": 26.822
+          },
+          {
+            "easing": "linear",
+            "t": 39,
+            "value": 28.092
+          },
+          {
+            "easing": "linear",
+            "t": 42,
+            "value": 28.758
+          },
+          {
+            "easing": "linear",
+            "t": 45,
+            "value": 29.668
+          },
+          {
+            "easing": "linear",
+            "t": 48,
+            "value": 33.864
+          },
+          {
+            "easing": "linear",
+            "t": 51,
+            "value": 36.065
+          },
+          {
+            "easing": "linear",
+            "t": 54,
+            "value": 37.22
+          },
+          {
+            "easing": "linear",
+            "t": 57,
+            "value": 37.825
+          },
+          {
+            "easing": "linear",
+            "t": 60,
+            "value": 38.767
+          },
+          {
+            "easing": "linear",
+            "t": 63,
+            "value": 43.393
+          },
+          {
+            "easing": "linear",
+            "t": 66,
+            "value": 45.818
+          },
+          {
+            "easing": "linear",
+            "t": 69,
+            "value": 47.09
+          },
+          {
+            "easing": "linear",
+            "t": 72,
+            "value": 47.757
+          },
+          {
+            "easing": "linear",
+            "t": 75,
+            "value": 48.731
+          },
+          {
+            "easing": "linear",
+            "t": 78,
+            "value": 53.372
+          },
+          {
+            "easing": "linear",
+            "t": 81,
+            "value": 55.807
+          },
+          {
+            "easing": "linear",
+            "t": 84,
+            "value": 57.085
+          },
+          {
+            "easing": "linear",
+            "t": 87,
+            "value": 57.754
+          },
+          {
+            "easing": "linear",
+            "t": 90,
+            "value": 58.667
+          },
+          {
+            "easing": "linear",
+            "t": 93,
+            "value": 62.864
+          },
+          {
+            "easing": "linear",
+            "t": 96,
+            "value": 65.065
+          },
+          {
+            "easing": "linear",
+            "t": 99,
+            "value": 66.22
+          },
+          {
+            "easing": "linear",
+            "t": 102,
+            "value": 66.825
+          },
+          {
+            "easing": "linear",
+            "t": 105,
+            "value": 67.767
+          },
+          {
+            "easing": "linear",
+            "t": 108,
+            "value": 72.393
+          },
+          {
+            "easing": "linear",
+            "t": 111,
+            "value": 74.818
+          },
+          {
+            "easing": "linear",
+            "t": 114,
+            "value": 76.09
+          },
+          {
+            "easing": "linear",
+            "t": 117,
+            "value": 76.757
+          },
+          {
+            "easing": "linear",
+            "t": 120,
+            "value": 77.731
+          },
+          {
+            "easing": "linear",
+            "t": 123,
+            "value": 82.372
+          },
+          {
+            "easing": "linear",
+            "t": 126,
+            "value": 84.807
+          },
+          {
+            "easing": "linear",
+            "t": 129,
+            "value": 86.085
+          },
+          {
+            "easing": "linear",
+            "t": 132,
+            "value": 86.754
+          },
+          {
+            "easing": "linear",
+            "t": 135,
+            "value": 87.667
+          },
+          {
+            "easing": "linear",
+            "t": 138,
+            "value": 91.864
+          },
+          {
+            "easing": "linear",
+            "t": 141,
+            "value": 94.065
+          },
+          {
+            "easing": "linear",
+            "t": 144,
+            "value": 95.22
+          },
+          {
+            "easing": "linear",
+            "t": 147,
+            "value": 95.825
+          },
+          {
+            "easing": "linear",
+            "t": 150,
+            "value": 96.767
+          },
+          {
+            "easing": "linear",
+            "t": 153,
+            "value": 101.393
+          },
+          {
+            "easing": "linear",
+            "t": 156,
+            "value": 103.818
+          },
+          {
+            "easing": "linear",
+            "t": 159,
+            "value": 105.09
+          },
+          {
+            "easing": "linear",
+            "t": 162,
+            "value": 105.757
+          },
+          {
+            "easing": "linear",
+            "t": 165,
+            "value": 106.731
+          },
+          {
+            "easing": "linear",
+            "t": 168,
+            "value": 111.372
+          },
+          {
+            "easing": "linear",
+            "t": 171,
+            "value": 113.807
+          },
+          {
+            "easing": "linear",
+            "t": 174,
+            "value": 115.085
+          },
+          {
+            "easing": "linear",
+            "t": 177,
+            "value": 115.754
+          },
+          {
+            "easing": "linear",
+            "t": 180,
+            "value": 116.667
+          },
+          {
+            "easing": "linear",
+            "t": 183,
+            "value": 120.864
+          },
+          {
+            "easing": "linear",
+            "t": 186,
+            "value": 123.065
+          },
+          {
+            "easing": "linear",
+            "t": 189,
+            "value": 124.22
+          },
+          {
+            "easing": "linear",
+            "t": 192,
+            "value": 124.825
+          },
+          {
+            "easing": "linear",
+            "t": 195,
+            "value": 125.767
+          },
+          {
+            "easing": "linear",
+            "t": 198,
+            "value": 130.393
+          },
+          {
+            "easing": "linear",
+            "t": 201,
+            "value": 132.818
+          },
+          {
+            "easing": "linear",
+            "t": 204,
+            "value": 134.09
+          },
+          {
+            "easing": "linear",
+            "t": 207,
+            "value": 134.757
+          },
+          {
+            "easing": "linear",
+            "t": 210,
+            "value": 135.668
+          },
+          {
+            "easing": "linear",
+            "t": 213,
+            "value": 139.864
+          },
+          {
+            "easing": "linear",
+            "t": 216,
+            "value": 142.065
+          },
+          {
+            "easing": "linear",
+            "t": 219,
+            "value": 143.22
+          },
+          {
+            "easing": "linear",
+            "t": 222,
+            "value": 143.825
+          },
+          {
+            "easing": "linear",
+            "t": 225,
+            "value": 144.767
+          },
+          {
+            "easing": "linear",
+            "t": 228,
+            "value": 149.393
+          },
+          {
+            "easing": "linear",
+            "t": 231,
+            "value": 151.818
+          },
+          {
+            "easing": "linear",
+            "t": 234,
+            "value": 153.09
+          },
+          {
+            "easing": "linear",
+            "t": 237,
+            "value": 153.757
+          },
+          {
+            "easing": "linear",
+            "t": 240,
+            "value": 154.731
+          },
+          {
+            "easing": "linear",
+            "t": 243,
+            "value": 159.372
+          },
+          {
+            "easing": "linear",
+            "t": 246,
+            "value": 161.807
+          },
+          {
+            "easing": "linear",
+            "t": 249,
+            "value": 163.085
+          },
+          {
+            "easing": "linear",
+            "t": 252,
+            "value": 163.754
+          },
+          {
+            "easing": "linear",
+            "t": 255,
+            "value": 164.667
+          },
+          {
+            "easing": "linear",
+            "t": 258,
+            "value": 168.864
+          },
+          {
+            "easing": "linear",
+            "t": 261,
+            "value": 171.065
+          },
+          {
+            "easing": "linear",
+            "t": 264,
+            "value": 172.22
+          },
+          {
+            "easing": "linear",
+            "t": 267,
+            "value": 172.825
+          }
+        ]
+      },
+      "name": "Cursor itm_m1n2p3q4r5",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "shape": "ellipse",
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
+      "start": 0,
+      "stroke_color": "#1F1F1F",
+      "stroke_width": 2,
+      "track": "trk_n3w7r4ck21",
+      "type": "shape",
+      "volume": 1,
+      "width": 27,
+      "x": 10.5,
+      "y": 10.5
+    }
+  },
+  {
+    "kind": "item.added",
+    "id": "itm_cr00000002",
+    "object": {
+      "contrast": 1,
+      "duration": 267,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
+      "height": 27,
+      "id": "itm_cr00000002",
+      "keyframes": {
+        "x": [
+          {
+            "easing": "linear",
+            "t": 0,
+            "value": 302.237
+          },
+          {
+            "easing": "linear",
+            "t": 3,
+            "value": 303.897
+          },
+          {
+            "easing": "linear",
+            "t": 6,
+            "value": 311.788
+          },
+          {
+            "easing": "linear",
+            "t": 9,
+            "value": 315.926
+          },
+          {
+            "easing": "linear",
+            "t": 12,
+            "value": 318.098
+          },
+          {
+            "easing": "linear",
+            "t": 15,
+            "value": 319.237
+          },
+          {
+            "easing": "linear",
+            "t": 18,
+            "value": 320.96
+          },
+          {
+            "easing": "linear",
+            "t": 21,
+            "value": 329.297
+          },
+          {
+            "easing": "linear",
+            "t": 24,
+            "value": 333.67
+          },
+          {
+            "easing": "linear",
+            "t": 27,
+            "value": 335.964
+          },
+          {
+            "easing": "linear",
+            "t": 30,
+            "value": 337.165
+          },
+          {
+            "easing": "linear",
+            "t": 33,
+            "value": 338.859
+          },
+          {
+            "easing": "linear",
+            "t": 36,
+            "value": 346.77
+          },
+          {
+            "easing": "linear",
+            "t": 39,
+            "value": 350.917
+          },
+          {
+            "easing": "linear",
+            "t": 42,
+            "value": 353.093
+          },
+          {
+            "easing": "linear",
+            "t": 45,
+            "value": 354.235
+          },
+          {
+            "easing": "linear",
+            "t": 48,
+            "value": 355.896
+          },
+          {
+            "easing": "linear",
+            "t": 51,
+            "value": 363.787
+          },
+          {
+            "easing": "linear",
+            "t": 54,
+            "value": 367.925
+          },
+          {
+            "easing": "linear",
+            "t": 57,
+            "value": 370.098
+          },
+          {
+            "easing": "linear",
+            "t": 60,
+            "value": 371.237
+          },
+          {
+            "easing": "linear",
+            "t": 63,
+            "value": 372.96
+          },
+          {
+            "easing": "linear",
+            "t": 66,
+            "value": 381.297
+          },
+          {
+            "easing": "linear",
+            "t": 69,
+            "value": 385.67
+          },
+          {
+            "easing": "linear",
+            "t": 72,
+            "value": 387.964
+          },
+          {
+            "easing": "linear",
+            "t": 75,
+            "value": 389.165
+          },
+          {
+            "easing": "linear",
+            "t": 78,
+            "value": 390.859
+          },
+          {
+            "easing": "linear",
+            "t": 81,
+            "value": 398.77
+          },
+          {
+            "easing": "linear",
+            "t": 84,
+            "value": 402.917
+          },
+          {
+            "easing": "linear",
+            "t": 87,
+            "value": 405.093
+          },
+          {
+            "easing": "linear",
+            "t": 90,
+            "value": 406.235
+          },
+          {
+            "easing": "linear",
+            "t": 93,
+            "value": 407.896
+          },
+          {
+            "easing": "linear",
+            "t": 96,
+            "value": 415.787
+          },
+          {
+            "easing": "linear",
+            "t": 99,
+            "value": 419.925
+          },
+          {
+            "easing": "linear",
+            "t": 102,
+            "value": 422.098
+          },
+          {
+            "easing": "linear",
+            "t": 105,
+            "value": 423.237
+          },
+          {
+            "easing": "linear",
+            "t": 108,
+            "value": 424.897
+          },
+          {
+            "easing": "linear",
+            "t": 111,
+            "value": 432.788
+          },
+          {
+            "easing": "linear",
+            "t": 114,
+            "value": 436.926
+          },
+          {
+            "easing": "linear",
+            "t": 117,
+            "value": 439.098
+          },
+          {
+            "easing": "linear",
+            "t": 120,
+            "value": 440.237
+          },
+          {
+            "easing": "linear",
+            "t": 123,
+            "value": 441.96
+          },
+          {
+            "easing": "linear",
+            "t": 126,
+            "value": 450.297
+          },
+          {
+            "easing": "linear",
+            "t": 129,
+            "value": 454.67
+          },
+          {
+            "easing": "linear",
+            "t": 132,
+            "value": 456.964
+          },
+          {
+            "easing": "linear",
+            "t": 135,
+            "value": 458.165
+          },
+          {
+            "easing": "linear",
+            "t": 138,
+            "value": 459.859
+          },
+          {
+            "easing": "linear",
+            "t": 141,
+            "value": 467.77
+          },
+          {
+            "easing": "linear",
+            "t": 144,
+            "value": 471.917
+          },
+          {
+            "easing": "linear",
+            "t": 147,
+            "value": 474.093
+          },
+          {
+            "easing": "linear",
+            "t": 150,
+            "value": 475.235
+          },
+          {
+            "easing": "linear",
+            "t": 153,
+            "value": 476.896
+          },
+          {
+            "easing": "linear",
+            "t": 156,
+            "value": 484.787
+          },
+          {
+            "easing": "linear",
+            "t": 159,
+            "value": 488.925
+          },
+          {
+            "easing": "linear",
+            "t": 162,
+            "value": 491.098
+          },
+          {
+            "easing": "linear",
+            "t": 165,
+            "value": 492.237
+          },
+          {
+            "easing": "linear",
+            "t": 168,
+            "value": 493.897
+          },
+          {
+            "easing": "linear",
+            "t": 171,
+            "value": 501.788
+          },
+          {
+            "easing": "linear",
+            "t": 174,
+            "value": 505.926
+          },
+          {
+            "easing": "linear",
+            "t": 177,
+            "value": 508.098
+          },
+          {
+            "easing": "linear",
+            "t": 180,
+            "value": 509.237
+          },
+          {
+            "easing": "linear",
+            "t": 183,
+            "value": 510.96
+          },
+          {
+            "easing": "linear",
+            "t": 186,
+            "value": 519.297
+          },
+          {
+            "easing": "linear",
+            "t": 189,
+            "value": 523.67
+          },
+          {
+            "easing": "linear",
+            "t": 192,
+            "value": 525.964
+          },
+          {
+            "easing": "linear",
+            "t": 195,
+            "value": 527.165
+          },
+          {
+            "easing": "linear",
+            "t": 198,
+            "value": 528.859
+          },
+          {
+            "easing": "linear",
+            "t": 201,
+            "value": 536.77
+          },
+          {
+            "easing": "linear",
+            "t": 204,
+            "value": 540.917
+          },
+          {
+            "easing": "linear",
+            "t": 207,
+            "value": 543.093
+          },
+          {
+            "easing": "linear",
+            "t": 210,
+            "value": 544.235
+          },
+          {
+            "easing": "linear",
+            "t": 213,
+            "value": 545.896
+          },
+          {
+            "easing": "linear",
+            "t": 216,
+            "value": 553.787
+          },
+          {
+            "easing": "linear",
+            "t": 219,
+            "value": 557.925
+          },
+          {
+            "easing": "linear",
+            "t": 222,
+            "value": 560.098
+          },
+          {
+            "easing": "linear",
+            "t": 225,
+            "value": 561.237
+          },
+          {
+            "easing": "linear",
+            "t": 228,
+            "value": 562.96
+          },
+          {
+            "easing": "linear",
+            "t": 231,
+            "value": 571.297
+          },
+          {
+            "easing": "linear",
+            "t": 234,
+            "value": 575.67
+          },
+          {
+            "easing": "linear",
+            "t": 237,
+            "value": 577.964
+          },
+          {
+            "easing": "linear",
+            "t": 240,
+            "value": 579.165
+          },
+          {
+            "easing": "linear",
+            "t": 243,
+            "value": 580.859
+          },
+          {
+            "easing": "linear",
+            "t": 246,
+            "value": 588.77
+          },
+          {
+            "easing": "linear",
+            "t": 249,
+            "value": 592.917
+          },
+          {
+            "easing": "linear",
+            "t": 252,
+            "value": 595.093
+          },
+          {
+            "easing": "linear",
+            "t": 255,
+            "value": 596.235
+          },
+          {
+            "easing": "linear",
+            "t": 258,
+            "value": 597.896
+          },
+          {
+            "easing": "linear",
+            "t": 261,
+            "value": 605.787
+          },
+          {
+            "easing": "linear",
+            "t": 264,
+            "value": 609.925
+          },
+          {
+            "easing": "linear",
+            "t": 267,
+            "value": 612.098
+          }
+        ],
+        "y": [
+          {
+            "easing": "linear",
+            "t": 0,
+            "value": 172.825
+          },
+          {
+            "easing": "linear",
+            "t": 3,
+            "value": 173.767
+          },
+          {
+            "easing": "linear",
+            "t": 6,
+            "value": 178.393
+          },
+          {
+            "easing": "linear",
+            "t": 9,
+            "value": 180.818
+          },
+          {
+            "easing": "linear",
+            "t": 12,
+            "value": 182.09
+          },
+          {
+            "easing": "linear",
+            "t": 15,
+            "value": 182.757
+          },
+          {
+            "easing": "linear",
+            "t": 18,
+            "value": 183.731
+          },
+          {
+            "easing": "linear",
+            "t": 21,
+            "value": 188.372
+          },
+          {
+            "easing": "linear",
+            "t": 24,
+            "value": 190.807
+          },
+          {
+            "easing": "linear",
+            "t": 27,
+            "value": 192.085
+          },
+          {
+            "easing": "linear",
+            "t": 30,
+            "value": 192.754
+          },
+          {
+            "easing": "linear",
+            "t": 33,
+            "value": 193.667
+          },
+          {
+            "easing": "linear",
+            "t": 36,
+            "value": 197.864
+          },
+          {
+            "easing": "linear",
+            "t": 39,
+            "value": 200.065
+          },
+          {
+            "easing": "linear",
+            "t": 42,
+            "value": 201.22
+          },
+          {
+            "easing": "linear",
+            "t": 45,
+            "value": 201.825
+          },
+          {
+            "easing": "linear",
+            "t": 48,
+            "value": 202.767
+          },
+          {
+            "easing": "linear",
+            "t": 51,
+            "value": 207.393
+          },
+          {
+            "easing": "linear",
+            "t": 54,
+            "value": 209.818
+          },
+          {
+            "easing": "linear",
+            "t": 57,
+            "value": 211.09
+          },
+          {
+            "easing": "linear",
+            "t": 60,
+            "value": 211.757
+          },
+          {
+            "easing": "linear",
+            "t": 63,
+            "value": 212.731
+          },
+          {
+            "easing": "linear",
+            "t": 66,
+            "value": 217.372
+          },
+          {
+            "easing": "linear",
+            "t": 69,
+            "value": 219.807
+          },
+          {
+            "easing": "linear",
+            "t": 72,
+            "value": 221.085
+          },
+          {
+            "easing": "linear",
+            "t": 75,
+            "value": 221.754
+          },
+          {
+            "easing": "linear",
+            "t": 78,
+            "value": 222.667
+          },
+          {
+            "easing": "linear",
+            "t": 81,
+            "value": 226.864
+          },
+          {
+            "easing": "linear",
+            "t": 84,
+            "value": 229.065
+          },
+          {
+            "easing": "linear",
+            "t": 87,
+            "value": 230.22
+          },
+          {
+            "easing": "linear",
+            "t": 90,
+            "value": 230.825
+          },
+          {
+            "easing": "linear",
+            "t": 93,
+            "value": 231.767
+          },
+          {
+            "easing": "linear",
+            "t": 96,
+            "value": 236.393
+          },
+          {
+            "easing": "linear",
+            "t": 99,
+            "value": 238.818
+          },
+          {
+            "easing": "linear",
+            "t": 102,
+            "value": 240.09
+          },
+          {
+            "easing": "linear",
+            "t": 105,
+            "value": 240.757
+          },
+          {
+            "easing": "linear",
+            "t": 108,
+            "value": 241.668
+          },
+          {
+            "easing": "linear",
+            "t": 111,
+            "value": 245.864
+          },
+          {
+            "easing": "linear",
+            "t": 114,
+            "value": 248.065
+          },
+          {
+            "easing": "linear",
+            "t": 117,
+            "value": 249.22
+          },
+          {
+            "easing": "linear",
+            "t": 120,
+            "value": 249.825
+          },
+          {
+            "easing": "linear",
+            "t": 123,
+            "value": 250.767
+          },
+          {
+            "easing": "linear",
+            "t": 126,
+            "value": 255.393
+          },
+          {
+            "easing": "linear",
+            "t": 129,
+            "value": 257.818
+          },
+          {
+            "easing": "linear",
+            "t": 132,
+            "value": 259.09
+          },
+          {
+            "easing": "linear",
+            "t": 135,
+            "value": 259.757
+          },
+          {
+            "easing": "linear",
+            "t": 138,
+            "value": 260.731
+          },
+          {
+            "easing": "linear",
+            "t": 141,
+            "value": 265.372
+          },
+          {
+            "easing": "linear",
+            "t": 144,
+            "value": 267.807
+          },
+          {
+            "easing": "linear",
+            "t": 147,
+            "value": 269.085
+          },
+          {
+            "easing": "linear",
+            "t": 150,
+            "value": 269.754
+          },
+          {
+            "easing": "linear",
+            "t": 153,
+            "value": 270.667
+          },
+          {
+            "easing": "linear",
+            "t": 156,
+            "value": 274.864
+          },
+          {
+            "easing": "linear",
+            "t": 159,
+            "value": 277.065
+          },
+          {
+            "easing": "linear",
+            "t": 162,
+            "value": 278.22
+          },
+          {
+            "easing": "linear",
+            "t": 165,
+            "value": 278.825
+          },
+          {
+            "easing": "linear",
+            "t": 168,
+            "value": 279.767
+          },
+          {
+            "easing": "linear",
+            "t": 171,
+            "value": 284.393
+          },
+          {
+            "easing": "linear",
+            "t": 174,
+            "value": 286.818
+          },
+          {
+            "easing": "linear",
+            "t": 177,
+            "value": 288.09
+          },
+          {
+            "easing": "linear",
+            "t": 180,
+            "value": 288.757
+          },
+          {
+            "easing": "linear",
+            "t": 183,
+            "value": 289.731
+          },
+          {
+            "easing": "linear",
+            "t": 186,
+            "value": 294.372
+          },
+          {
+            "easing": "linear",
+            "t": 189,
+            "value": 296.807
+          },
+          {
+            "easing": "linear",
+            "t": 192,
+            "value": 298.085
+          },
+          {
+            "easing": "linear",
+            "t": 195,
+            "value": 298.754
+          },
+          {
+            "easing": "linear",
+            "t": 198,
+            "value": 299.667
+          },
+          {
+            "easing": "linear",
+            "t": 201,
+            "value": 303.864
+          },
+          {
+            "easing": "linear",
+            "t": 204,
+            "value": 306.065
+          },
+          {
+            "easing": "linear",
+            "t": 207,
+            "value": 307.22
+          },
+          {
+            "easing": "linear",
+            "t": 210,
+            "value": 307.825
+          },
+          {
+            "easing": "linear",
+            "t": 213,
+            "value": 308.767
+          },
+          {
+            "easing": "linear",
+            "t": 216,
+            "value": 313.393
+          },
+          {
+            "easing": "linear",
+            "t": 219,
+            "value": 315.818
+          },
+          {
+            "easing": "linear",
+            "t": 222,
+            "value": 317.09
+          },
+          {
+            "easing": "linear",
+            "t": 225,
+            "value": 317.757
+          },
+          {
+            "easing": "linear",
+            "t": 228,
+            "value": 318.731
+          },
+          {
+            "easing": "linear",
+            "t": 231,
+            "value": 323.372
+          },
+          {
+            "easing": "linear",
+            "t": 234,
+            "value": 325.807
+          },
+          {
+            "easing": "linear",
+            "t": 237,
+            "value": 327.085
+          },
+          {
+            "easing": "linear",
+            "t": 240,
+            "value": 327.754
+          },
+          {
+            "easing": "linear",
+            "t": 243,
+            "value": 328.667
+          },
+          {
+            "easing": "linear",
+            "t": 246,
+            "value": 332.864
+          },
+          {
+            "easing": "linear",
+            "t": 249,
+            "value": 335.065
+          },
+          {
+            "easing": "linear",
+            "t": 252,
+            "value": 336.22
+          },
+          {
+            "easing": "linear",
+            "t": 255,
+            "value": 336.825
+          },
+          {
+            "easing": "linear",
+            "t": 258,
+            "value": 337.767
+          },
+          {
+            "easing": "linear",
+            "t": 261,
+            "value": 342.393
+          },
+          {
+            "easing": "linear",
+            "t": 264,
+            "value": 344.818
+          },
+          {
+            "easing": "linear",
+            "t": 267,
+            "value": 346.09
+          }
+        ]
+      },
+      "name": "Cursor itm_m1n2p3q4r5",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "shape": "ellipse",
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
+      "start": 267,
+      "stroke_color": "#1F1F1F",
+      "stroke_width": 2,
+      "track": "trk_n3w7r4ck21",
+      "type": "shape",
+      "volume": 1,
+      "width": 27,
+      "x": 302.237,
+      "y": 172.825
+    }
+  },
+  {
+    "kind": "item.added",
+    "id": "itm_cr00000003",
+    "object": {
+      "contrast": 1,
+      "duration": 267,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
+      "height": 27,
+      "id": "itm_cr00000003",
+      "keyframes": {
+        "x": [
+          {
+            "easing": "linear",
+            "t": 0,
+            "value": 612.098
+          },
+          {
+            "easing": "linear",
+            "t": 3,
+            "value": 613.237
+          },
+          {
+            "easing": "linear",
+            "t": 6,
+            "value": 614.897
+          },
+          {
+            "easing": "linear",
+            "t": 9,
+            "value": 622.788
+          },
+          {
+            "easing": "linear",
+            "t": 12,
+            "value": 626.926
+          },
+          {
+            "easing": "linear",
+            "t": 15,
+            "value": 629.098
+          },
+          {
+            "easing": "linear",
+            "t": 18,
+            "value": 630.237
+          },
+          {
+            "easing": "linear",
+            "t": 21,
+            "value": 631.96
+          },
+          {
+            "easing": "linear",
+            "t": 24,
+            "value": 640.297
+          },
+          {
+            "easing": "linear",
+            "t": 27,
+            "value": 644.67
+          },
+          {
+            "easing": "linear",
+            "t": 30,
+            "value": 646.964
+          },
+          {
+            "easing": "linear",
+            "t": 33,
+            "value": 648.165
+          },
+          {
+            "easing": "linear",
+            "t": 36,
+            "value": 649.859
+          },
+          {
+            "easing": "linear",
+            "t": 39,
+            "value": 657.77
+          },
+          {
+            "easing": "linear",
+            "t": 42,
+            "value": 661.917
+          },
+          {
+            "easing": "linear",
+            "t": 45,
+            "value": 664.093
+          },
+          {
+            "easing": "linear",
+            "t": 48,
+            "value": 665.235
+          },
+          {
+            "easing": "linear",
+            "t": 51,
+            "value": 666.896
+          },
+          {
+            "easing": "linear",
+            "t": 54,
+            "value": 674.787
+          },
+          {
+            "easing": "linear",
+            "t": 57,
+            "value": 678.925
+          },
+          {
+            "easing": "linear",
+            "t": 60,
+            "value": 681.098
+          },
+          {
+            "easing": "linear",
+            "t": 63,
+            "value": 682.237
+          },
+          {
+            "easing": "linear",
+            "t": 66,
+            "value": 683.897
+          },
+          {
+            "easing": "linear",
+            "t": 69,
+            "value": 691.788
+          },
+          {
+            "easing": "linear",
+            "t": 72,
+            "value": 695.926
+          },
+          {
+            "easing": "linear",
+            "t": 75,
+            "value": 698.098
+          },
+          {
+            "easing": "linear",
+            "t": 78,
+            "value": 699.237
+          },
+          {
+            "easing": "linear",
+            "t": 81,
+            "value": 700.96
+          },
+          {
+            "easing": "linear",
+            "t": 84,
+            "value": 709.297
+          },
+          {
+            "easing": "linear",
+            "t": 87,
+            "value": 713.67
+          },
+          {
+            "easing": "linear",
+            "t": 90,
+            "value": 715.964
+          },
+          {
+            "easing": "linear",
+            "t": 93,
+            "value": 717.165
+          },
+          {
+            "easing": "linear",
+            "t": 96,
+            "value": 718.859
+          },
+          {
+            "easing": "linear",
+            "t": 99,
+            "value": 726.77
+          },
+          {
+            "easing": "linear",
+            "t": 102,
+            "value": 730.917
+          },
+          {
+            "easing": "linear",
+            "t": 105,
+            "value": 733.093
+          },
+          {
+            "easing": "linear",
+            "t": 108,
+            "value": 734.235
+          },
+          {
+            "easing": "linear",
+            "t": 111,
+            "value": 735.896
+          },
+          {
+            "easing": "linear",
+            "t": 114,
+            "value": 743.787
+          },
+          {
+            "easing": "linear",
+            "t": 117,
+            "value": 747.925
+          },
+          {
+            "easing": "linear",
+            "t": 120,
+            "value": 750.098
+          },
+          {
+            "easing": "linear",
+            "t": 123,
+            "value": 751.237
+          },
+          {
+            "easing": "linear",
+            "t": 126,
+            "value": 752.96
+          },
+          {
+            "easing": "linear",
+            "t": 129,
+            "value": 761.297
+          },
+          {
+            "easing": "linear",
+            "t": 132,
+            "value": 765.67
+          },
+          {
+            "easing": "linear",
+            "t": 135,
+            "value": 767.964
+          },
+          {
+            "easing": "linear",
+            "t": 138,
+            "value": 769.165
+          },
+          {
+            "easing": "linear",
+            "t": 141,
+            "value": 770.859
+          },
+          {
+            "easing": "linear",
+            "t": 144,
+            "value": 778.77
+          },
+          {
+            "easing": "linear",
+            "t": 147,
+            "value": 782.917
+          },
+          {
+            "easing": "linear",
+            "t": 150,
+            "value": 785.093
+          },
+          {
+            "easing": "linear",
+            "t": 153,
+            "value": 786.235
+          },
+          {
+            "easing": "linear",
+            "t": 156,
+            "value": 787.896
+          },
+          {
+            "easing": "linear",
+            "t": 159,
+            "value": 795.787
+          },
+          {
+            "easing": "linear",
+            "t": 162,
+            "value": 799.925
+          },
+          {
+            "easing": "linear",
+            "t": 165,
+            "value": 802.098
+          },
+          {
+            "easing": "linear",
+            "t": 168,
+            "value": 803.237
+          },
+          {
+            "easing": "linear",
+            "t": 171,
+            "value": 804.897
+          },
+          {
+            "easing": "linear",
+            "t": 174,
+            "value": 812.788
+          },
+          {
+            "easing": "linear",
+            "t": 177,
+            "value": 816.926
+          },
+          {
+            "easing": "linear",
+            "t": 180,
+            "value": 819.098
+          },
+          {
+            "easing": "linear",
+            "t": 183,
+            "value": 820.237
+          },
+          {
+            "easing": "linear",
+            "t": 186,
+            "value": 821.96
+          },
+          {
+            "easing": "linear",
+            "t": 189,
+            "value": 830.297
+          },
+          {
+            "easing": "linear",
+            "t": 192,
+            "value": 834.67
+          },
+          {
+            "easing": "linear",
+            "t": 195,
+            "value": 836.964
+          },
+          {
+            "easing": "linear",
+            "t": 198,
+            "value": 838.165
+          },
+          {
+            "easing": "linear",
+            "t": 201,
+            "value": 839.859
+          },
+          {
+            "easing": "linear",
+            "t": 204,
+            "value": 847.77
+          },
+          {
+            "easing": "linear",
+            "t": 207,
+            "value": 851.917
+          },
+          {
+            "easing": "linear",
+            "t": 210,
+            "value": 854.093
+          },
+          {
+            "easing": "linear",
+            "t": 213,
+            "value": 855.235
+          },
+          {
+            "easing": "linear",
+            "t": 216,
+            "value": 856.896
+          },
+          {
+            "easing": "linear",
+            "t": 219,
+            "value": 864.787
+          },
+          {
+            "easing": "linear",
+            "t": 222,
+            "value": 868.925
+          },
+          {
+            "easing": "linear",
+            "t": 225,
+            "value": 871.098
+          },
+          {
+            "easing": "linear",
+            "t": 228,
+            "value": 872.237
+          },
+          {
+            "easing": "linear",
+            "t": 231,
+            "value": 873.897
+          },
+          {
+            "easing": "linear",
+            "t": 234,
+            "value": 881.788
+          },
+          {
+            "easing": "linear",
+            "t": 237,
+            "value": 885.926
+          },
+          {
+            "easing": "linear",
+            "t": 240,
+            "value": 888.098
+          },
+          {
+            "easing": "linear",
+            "t": 243,
+            "value": 889.237
+          },
+          {
+            "easing": "linear",
+            "t": 246,
+            "value": 890.96
+          },
+          {
+            "easing": "linear",
+            "t": 249,
+            "value": 899.297
+          },
+          {
+            "easing": "linear",
+            "t": 252,
+            "value": 903.67
+          },
+          {
+            "easing": "linear",
+            "t": 255,
+            "value": 905.964
+          },
+          {
+            "easing": "linear",
+            "t": 258,
+            "value": 907.165
+          },
+          {
+            "easing": "linear",
+            "t": 261,
+            "value": 908.859
+          },
+          {
+            "easing": "linear",
+            "t": 264,
+            "value": 916.77
+          },
+          {
+            "easing": "linear",
+            "t": 267,
+            "value": 920.917
+          }
+        ],
+        "y": [
+          {
+            "easing": "linear",
+            "t": 0,
+            "value": 346.09
+          },
+          {
+            "easing": "linear",
+            "t": 3,
+            "value": 346.757
+          },
+          {
+            "easing": "linear",
+            "t": 6,
+            "value": 347.668
+          },
+          {
+            "easing": "linear",
+            "t": 9,
+            "value": 351.864
+          },
+          {
+            "easing": "linear",
+            "t": 12,
+            "value": 354.065
+          },
+          {
+            "easing": "linear",
+            "t": 15,
+            "value": 355.22
+          },
+          {
+            "easing": "linear",
+            "t": 18,
+            "value": 355.825
+          },
+          {
+            "easing": "linear",
+            "t": 21,
+            "value": 356.767
+          },
+          {
+            "easing": "linear",
+            "t": 24,
+            "value": 361.393
+          },
+          {
+            "easing": "linear",
+            "t": 27,
+            "value": 363.818
+          },
+          {
+            "easing": "linear",
+            "t": 30,
+            "value": 365.09
+          },
+          {
+            "easing": "linear",
+            "t": 33,
+            "value": 365.757
+          },
+          {
+            "easing": "linear",
+            "t": 36,
+            "value": 366.731
+          },
+          {
+            "easing": "linear",
+            "t": 39,
+            "value": 371.372
+          },
+          {
+            "easing": "linear",
+            "t": 42,
+            "value": 373.807
+          },
+          {
+            "easing": "linear",
+            "t": 45,
+            "value": 375.085
+          },
+          {
+            "easing": "linear",
+            "t": 48,
+            "value": 375.754
+          },
+          {
+            "easing": "linear",
+            "t": 51,
+            "value": 376.667
+          },
+          {
+            "easing": "linear",
+            "t": 54,
+            "value": 380.864
+          },
+          {
+            "easing": "linear",
+            "t": 57,
+            "value": 383.065
+          },
+          {
+            "easing": "linear",
+            "t": 60,
+            "value": 384.22
+          },
+          {
+            "easing": "linear",
+            "t": 63,
+            "value": 384.825
+          },
+          {
+            "easing": "linear",
+            "t": 66,
+            "value": 385.767
+          },
+          {
+            "easing": "linear",
+            "t": 69,
+            "value": 390.393
+          },
+          {
+            "easing": "linear",
+            "t": 72,
+            "value": 392.818
+          },
+          {
+            "easing": "linear",
+            "t": 75,
+            "value": 394.09
+          },
+          {
+            "easing": "linear",
+            "t": 78,
+            "value": 394.757
+          },
+          {
+            "easing": "linear",
+            "t": 81,
+            "value": 395.731
+          },
+          {
+            "easing": "linear",
+            "t": 84,
+            "value": 400.372
+          },
+          {
+            "easing": "linear",
+            "t": 87,
+            "value": 402.807
+          },
+          {
+            "easing": "linear",
+            "t": 90,
+            "value": 404.085
+          },
+          {
+            "easing": "linear",
+            "t": 93,
+            "value": 404.754
+          },
+          {
+            "easing": "linear",
+            "t": 96,
+            "value": 405.667
+          },
+          {
+            "easing": "linear",
+            "t": 99,
+            "value": 409.864
+          },
+          {
+            "easing": "linear",
+            "t": 102,
+            "value": 412.065
+          },
+          {
+            "easing": "linear",
+            "t": 105,
+            "value": 413.22
+          },
+          {
+            "easing": "linear",
+            "t": 108,
+            "value": 413.825
+          },
+          {
+            "easing": "linear",
+            "t": 111,
+            "value": 414.767
+          },
+          {
+            "easing": "linear",
+            "t": 114,
+            "value": 419.393
+          },
+          {
+            "easing": "linear",
+            "t": 117,
+            "value": 421.818
+          },
+          {
+            "easing": "linear",
+            "t": 120,
+            "value": 423.09
+          },
+          {
+            "easing": "linear",
+            "t": 123,
+            "value": 423.757
+          },
+          {
+            "easing": "linear",
+            "t": 126,
+            "value": 424.731
+          },
+          {
+            "easing": "linear",
+            "t": 129,
+            "value": 429.372
+          },
+          {
+            "easing": "linear",
+            "t": 132,
+            "value": 431.807
+          },
+          {
+            "easing": "linear",
+            "t": 135,
+            "value": 433.085
+          },
+          {
+            "easing": "linear",
+            "t": 138,
+            "value": 433.754
+          },
+          {
+            "easing": "linear",
+            "t": 141,
+            "value": 434.667
+          },
+          {
+            "easing": "linear",
+            "t": 144,
+            "value": 438.864
+          },
+          {
+            "easing": "linear",
+            "t": 147,
+            "value": 441.065
+          },
+          {
+            "easing": "linear",
+            "t": 150,
+            "value": 442.22
+          },
+          {
+            "easing": "linear",
+            "t": 153,
+            "value": 442.825
+          },
+          {
+            "easing": "linear",
+            "t": 156,
+            "value": 443.767
+          },
+          {
+            "easing": "linear",
+            "t": 159,
+            "value": 448.393
+          },
+          {
+            "easing": "linear",
+            "t": 162,
+            "value": 450.818
+          },
+          {
+            "easing": "linear",
+            "t": 165,
+            "value": 452.09
+          },
+          {
+            "easing": "linear",
+            "t": 168,
+            "value": 452.757
+          },
+          {
+            "easing": "linear",
+            "t": 171,
+            "value": 453.668
+          },
+          {
+            "easing": "linear",
+            "t": 174,
+            "value": 457.864
+          },
+          {
+            "easing": "linear",
+            "t": 177,
+            "value": 460.065
+          },
+          {
+            "easing": "linear",
+            "t": 180,
+            "value": 461.22
+          },
+          {
+            "easing": "linear",
+            "t": 183,
+            "value": 461.825
+          },
+          {
+            "easing": "linear",
+            "t": 186,
+            "value": 462.767
+          },
+          {
+            "easing": "linear",
+            "t": 189,
+            "value": 467.393
+          },
+          {
+            "easing": "linear",
+            "t": 192,
+            "value": 469.818
+          },
+          {
+            "easing": "linear",
+            "t": 195,
+            "value": 471.09
+          },
+          {
+            "easing": "linear",
+            "t": 198,
+            "value": 471.757
+          },
+          {
+            "easing": "linear",
+            "t": 201,
+            "value": 472.731
+          },
+          {
+            "easing": "linear",
+            "t": 204,
+            "value": 477.372
+          },
+          {
+            "easing": "linear",
+            "t": 207,
+            "value": 479.807
+          },
+          {
+            "easing": "linear",
+            "t": 210,
+            "value": 481.085
+          },
+          {
+            "easing": "linear",
+            "t": 213,
+            "value": 481.754
+          },
+          {
+            "easing": "linear",
+            "t": 216,
+            "value": 482.667
+          },
+          {
+            "easing": "linear",
+            "t": 219,
+            "value": 486.864
+          },
+          {
+            "easing": "linear",
+            "t": 222,
+            "value": 489.065
+          },
+          {
+            "easing": "linear",
+            "t": 225,
+            "value": 490.22
+          },
+          {
+            "easing": "linear",
+            "t": 228,
+            "value": 490.825
+          },
+          {
+            "easing": "linear",
+            "t": 231,
+            "value": 491.767
+          },
+          {
+            "easing": "linear",
+            "t": 234,
+            "value": 496.393
+          },
+          {
+            "easing": "linear",
+            "t": 237,
+            "value": 498.818
+          },
+          {
+            "easing": "linear",
+            "t": 240,
+            "value": 500.09
+          },
+          {
+            "easing": "linear",
+            "t": 243,
+            "value": 500.757
+          },
+          {
+            "easing": "linear",
+            "t": 246,
+            "value": 501.731
+          },
+          {
+            "easing": "linear",
+            "t": 249,
+            "value": 506.372
+          },
+          {
+            "easing": "linear",
+            "t": 252,
+            "value": 508.807
+          },
+          {
+            "easing": "linear",
+            "t": 255,
+            "value": 510.085
+          },
+          {
+            "easing": "linear",
+            "t": 258,
+            "value": 510.754
+          },
+          {
+            "easing": "linear",
+            "t": 261,
+            "value": 511.667
+          },
+          {
+            "easing": "linear",
+            "t": 264,
+            "value": 515.864
+          },
+          {
+            "easing": "linear",
+            "t": 267,
+            "value": 518.065
+          }
+        ]
+      },
+      "name": "Cursor itm_m1n2p3q4r5",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "shape": "ellipse",
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
+      "start": 534,
+      "stroke_color": "#1F1F1F",
+      "stroke_width": 2,
+      "track": "trk_n3w7r4ck21",
+      "type": "shape",
+      "volume": 1,
+      "width": 27,
+      "x": 612.098,
+      "y": 346.09
+    }
+  },
+  {
+    "kind": "item.added",
+    "id": "itm_cr00000004",
+    "object": {
+      "contrast": 1,
+      "duration": 267,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
+      "height": 27,
+      "id": "itm_cr00000004",
+      "keyframes": {
+        "x": [
+          {
+            "easing": "linear",
+            "t": 0,
+            "value": 920.917
+          },
+          {
+            "easing": "linear",
+            "t": 3,
+            "value": 923.093
+          },
+          {
+            "easing": "linear",
+            "t": 6,
+            "value": 924.235
+          },
+          {
+            "easing": "linear",
+            "t": 9,
+            "value": 925.896
+          },
+          {
+            "easing": "linear",
+            "t": 12,
+            "value": 933.787
+          },
+          {
+            "easing": "linear",
+            "t": 15,
+            "value": 937.925
+          },
+          {
+            "easing": "linear",
+            "t": 18,
+            "value": 940.098
+          },
+          {
+            "easing": "linear",
+            "t": 21,
+            "value": 941.237
+          },
+          {
+            "easing": "linear",
+            "t": 24,
+            "value": 942.96
+          },
+          {
+            "easing": "linear",
+            "t": 27,
+            "value": 951.297
+          },
+          {
+            "easing": "linear",
+            "t": 30,
+            "value": 955.67
+          },
+          {
+            "easing": "linear",
+            "t": 33,
+            "value": 957.964
+          },
+          {
+            "easing": "linear",
+            "t": 36,
+            "value": 959.165
+          },
+          {
+            "easing": "linear",
+            "t": 39,
+            "value": 960.859
+          },
+          {
+            "easing": "linear",
+            "t": 42,
+            "value": 968.77
+          },
+          {
+            "easing": "linear",
+            "t": 45,
+            "value": 972.917
+          },
+          {
+            "easing": "linear",
+            "t": 48,
+            "value": 975.093
+          },
+          {
+            "easing": "linear",
+            "t": 51,
+            "value": 976.235
+          },
+          {
+            "easing": "linear",
+            "t": 54,
+            "value": 977.896
+          },
+          {
+            "easing": "linear",
+            "t": 57,
+            "value": 985.787
+          },
+          {
+            "easing": "linear",
+            "t": 60,
+            "value": 989.925
+          },
+          {
+            "easing": "linear",
+            "t": 63,
+            "value": 992.098
+          },
+          {
+            "easing": "linear",
+            "t": 66,
+            "value": 993.237
+          },
+          {
+            "easing": "linear",
+            "t": 69,
+            "value": 994.897
+          },
+          {
+            "easing": "linear",
+            "t": 72,
+            "value": 1002.788
+          },
+          {
+            "easing": "linear",
+            "t": 75,
+            "value": 1006.926
+          },
+          {
+            "easing": "linear",
+            "t": 78,
+            "value": 1009.098
+          },
+          {
+            "easing": "linear",
+            "t": 81,
+            "value": 1010.237
+          },
+          {
+            "easing": "linear",
+            "t": 84,
+            "value": 1011.96
+          },
+          {
+            "easing": "linear",
+            "t": 87,
+            "value": 1020.297
+          },
+          {
+            "easing": "linear",
+            "t": 90,
+            "value": 1024.67
+          },
+          {
+            "easing": "linear",
+            "t": 93,
+            "value": 1026.964
+          },
+          {
+            "easing": "linear",
+            "t": 96,
+            "value": 1028.165
+          },
+          {
+            "easing": "linear",
+            "t": 99,
+            "value": 1029.859
+          },
+          {
+            "easing": "linear",
+            "t": 102,
+            "value": 1037.77
+          },
+          {
+            "easing": "linear",
+            "t": 105,
+            "value": 1041.917
+          },
+          {
+            "easing": "linear",
+            "t": 108,
+            "value": 1044.093
+          },
+          {
+            "easing": "linear",
+            "t": 111,
+            "value": 1045.235
+          },
+          {
+            "easing": "linear",
+            "t": 114,
+            "value": 1046.896
+          },
+          {
+            "easing": "linear",
+            "t": 117,
+            "value": 1054.787
+          },
+          {
+            "easing": "linear",
+            "t": 120,
+            "value": 1058.925
+          },
+          {
+            "easing": "linear",
+            "t": 123,
+            "value": 1061.098
+          },
+          {
+            "easing": "linear",
+            "t": 126,
+            "value": 1062.237
+          },
+          {
+            "easing": "linear",
+            "t": 129,
+            "value": 1063.897
+          },
+          {
+            "easing": "linear",
+            "t": 132,
+            "value": 1071.788
+          },
+          {
+            "easing": "linear",
+            "t": 135,
+            "value": 1075.926
+          },
+          {
+            "easing": "linear",
+            "t": 138,
+            "value": 1078.098
+          },
+          {
+            "easing": "linear",
+            "t": 141,
+            "value": 1079.237
+          },
+          {
+            "easing": "linear",
+            "t": 144,
+            "value": 1080.96
+          },
+          {
+            "easing": "linear",
+            "t": 147,
+            "value": 1089.297
+          },
+          {
+            "easing": "linear",
+            "t": 150,
+            "value": 1093.67
+          },
+          {
+            "easing": "linear",
+            "t": 153,
+            "value": 1095.964
+          },
+          {
+            "easing": "linear",
+            "t": 156,
+            "value": 1097.165
+          },
+          {
+            "easing": "linear",
+            "t": 159,
+            "value": 1098.859
+          },
+          {
+            "easing": "linear",
+            "t": 162,
+            "value": 1106.77
+          },
+          {
+            "easing": "linear",
+            "t": 165,
+            "value": 1110.917
+          },
+          {
+            "easing": "linear",
+            "t": 168,
+            "value": 1113.093
+          },
+          {
+            "easing": "linear",
+            "t": 171,
+            "value": 1114.235
+          },
+          {
+            "easing": "linear",
+            "t": 174,
+            "value": 1115.896
+          },
+          {
+            "easing": "linear",
+            "t": 177,
+            "value": 1123.787
+          },
+          {
+            "easing": "linear",
+            "t": 180,
+            "value": 1127.925
+          },
+          {
+            "easing": "linear",
+            "t": 183,
+            "value": 1130.098
+          },
+          {
+            "easing": "linear",
+            "t": 186,
+            "value": 1131.237
+          },
+          {
+            "easing": "linear",
+            "t": 189,
+            "value": 1132.96
+          },
+          {
+            "easing": "linear",
+            "t": 192,
+            "value": 1141.297
+          },
+          {
+            "easing": "linear",
+            "t": 195,
+            "value": 1145.67
+          },
+          {
+            "easing": "linear",
+            "t": 198,
+            "value": 1147.964
+          },
+          {
+            "easing": "linear",
+            "t": 201,
+            "value": 1149.165
+          },
+          {
+            "easing": "linear",
+            "t": 204,
+            "value": 1150.859
+          },
+          {
+            "easing": "linear",
+            "t": 207,
+            "value": 1158.77
+          },
+          {
+            "easing": "linear",
+            "t": 210,
+            "value": 1162.917
+          },
+          {
+            "easing": "linear",
+            "t": 213,
+            "value": 1165.093
+          },
+          {
+            "easing": "linear",
+            "t": 216,
+            "value": 1166.235
+          },
+          {
+            "easing": "linear",
+            "t": 219,
+            "value": 1167.896
+          },
+          {
+            "easing": "linear",
+            "t": 222,
+            "value": 1175.787
+          },
+          {
+            "easing": "linear",
+            "t": 225,
+            "value": 1179.925
+          },
+          {
+            "easing": "linear",
+            "t": 228,
+            "value": 1182.098
+          },
+          {
+            "easing": "linear",
+            "t": 231,
+            "value": 1183.237
+          },
+          {
+            "easing": "linear",
+            "t": 234,
+            "value": 1184.897
+          },
+          {
+            "easing": "linear",
+            "t": 237,
+            "value": 1192.788
+          },
+          {
+            "easing": "linear",
+            "t": 240,
+            "value": 1196.926
+          },
+          {
+            "easing": "linear",
+            "t": 243,
+            "value": 1199.098
+          },
+          {
+            "easing": "linear",
+            "t": 246,
+            "value": 1200.237
+          },
+          {
+            "easing": "linear",
+            "t": 249,
+            "value": 1201.96
+          },
+          {
+            "easing": "linear",
+            "t": 252,
+            "value": 1210.297
+          },
+          {
+            "easing": "linear",
+            "t": 255,
+            "value": 1214.67
+          },
+          {
+            "easing": "linear",
+            "t": 258,
+            "value": 1216.964
+          },
+          {
+            "easing": "linear",
+            "t": 261,
+            "value": 1218.165
+          },
+          {
+            "easing": "linear",
+            "t": 264,
+            "value": 1219.859
+          },
+          {
+            "easing": "linear",
+            "t": 267,
+            "value": 1227.77
+          }
+        ],
+        "y": [
+          {
+            "easing": "linear",
+            "t": 0,
+            "value": 518.065
+          },
+          {
+            "easing": "linear",
+            "t": 3,
+            "value": 519.22
+          },
+          {
+            "easing": "linear",
+            "t": 6,
+            "value": 519.825
+          },
+          {
+            "easing": "linear",
+            "t": 9,
+            "value": 520.767
+          },
+          {
+            "easing": "linear",
+            "t": 12,
+            "value": 525.393
+          },
+          {
+            "easing": "linear",
+            "t": 15,
+            "value": 527.818
+          },
+          {
+            "easing": "linear",
+            "t": 18,
+            "value": 529.09
+          },
+          {
+            "easing": "linear",
+            "t": 21,
+            "value": 529.757
+          },
+          {
+            "easing": "linear",
+            "t": 24,
+            "value": 530.731
+          },
+          {
+            "easing": "linear",
+            "t": 27,
+            "value": 535.372
+          },
+          {
+            "easing": "linear",
+            "t": 30,
+            "value": 537.807
+          },
+          {
+            "easing": "linear",
+            "t": 33,
+            "value": 539.085
+          },
+          {
+            "easing": "linear",
+            "t": 36,
+            "value": 539.754
+          },
+          {
+            "easing": "linear",
+            "t": 39,
+            "value": 540.667
+          },
+          {
+            "easing": "linear",
+            "t": 42,
+            "value": 544.864
+          },
+          {
+            "easing": "linear",
+            "t": 45,
+            "value": 547.065
+          },
+          {
+            "easing": "linear",
+            "t": 48,
+            "value": 548.22
+          },
+          {
+            "easing": "linear",
+            "t": 51,
+            "value": 548.825
+          },
+          {
+            "easing": "linear",
+            "t": 54,
+            "value": 549.767
+          },
+          {
+            "easing": "linear",
+            "t": 57,
+            "value": 554.393
+          },
+          {
+            "easing": "linear",
+            "t": 60,
+            "value": 556.818
+          },
+          {
+            "easing": "linear",
+            "t": 63,
+            "value": 558.09
+          },
+          {
+            "easing": "linear",
+            "t": 66,
+            "value": 558.757
+          },
+          {
+            "easing": "linear",
+            "t": 69,
+            "value": 559.668
+          },
+          {
+            "easing": "linear",
+            "t": 72,
+            "value": 563.864
+          },
+          {
+            "easing": "linear",
+            "t": 75,
+            "value": 566.065
+          },
+          {
+            "easing": "linear",
+            "t": 78,
+            "value": 567.22
+          },
+          {
+            "easing": "linear",
+            "t": 81,
+            "value": 567.825
+          },
+          {
+            "easing": "linear",
+            "t": 84,
+            "value": 568.767
+          },
+          {
+            "easing": "linear",
+            "t": 87,
+            "value": 573.393
+          },
+          {
+            "easing": "linear",
+            "t": 90,
+            "value": 575.818
+          },
+          {
+            "easing": "linear",
+            "t": 93,
+            "value": 577.09
+          },
+          {
+            "easing": "linear",
+            "t": 96,
+            "value": 577.757
+          },
+          {
+            "easing": "linear",
+            "t": 99,
+            "value": 578.731
+          },
+          {
+            "easing": "linear",
+            "t": 102,
+            "value": 583.372
+          },
+          {
+            "easing": "linear",
+            "t": 105,
+            "value": 585.807
+          },
+          {
+            "easing": "linear",
+            "t": 108,
+            "value": 587.085
+          },
+          {
+            "easing": "linear",
+            "t": 111,
+            "value": 587.754
+          },
+          {
+            "easing": "linear",
+            "t": 114,
+            "value": 588.667
+          },
+          {
+            "easing": "linear",
+            "t": 117,
+            "value": 592.864
+          },
+          {
+            "easing": "linear",
+            "t": 120,
+            "value": 595.065
+          },
+          {
+            "easing": "linear",
+            "t": 123,
+            "value": 596.22
+          },
+          {
+            "easing": "linear",
+            "t": 126,
+            "value": 596.825
+          },
+          {
+            "easing": "linear",
+            "t": 129,
+            "value": 597.767
+          },
+          {
+            "easing": "linear",
+            "t": 132,
+            "value": 602.393
+          },
+          {
+            "easing": "linear",
+            "t": 135,
+            "value": 604.818
+          },
+          {
+            "easing": "linear",
+            "t": 138,
+            "value": 606.09
+          },
+          {
+            "easing": "linear",
+            "t": 141,
+            "value": 606.757
+          },
+          {
+            "easing": "linear",
+            "t": 144,
+            "value": 607.731
+          },
+          {
+            "easing": "linear",
+            "t": 147,
+            "value": 612.372
+          },
+          {
+            "easing": "linear",
+            "t": 150,
+            "value": 614.807
+          },
+          {
+            "easing": "linear",
+            "t": 153,
+            "value": 616.085
+          },
+          {
+            "easing": "linear",
+            "t": 156,
+            "value": 616.754
+          },
+          {
+            "easing": "linear",
+            "t": 159,
+            "value": 617.667
+          },
+          {
+            "easing": "linear",
+            "t": 162,
+            "value": 621.864
+          },
+          {
+            "easing": "linear",
+            "t": 165,
+            "value": 624.065
+          },
+          {
+            "easing": "linear",
+            "t": 168,
+            "value": 625.22
+          },
+          {
+            "easing": "linear",
+            "t": 171,
+            "value": 625.825
+          },
+          {
+            "easing": "linear",
+            "t": 174,
+            "value": 626.767
+          },
+          {
+            "easing": "linear",
+            "t": 177,
+            "value": 631.393
+          },
+          {
+            "easing": "linear",
+            "t": 180,
+            "value": 633.818
+          },
+          {
+            "easing": "linear",
+            "t": 183,
+            "value": 635.09
+          },
+          {
+            "easing": "linear",
+            "t": 186,
+            "value": 635.757
+          },
+          {
+            "easing": "linear",
+            "t": 189,
+            "value": 636.731
+          },
+          {
+            "easing": "linear",
+            "t": 192,
+            "value": 641.372
+          },
+          {
+            "easing": "linear",
+            "t": 195,
+            "value": 643.807
+          },
+          {
+            "easing": "linear",
+            "t": 198,
+            "value": 645.085
+          },
+          {
+            "easing": "linear",
+            "t": 201,
+            "value": 645.754
+          },
+          {
+            "easing": "linear",
+            "t": 204,
+            "value": 646.667
+          },
+          {
+            "easing": "linear",
+            "t": 207,
+            "value": 650.864
+          },
+          {
+            "easing": "linear",
+            "t": 210,
+            "value": 653.065
+          },
+          {
+            "easing": "linear",
+            "t": 213,
+            "value": 654.22
+          },
+          {
+            "easing": "linear",
+            "t": 216,
+            "value": 654.825
+          },
+          {
+            "easing": "linear",
+            "t": 219,
+            "value": 655.767
+          },
+          {
+            "easing": "linear",
+            "t": 222,
+            "value": 660.393
+          },
+          {
+            "easing": "linear",
+            "t": 225,
+            "value": 662.818
+          },
+          {
+            "easing": "linear",
+            "t": 228,
+            "value": 664.09
+          },
+          {
+            "easing": "linear",
+            "t": 231,
+            "value": 664.757
+          },
+          {
+            "easing": "linear",
+            "t": 234,
+            "value": 665.668
+          },
+          {
+            "easing": "linear",
+            "t": 237,
+            "value": 669.864
+          },
+          {
+            "easing": "linear",
+            "t": 240,
+            "value": 672.065
+          },
+          {
+            "easing": "linear",
+            "t": 243,
+            "value": 673.22
+          },
+          {
+            "easing": "linear",
+            "t": 246,
+            "value": 673.825
+          },
+          {
+            "easing": "linear",
+            "t": 249,
+            "value": 674.767
+          },
+          {
+            "easing": "linear",
+            "t": 252,
+            "value": 679.393
+          },
+          {
+            "easing": "linear",
+            "t": 255,
+            "value": 681.818
+          },
+          {
+            "easing": "linear",
+            "t": 258,
+            "value": 683.09
+          },
+          {
+            "easing": "linear",
+            "t": 261,
+            "value": 683.757
+          },
+          {
+            "easing": "linear",
+            "t": 264,
+            "value": 684.731
+          },
+          {
+            "easing": "linear",
+            "t": 267,
+            "value": 689.372
+          }
+        ]
+      },
+      "name": "Cursor itm_m1n2p3q4r5",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "shape": "ellipse",
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
+      "start": 801,
+      "stroke_color": "#1F1F1F",
+      "stroke_width": 2,
+      "track": "trk_n3w7r4ck21",
+      "type": "shape",
+      "volume": 1,
+      "width": 27,
+      "x": 920.917,
+      "y": 518.065
+    }
+  },
+  {
+    "kind": "item.added",
+    "id": "itm_cr00000005",
+    "object": {
+      "contrast": 1,
+      "duration": 267,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
+      "height": 27,
+      "id": "itm_cr00000005",
+      "keyframes": {
+        "x": [
+          {
+            "easing": "linear",
+            "t": 0,
+            "value": 1227.77
+          },
+          {
+            "easing": "linear",
+            "t": 3,
+            "value": 1231.917
+          },
+          {
+            "easing": "linear",
+            "t": 6,
+            "value": 1234.093
+          },
+          {
+            "easing": "linear",
+            "t": 9,
+            "value": 1235.235
+          },
+          {
+            "easing": "linear",
+            "t": 12,
+            "value": 1236.896
+          },
+          {
+            "easing": "linear",
+            "t": 15,
+            "value": 1244.787
+          },
+          {
+            "easing": "linear",
+            "t": 18,
+            "value": 1248.925
+          },
+          {
+            "easing": "linear",
+            "t": 21,
+            "value": 1251.098
+          },
+          {
+            "easing": "linear",
+            "t": 24,
+            "value": 1252.237
+          },
+          {
+            "easing": "linear",
+            "t": 27,
+            "value": 1253.897
+          },
+          {
+            "easing": "linear",
+            "t": 30,
+            "value": 1261.788
+          },
+          {
+            "easing": "linear",
+            "t": 33,
+            "value": 1265.926
+          },
+          {
+            "easing": "linear",
+            "t": 36,
+            "value": 1268.098
+          },
+          {
+            "easing": "linear",
+            "t": 39,
+            "value": 1269.237
+          },
+          {
+            "easing": "linear",
+            "t": 42,
+            "value": 1270.96
+          },
+          {
+            "easing": "linear",
+            "t": 45,
+            "value": 1279.297
+          },
+          {
+            "easing": "linear",
+            "t": 48,
+            "value": 1283.67
+          },
+          {
+            "easing": "linear",
+            "t": 51,
+            "value": 1285.964
+          },
+          {
+            "easing": "linear",
+            "t": 54,
+            "value": 1287.165
+          },
+          {
+            "easing": "linear",
+            "t": 57,
+            "value": 1288.859
+          },
+          {
+            "easing": "linear",
+            "t": 60,
+            "value": 1296.77
+          },
+          {
+            "easing": "linear",
+            "t": 63,
+            "value": 1300.917
+          },
+          {
+            "easing": "linear",
+            "t": 66,
+            "value": 1303.093
+          },
+          {
+            "easing": "linear",
+            "t": 69,
+            "value": 1304.235
+          },
+          {
+            "easing": "linear",
+            "t": 72,
+            "value": 1305.896
+          },
+          {
+            "easing": "linear",
+            "t": 75,
+            "value": 1313.787
+          },
+          {
+            "easing": "linear",
+            "t": 78,
+            "value": 1317.925
+          },
+          {
+            "easing": "linear",
+            "t": 81,
+            "value": 1320.098
+          },
+          {
+            "easing": "linear",
+            "t": 84,
+            "value": 1321.237
+          },
+          {
+            "easing": "linear",
+            "t": 87,
+            "value": 1322.96
+          },
+          {
+            "easing": "linear",
+            "t": 90,
+            "value": 1331.297
+          },
+          {
+            "easing": "linear",
+            "t": 93,
+            "value": 1335.67
+          },
+          {
+            "easing": "linear",
+            "t": 96,
+            "value": 1337.964
+          },
+          {
+            "easing": "linear",
+            "t": 99,
+            "value": 1339.165
+          },
+          {
+            "easing": "linear",
+            "t": 102,
+            "value": 1340.859
+          },
+          {
+            "easing": "linear",
+            "t": 105,
+            "value": 1348.77
+          },
+          {
+            "easing": "linear",
+            "t": 108,
+            "value": 1352.917
+          },
+          {
+            "easing": "linear",
+            "t": 111,
+            "value": 1355.093
+          },
+          {
+            "easing": "linear",
+            "t": 114,
+            "value": 1356.235
+          },
+          {
+            "easing": "linear",
+            "t": 117,
+            "value": 1357.896
+          },
+          {
+            "easing": "linear",
+            "t": 120,
+            "value": 1365.787
+          },
+          {
+            "easing": "linear",
+            "t": 123,
+            "value": 1369.925
+          },
+          {
+            "easing": "linear",
+            "t": 126,
+            "value": 1372.098
+          },
+          {
+            "easing": "linear",
+            "t": 129,
+            "value": 1373.237
+          },
+          {
+            "easing": "linear",
+            "t": 132,
+            "value": 1374.897
+          },
+          {
+            "easing": "linear",
+            "t": 135,
+            "value": 1382.788
+          },
+          {
+            "easing": "linear",
+            "t": 138,
+            "value": 1386.926
+          },
+          {
+            "easing": "linear",
+            "t": 141,
+            "value": 1389.098
+          },
+          {
+            "easing": "linear",
+            "t": 144,
+            "value": 1390.237
+          },
+          {
+            "easing": "linear",
+            "t": 147,
+            "value": 1391.96
+          },
+          {
+            "easing": "linear",
+            "t": 150,
+            "value": 1400.297
+          },
+          {
+            "easing": "linear",
+            "t": 153,
+            "value": 1404.67
+          },
+          {
+            "easing": "linear",
+            "t": 156,
+            "value": 1406.964
+          },
+          {
+            "easing": "linear",
+            "t": 159,
+            "value": 1408.165
+          },
+          {
+            "easing": "linear",
+            "t": 162,
+            "value": 1409.859
+          },
+          {
+            "easing": "linear",
+            "t": 165,
+            "value": 1417.77
+          },
+          {
+            "easing": "linear",
+            "t": 168,
+            "value": 1421.917
+          },
+          {
+            "easing": "linear",
+            "t": 171,
+            "value": 1424.093
+          },
+          {
+            "easing": "linear",
+            "t": 174,
+            "value": 1425.235
+          },
+          {
+            "easing": "linear",
+            "t": 177,
+            "value": 1426.896
+          },
+          {
+            "easing": "linear",
+            "t": 180,
+            "value": 1434.787
+          },
+          {
+            "easing": "linear",
+            "t": 183,
+            "value": 1438.925
+          },
+          {
+            "easing": "linear",
+            "t": 186,
+            "value": 1441.098
+          },
+          {
+            "easing": "linear",
+            "t": 189,
+            "value": 1442.237
+          },
+          {
+            "easing": "linear",
+            "t": 192,
+            "value": 1443.897
+          },
+          {
+            "easing": "linear",
+            "t": 195,
+            "value": 1451.788
+          },
+          {
+            "easing": "linear",
+            "t": 198,
+            "value": 1455.926
+          },
+          {
+            "easing": "linear",
+            "t": 201,
+            "value": 1458.098
+          },
+          {
+            "easing": "linear",
+            "t": 204,
+            "value": 1459.237
+          },
+          {
+            "easing": "linear",
+            "t": 207,
+            "value": 1460.96
+          },
+          {
+            "easing": "linear",
+            "t": 210,
+            "value": 1469.297
+          },
+          {
+            "easing": "linear",
+            "t": 213,
+            "value": 1473.67
+          },
+          {
+            "easing": "linear",
+            "t": 216,
+            "value": 1475.964
+          },
+          {
+            "easing": "linear",
+            "t": 219,
+            "value": 1477.165
+          },
+          {
+            "easing": "linear",
+            "t": 222,
+            "value": 1478.859
+          },
+          {
+            "easing": "linear",
+            "t": 225,
+            "value": 1486.77
+          },
+          {
+            "easing": "linear",
+            "t": 228,
+            "value": 1490.917
+          },
+          {
+            "easing": "linear",
+            "t": 231,
+            "value": 1493.093
+          },
+          {
+            "easing": "linear",
+            "t": 234,
+            "value": 1494.235
+          },
+          {
+            "easing": "linear",
+            "t": 237,
+            "value": 1495.896
+          },
+          {
+            "easing": "linear",
+            "t": 240,
+            "value": 1503.787
+          },
+          {
+            "easing": "linear",
+            "t": 243,
+            "value": 1507.925
+          },
+          {
+            "easing": "linear",
+            "t": 246,
+            "value": 1510.098
+          },
+          {
+            "easing": "linear",
+            "t": 249,
+            "value": 1511.237
+          },
+          {
+            "easing": "linear",
+            "t": 252,
+            "value": 1512.96
+          },
+          {
+            "easing": "linear",
+            "t": 255,
+            "value": 1521.297
+          },
+          {
+            "easing": "linear",
+            "t": 258,
+            "value": 1525.67
+          },
+          {
+            "easing": "linear",
+            "t": 261,
+            "value": 1527.964
+          },
+          {
+            "easing": "linear",
+            "t": 264,
+            "value": 1529.165
+          },
+          {
+            "easing": "linear",
+            "t": 267,
+            "value": 1530.859
+          }
+        ],
+        "y": [
+          {
+            "easing": "linear",
+            "t": 0,
+            "value": 689.372
+          },
+          {
+            "easing": "linear",
+            "t": 3,
+            "value": 691.807
+          },
+          {
+            "easing": "linear",
+            "t": 6,
+            "value": 693.085
+          },
+          {
+            "easing": "linear",
+            "t": 9,
+            "value": 693.754
+          },
+          {
+            "easing": "linear",
+            "t": 12,
+            "value": 694.667
+          },
+          {
+            "easing": "linear",
+            "t": 15,
+            "value": 698.864
+          },
+          {
+            "easing": "linear",
+            "t": 18,
+            "value": 701.065
+          },
+          {
+            "easing": "linear",
+            "t": 21,
+            "value": 702.22
+          },
+          {
+            "easing": "linear",
+            "t": 24,
+            "value": 702.825
+          },
+          {
+            "easing": "linear",
+            "t": 27,
+            "value": 703.767
+          },
+          {
+            "easing": "linear",
+            "t": 30,
+            "value": 708.393
+          },
+          {
+            "easing": "linear",
+            "t": 33,
+            "value": 710.818
+          },
+          {
+            "easing": "linear",
+            "t": 36,
+            "value": 712.09
+          },
+          {
+            "easing": "linear",
+            "t": 39,
+            "value": 712.757
+          },
+          {
+            "easing": "linear",
+            "t": 42,
+            "value": 713.731
+          },
+          {
+            "easing": "linear",
+            "t": 45,
+            "value": 718.372
+          },
+          {
+            "easing": "linear",
+            "t": 48,
+            "value": 720.807
+          },
+          {
+            "easing": "linear",
+            "t": 51,
+            "value": 722.085
+          },
+          {
+            "easing": "linear",
+            "t": 54,
+            "value": 722.754
+          },
+          {
+            "easing": "linear",
+            "t": 57,
+            "value": 723.667
+          },
+          {
+            "easing": "linear",
+            "t": 60,
+            "value": 727.864
+          },
+          {
+            "easing": "linear",
+            "t": 63,
+            "value": 730.065
+          },
+          {
+            "easing": "linear",
+            "t": 66,
+            "value": 731.22
+          },
+          {
+            "easing": "linear",
+            "t": 69,
+            "value": 731.825
+          },
+          {
+            "easing": "linear",
+            "t": 72,
+            "value": 732.767
+          },
+          {
+            "easing": "linear",
+            "t": 75,
+            "value": 737.393
+          },
+          {
+            "easing": "linear",
+            "t": 78,
+            "value": 739.818
+          },
+          {
+            "easing": "linear",
+            "t": 81,
+            "value": 741.09
+          },
+          {
+            "easing": "linear",
+            "t": 84,
+            "value": 741.757
+          },
+          {
+            "easing": "linear",
+            "t": 87,
+            "value": 742.731
+          },
+          {
+            "easing": "linear",
+            "t": 90,
+            "value": 747.372
+          },
+          {
+            "easing": "linear",
+            "t": 93,
+            "value": 749.807
+          },
+          {
+            "easing": "linear",
+            "t": 96,
+            "value": 751.085
+          },
+          {
+            "easing": "linear",
+            "t": 99,
+            "value": 751.754
+          },
+          {
+            "easing": "linear",
+            "t": 102,
+            "value": 752.667
+          },
+          {
+            "easing": "linear",
+            "t": 105,
+            "value": 756.864
+          },
+          {
+            "easing": "linear",
+            "t": 108,
+            "value": 759.065
+          },
+          {
+            "easing": "linear",
+            "t": 111,
+            "value": 760.22
+          },
+          {
+            "easing": "linear",
+            "t": 114,
+            "value": 760.825
+          },
+          {
+            "easing": "linear",
+            "t": 117,
+            "value": 761.767
+          },
+          {
+            "easing": "linear",
+            "t": 120,
+            "value": 766.393
+          },
+          {
+            "easing": "linear",
+            "t": 123,
+            "value": 768.818
+          },
+          {
+            "easing": "linear",
+            "t": 126,
+            "value": 770.09
+          },
+          {
+            "easing": "linear",
+            "t": 129,
+            "value": 770.757
+          },
+          {
+            "easing": "linear",
+            "t": 132,
+            "value": 771.668
+          },
+          {
+            "easing": "linear",
+            "t": 135,
+            "value": 775.864
+          },
+          {
+            "easing": "linear",
+            "t": 138,
+            "value": 778.065
+          },
+          {
+            "easing": "linear",
+            "t": 141,
+            "value": 779.22
+          },
+          {
+            "easing": "linear",
+            "t": 144,
+            "value": 779.825
+          },
+          {
+            "easing": "linear",
+            "t": 147,
+            "value": 780.767
+          },
+          {
+            "easing": "linear",
+            "t": 150,
+            "value": 785.393
+          },
+          {
+            "easing": "linear",
+            "t": 153,
+            "value": 787.818
+          },
+          {
+            "easing": "linear",
+            "t": 156,
+            "value": 789.09
+          },
+          {
+            "easing": "linear",
+            "t": 159,
+            "value": 789.757
+          },
+          {
+            "easing": "linear",
+            "t": 162,
+            "value": 790.731
+          },
+          {
+            "easing": "linear",
+            "t": 165,
+            "value": 795.372
+          },
+          {
+            "easing": "linear",
+            "t": 168,
+            "value": 797.807
+          },
+          {
+            "easing": "linear",
+            "t": 171,
+            "value": 799.085
+          },
+          {
+            "easing": "linear",
+            "t": 174,
+            "value": 799.754
+          },
+          {
+            "easing": "linear",
+            "t": 177,
+            "value": 800.667
+          },
+          {
+            "easing": "linear",
+            "t": 180,
+            "value": 804.864
+          },
+          {
+            "easing": "linear",
+            "t": 183,
+            "value": 807.065
+          },
+          {
+            "easing": "linear",
+            "t": 186,
+            "value": 808.22
+          },
+          {
+            "easing": "linear",
+            "t": 189,
+            "value": 808.825
+          },
+          {
+            "easing": "linear",
+            "t": 192,
+            "value": 809.767
+          },
+          {
+            "easing": "linear",
+            "t": 195,
+            "value": 814.393
+          },
+          {
+            "easing": "linear",
+            "t": 198,
+            "value": 816.818
+          },
+          {
+            "easing": "linear",
+            "t": 201,
+            "value": 818.09
+          },
+          {
+            "easing": "linear",
+            "t": 204,
+            "value": 818.757
+          },
+          {
+            "easing": "linear",
+            "t": 207,
+            "value": 819.731
+          },
+          {
+            "easing": "linear",
+            "t": 210,
+            "value": 824.372
+          },
+          {
+            "easing": "linear",
+            "t": 213,
+            "value": 826.807
+          },
+          {
+            "easing": "linear",
+            "t": 216,
+            "value": 828.085
+          },
+          {
+            "easing": "linear",
+            "t": 219,
+            "value": 828.754
+          },
+          {
+            "easing": "linear",
+            "t": 222,
+            "value": 829.667
+          },
+          {
+            "easing": "linear",
+            "t": 225,
+            "value": 833.864
+          },
+          {
+            "easing": "linear",
+            "t": 228,
+            "value": 836.065
+          },
+          {
+            "easing": "linear",
+            "t": 231,
+            "value": 837.22
+          },
+          {
+            "easing": "linear",
+            "t": 234,
+            "value": 837.825
+          },
+          {
+            "easing": "linear",
+            "t": 237,
+            "value": 838.767
+          },
+          {
+            "easing": "linear",
+            "t": 240,
+            "value": 843.393
+          },
+          {
+            "easing": "linear",
+            "t": 243,
+            "value": 845.818
+          },
+          {
+            "easing": "linear",
+            "t": 246,
+            "value": 847.09
+          },
+          {
+            "easing": "linear",
+            "t": 249,
+            "value": 847.757
+          },
+          {
+            "easing": "linear",
+            "t": 252,
+            "value": 848.731
+          },
+          {
+            "easing": "linear",
+            "t": 255,
+            "value": 853.372
+          },
+          {
+            "easing": "linear",
+            "t": 258,
+            "value": 855.807
+          },
+          {
+            "easing": "linear",
+            "t": 261,
+            "value": 857.085
+          },
+          {
+            "easing": "linear",
+            "t": 264,
+            "value": 857.754
+          },
+          {
+            "easing": "linear",
+            "t": 267,
+            "value": 858.667
+          }
+        ]
+      },
+      "name": "Cursor itm_m1n2p3q4r5",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "shape": "ellipse",
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
+      "start": 1068,
+      "stroke_color": "#1F1F1F",
+      "stroke_width": 2,
+      "track": "trk_n3w7r4ck21",
+      "type": "shape",
+      "volume": 1,
+      "width": 27,
+      "x": 1227.77,
+      "y": 689.372
+    }
+  },
+  {
+    "kind": "item.added",
+    "id": "itm_cr00000006",
+    "object": {
+      "contrast": 1,
+      "duration": 267,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
+      "height": 27,
+      "id": "itm_cr00000006",
+      "keyframes": {
+        "x": [
+          {
+            "easing": "linear",
+            "t": 0,
+            "value": 1530.859
+          },
+          {
+            "easing": "linear",
+            "t": 3,
+            "value": 1538.77
+          },
+          {
+            "easing": "linear",
+            "t": 6,
+            "value": 1542.917
+          },
+          {
+            "easing": "linear",
+            "t": 9,
+            "value": 1545.093
+          },
+          {
+            "easing": "linear",
+            "t": 12,
+            "value": 1546.235
+          },
+          {
+            "easing": "linear",
+            "t": 15,
+            "value": 1547.896
+          },
+          {
+            "easing": "linear",
+            "t": 18,
+            "value": 1555.787
+          },
+          {
+            "easing": "linear",
+            "t": 21,
+            "value": 1559.925
+          },
+          {
+            "easing": "linear",
+            "t": 24,
+            "value": 1562.098
+          },
+          {
+            "easing": "linear",
+            "t": 27,
+            "value": 1563.237
+          },
+          {
+            "easing": "linear",
+            "t": 30,
+            "value": 1564.897
+          },
+          {
+            "easing": "linear",
+            "t": 33,
+            "value": 1572.788
+          },
+          {
+            "easing": "linear",
+            "t": 36,
+            "value": 1576.926
+          },
+          {
+            "easing": "linear",
+            "t": 39,
+            "value": 1579.098
+          },
+          {
+            "easing": "linear",
+            "t": 42,
+            "value": 1580.237
+          },
+          {
+            "easing": "linear",
+            "t": 45,
+            "value": 1581.96
+          },
+          {
+            "easing": "linear",
+            "t": 48,
+            "value": 1590.297
+          },
+          {
+            "easing": "linear",
+            "t": 51,
+            "value": 1594.67
+          },
+          {
+            "easing": "linear",
+            "t": 54,
+            "value": 1596.964
+          },
+          {
+            "easing": "linear",
+            "t": 57,
+            "value": 1598.165
+          },
+          {
+            "easing": "linear",
+            "t": 60,
+            "value": 1599.859
+          },
+          {
+            "easing": "linear",
+            "t": 63,
+            "value": 1607.77
+          },
+          {
+            "easing": "linear",
+            "t": 66,
+            "value": 1611.917
+          },
+          {
+            "easing": "linear",
+            "t": 69,
+            "value": 1614.093
+          },
+          {
+            "easing": "linear",
+            "t": 72,
+            "value": 1615.235
+          },
+          {
+            "easing": "linear",
+            "t": 75,
+            "value": 1616.896
+          },
+          {
+            "easing": "linear",
+            "t": 78,
+            "value": 1624.787
+          },
+          {
+            "easing": "linear",
+            "t": 81,
+            "value": 1628.925
+          },
+          {
+            "easing": "linear",
+            "t": 84,
+            "value": 1631.098
+          },
+          {
+            "easing": "linear",
+            "t": 87,
+            "value": 1632.237
+          },
+          {
+            "easing": "linear",
+            "t": 90,
+            "value": 1633.897
+          },
+          {
+            "easing": "linear",
+            "t": 93,
+            "value": 1641.788
+          },
+          {
+            "easing": "linear",
+            "t": 96,
+            "value": 1645.926
+          },
+          {
+            "easing": "linear",
+            "t": 99,
+            "value": 1648.098
+          },
+          {
+            "easing": "linear",
+            "t": 102,
+            "value": 1649.237
+          },
+          {
+            "easing": "linear",
+            "t": 105,
+            "value": 1650.96
+          },
+          {
+            "easing": "linear",
+            "t": 108,
+            "value": 1659.297
+          },
+          {
+            "easing": "linear",
+            "t": 111,
+            "value": 1663.67
+          },
+          {
+            "easing": "linear",
+            "t": 114,
+            "value": 1665.964
+          },
+          {
+            "easing": "linear",
+            "t": 117,
+            "value": 1667.165
+          },
+          {
+            "easing": "linear",
+            "t": 120,
+            "value": 1668.859
+          },
+          {
+            "easing": "linear",
+            "t": 123,
+            "value": 1676.77
+          },
+          {
+            "easing": "linear",
+            "t": 126,
+            "value": 1680.917
+          },
+          {
+            "easing": "linear",
+            "t": 129,
+            "value": 1683.093
+          },
+          {
+            "easing": "linear",
+            "t": 132,
+            "value": 1684.235
+          },
+          {
+            "easing": "linear",
+            "t": 135,
+            "value": 1685.896
+          },
+          {
+            "easing": "linear",
+            "t": 138,
+            "value": 1693.787
+          },
+          {
+            "easing": "linear",
+            "t": 141,
+            "value": 1697.925
+          },
+          {
+            "easing": "linear",
+            "t": 144,
+            "value": 1700.098
+          },
+          {
+            "easing": "linear",
+            "t": 147,
+            "value": 1701.237
+          },
+          {
+            "easing": "linear",
+            "t": 150,
+            "value": 1702.96
+          },
+          {
+            "easing": "linear",
+            "t": 153,
+            "value": 1711.297
+          },
+          {
+            "easing": "linear",
+            "t": 156,
+            "value": 1715.67
+          },
+          {
+            "easing": "linear",
+            "t": 159,
+            "value": 1717.964
+          },
+          {
+            "easing": "linear",
+            "t": 162,
+            "value": 1719.165
+          },
+          {
+            "easing": "linear",
+            "t": 165,
+            "value": 1720.859
+          },
+          {
+            "easing": "linear",
+            "t": 168,
+            "value": 1728.77
+          },
+          {
+            "easing": "linear",
+            "t": 171,
+            "value": 1732.917
+          },
+          {
+            "easing": "linear",
+            "t": 174,
+            "value": 1735.093
+          },
+          {
+            "easing": "linear",
+            "t": 177,
+            "value": 1736.235
+          },
+          {
+            "easing": "linear",
+            "t": 180,
+            "value": 1737.896
+          },
+          {
+            "easing": "linear",
+            "t": 183,
+            "value": 1745.787
+          },
+          {
+            "easing": "linear",
+            "t": 186,
+            "value": 1749.925
+          },
+          {
+            "easing": "linear",
+            "t": 189,
+            "value": 1752.098
+          },
+          {
+            "easing": "linear",
+            "t": 192,
+            "value": 1753.237
+          },
+          {
+            "easing": "linear",
+            "t": 195,
+            "value": 1754.897
+          },
+          {
+            "easing": "linear",
+            "t": 198,
+            "value": 1762.788
+          },
+          {
+            "easing": "linear",
+            "t": 201,
+            "value": 1766.926
+          },
+          {
+            "easing": "linear",
+            "t": 204,
+            "value": 1769.098
+          },
+          {
+            "easing": "linear",
+            "t": 207,
+            "value": 1770.237
+          },
+          {
+            "easing": "linear",
+            "t": 210,
+            "value": 1771.96
+          },
+          {
+            "easing": "linear",
+            "t": 213,
+            "value": 1780.297
+          },
+          {
+            "easing": "linear",
+            "t": 216,
+            "value": 1784.67
+          },
+          {
+            "easing": "linear",
+            "t": 219,
+            "value": 1786.964
+          },
+          {
+            "easing": "linear",
+            "t": 222,
+            "value": 1788.165
+          },
+          {
+            "easing": "linear",
+            "t": 225,
+            "value": 1789.859
+          },
+          {
+            "easing": "linear",
+            "t": 228,
+            "value": 1797.77
+          },
+          {
+            "easing": "linear",
+            "t": 231,
+            "value": 1801.917
+          },
+          {
+            "easing": "linear",
+            "t": 234,
+            "value": 1804.093
+          },
+          {
+            "easing": "linear",
+            "t": 237,
+            "value": 1805.235
+          },
+          {
+            "easing": "linear",
+            "t": 240,
+            "value": 1806.896
+          },
+          {
+            "easing": "linear",
+            "t": 243,
+            "value": 1814.787
+          },
+          {
+            "easing": "linear",
+            "t": 246,
+            "value": 1818.925
+          },
+          {
+            "easing": "linear",
+            "t": 249,
+            "value": 1821.098
+          },
+          {
+            "easing": "linear",
+            "t": 252,
+            "value": 1822.237
+          },
+          {
+            "easing": "linear",
+            "t": 255,
+            "value": 1823.897
+          },
+          {
+            "easing": "linear",
+            "t": 258,
+            "value": 1831.788
+          },
+          {
+            "easing": "linear",
+            "t": 261,
+            "value": 1835.926
+          },
+          {
+            "easing": "linear",
+            "t": 264,
+            "value": 1838.098
+          },
+          {
+            "easing": "linear",
+            "t": 267,
+            "value": 1839.237
+          }
+        ],
+        "y": [
+          {
+            "easing": "linear",
+            "t": 0,
+            "value": 858.667
+          },
+          {
+            "easing": "linear",
+            "t": 3,
+            "value": 862.864
+          },
+          {
+            "easing": "linear",
+            "t": 6,
+            "value": 865.065
+          },
+          {
+            "easing": "linear",
+            "t": 9,
+            "value": 866.22
+          },
+          {
+            "easing": "linear",
+            "t": 12,
+            "value": 866.825
+          },
+          {
+            "easing": "linear",
+            "t": 15,
+            "value": 867.767
+          },
+          {
+            "easing": "linear",
+            "t": 18,
+            "value": 872.393
+          },
+          {
+            "easing": "linear",
+            "t": 21,
+            "value": 874.818
+          },
+          {
+            "easing": "linear",
+            "t": 24,
+            "value": 876.09
+          },
+          {
+            "easing": "linear",
+            "t": 27,
+            "value": 876.757
+          },
+          {
+            "easing": "linear",
+            "t": 30,
+            "value": 877.668
+          },
+          {
+            "easing": "linear",
+            "t": 33,
+            "value": 881.864
+          },
+          {
+            "easing": "linear",
+            "t": 36,
+            "value": 884.065
+          },
+          {
+            "easing": "linear",
+            "t": 39,
+            "value": 885.22
+          },
+          {
+            "easing": "linear",
+            "t": 42,
+            "value": 885.825
+          },
+          {
+            "easing": "linear",
+            "t": 45,
+            "value": 886.767
+          },
+          {
+            "easing": "linear",
+            "t": 48,
+            "value": 891.393
+          },
+          {
+            "easing": "linear",
+            "t": 51,
+            "value": 893.818
+          },
+          {
+            "easing": "linear",
+            "t": 54,
+            "value": 895.09
+          },
+          {
+            "easing": "linear",
+            "t": 57,
+            "value": 895.757
+          },
+          {
+            "easing": "linear",
+            "t": 60,
+            "value": 896.731
+          },
+          {
+            "easing": "linear",
+            "t": 63,
+            "value": 901.372
+          },
+          {
+            "easing": "linear",
+            "t": 66,
+            "value": 903.807
+          },
+          {
+            "easing": "linear",
+            "t": 69,
+            "value": 905.085
+          },
+          {
+            "easing": "linear",
+            "t": 72,
+            "value": 905.754
+          },
+          {
+            "easing": "linear",
+            "t": 75,
+            "value": 906.667
+          },
+          {
+            "easing": "linear",
+            "t": 78,
+            "value": 910.864
+          },
+          {
+            "easing": "linear",
+            "t": 81,
+            "value": 913.065
+          },
+          {
+            "easing": "linear",
+            "t": 84,
+            "value": 914.22
+          },
+          {
+            "easing": "linear",
+            "t": 87,
+            "value": 914.825
+          },
+          {
+            "easing": "linear",
+            "t": 90,
+            "value": 915.767
+          },
+          {
+            "easing": "linear",
+            "t": 93,
+            "value": 920.393
+          },
+          {
+            "easing": "linear",
+            "t": 96,
+            "value": 922.818
+          },
+          {
+            "easing": "linear",
+            "t": 99,
+            "value": 924.09
+          },
+          {
+            "easing": "linear",
+            "t": 102,
+            "value": 924.757
+          },
+          {
+            "easing": "linear",
+            "t": 105,
+            "value": 925.731
+          },
+          {
+            "easing": "linear",
+            "t": 108,
+            "value": 930.372
+          },
+          {
+            "easing": "linear",
+            "t": 111,
+            "value": 932.807
+          },
+          {
+            "easing": "linear",
+            "t": 114,
+            "value": 934.085
+          },
+          {
+            "easing": "linear",
+            "t": 117,
+            "value": 934.754
+          },
+          {
+            "easing": "linear",
+            "t": 120,
+            "value": 935.667
+          },
+          {
+            "easing": "linear",
+            "t": 123,
+            "value": 939.864
+          },
+          {
+            "easing": "linear",
+            "t": 126,
+            "value": 942.065
+          },
+          {
+            "easing": "linear",
+            "t": 129,
+            "value": 943.22
+          },
+          {
+            "easing": "linear",
+            "t": 132,
+            "value": 943.825
+          },
+          {
+            "easing": "linear",
+            "t": 135,
+            "value": 944.767
+          },
+          {
+            "easing": "linear",
+            "t": 138,
+            "value": 949.393
+          },
+          {
+            "easing": "linear",
+            "t": 141,
+            "value": 951.818
+          },
+          {
+            "easing": "linear",
+            "t": 144,
+            "value": 953.09
+          },
+          {
+            "easing": "linear",
+            "t": 147,
+            "value": 953.757
+          },
+          {
+            "easing": "linear",
+            "t": 150,
+            "value": 954.731
+          },
+          {
+            "easing": "linear",
+            "t": 153,
+            "value": 959.372
+          },
+          {
+            "easing": "linear",
+            "t": 156,
+            "value": 961.807
+          },
+          {
+            "easing": "linear",
+            "t": 159,
+            "value": 963.085
+          },
+          {
+            "easing": "linear",
+            "t": 162,
+            "value": 963.754
+          },
+          {
+            "easing": "linear",
+            "t": 165,
+            "value": 964.667
+          },
+          {
+            "easing": "linear",
+            "t": 168,
+            "value": 968.864
+          },
+          {
+            "easing": "linear",
+            "t": 171,
+            "value": 971.065
+          },
+          {
+            "easing": "linear",
+            "t": 174,
+            "value": 972.22
+          },
+          {
+            "easing": "linear",
+            "t": 177,
+            "value": 972.825
+          },
+          {
+            "easing": "linear",
+            "t": 180,
+            "value": 973.767
+          },
+          {
+            "easing": "linear",
+            "t": 183,
+            "value": 978.393
+          },
+          {
+            "easing": "linear",
+            "t": 186,
+            "value": 980.818
+          },
+          {
+            "easing": "linear",
+            "t": 189,
+            "value": 982.09
+          },
+          {
+            "easing": "linear",
+            "t": 192,
+            "value": 982.757
+          },
+          {
+            "easing": "linear",
+            "t": 195,
+            "value": 983.668
+          },
+          {
+            "easing": "linear",
+            "t": 198,
+            "value": 987.864
+          },
+          {
+            "easing": "linear",
+            "t": 201,
+            "value": 990.065
+          },
+          {
+            "easing": "linear",
+            "t": 204,
+            "value": 991.22
+          },
+          {
+            "easing": "linear",
+            "t": 207,
+            "value": 991.825
+          },
+          {
+            "easing": "linear",
+            "t": 210,
+            "value": 992.767
+          },
+          {
+            "easing": "linear",
+            "t": 213,
+            "value": 997.393
+          },
+          {
+            "easing": "linear",
+            "t": 216,
+            "value": 999.818
+          },
+          {
+            "easing": "linear",
+            "t": 219,
+            "value": 1001.09
+          },
+          {
+            "easing": "linear",
+            "t": 222,
+            "value": 1001.757
+          },
+          {
+            "easing": "linear",
+            "t": 225,
+            "value": 1002.731
+          },
+          {
+            "easing": "linear",
+            "t": 228,
+            "value": 1007.372
+          },
+          {
+            "easing": "linear",
+            "t": 231,
+            "value": 1009.807
+          },
+          {
+            "easing": "linear",
+            "t": 234,
+            "value": 1011.085
+          },
+          {
+            "easing": "linear",
+            "t": 237,
+            "value": 1011.754
+          },
+          {
+            "easing": "linear",
+            "t": 240,
+            "value": 1012.667
+          },
+          {
+            "easing": "linear",
+            "t": 243,
+            "value": 1016.864
+          },
+          {
+            "easing": "linear",
+            "t": 246,
+            "value": 1019.065
+          },
+          {
+            "easing": "linear",
+            "t": 249,
+            "value": 1020.22
+          },
+          {
+            "easing": "linear",
+            "t": 252,
+            "value": 1020.825
+          },
+          {
+            "easing": "linear",
+            "t": 255,
+            "value": 1021.767
+          },
+          {
+            "easing": "linear",
+            "t": 258,
+            "value": 1026.393
+          },
+          {
+            "easing": "linear",
+            "t": 261,
+            "value": 1028.818
+          },
+          {
+            "easing": "linear",
+            "t": 264,
+            "value": 1030.09
+          },
+          {
+            "easing": "linear",
+            "t": 267,
+            "value": 1030.757
+          }
+        ]
+      },
+      "name": "Cursor itm_m1n2p3q4r5",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "shape": "ellipse",
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
+      "start": 1335,
+      "stroke_color": "#1F1F1F",
+      "stroke_width": 2,
+      "track": "trk_n3w7r4ck21",
+      "type": "shape",
+      "volume": 1,
+      "width": 27,
+      "x": 1530.859,
+      "y": 858.667
+    }
+  },
+  {
+    "kind": "item.added",
+    "id": "itm_cr00000007",
+    "object": {
+      "contrast": 1,
+      "duration": 198,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
+      "height": 27,
+      "id": "itm_cr00000007",
+      "keyframes": {
+        "x": [
+          {
+            "easing": "linear",
+            "t": 0,
+            "value": 1839.237
+          },
+          {
+            "easing": "linear",
+            "t": 3,
+            "value": 1840.96
+          },
+          {
+            "easing": "linear",
+            "t": 6,
+            "value": 1849.297
+          },
+          {
+            "easing": "linear",
+            "t": 9,
+            "value": 1853.67
+          },
+          {
+            "easing": "linear",
+            "t": 12,
+            "value": 1855.964
+          },
+          {
+            "easing": "linear",
+            "t": 15,
+            "value": 1857.165
+          },
+          {
+            "easing": "linear",
+            "t": 18,
+            "value": 1858.859
+          },
+          {
+            "easing": "linear",
+            "t": 21,
+            "value": 1866.77
+          },
+          {
+            "easing": "linear",
+            "t": 24,
+            "value": 1870.917
+          },
+          {
+            "easing": "linear",
+            "t": 27,
+            "value": 1873.093
+          },
+          {
+            "easing": "linear",
+            "t": 30,
+            "value": 1874.235
+          },
+          {
+            "easing": "linear",
+            "t": 33,
+            "value": 1875.896
+          },
+          {
+            "easing": "linear",
+            "t": 36,
+            "value": 1883.787
+          },
+          {
+            "easing": "linear",
+            "t": 39,
+            "value": 1887.925
+          },
+          {
+            "easing": "linear",
+            "t": 42,
+            "value": 1890.098
+          },
+          {
+            "easing": "linear",
+            "t": 45,
+            "value": 1891.237
+          },
+          {
+            "easing": "linear",
+            "t": 48,
+            "value": 1891.835
+          },
+          {
+            "easing": "linear",
+            "t": 51,
+            "value": 1892.148
+          },
+          {
+            "easing": "linear",
+            "t": 54,
+            "value": 1892.314
+          },
+          {
+            "easing": "linear",
+            "t": 57,
+            "value": 1892.399
+          },
+          {
+            "easing": "linear",
+            "t": 60,
+            "value": 1892.443
+          },
+          {
+            "easing": "linear",
+            "t": 63,
+            "value": 1892.467
+          },
+          {
+            "easing": "linear",
+            "t": 66,
+            "value": 1892.478
+          },
+          {
+            "easing": "linear",
+            "t": 69,
+            "value": 1892.485
+          },
+          {
+            "easing": "linear",
+            "t": 72,
+            "value": 1892.485
+          },
+          {
+            "easing": "linear",
+            "t": 75,
+            "value": 1892.485
+          },
+          {
+            "easing": "linear",
+            "t": 78,
+            "value": 1892.485
+          },
+          {
+            "easing": "linear",
+            "t": 81,
+            "value": 1892.485
+          },
+          {
+            "easing": "linear",
+            "t": 84,
+            "value": 1892.485
+          },
+          {
+            "easing": "linear",
+            "t": 87,
+            "value": 1892.485
+          },
+          {
+            "easing": "linear",
+            "t": 90,
+            "value": 1892.485
+          },
+          {
+            "easing": "linear",
+            "t": 93,
+            "value": 1892.485
+          },
+          {
+            "easing": "linear",
+            "t": 96,
+            "value": 1892.485
+          },
+          {
+            "easing": "linear",
+            "t": 99,
+            "value": 1892.485
+          },
+          {
+            "easing": "linear",
+            "t": 102,
+            "value": 1892.485
+          },
+          {
+            "easing": "linear",
+            "t": 105,
+            "value": 1892.485
+          },
+          {
+            "easing": "linear",
+            "t": 108,
+            "value": 1892.485
+          },
+          {
+            "easing": "linear",
+            "t": 111,
+            "value": 1892.485
+          },
+          {
+            "easing": "linear",
+            "t": 114,
+            "value": 1892.485
+          },
+          {
+            "easing": "linear",
+            "t": 117,
+            "value": 1892.485
+          },
+          {
+            "easing": "linear",
+            "t": 120,
+            "value": 1892.485
+          },
+          {
+            "easing": "linear",
+            "t": 123,
+            "value": 1892.485
+          },
+          {
+            "easing": "linear",
+            "t": 126,
+            "value": 1892.485
+          },
+          {
+            "easing": "linear",
+            "t": 129,
+            "value": 1892.485
+          },
+          {
+            "easing": "linear",
+            "t": 132,
+            "value": 1892.485
+          },
+          {
+            "easing": "linear",
+            "t": 135,
+            "value": 1892.485
+          },
+          {
+            "easing": "linear",
+            "t": 138,
+            "value": 1892.485
+          },
+          {
+            "easing": "linear",
+            "t": 141,
+            "value": 1892.485
+          },
+          {
+            "easing": "linear",
+            "t": 144,
+            "value": 1892.485
+          },
+          {
+            "easing": "linear",
+            "t": 147,
+            "value": 1892.485
+          },
+          {
+            "easing": "linear",
+            "t": 150,
+            "value": 1892.485
+          },
+          {
+            "easing": "linear",
+            "t": 153,
+            "value": 1892.485
+          },
+          {
+            "easing": "linear",
+            "t": 156,
+            "value": 1892.485
+          },
+          {
+            "easing": "linear",
+            "t": 159,
+            "value": 1892.485
+          },
+          {
+            "easing": "linear",
+            "t": 162,
+            "value": 1892.485
+          },
+          {
+            "easing": "linear",
+            "t": 165,
+            "value": 1892.485
+          },
+          {
+            "easing": "linear",
+            "t": 168,
+            "value": 1892.485
+          },
+          {
+            "easing": "linear",
+            "t": 171,
+            "value": 1892.485
+          },
+          {
+            "easing": "linear",
+            "t": 174,
+            "value": 1892.485
+          },
+          {
+            "easing": "linear",
+            "t": 177,
+            "value": 1892.485
+          },
+          {
+            "easing": "linear",
+            "t": 180,
+            "value": 1892.485
+          },
+          {
+            "easing": "linear",
+            "t": 183,
+            "value": 1892.485
+          },
+          {
+            "easing": "linear",
+            "t": 186,
+            "value": 1892.485
+          },
+          {
+            "easing": "linear",
+            "t": 189,
+            "value": 1892.485
+          },
+          {
+            "easing": "linear",
+            "t": 192,
+            "value": 1892.485
+          },
+          {
+            "easing": "linear",
+            "t": 195,
+            "value": 1892.485
+          },
+          {
+            "easing": "linear",
+            "t": 198,
+            "value": 1892.485
+          }
+        ],
+        "y": [
+          {
+            "easing": "linear",
+            "t": 0,
+            "value": 1030.757
+          },
+          {
+            "easing": "linear",
+            "t": 3,
+            "value": 1031.731
+          },
+          {
+            "easing": "linear",
+            "t": 6,
+            "value": 1036.372
+          },
+          {
+            "easing": "linear",
+            "t": 9,
+            "value": 1038.807
+          },
+          {
+            "easing": "linear",
+            "t": 12,
+            "value": 1040.085
+          },
+          {
+            "easing": "linear",
+            "t": 15,
+            "value": 1040.754
+          },
+          {
+            "easing": "linear",
+            "t": 18,
+            "value": 1041.667
+          },
+          {
+            "easing": "linear",
+            "t": 21,
+            "value": 1045.864
+          },
+          {
+            "easing": "linear",
+            "t": 24,
+            "value": 1048.065
+          },
+          {
+            "easing": "linear",
+            "t": 27,
+            "value": 1049.22
+          },
+          {
+            "easing": "linear",
+            "t": 30,
+            "value": 1049.825
+          },
+          {
+            "easing": "linear",
+            "t": 33,
+            "value": 1050.767
+          },
+          {
+            "easing": "linear",
+            "t": 36,
+            "value": 1055.393
+          },
+          {
+            "easing": "linear",
+            "t": 39,
+            "value": 1057.818
+          },
+          {
+            "easing": "linear",
+            "t": 42,
+            "value": 1059.09
+          },
+          {
+            "easing": "linear",
+            "t": 45,
+            "value": 1059.757
+          },
+          {
+            "easing": "linear",
+            "t": 48,
+            "value": 1060.106
+          },
+          {
+            "easing": "linear",
+            "t": 51,
+            "value": 1060.289
+          },
+          {
+            "easing": "linear",
+            "t": 54,
+            "value": 1060.386
+          },
+          {
+            "easing": "linear",
+            "t": 57,
+            "value": 1060.437
+          },
+          {
+            "easing": "linear",
+            "t": 60,
+            "value": 1060.463
+          },
+          {
+            "easing": "linear",
+            "t": 63,
+            "value": 1060.476
+          },
+          {
+            "easing": "linear",
+            "t": 66,
+            "value": 1060.485
+          },
+          {
+            "easing": "linear",
+            "t": 69,
+            "value": 1060.485
+          },
+          {
+            "easing": "linear",
+            "t": 72,
+            "value": 1060.485
+          },
+          {
+            "easing": "linear",
+            "t": 75,
+            "value": 1060.485
+          },
+          {
+            "easing": "linear",
+            "t": 78,
+            "value": 1060.485
+          },
+          {
+            "easing": "linear",
+            "t": 81,
+            "value": 1060.485
+          },
+          {
+            "easing": "linear",
+            "t": 84,
+            "value": 1060.485
+          },
+          {
+            "easing": "linear",
+            "t": 87,
+            "value": 1060.485
+          },
+          {
+            "easing": "linear",
+            "t": 90,
+            "value": 1060.485
+          },
+          {
+            "easing": "linear",
+            "t": 93,
+            "value": 1060.485
+          },
+          {
+            "easing": "linear",
+            "t": 96,
+            "value": 1060.485
+          },
+          {
+            "easing": "linear",
+            "t": 99,
+            "value": 1060.485
+          },
+          {
+            "easing": "linear",
+            "t": 102,
+            "value": 1060.485
+          },
+          {
+            "easing": "linear",
+            "t": 105,
+            "value": 1060.485
+          },
+          {
+            "easing": "linear",
+            "t": 108,
+            "value": 1060.485
+          },
+          {
+            "easing": "linear",
+            "t": 111,
+            "value": 1060.485
+          },
+          {
+            "easing": "linear",
+            "t": 114,
+            "value": 1060.485
+          },
+          {
+            "easing": "linear",
+            "t": 117,
+            "value": 1060.485
+          },
+          {
+            "easing": "linear",
+            "t": 120,
+            "value": 1060.485
+          },
+          {
+            "easing": "linear",
+            "t": 123,
+            "value": 1060.485
+          },
+          {
+            "easing": "linear",
+            "t": 126,
+            "value": 1060.485
+          },
+          {
+            "easing": "linear",
+            "t": 129,
+            "value": 1060.485
+          },
+          {
+            "easing": "linear",
+            "t": 132,
+            "value": 1060.485
+          },
+          {
+            "easing": "linear",
+            "t": 135,
+            "value": 1060.485
+          },
+          {
+            "easing": "linear",
+            "t": 138,
+            "value": 1060.485
+          },
+          {
+            "easing": "linear",
+            "t": 141,
+            "value": 1060.485
+          },
+          {
+            "easing": "linear",
+            "t": 144,
+            "value": 1060.485
+          },
+          {
+            "easing": "linear",
+            "t": 147,
+            "value": 1060.485
+          },
+          {
+            "easing": "linear",
+            "t": 150,
+            "value": 1060.485
+          },
+          {
+            "easing": "linear",
+            "t": 153,
+            "value": 1060.485
+          },
+          {
+            "easing": "linear",
+            "t": 156,
+            "value": 1060.485
+          },
+          {
+            "easing": "linear",
+            "t": 159,
+            "value": 1060.485
+          },
+          {
+            "easing": "linear",
+            "t": 162,
+            "value": 1060.485
+          },
+          {
+            "easing": "linear",
+            "t": 165,
+            "value": 1060.485
+          },
+          {
+            "easing": "linear",
+            "t": 168,
+            "value": 1060.485
+          },
+          {
+            "easing": "linear",
+            "t": 171,
+            "value": 1060.485
+          },
+          {
+            "easing": "linear",
+            "t": 174,
+            "value": 1060.485
+          },
+          {
+            "easing": "linear",
+            "t": 177,
+            "value": 1060.485
+          },
+          {
+            "easing": "linear",
+            "t": 180,
+            "value": 1060.485
+          },
+          {
+            "easing": "linear",
+            "t": 183,
+            "value": 1060.485
+          },
+          {
+            "easing": "linear",
+            "t": 186,
+            "value": 1060.485
+          },
+          {
+            "easing": "linear",
+            "t": 189,
+            "value": 1060.485
+          },
+          {
+            "easing": "linear",
+            "t": 192,
+            "value": 1060.485
+          },
+          {
+            "easing": "linear",
+            "t": 195,
+            "value": 1060.485
+          },
+          {
+            "easing": "linear",
+            "t": 198,
+            "value": 1060.485
+          }
+        ]
+      },
+      "name": "Cursor itm_m1n2p3q4r5",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "shape": "ellipse",
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
+      "start": 1602,
+      "stroke_color": "#1F1F1F",
+      "stroke_width": 2,
+      "track": "trk_n3w7r4ck21",
+      "type": "shape",
+      "volume": 1,
+      "width": 27,
+      "x": 1839.237,
+      "y": 1030.757
+    }
+  }
+]

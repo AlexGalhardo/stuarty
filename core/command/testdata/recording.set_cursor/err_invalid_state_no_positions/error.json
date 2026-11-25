@@ -1,0 +1,7 @@
+{
+  "code": "E_INVALID_STATE",
+  "message": "Item itm_m1n2p3q4r5 has no pointer position in the part of the recording it plays.",
+  "hint": "Use a take recorded with pointer events.",
+  "retryable": false,
+  "path": "args.item_id"
+}

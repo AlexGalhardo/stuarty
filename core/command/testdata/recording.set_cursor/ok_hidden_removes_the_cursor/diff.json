@@ -1,0 +1,31 @@
+[
+  {
+    "kind": "item.removed",
+    "id": "itm_cr0000000a",
+    "object": {
+      "contrast": 1,
+      "duration": 60,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
+      "height": 20,
+      "id": "itm_cr0000000a",
+      "name": "Cursor itm_m1n2p3q4r5",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "shape": "ellipse",
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
+      "start": 0,
+      "stroke_color": "#000000",
+      "track": "trk_cr00000001",
+      "type": "shape",
+      "volume": 1,
+      "width": 20
+    }
+  }
+]

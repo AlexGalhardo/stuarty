@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "color": {
+      "description": "A colour; default #FFFFFF.",
+      "type": "string"
+    },
+    "item_id": {
+      "description": "A clip of a screen recording.",
+      "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+      "type": "string"
+    },
+    "keyframe_ms": {
+      "description": "The time between two keyframes, 50 to 1000 ms. Default 100.",
+      "maximum": 1000,
+      "minimum": 50,
+      "type": "integer"
+    },
+    "size": {
+      "description": "Pixels of the frame, 8 to 128. Default a fortieth of the frame height, at least 16.",
+      "maximum": 128,
+      "minimum": 8,
+      "type": "number"
+    },
+    "smoothing_ms": {
+      "description": "Time constant of the smoothing, 0 to 2000 ms; 0 follows the raw path. Default 150.",
+      "maximum": 2000,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "style": {
+      "description": "dot (default) or ring.",
+      "enum": [
+        "dot",
+        "ring"
+      ],
+      "type": "string"
+    },
+    "visible": {
+      "description": "false removes the cursor of the clip. Default true.",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "item_id"
+  ],
+  "type": "object"
+}
