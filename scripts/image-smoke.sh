@@ -33,16 +33,22 @@ docker run --rm --entrypoint sh "$img" -c "ffmpeg -version | head -n 1"
 # build (D-017) has none: libopenh264 is absent until the explicit install step, and the
 # image must not carry the Cisco binary. SMOKE_OPENH264_STEP=1 runs that step (it needs the
 # network and downloads from Cisco) and then encodes with the downloaded library.
-if docker run --rm --entrypoint sh "$img" -c "ffmpeg -hide_banner -encoders | grep -q libopenh264"; then
+#
+# The own build is told apart by its marker, not by the encoder list: its patched libopenh264 encoder is
+# listed (it loads the library at run time) but cannot open without the library.
+if ! docker run --rm --entrypoint sh "$img" -c "ffmpeg -hide_banner -version | grep -q -e --extra-version=stuarty -e --extra-version=vukem"; then
 	docker run --rm --entrypoint sh "$img" -c "ffmpeg -v error -hide_banner -f lavfi -i testsrc=duration=1:size=320x240:rate=25 -c:v libopenh264 -pix_fmt yuv420p /tmp/t.mp4 && ffprobe -v error -show_entries stream=codec_name -of csv=p=0 /tmp/t.mp4 | grep -qx h264"
 else
-	echo "image-smoke: the build has no libopenh264 encoder (own build)"
+	echo "image-smoke: the own build: libopenh264 is listed, but it needs the Cisco library, which the image does not carry"
+	docker run --rm --entrypoint sh "$img" -c "ffmpeg -hide_banner -encoders | grep -q libopenh264"
+	docker run --rm --entrypoint sh "$img" -c "! ffmpeg -v error -hide_banner -f lavfi -i testsrc=duration=1:size=320x240:rate=25 -c:v libopenh264 -pix_fmt yuv420p /tmp/t.mp4 2>/dev/null"
 	docker run --rm --entrypoint sh "$img" -c "! ffmpeg -hide_banner -version | grep -q -e --enable-libopenh264"
-	docker run --rm --entrypoint sh "$img" -c "! find / -xdev -name 'libopenh264*' 2>/dev/null | grep -q ."
+	docker run --rm --entrypoint sh "$img" -c "! find / -xdev \( -name 'libopenh264*' -o -name 'openh264*.dll' \) 2>/dev/null | grep -q ."
 	docker run --rm --entrypoint sh "$img" -c "ffmpeg -hide_banner -encoders | grep -q libvpx-vp9"
+	docker run --rm --entrypoint sh "$img" -c "test -s /usr/share/doc/stuarty/ffmpeg/licenses/ffmpeg/COPYING.LGPLv3 && test -s /usr/share/doc/stuarty/ffmpeg/licenses/libvpx/LICENSE"
 	if [ "${SMOKE_OPENH264_STEP:-}" = 1 ]; then
 		docker run --name "$name-step" -v "$vol:/data" "$img" tools:install openh264 --yes
-		docker run --rm -v "$vol:/data" --entrypoint sh "$img" -c 'lib="$(find /data -name "libopenh264*" | head -n 1)"; test -n "$lib" && LD_LIBRARY_PATH="$(dirname "$lib")" ffmpeg -v error -hide_banner -f lavfi -i testsrc=duration=1:size=320x240:rate=25 -c:v libopenh264 -pix_fmt yuv420p /tmp/t.mp4 && ffprobe -v error -show_entries stream=codec_name -of csv=p=0 /tmp/t.mp4 | grep -qx h264'
+		docker run --rm -v "$vol:/data" --entrypoint sh "$img" -c 'lib="$(find /data -name "libopenh264*" | head -n 1)"; test -n "$lib" && STUARTY_OPENH264_DIR="$(dirname "$lib")" ffmpeg -v error -hide_banner -f lavfi -i testsrc=duration=1:size=320x240:rate=25 -c:v libopenh264 -pix_fmt yuv420p /tmp/t.mp4 && ffprobe -v error -show_entries stream=codec_name -of csv=p=0 /tmp/t.mp4 | grep -qx h264'
 		docker rm -f "$name-step" >/dev/null 2>&1 || true
 	fi
 fi
