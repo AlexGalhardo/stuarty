@@ -444,6 +444,13 @@ func mediaInspect(ctx context.Context, svc service.Service, raw json.RawMessage)
 		return nil, err
 	}
 
+	if in.AssetID != "" && in.ProjectID == "" && in.Hash == "" && in.Library == nil {
+		return nil, &service.Error{
+			Code: command.CodeValidation, Path: "project_id", Message: "the command needs a project.",
+			Hint: "pass project_id, or hash to read one file of the library",
+		}
+	}
+
 	if in.Hash != "" || in.Library != nil || in.ProjectID == "" {
 		return libraryInspect(ctx, svc, in.Hash, in.ProjectID, in.Library, in.page())
 	}
