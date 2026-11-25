@@ -1,5 +1,6 @@
 import {
 	AudioLines,
+	AudioWaveform,
 	Captions,
 	Film,
 	Layers,
@@ -15,6 +16,7 @@ import UntrustedText from "@/components/UntrustedText";
 import { useT } from "@/lib/i18n";
 import { useCommandsExposed } from "../commands/useExposedCommands";
 import CaptionsInspector from "../stages/CaptionsInspector";
+import VoiceInspector from "../stages/VoiceInspector";
 import ZoomPanel from "../stages/ZoomPanel";
 import { useDocumentState, useUiState } from "../state/EditorContext";
 import { selectOrderedTrackIds } from "../state/selectors";
@@ -105,6 +107,7 @@ export default function Inspector(): ReactNode {
 		(s) => s.activePanelTab === "effects" && s.panels.left,
 	);
 	const zoomExposed = useCommandsExposed("recording.auto_zoom");
+	const stage = useUiState((s) => s.stage);
 	const captionsTab = useUiState(
 		(s) => s.activePanelTab === "captions" && s.panels.left,
 	);
@@ -112,7 +115,11 @@ export default function Inspector(): ReactNode {
 	let title: ReactNode;
 	let Icon: LucideIcon = SlidersHorizontal;
 	let body: ReactNode;
-	if (captionsTab && selected.length <= 1) {
+	if (stage?.kind === "voice") {
+		Icon = AudioWaveform;
+		title = t("ui.editor.voice_stage.title");
+		body = <VoiceInspector itemId={stage.item} />;
+	} else if (captionsTab && selected.length <= 1) {
 		Icon = Captions;
 		title = t("ui.editor.panels.captions");
 		body = <CaptionsInspector />;

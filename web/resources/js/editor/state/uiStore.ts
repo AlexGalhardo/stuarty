@@ -70,7 +70,13 @@ export interface UiState {
 	activePanelTab: LeftTab;
 	panels: { left: boolean; inspector: boolean; history: boolean };
 	inspectorTab: InspectorTab;
+	// A tool that takes a stage of the editor for the item it works on (final design 26, 27 and 30): the transcript
+	// beside the preview, the proposed cuts, or the before and after of the studio voice. Null is the ordinary editor.
+	stage: { kind: StageKind; item: string } | null;
 }
+
+// The tools with a stage of their own.
+export type StageKind = "transcript" | "cuts" | "voice";
 
 // The tabs of the material rail (SDD-012 section 6.4); "library" is Media.
 export type LeftTab =
@@ -129,6 +135,8 @@ export interface UiWriter {
 	toggleInspector(): void;
 	showInspectorTab(tab: InspectorTab): void;
 	showLeftTab(tab: LeftTab): void;
+	// Opens the stage of a tool for an item, or closes it with null.
+	showStage(stage: UiState["stage"]): void;
 	// Alt+1: show or hide the whole left region (the rail stays); the last tab comes back.
 	toggleLeftRegion(): void;
 }
@@ -160,6 +168,7 @@ export function createUiStore(initialZoom = 1): {
 		activePanelTab: "library",
 		panels: { left: true, inspector: true, history: readLayout().historyOpen },
 		inspectorTab: "video",
+		stage: null,
 	});
 	return {
 		store: readOnly(store),
@@ -294,6 +303,7 @@ export function createUiStore(initialZoom = 1): {
 					activePanelTab: tab,
 					panels: { ...s.panels, left: true },
 				})),
+			showStage: (stage) => store.setState((s) => ({ ...s, stage })),
 			showInspectorTab: (tab) =>
 				store.setState((s) =>
 					s.inspectorTab === tab ? s : { ...s, inspectorTab: tab },
