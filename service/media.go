@@ -1063,7 +1063,8 @@ func (s *svc) MediaInspect(ctx context.Context, req MediaInspectRequest) (*Media
 	for _, sec := range sections {
 		if !slices.Contains(inspectSections, sec) {
 			return nil, newError(command.CodeValidation, "the section %q is not known.", sec).
-				withPath("sections").withHint("use probe, transcript, silences, loudness, beats, words, fillers or zooms")
+				withPath("sections").
+				withHint("use probe, transcript, silences, loudness, beats, words, fillers or zooms")
 		}
 	}
 
@@ -1116,13 +1117,7 @@ func (s *svc) MediaInspect(ctx context.Context, req MediaInspectRequest) (*Media
 		case "probe":
 			text.WriteString(s.probeSection(ctx, &row, &ar, pa.AssetID, res))
 		case "loudness":
-			if l := s.loudnessOf(arts); l != nil {
-				res.Loudness = l
-				res.Available = append(res.Available, "loudness")
-				text.WriteString("\n" + loudnessText(l))
-			} else {
-				text.WriteString("\nloudness: none (the asset has no audio)")
-			}
+			text.WriteString(s.loudnessSection(arts, res))
 		case "beats":
 			text.WriteString(s.beatsSection(arts, res))
 		case "silences":
@@ -1204,6 +1199,19 @@ func zoomsSection(row *ProjectRow, assetID string, res *MediaInspectResult) (str
 	}
 
 	return text.String(), nil
+}
+
+// loudnessSection fills res.Loudness from the loudness artifact of the asset.
+func (s *svc) loudnessSection(arts []ArtifactRow, res *MediaInspectResult) string {
+	l := s.loudnessOf(arts)
+	if l == nil {
+		return "\nloudness: none (the asset has no audio)"
+	}
+
+	res.Loudness = l
+	res.Available = append(res.Available, "loudness")
+
+	return "\n" + loudnessText(l)
 }
 
 func orDash(s string) string {
