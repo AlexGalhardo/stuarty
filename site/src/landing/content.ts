@@ -58,8 +58,8 @@ export const screens = {
 	homeMobile: {
 		src: "/landing/home-mobile",
 		alt: "The Stuarty home on a phone: the project in progress, what waits for your yes and the scene bar at the bottom.",
-		width: 780,
-		height: 1688,
+		width: 1600,
+		height: 3464,
 	},
 	briefing: {
 		src: "/landing/project-brief",
