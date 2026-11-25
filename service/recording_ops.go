@@ -195,6 +195,9 @@ type recSession struct {
 	done chan struct{}
 	// discard is set by a cancel on the goroutine of the request and read by the supervisor when the helper ends.
 	discard atomic.Bool
+	// move serialises pauses and resumes: the command to the helper and the write of the row happen together,
+	// so two requests at once cannot leave the row saying paused while the helper records, or the reverse.
+	move sync.Mutex
 
 	// progress is the last line the helper sent, kept in memory so a read shows the clock of a recording that
 	// is running without a write to the database every second.
@@ -830,7 +833,23 @@ func (s *svc) moveRecording(
 	sess := s.recSessions[id]
 	s.recMu.Unlock()
 
-	if sess == nil || r.State != string(from) {
+	if sess == nil {
+		return nil, newError(command.CodeInvalidState, "the recording is %s and cannot be %s.", r.State, pastOf(ev))
+	}
+
+	sess.move.Lock()
+	defer sess.move.Unlock()
+
+	// Read again under the lock: another pause or resume may have moved it meanwhile.
+	if r, err = s.store.Recordings().Get(ctx, id); err != nil {
+		return nil, asError(err)
+	}
+
+	if r.State == string(to) {
+		return s.liveView(r), nil
+	}
+
+	if r.State != string(from) {
 		return nil, newError(command.CodeInvalidState, "the recording is %s and cannot be %s.", r.State, pastOf(ev))
 	}
 

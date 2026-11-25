@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -159,6 +160,49 @@ func TestRecordingPauseAndResume(t *testing.T) {
 
 	if _, err := r.svc.RecordingPause(agentCtx, service.RecordingRef{ID: rec.ID}); code(err) != "E_INVALID_STATE" {
 		t.Errorf("pause of a finished recording: %v", err)
+	}
+}
+
+// Pauses and resumes asked at once reach the helper in the order the row records them: the helper is told to
+// pause only when the row says recording, so the row never says paused while the helper records.
+func TestRecordingPausesAndResumesAtOnceKeepTheRowAndTheHelperTogether(t *testing.T) {
+	r := newRecEnv(t)
+	project := r.newProject("p")
+	rec := r.start(t, project)
+	agentCtx := r.as(agent)
+	s := r.cap.last()
+
+	var wg sync.WaitGroup
+
+	for i := range 40 {
+		wg.Add(1)
+
+		go func() {
+			defer wg.Done()
+
+			if i%2 == 0 {
+				_, _ = r.svc.RecordingPause(agentCtx, service.RecordingRef{ID: rec.ID})
+			} else {
+				_, _ = r.svc.RecordingResume(personCtx(), service.RecordingRef{ID: rec.ID})
+			}
+		}()
+	}
+
+	wg.Wait()
+
+	got, err := r.svc.RecordingGet(personCtx(), service.RecordingRef{ID: rec.ID})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	sentPaused := s.paused.Load() - s.resumed.Load()
+	if sentPaused != 0 && sentPaused != 1 {
+		t.Fatalf("the helper was told %d pauses and %d resumes: two in a row", s.paused.Load(), s.resumed.Load())
+	}
+
+	if (got.State == "paused") != (sentPaused == 1) {
+		t.Fatalf("the row says %s, the helper was last told to %s", got.State,
+			map[int64]string{0: "record", 1: "pause"}[sentPaused])
 	}
 }
 
