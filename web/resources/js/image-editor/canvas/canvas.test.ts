@@ -31,7 +31,7 @@ const VIEW = { zoom: 1, fit: true, panX: 0, panY: 0 };
 describe("viewport", () => {
 	test("fit leaves a margin and never zooms in past 100%", () => {
 		expect(fitZoom({ w: 1000, h: 600 }, { w: 1280, h: 720 })).toBeCloseTo(
-			Math.min(952 / 1280, 552 / 720),
+			Math.min(952 / 1280, 496 / 720),
 		);
 		expect(fitZoom({ w: 4000, h: 4000 }, { w: 100, h: 100 })).toBe(1);
 	});
@@ -59,14 +59,14 @@ describe("viewport", () => {
 		expect(after.y).toBeCloseTo(before.y, 6);
 	});
 
-	test("the picture is centred and the pan moves it", () => {
+	test("the picture is centred above the room for the zoom bar and the pan moves it", () => {
 		const o = origin(
 			{ ...VIEW, panX: 10, panY: -5 },
 			{ w: 1000, h: 600 },
 			{ w: 200, h: 100 },
 			1,
 		);
-		expect(o).toEqual({ x: 410, y: 245 });
+		expect(o).toEqual({ x: 410, y: 217 });
 	});
 });
 

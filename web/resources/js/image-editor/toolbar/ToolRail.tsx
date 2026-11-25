@@ -14,6 +14,7 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useT } from "@/lib/i18n";
+import { findLayer, useImage } from "../state/context";
 import { type Operation, PRIMARY_TOOLS, useOperations } from "./operations";
 import { SHORTCUTS } from "./shortcuts";
 import ToolButton from "./ToolButton";
@@ -28,6 +29,27 @@ export function moreOperations(operations: Operation[]): Operation[] {
 	);
 }
 
+// The primary tool the selection is of, so the rail shows what is being edited: a text layer lights Text, a
+// rectangle Rectangle, a fill Fill, an image Image. It only reads the selected layer; it decides nothing.
+function useActiveTool(): string | null {
+	const doc = useImage((s) => s.doc);
+	const selection = useImage((s) => s.selection);
+	if (doc === null || selection.length !== 1) return null;
+	const layer = findLayer(doc.layers, selection[0] ?? "");
+	switch (layer?.kind) {
+		case "text":
+			return "add-text";
+		case "image":
+			return "add-image";
+		case "fill":
+			return "add-fill";
+		case "shape":
+			return layer.shape === "ellipse" ? null : "add-rect";
+		default:
+			return null;
+	}
+}
+
 // The tool rail of the final design: the eight primary tools as icons and a "more" control for the rest, so every
 // tool the editor has is still one click (or the palette) away. The buttons and the menu run the operations the
 // palette lists.
@@ -39,6 +61,9 @@ export function ToolRail(): ReactNode {
 		return found === undefined ? [] : [found];
 	});
 	const more = moreOperations(operations);
+	const active = useActiveTool();
+	const hasSelection = useImage((s) => s.selection.length > 0);
+	const hasDocument = useImage((s) => s.doc !== null);
 
 	return (
 		<Toolbar label={t("ui.image.toolbar.label")} orientation="vertical">
@@ -49,6 +74,7 @@ export function ToolRail(): ReactNode {
 					label={o.label}
 					shortcut={o.shortcut}
 					disabled={o.disabled}
+					pressed={active === o.id}
 					onClick={o.run}
 					testId={o.testId}
 				/>
@@ -60,8 +86,9 @@ export function ToolRail(): ReactNode {
 							<Button
 								type="button"
 								variant="ghost"
-								size="icon-sm"
+								size="icon"
 								aria-label={t("ui.image.toolbar.more")}
+								className="mt-1"
 								data-tool=""
 								data-testid="image-more-tools"
 								// The arrows walk the rail (Toolbar.tsx); a menu trigger would open on ArrowDown, so
@@ -80,7 +107,12 @@ export function ToolRail(): ReactNode {
 					</TooltipTrigger>
 					<TooltipContent>{t("ui.image.toolbar.more")}</TooltipContent>
 				</Tooltip>
-				<DropdownMenuContent className="w-56">
+				<DropdownMenuContent
+					side="right"
+					align="start"
+					sideOffset={8}
+					className="w-60"
+				>
 					{more.map((o) => {
 						const Icon = o.icon;
 						const keys =
@@ -89,6 +121,7 @@ export function ToolRail(): ReactNode {
 							<DropdownMenuItem
 								key={o.id}
 								disabled={o.disabled}
+								className="h-8 data-disabled:opacity-60"
 								data-testid={o.testId}
 								aria-keyshortcuts={keys}
 								onSelect={o.run}
@@ -103,6 +136,11 @@ export function ToolRail(): ReactNode {
 							</DropdownMenuItem>
 						);
 					})}
+					{hasDocument && !hasSelection && (
+						<p className="m-0 border-t border-border px-2 pt-2 pb-1 text-xs text-text-muted">
+							{t("ui.image.toolbar.more_hint")}
+						</p>
+					)}
 				</DropdownMenuContent>
 			</DropdownMenu>
 		</Toolbar>

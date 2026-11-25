@@ -218,7 +218,7 @@ export default function Canvas(): ReactNode {
 			{doc !== null && stage.w > 0 && (
 				<div
 					data-testid="image-picture"
-					className="absolute shadow-lg [background:repeating-conic-gradient(#808080_0_25%,#c0c0c0_0_50%)_50%/16px_16px]"
+					className="absolute overflow-hidden rounded-lg [background:repeating-conic-gradient(#808080_0_25%,#c0c0c0_0_50%)_50%/16px_16px]"
 					style={{
 						left: at.x,
 						top: at.y,

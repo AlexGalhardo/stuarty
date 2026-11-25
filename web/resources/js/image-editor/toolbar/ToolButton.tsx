@@ -7,6 +7,7 @@ import {
 	TooltipContent,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { cn } from "@/lib/cn";
 import { SHORTCUTS, type ShortcutRow } from "./shortcuts";
 
 // One icon button of the toolbar (design system 4.3.1): an icon, an accessible name and a tooltip with the same
@@ -36,11 +37,14 @@ export default function ToolButton({
 				<Button
 					type="button"
 					variant="ghost"
-					size="icon-sm"
+					size="icon"
 					aria-label={label}
 					aria-keyshortcuts={keys}
 					aria-pressed={pressed}
 					disabled={disabled}
+					className={cn(
+						pressed && "bg-accent-soft text-accent-text hover:bg-accent-soft",
+					)}
 					data-tool=""
 					data-testid={testId}
 					onClick={onClick}

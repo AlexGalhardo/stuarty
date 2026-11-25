@@ -1,4 +1,5 @@
 import {
+	type CSSProperties,
 	createContext,
 	type KeyboardEvent,
 	type ReactNode,
@@ -29,12 +30,14 @@ export function Toolbar({
 	orientation = "horizontal",
 	testId = "image-toolbar",
 	className,
+	style,
 }: {
 	label: string;
 	children: ReactNode;
 	orientation?: Orientation;
 	testId?: string;
 	className?: string;
+	style?: CSSProperties;
 }): ReactNode {
 	const vertical = orientation === "vertical";
 	const ref = useRef<HTMLDivElement>(null);
@@ -102,11 +105,12 @@ export function Toolbar({
 				aria-label={label}
 				aria-orientation={orientation}
 				data-testid={testId}
+				style={style}
 				onKeyDown={onKeyDown}
 				className={cn(
 					"flex items-center gap-1 bg-ed-panel",
 					vertical
-						? "w-11 shrink-0 flex-col overflow-y-auto border-r border-border px-1 py-2"
+						? "w-11 shrink-0 flex-col overflow-y-auto border-r border-border px-1.5 pt-2 pb-2"
 						: "px-2 py-1",
 					className,
 				)}
