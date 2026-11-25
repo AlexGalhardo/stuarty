@@ -1,5 +1,5 @@
 import { CircleHelp } from "lucide-react";
-import { type FormEvent, useId, useState } from "react";
+import { type FormEvent, type ReactNode, useId, useState } from "react";
 
 import { type Failure, FailureNote } from "@/components/Failure";
 import { Button } from "@/components/ui/button";
@@ -76,6 +76,8 @@ interface Props {
 	cancelLabel?: string;
 	// The first field takes the focus when the form opens, as in a dialog.
 	autoFocusFirst?: boolean;
+	// The page layout of a new project: the idea in one card and the goal in a two-column grid in another.
+	page?: boolean;
 }
 
 // The form of the context of a project: name, description and the five parts of the SMART goal with its due date.
@@ -94,6 +96,7 @@ export default function ProjectContextForm({
 	kind,
 	cancelLabel,
 	autoFocusFirst = false,
+	page = false,
 }: Props) {
 	const t = useT();
 	const prefix = useId();
@@ -141,85 +144,109 @@ export default function ProjectContextForm({
 		};
 	};
 
+	const renderField = (field: FieldId): ReactNode => {
+		const id = `${prefix}-${field}`;
+		const error = touched.has(field) ? errors[pathOf(field)] : undefined;
+		const refused = !error && failure?.path === pathOf(field) ? failure : null;
+		const label = t(`ui.projects.context.${field}`);
+		const common = {
+			id,
+			name: field,
+			value: fieldValue(values, field),
+			autoComplete: "off",
+			autoFocus: autoFocusFirst && field === "name",
+			placeholder: t(exampleKey(kind, field)),
+			"aria-invalid": error || refused ? true : undefined,
+			"aria-describedby": error || refused ? `${id}-error` : undefined,
+			onBlur: () => touch(field),
+			onChange: (
+				e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+			) => {
+				touch(field);
+				onEdited?.();
+				setValues((was) => withValue(was, field, e.target.value));
+			},
+		};
+		const { min, max } = rule(field);
+
+		return (
+			<div key={field} className="flex flex-col gap-2">
+				<div className="flex items-center gap-1">
+					<Label id={`${id}-label`} htmlFor={id}>
+						{label}
+					</Label>
+					<Tooltip>
+						<TooltipTrigger
+							type="button"
+							aria-label={t("ui.projects.help_for", { field: label })}
+							className="inline-flex size-6 items-center justify-center rounded-full text-muted-foreground hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
+						>
+							<CircleHelp className="size-4" aria-hidden="true" />
+						</TooltipTrigger>
+						<TooltipContent className="max-w-xs">
+							{t(`ui.projects.help.${field}`)}
+						</TooltipContent>
+					</Tooltip>
+				</div>
+				{field === "description" ? (
+					<Textarea rows={4} {...common} />
+				) : (
+					<Input type={field === "due" ? "date" : "text"} {...common} />
+				)}
+				{min !== undefined && max !== undefined && (
+					<p className="text-xs text-muted-foreground">
+						{t("ui.projects.counter", {
+							count: charCount(fieldValue(values, field)),
+							min,
+							max,
+						})}
+					</p>
+				)}
+				{error && (
+					<p
+						id={`${id}-error`}
+						role="alert"
+						className="text-sm text-destructive"
+					>
+						{t(error.key, error.params)}
+					</p>
+				)}
+				<FailureNote failure={refused} id={`${id}-error`} />
+			</div>
+		);
+	};
+
 	return (
 		<TooltipProvider>
 			<form
 				onSubmit={submit}
 				noValidate
-				className="flex flex-col gap-5 rounded-xl border bg-card p-5 text-card-foreground"
+				className={
+					page
+						? "flex flex-col gap-5 text-text"
+						: "flex flex-col gap-5 rounded-xl border bg-card p-5 text-card-foreground"
+				}
 			>
-				{FIELDS.map((field) => {
-					const id = `${prefix}-${field}`;
-					const error = touched.has(field) ? errors[pathOf(field)] : undefined;
-					const refused =
-						!error && failure?.path === pathOf(field) ? failure : null;
-					const label = t(`ui.projects.context.${field}`);
-					const common = {
-						id,
-						name: field,
-						value: fieldValue(values, field),
-						autoComplete: "off",
-						autoFocus: autoFocusFirst && field === "name",
-						placeholder: t(exampleKey(kind, field)),
-						"aria-invalid": error || refused ? true : undefined,
-						"aria-describedby": error || refused ? `${id}-error` : undefined,
-						onBlur: () => touch(field),
-						onChange: (
-							e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-						) => {
-							touch(field);
-							onEdited?.();
-							setValues((was) => withValue(was, field, e.target.value));
-						},
-					};
-					const { min, max } = rule(field);
-
-					return (
-						<div key={field} className="flex flex-col gap-2">
-							<div className="flex items-center gap-1">
-								<Label id={`${id}-label`} htmlFor={id}>
-									{label}
-								</Label>
-								<Tooltip>
-									<TooltipTrigger
-										type="button"
-										aria-label={t("ui.projects.help_for", { field: label })}
-										className="inline-flex size-6 items-center justify-center rounded-full text-muted-foreground hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
-									>
-										<CircleHelp className="size-4" aria-hidden="true" />
-									</TooltipTrigger>
-									<TooltipContent className="max-w-xs">
-										{t(`ui.projects.help.${field}`)}
-									</TooltipContent>
-								</Tooltip>
+				{page ? (
+					<>
+						<section className="flex flex-col gap-4 rounded-xl border border-border bg-surface p-5">
+							{(["name", "description"] as const).map(renderField)}
+						</section>
+						<section
+							aria-labelledby={`${prefix}-goal`}
+							className="flex flex-col gap-4 rounded-xl border border-border bg-surface p-5"
+						>
+							<h2 id={`${prefix}-goal`} className="text-lg font-semibold">
+								{t("ui.projects.context.goal_title")}
+							</h2>
+							<div className="grid gap-4 sm:grid-cols-2">
+								{[...goalKeys, "due" as const].map(renderField)}
 							</div>
-							{field === "description" ? (
-								<Textarea rows={4} {...common} />
-							) : (
-								<Input type={field === "due" ? "date" : "text"} {...common} />
-							)}
-							{min !== undefined && max !== undefined && (
-								<p className="text-xs text-muted-foreground">
-									{t("ui.projects.counter", {
-										count: charCount(fieldValue(values, field)),
-										min,
-										max,
-									})}
-								</p>
-							)}
-							{error && (
-								<p
-									id={`${id}-error`}
-									role="alert"
-									className="text-sm text-destructive"
-								>
-									{t(error.key, error.params)}
-								</p>
-							)}
-							<FailureNote failure={refused} id={`${id}-error`} />
-						</div>
-					);
-				})}
+						</section>
+					</>
+				) : (
+					FIELDS.map(renderField)
+				)}
 				{!aboutAField && <FailureNote failure={failure} />}
 				<div className="flex gap-2">
 					<Button type="submit" disabled={!valid || busy}>

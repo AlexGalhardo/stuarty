@@ -562,6 +562,12 @@
       }
     },
     "projects": {
+      "import_template": "Import template",
+      "next": {
+        "title": "Next step",
+        "description": "Open a project or start a new one. It can be just a text: no project needs a video.",
+        "action": "Start briefing"
+      },
       "views": {
         "label": "Project views"
       },
@@ -585,11 +591,25 @@
       "new_project": {
         "title": "Start a new project",
         "name": "Project name",
+        "page_lead": "Answer in your own words. The agent reads the briefing before it suggests anything.",
+        "steps": "New project steps",
+        "step_kind": "What to create",
+        "step_idea": "The idea and the goal",
+        "step_idea_hint": "For whom and why",
+        "reads_title": "What the agent will read",
+        "reads_body": "The name, the description and the goal you write here. Nothing else is sent to the agent before the project exists.",
+        "reads_permission": "It can suggest. Every action still asks for your permission.",
+        "page_title": {
+          "text": "New project: text briefing",
+          "video": "New project: video briefing",
+          "image": "New project: image briefing",
+          "undecided": "New project: briefing"
+        },
         "name_placeholder": "E.g. Course launch",
         "chosen": "Chosen",
         "text_note": "No format and no media: just the text, and media is optional later.",
         "description": "Choose what you want to create. You can add the others later.",
-        "step_two": "Step 2 of 2: the briefing. The project is created when you send it.",
+        "step_two": "Step 2 of 2",
         "kind_legend": "What do you want to create?",
         "text_legend": "What kind of text?",
         "format": "Format",
@@ -822,6 +842,7 @@
         "download": "Download"
       },
       "context": {
+        "goal_title": "The goal",
         "title": "Context",
         "name": "Name",
         "description": "Description",
