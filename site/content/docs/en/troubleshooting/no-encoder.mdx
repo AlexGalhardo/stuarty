@@ -7,7 +7,7 @@ description: "What E_NO_ENCODER means, which encoders are tried and how to get a
 
 - what `E_NO_ENCODER` says and what was tried;
 - how to read the encoder check of the doctor;
-- three ways out: the bundled FFmpeg, a hardware encoder and your own libx264 build.
+- the ways out: the container image, a hardware encoder, OpenH264 for the own build, and your own libx264 build.
 
 ## The idea
 
@@ -17,7 +17,8 @@ An export needs an H.264 encoder, and the product only trusts one that passed a 
 
 1. Run `stuarty doctor --full`. The `ffmpeg.encoder` check prints the chosen encoder and each candidate with its status and time, or `E_NO_ENCODER`.
 2. Pick the way out that fits:
-   - use the FFmpeg that ships with Stuarty (the container image and the installers), which includes OpenH264;
+   - use the container image, whose FFmpeg has OpenH264 inside;
+   - with the own FFmpeg build (the Windows installer, once it carries it), run `stuarty tools:install openh264`: the library is Cisco's, Stuarty never carries it, and the doctor says `openh264_not_installed` until you do;
    - install the driver of your GPU, so that a hardware encoder passes the test;
    - point `STUARTY_FFMPEG` at your own build that has `libx264` and set `STUARTY_ALLOW_USER_X264=true`. The licence consequences are yours: do not redistribute it.
 3. Run the doctor again, then export.
@@ -33,7 +34,7 @@ To test one encoder only, set `STUARTY_ENCODER` to its FFmpeg name. Then only th
 
 - Forcing an encoder the machine does not have (`STUARTY_ENCODER=h264_nvenc` without an NVIDIA driver).
 - Setting `STUARTY_ALLOW_USER_X264=true` while the FFmpeg is the bundled one: `libx264` is used only with your own FFmpeg.
-- Running in a container or a virtual machine without the device nodes that a hardware encoder needs. The OpenH264 encoder of the bundled FFmpeg needs none.
+- Running in a container or a virtual machine without the device nodes that a hardware encoder needs. The OpenH264 encoder needs none.
 - Reading `E_FFMPEG_MISSING` as the same thing. See [FFmpeg is not found](/docs/troubleshooting/ffmpeg-missing).
 
 ## Next steps

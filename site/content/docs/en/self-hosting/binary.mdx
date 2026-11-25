@@ -41,7 +41,7 @@ Stop the server with `Ctrl+C` or by sending `SIGTERM`. It waits up to 15 seconds
 | Local token | `<workspace>/token` | readable only by you; `stuarty token:rotate` makes a new one |
 | Application key | `<workspace>/app.key` | created on first start in local mode when `APP_KEY` is unset; keep it private |
 | Logs | `<workspace>/logs/stuarty.log` | rotated at 10 MiB, three old files kept; `LOG_LEVEL` sets the level |
-| FFmpeg | the order of [FFmpeg, codecs and licences](/docs/self-hosting/ffmpeg-and-licences) | `STUARTY_FFMPEG` and `STUARTY_FFPROBE` name it explicitly |
+| FFmpeg | the order of [FFmpeg, codecs and licences](/docs/self-hosting/ffmpeg-and-licences): your setting, then the one next to `stuarty`, then the `PATH` | `STUARTY_FFMPEG` and `STUARTY_FFPROBE` name it explicitly; the release archives carry none |
 
 Every variable is in the [configuration reference](/docs/reference/configuration).
 
