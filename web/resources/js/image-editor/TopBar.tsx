@@ -1,5 +1,12 @@
 import { Link } from "@inertiajs/react";
-import { ArrowLeft, Check, History, MessagesSquare, Wifi } from "lucide-react";
+import {
+	ArrowLeft,
+	Check,
+	History,
+	MessagesSquare,
+	Search,
+	Wifi,
+} from "lucide-react";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 
 import UntrustedText from "@/components/UntrustedText";
@@ -10,6 +17,8 @@ import NotificationBell from "../shell/NotificationBell";
 import { useShell } from "../shell/ShellContext";
 import type { ImageDocument } from "./api/types";
 import { ExportTool } from "./export/ExportDialog";
+import { paletteHint } from "./palette/CommandPalette";
+import { useOperationDialogs } from "./toolbar/operations";
 
 // "Saved automatically: 14:32": the core stores every edit before its answer arrives, so the time is the
 // moment the open revision reached the screen. It says nothing until a document is on screen.
@@ -67,6 +76,27 @@ function ChatButton(): ReactNode {
 	);
 }
 
+// The Commands button of the top bar: it opens the command palette, which Ctrl K (Cmd K on macOS) opens too.
+function PaletteButton(): ReactNode {
+	const t = useT();
+	const { setPaletteOpen } = useOperationDialogs();
+	const hint = paletteHint();
+	return (
+		<Button
+			type="button"
+			variant="ghost"
+			size="sm"
+			aria-keyshortcuts={hint === "Ctrl K" ? "Control+K" : "Meta+K"}
+			onClick={() => setPaletteOpen(true)}
+			data-testid="image-palette-open"
+		>
+			<Search aria-hidden="true" />
+			{t("ui.image.palette.open")}
+			<kbd className="font-sans text-xs text-muted-foreground">{hint}</kbd>
+		</Button>
+	);
+}
+
 // The top bar of the final design (SDD-012 section 24): the way back, the name of the image, its revision in a
 // badge, its size and the saved check, and at the right the bell, Chat and the primary Export.
 export default function TopBar({
@@ -116,6 +146,7 @@ export default function TopBar({
 			)}
 			<SavedIndicator revision={doc?.revision ?? null} />
 			<span className="ml-auto" />
+			<PaletteButton />
 			<NotificationBell />
 			<ChatButton />
 			<ExportTool />
