@@ -3,13 +3,14 @@ package workspace
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"runtime"
 	"strings"
 	"testing"
 )
 
 // EnvAllowDefaultHome lets a build that is not a release, and a test, open the default workspace
-// (~/.stuarty). Only the value 1 counts (SDD-000 section 10, SDD-007 section 13).
+// (~/.stuarty). Only the value 1 counts (SDD-000 section 10, SDD-007 section 3.10).
 const EnvAllowDefaultHome = "STUARTY_ALLOW_DEFAULT_HOME"
 
 // Release is the version a release build stamps with
@@ -36,11 +37,15 @@ func releaseVersion(v string) bool {
 	return !strings.Contains(strings.ToLower(v), "dev")
 }
 
-// guardDefaultHome refuses the default workspace to a build that is not a release and to every test, so
-// that a development binary never migrates the workspace of the installed application (VV-421). The
-// refusal names the way out: another folder in STUARTY_HOME.
-func guardDefaultHome(getenv func(string) string, abs, def string) error {
-	if getenv(EnvAllowDefaultHome) == "1" || ReleasedBuild() || !samePath(abs, def) {
+// guardDefaultHome refuses the default workspace of home, and the folder of the former name, to a build that
+// is not a release and to every test, so that a development binary never migrates the workspace of the
+// installed application (VV-421). The refusal names the way out: another folder in STUARTY_HOME.
+func guardDefaultHome(getenv func(string) string, abs, home string) error {
+	if getenv(EnvAllowDefaultHome) == "1" || ReleasedBuild() {
+		return nil
+	}
+	def := filepath.Join(home, defaultDir)
+	if !samePath(abs, def) && !samePath(abs, filepath.Join(home, formerDir)) {
 		return nil
 	}
 	return &Error{
@@ -51,13 +56,30 @@ func guardDefaultHome(getenv func(string) string, abs, def string) error {
 	}
 }
 
+// samePath reports whether the folder a is the folder b. The names are compared first; then the folders
+// themselves, so that a symbolic link, a junction, an 8.3 short name or another spelling of b is caught;
+// then, for a b that does not exist yet, their parents and their last names.
 func samePath(a, b string) bool {
-	if runtime.GOOS == "windows" || runtime.GOOS == "darwin" {
-		return strings.EqualFold(a, b)
-	}
-	if a == b {
+	if sameName(a, b) || sameFile(a, b) {
 		return true
 	}
+	return sameName(filepath.Base(a), filepath.Base(b)) && sameFile(filepath.Dir(a), filepath.Dir(b))
+}
+
+// sameName compares two names the way the file system does: Windows and macOS ignore the case, and
+// Windows drops the dots and spaces that end a name.
+func sameName(a, b string) bool {
+	switch runtime.GOOS {
+	case "windows":
+		return strings.EqualFold(strings.TrimRight(a, ". "), strings.TrimRight(b, ". "))
+	case "darwin":
+		return strings.EqualFold(a, b)
+	default:
+		return a == b
+	}
+}
+
+func sameFile(a, b string) bool {
 	ai, aerr := os.Stat(a)
 	bi, berr := os.Stat(b)
 	return aerr == nil && berr == nil && os.SameFile(ai, bi)
