@@ -66,10 +66,29 @@ async function serious(page: Page, include: string): Promise<string[]> {
 }
 
 // Moves the focus with Tab until the locator has it, as a keyboard user would.
+// The gallery sits before the timeline in the page, so from a click in the timeline the walk has to wrap. Chromium
+// wraps to the top of the document; headless Firefox leaves the focus on the last control instead (the wrap goes
+// through browser chrome that it does not have). When a press moves nothing, the walk restarts from the top of the
+// page, which is where a person's Tab starts after the wrap (VV-407).
 async function tabTo(page: Page, target: Locator): Promise<void> {
+	let last = -1;
 	for (let i = 0; i < 200; i++) {
 		if (await target.evaluate((el) => el === document.activeElement)) return;
 		await page.keyboard.press("Tab");
+		const now = await page.evaluate(() =>
+			Array.from(document.querySelectorAll("*")).indexOf(
+				document.activeElement as Element,
+			),
+		);
+		if (now === last) {
+			await page.evaluate(() => {
+				(document.activeElement as HTMLElement | null)?.blur();
+				document.body.tabIndex = -1;
+				document.body.focus();
+				document.body.removeAttribute("tabindex");
+			});
+		}
+		last = now;
 	}
 	throw new Error("the control is not reachable with Tab");
 }
