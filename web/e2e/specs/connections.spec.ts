@@ -89,6 +89,8 @@ test.describe("connections", () => {
 				),
 			).toBeVisible();
 
+			await page.getByTestId("connection-new").click();
+			await page.getByTestId("connection-new").click();
 			await newConnection(page).getByLabel("Name", { exact: true }).fill(label);
 			await page.getByLabel("Address (https)").fill(dest.url);
 			await page.getByLabel("Credential").fill(SECRET);
