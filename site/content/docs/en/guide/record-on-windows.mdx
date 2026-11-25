@@ -59,7 +59,7 @@ The same three steps are commands of the `edit` tool, so an agent or a script ca
 ```bash
 stuarty edit --project prj_7k2m9x4q1b recording.auto_zoom item_id=itm_m1n2p3q4r5
 stuarty edit --project prj_7k2m9x4q1b recording.set_cursor item_id=itm_m1n2p3q4r5 style=ring
-stuarty edit --project prj_7k2m9x4q1b recording.set_click_highlight item_id=itm_m1n2p3q4r5 style=wave
+stuarty edit --project prj_7k2m9x4q1b recording.set_click_highlight \n  item_id=itm_m1n2p3q4r5 style=wave
 ```
 
 A recording made in a browser has no pointer data, so these commands answer `E_INVALID_STATE` for it. Zoom it by hand with keyframes ([Keyframes](/docs/guide/keyframes)).
