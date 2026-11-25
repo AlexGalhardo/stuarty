@@ -238,6 +238,7 @@
         "project": "Projeto",
         "none": "Agente",
         "none_hint": "Esperando o seu pedido",
+        "none_unconnected": "Nenhum agente conectado",
         "skill_not_in_use": "Nenhuma skill em uso",
         "tool_not_in_use": "Nenhuma em uso",
         "skill": "Habilidade",

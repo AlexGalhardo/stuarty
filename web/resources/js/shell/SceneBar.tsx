@@ -181,7 +181,12 @@ export default function SceneBar({
 						className={cn("truncate text-xs font-medium", look.text)}
 					>
 						{variant === "none"
-							? t("ui.shell.scene.none_hint")
+							? // with no agent connected, nothing waits for a request: the bar says so instead
+								t(
+									connected === false
+										? "ui.shell.scene.none_unconnected"
+										: "ui.shell.scene.none_hint",
+								)
 							: `${t(`ui.shell.scene.state.${variant}`)}${reason}`}
 					</p>
 				</div>
