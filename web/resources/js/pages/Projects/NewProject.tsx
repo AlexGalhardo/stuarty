@@ -2,6 +2,7 @@ import { router } from "@inertiajs/react";
 import { type ReactNode, useState } from "react";
 
 import { type Failure, failureOf } from "@/components/Failure";
+import { Segment } from "@/components/Segment";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -11,7 +12,6 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
-import { Segment } from "@/components/Segment";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useT } from "@/lib/i18n";
