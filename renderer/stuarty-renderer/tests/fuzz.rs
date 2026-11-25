@@ -647,6 +647,7 @@ fn the_sampler_survives_every_rotation_and_scale() {
 			rng.below(256) as u32,
 			*rng.pick(&BLENDS),
 			state.as_ref(),
+			None,
 		);
 	}
 }

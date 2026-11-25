@@ -12,6 +12,13 @@ import (
 // flags and a zero as u32, then the grown width and height, the offset of the centre and the scale as f64.
 const preparedHeader = 16 + 40
 
+// preparedWindowFlag marks a block that holds a window of its picture; four more u32 follow the header: where the
+// window starts in the picture and the size of the picture.
+const (
+	preparedWindowFlag = 2
+	preparedWindowHead = 16
+)
+
 // Prepared is a layer after its looks, the block `vr_prepare` gives (SDD-013 section 4.2.2): its pixels, the
 // size of the rectangle that draws them and what places it again. It is a plain value: the host that made it
 // and any other instance of the module read it the same way, so it can be kept and uploaded again.
@@ -142,4 +149,37 @@ func (h *Host) MemoryBytes() int64 {
 	}
 
 	return int64(h.mem.Size())
+}
+
+// Window is the prepared layer cut to the pixels [x0, x1) by [y0, y1) of its picture, clamped to it: the module
+// draws it as it draws the whole picture, with the same scale, edges and clamps, as long as the window holds
+// every pixel the draw reads (SDD-013 section 4.2.2). A window that is the whole picture is the layer itself.
+func (p Prepared) Window(x0, y0, x1, y1 int) Prepared {
+	sz := p.Size()
+	x0, y0, x1, y1 = max(x0, 0), max(y0, 0), min(x1, sz.W), min(y1, sz.H)
+
+	if x0 >= x1 || y0 >= y1 {
+		return Prepared{}
+	}
+
+	if x0 == 0 && y0 == 0 && x1 == sz.W && y1 == sz.H {
+		return p
+	}
+
+	out := make([]byte, 0, preparedHeader+preparedWindowHead+(x1-x0)*(y1-y0)*4)
+	out = append(out, p.block[:preparedHeader]...)
+	binary.LittleEndian.PutUint32(out[0:], uint32(x1-x0)) //nolint:gosec // G115: inside the picture
+	binary.LittleEndian.PutUint32(out[4:], uint32(y1-y0)) //nolint:gosec // G115: inside the picture
+	binary.LittleEndian.PutUint32(out[8:], binary.LittleEndian.Uint32(p.block[8:])|preparedWindowFlag)
+
+	for _, v := range []int{x0, y0, sz.W, sz.H} {
+		out = binary.LittleEndian.AppendUint32(out, uint32(v)) //nolint:gosec // G115: inside the picture
+	}
+
+	for y := y0; y < y1; y++ {
+		o := preparedHeader + (y*sz.W+x0)*4
+		out = append(out, p.block[o:o+(x1-x0)*4]...)
+	}
+
+	return Prepared{block: out}
 }

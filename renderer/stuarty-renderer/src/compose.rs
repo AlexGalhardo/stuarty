@@ -55,7 +55,20 @@ pub enum Source<'a> {
 		off_x: f64,
 		off_y: f64,
 		scale: f64,
+		window: Option<Window>,
 	},
+}
+
+/// A stored picture that holds only a window of a larger one (SDD-013 section 4.2.2): `x0` and `y0` are where
+/// its first pixel sits in the whole picture, `full_w` and `full_h` the size of the whole picture, which the
+/// sampler still uses for the scale, the edges and the clamps, so the pixels it reads are the ones the whole
+/// picture would give as long as the window holds every pixel read.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Window {
+	pub x0: usize,
+	pub y0: usize,
+	pub full_w: usize,
+	pub full_h: usize,
 }
 
 /// One layer of the frame plan, in project pixels, with its pixels.
@@ -248,7 +261,7 @@ pub fn compose(dst: &mut Target<'_>, background: [u8; 4], layers: &[Layer<'_>], 
 		if l.ext.clip.is_some() {
 			if let Some(p) = prepare_clipped(layers, i, dst.width, dst.height, &dst.rows, out_scale)
 			{
-				draw(dst, &p.image, &p.placement, p.op, p.blend, None);
+				draw(dst, &p.image, &p.placement, p.op, p.blend, None, None);
 			}
 		} else {
 			draw_layer(dst, l, out_scale);
@@ -341,6 +354,7 @@ pub fn prepare_clipped(
 		op,
 		blend: l.blend,
 		mask: None,
+		window: None,
 	})
 }
 
@@ -360,6 +374,8 @@ pub struct Prepared<'a> {
 	pub blend: BlendMode,
 	/// The mask, placed on the layer's rectangle before the blur grew it.
 	pub mask: Option<MaskState>,
+	/// Set when `image` is a window of the picture the placement is for (a prepared layer cropped by the host).
+	pub window: Option<Window>,
 }
 
 /// Steps 1 to 5 of SDD-013 section 3.3 for one layer; `None` when the layer draws nothing.
@@ -392,6 +408,7 @@ pub fn prepare_layer_offset<'a>(l: &Layer<'a>, out_scale: f64) -> Option<(Prepar
 			grown_h,
 			off_x,
 			off_y,
+			window,
 			..
 		} => {
 			let p = Placement {
@@ -419,6 +436,7 @@ pub fn prepare_layer_offset<'a>(l: &Layer<'a>, out_scale: f64) -> Option<(Prepar
 					op,
 					blend: l.blend,
 					mask,
+					window,
 				},
 				off_x,
 				off_y,
@@ -541,6 +559,7 @@ pub fn prepare_layer_offset<'a>(l: &Layer<'a>, out_scale: f64) -> Option<(Prepar
 			op,
 			blend: l.blend,
 			mask,
+			window: None,
 		},
 		off.0,
 		off.1,
@@ -887,7 +906,15 @@ pub(crate) fn shadowed(
 
 fn draw_layer(dst: &mut Target<'_>, l: &Layer<'_>, out_scale: f64) {
 	if let Some(p) = prepare_layer(l, out_scale) {
-		draw(dst, &p.image, &p.placement, p.op, p.blend, p.mask.as_ref());
+		draw(
+			dst,
+			&p.image,
+			&p.placement,
+			p.op,
+			p.blend,
+			p.mask.as_ref(),
+			p.window,
+		);
 	}
 }
 
@@ -925,10 +952,15 @@ fn draw(
 	op: u32,
 	mode: BlendMode,
 	mask: Option<&MaskState>,
+	window: Option<Window>,
 ) {
-	match copy_origin(src.w, src.h, p) {
-		Some((x0, y0)) => blit(dst, src, x0, y0, op, mode, mask),
-		None => sample(dst, src, p, op, mode, mask),
+	let (full_w, full_h, wx, wy) = match window {
+		Some(w) => (w.full_w, w.full_h, w.x0 as i64, w.y0 as i64),
+		None => (src.w, src.h, 0, 0),
+	};
+	match copy_origin(full_w, full_h, p) {
+		Some((x0, y0)) => blit(dst, src, x0 + wx, y0 + wy, op, mode, mask),
+		None => sample(dst, src, p, op, mode, mask, window),
 	}
 }
 
@@ -1045,6 +1077,7 @@ pub fn sample(
 	op: u32,
 	mode: BlendMode,
 	mask: Option<&MaskState>,
+	window: Option<Window>,
 ) {
 	let (sin, cos) = sincos(mul(p.rot, core::f64::consts::PI / 180.0));
 	let (dw, origin) = (dst.width, dst.origin());
@@ -1064,7 +1097,11 @@ pub fn sample(
 
 	// The inverse transform of a destination pixel centre to source coordinates, as 32.32 fixed
 	// point: sx = ax*px + bx*py + ox, sy = ay*px + by*py + oy.
-	let (kx, ky) = (src.w as f64 / p.w, src.h as f64 / p.h);
+	let (full_w, full_h, win_x, win_y) = match window {
+		Some(w) => (w.full_w, w.full_h, w.x0 as i64, w.y0 as i64),
+		None => (src.w, src.h, 0, 0),
+	};
+	let (kx, ky) = (full_w as f64 / p.w, full_h as f64 / p.h);
 	let (dx0, dy0) = (0.5 - p.cx, 0.5 - p.cy);
 	let one = (1_u64 << FIX) as f64;
 	let q = |v: f64| round_half_away(mul(v, one));
@@ -1073,9 +1110,12 @@ pub fn sample(
 	let ox = q(mul(mul(dx0, cos) + mul(dy0, sin) + hw, kx));
 	let oy = q(mul(-mul(dx0, sin) + mul(dy0, cos) + hh, ky));
 
-	let (lim_x, lim_y) = ((src.w as i64) << FIX, (src.h as i64) << FIX);
+	let (lim_x, lim_y) = ((full_w as i64) << FIX, (full_h as i64) << FIX);
 	let half = 1_i64 << (FIX - 1);
-	let (max_x, max_y) = (src.w as i64 - 1, src.h as i64 - 1);
+	let (max_x, max_y) = (full_w as i64 - 1, full_h as i64 - 1);
+	// A window holds only part of the picture: the index of a pixel is its place in the whole picture less where
+	// the window starts, kept inside the window (the host sends every pixel a draw reads, so the clamp never acts).
+	let (top_x, top_y) = (src.w as i64 - 1, src.h as i64 - 1);
 	let w = src.w;
 
 	for y in by0..by1 {
@@ -1093,8 +1133,11 @@ pub fn sample(
 			let (fx, fy) = (sx - half, sy - half);
 			let (x0, y0) = (fx >> FIX, fy >> FIX);
 			let (wx, wy) = (frac8(fx), frac8(fy));
-			let (x1, y1) = ((x0 + 1).min(max_x) as usize, (y0 + 1).min(max_y) as usize);
-			let (x0, y0) = (x0.max(0) as usize, y0.max(0) as usize);
+			let (x1, y1) = ((x0 + 1).min(max_x), (y0 + 1).min(max_y));
+			let (x0, y0) = (x0.max(0), y0.max(0));
+			let at = |v: i64, off: i64, top: i64| (v - off).clamp(0, top) as usize;
+			let (x1, y1) = (at(x1, win_x, top_x), at(y1, win_y, top_y));
+			let (x0, y0) = (at(x0, win_x, top_x), at(y0, win_y, top_y));
 			// The four weights add up to 65536, and each channel is the same integer sum as the two
 			// interpolations in a row (nothing is rounded between them): four pixel reads, not sixteen.
 			let (w00, w10) = ((256 - wx) * (256 - wy), wx * (256 - wy));

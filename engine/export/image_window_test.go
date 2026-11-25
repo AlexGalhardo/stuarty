@@ -9,7 +9,7 @@ import (
 	coreimage "github.com/AlexGalhardo/stuarty/core/image"
 )
 
-// windowDocument is a document of 16 layers scattered over a 640 by 480 canvas, as the reference document is: a
+// windowDocument is a document of 18 layers scattered over a 640 by 480 canvas, as the reference document is: a
 // photo, rounded boxes and ellipses, turned, with looks that grow a layer (shadow, glow), a mask of their own,
 // and blend modes that read the picture below them.
 func windowDocument(t *testing.T) *coreimage.Document {
@@ -43,6 +43,14 @@ func windowDocument(t *testing.T) *coreimage.Document {
 		d.Layers = append(d.Layers, l)
 	}
 
+	// Two text layers, which the renderer holds as bitmaps with an offset of the centre (a shadow moves it).
+	for k, x := range []int{40, 300} {
+		d.Layers = append(d.Layers, coreimage.Layer{
+			ID: id(16 + k), Kind: coreimage.KindText, Name: fmt.Sprintf("Text %d", k), Visible: true, Opacity: 100,
+			X: x, Y: 60 + k*150, W: 260, H: 90, Rotation: 4 * k, Text: "WINDOW EDIT",
+		})
+	}
+
 	coreimage.ReorderAll(d)
 
 	op := func(name, args string) command.Operation {
@@ -69,6 +77,16 @@ func windowDocument(t *testing.T) *coreimage.Document {
 			op(
 				"layer.mask_set",
 				fmt.Sprintf(`{"layer_id": %q, "kind": "rounded_rect", "radius": 30, "feather": 4}`, id(i)),
+			),
+		)
+	}
+
+	for k := 16; k < 18; k++ {
+		ops = append(
+			ops,
+			op(
+				"layer.filter_add",
+				fmt.Sprintf(`{"layer_id": %q, "kind": "shadow", "dx": 9, "dy": 7, "blur": 4}`, id(k)),
 			),
 		)
 	}
