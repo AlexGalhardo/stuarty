@@ -81,17 +81,20 @@ test.describe("edit by text @chromium-only", () => {
 		await page.goto(`/editor/${seeded.id}`);
 		await page.locator(`[data-item-id="${seeded.itemIds[0]}"]`).click();
 		await page.getByRole("tab", { name: "Captions" }).click();
+		// Epic 99: the transcript is a screen of its own, beside the preview, with the review in the inspector.
+		await page.getByRole("button", { name: "Edit by text" }).click();
 		const panel = page.getByRole("region", { name: "Captions" });
+		const review = page.getByRole("complementary", { name: "Inspector" });
 		const words = panel.locator("[data-word-index]");
 		await expect(words).toHaveCount(4);
 		await expect(words.nth(2)).toHaveText("new");
 
 		// The search for fillers changes nothing: the transcript has none, and the panel says what it checked.
 		const before = await revision();
-		await panel
+		await review
 			.getByRole("button", { name: "Find fillers and repetitions" })
 			.click();
-		await expect(panel.locator("[data-fillers]")).toContainText(
+		await expect(review.locator("[data-fillers]")).toContainText(
 			"Nothing found. Checked:",
 		);
 		expect(await revision()).toBe(before);
