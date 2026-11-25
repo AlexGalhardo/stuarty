@@ -158,7 +158,10 @@ export default function WritePage(): ReactNode {
 						onChange={(next) => setKind(next === ALL ? "" : (next as TextKind))}
 						options={[
 							{ value: ALL, label: t("ui.write.filter.all_kinds") },
-							...KINDS.map((k) => ({ value: k, label: t(`ui.write.kind.${k}`) })),
+							...KINDS.map((k) => ({
+								value: k,
+								label: t(`ui.write.kind.${k}`),
+							})),
 						]}
 						className="min-w-44"
 					/>
