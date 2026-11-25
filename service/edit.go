@@ -758,6 +758,7 @@ var analysisOps = map[string]bool{
 	"transcript.delete_range":  true,
 	"audio.duck":               true,
 	"audio.mark_beats":         true,
+	"clip.face_frame":          true,
 
 	"recording.auto_zoom":           true,
 	"recording.set_cursor":          true,

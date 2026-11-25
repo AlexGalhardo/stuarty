@@ -143,10 +143,12 @@ func TestCallerCannotSupplyResolved(t *testing.T) {
 		"audio.duck": fmt.Sprintf(
 			`{"item_id":%q,"speech_item_ids":[%q],"resolved":{"speech":[]}}`, music, clip),
 		"audio.mark_beats": fmt.Sprintf(`{"item_id":%q,"resolved":{"beats":[0]}}`, music),
+		// VV-419: the face track is the artifact of the asset, never the caller's own.
+		"clip.face_frame": fmt.Sprintf(`{"item_id":%q,"resolved":{"track":{"fps":5,"samples":[]}}}`, clip),
 	} {
 		_, err := m.edit(ui, project, m.head(project).Revision, op(name, o))
-		if code(err) != "E_VALIDATION" || !strings.Contains(err.Error(), "resolved") {
-			t.Errorf("%s: %v, want E_VALIDATION naming resolved", name, err)
+		if code(err) != "E_VALIDATION" || !strings.Contains(err.Error(), "does not take a resolved argument") {
+			t.Errorf("%s: %v, want E_VALIDATION refusing resolved", name, err)
 		}
 	}
 }
