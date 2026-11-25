@@ -67,8 +67,7 @@ test.describe("preview-text-select-webgpu @chromium-only", () => {
 		const itemId = out.created[0] as string;
 
 		await page.goto(`/editor/${seeded.id}?executor=pixi&renderer=webgpu`);
-		// verify:env-skip the browser of this machine gives no WebGPU adapter
-		test.skip(!(await hasAdapter(page)), "no WebGPU adapter in this browser");
+		test.skip(!(await hasAdapter(page)), "no WebGPU adapter in this browser"); // verify:env-skip the browser has no WebGPU adapter
 
 		const canvas = canvasOf(page);
 		await expect(canvas).toHaveAttribute("data-executor", "pixi");
