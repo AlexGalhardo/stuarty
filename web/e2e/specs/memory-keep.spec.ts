@@ -33,6 +33,43 @@ test.describe("keeping a memory note", () => {
 		).toHaveCount(0);
 	});
 
+	// Epic 99 task 4 (SDD-018 section 18): a row names the agent that wrote the note and the project it is for; the
+	// name of the project is the creator's text and is drawn as text.
+	test("a row reads with the name of the agent and of the project", async ({
+		page,
+		request,
+	}) => {
+		const stamp = Date.now();
+		const call = await caller(request);
+		const project = (
+			(await call("POST", "/projects", {
+				name: `<b>Bold</b> film ${stamp}`,
+			})) as { project_id: string }
+		).project_id;
+		const name = `agent-scope-${stamp}`;
+		const agent = await caller(request, "claude-code");
+		await agent("POST", "/library/memory", {
+			name,
+			description: "Keep the logo on screen",
+			scope: project,
+			body: "Two seconds at the end.",
+		});
+
+		await ensureAccount(page.request, home);
+		await signInWithPassword(page.request);
+		await page.goto("/memory");
+		const row = page
+			.locator("[data-slot=list-row]")
+			.filter({ has: page.locator(`[data-entry='${name}']`) });
+		await expect(row).toContainText("by Claude Code");
+		const projectName = row.getByTestId("memory-project");
+		await expect(projectName).toContainText(`film ${stamp}`);
+		await expect(projectName.locator("b")).toHaveCount(0);
+		await page.locator(`[data-entry='${name}']`).click();
+		await page.getByRole("button", { name: "Reject this note" }).click();
+		await expect(page.locator(`[data-entry='${name}']`)).toHaveCount(0);
+	});
+
 	test("a note that waits is listed first, and Reject removes it so it is never kept", async ({
 		page,
 		request,

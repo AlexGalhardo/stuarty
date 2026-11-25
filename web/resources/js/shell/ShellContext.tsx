@@ -55,6 +55,11 @@ export function ShellProvider({
 	);
 }
 
+// The shell when the page is inside it; null on a page drawn on its own (a test, a frame without the dock).
+export function useOptionalShell(): ShellState | null {
+	return useContext(ShellContext);
+}
+
 export function useShell(): ShellState {
 	const value = useContext(ShellContext);
 	if (value === null) throw new Error("useShell needs the ShellProvider");
