@@ -12,10 +12,9 @@ import { PageHeaderAction } from "./PageHeader";
 import { Segment } from "./Segment";
 import { TabBar } from "./TabBar";
 
-const OPTIONS = [
-	{ value: "all", label: "All" },
-	{ value: "kept", label: "Kept" },
-];
+const ALL = { value: "all", label: "All" };
+const KEPT = { value: "kept", label: "Kept" };
+const OPTIONS = [ALL, KEPT];
 
 describe("the components of the final design", () => {
 	test("the primary action of a header is 40 px high", () => {
@@ -55,7 +54,7 @@ describe("the components of the final design", () => {
 			<TabBar
 				value="all"
 				onChange={() => undefined}
-				tabs={[{ ...OPTIONS[0]!, count: 3 }, OPTIONS[1]!]}
+				tabs={[{ ...ALL, count: 3 }, KEPT]}
 				label="Notes"
 			/>,
 		);
