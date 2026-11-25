@@ -248,9 +248,27 @@ var opGroupLine = regexp.MustCompile("(?m)^- `([a-z]+)`: ([a-z_*, ]+)$")
 func checkOperations(t *testing.T, skill string) {
 	t.Helper()
 
+	// The skill lists no operation (VV-383): a namespace added to the registry must not grow it. The guide of
+	// the video domain does, and it lists exactly the registry.
+	if m := opGroupLine.FindAllString(skill, -1); len(m) != 0 {
+		t.Errorf("SKILL.md lists operations by namespace, the guide of each domain does: %q", m)
+	}
+
+	if !strings.Contains(skill, "agent:docs --print guide:<domain>") {
+		t.Error("SKILL.md does not point to the guide of each domain")
+	}
+
+	page, err := agentdocs.Guide(command.DomainVideo)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	listed := map[string]bool{}
 
-	for _, m := range opGroupLine.FindAllStringSubmatch(skill, -1) {
+	_, section, _ := strings.Cut(string(page), "\n## Operations")
+	section, _, _ = strings.Cut(section, "\n## ")
+
+	for _, m := range opGroupLine.FindAllStringSubmatch(section, -1) {
 		for a := range strings.SplitSeq(m[2], ", ") {
 			listed[m[1]+"."+a] = true
 		}
@@ -259,23 +277,20 @@ func checkOperations(t *testing.T, skill string) {
 	want := map[string]bool{}
 
 	for _, c := range command.Default().List() {
-		if c.Internal {
-			continue
+		if !c.Internal {
+			want[c.Name] = true
 		}
-
-		name := c.Name
-		want[name] = true
 	}
 
 	for name := range want {
 		if !listed[name] {
-			t.Errorf("SKILL.md does not list the operation %s", name)
+			t.Errorf("guide:video does not list the operation %s", name)
 		}
 	}
 
 	for name := range listed {
 		if !want[name] {
-			t.Errorf("SKILL.md lists %s, which the registry does not have", name)
+			t.Errorf("guide:video lists %s, which the registry does not have", name)
 		}
 	}
 }

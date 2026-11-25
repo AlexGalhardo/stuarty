@@ -62,7 +62,6 @@ type view struct {
 	// SameName are the tools whose one command has the name of the tool: the skill lists them on one line.
 	SameName []string
 	Rules    []ruleView
-	Ops      []opGroup
 	Recipes  []recipeView
 }
 
@@ -89,21 +88,6 @@ func newView(in Inputs) (view, error) {
 
 	for i := range recipes {
 		v.Recipes = append(v.Recipes, recipeView{recipes[i].Title, recipes[i].Text()})
-	}
-
-	for _, c := range in.Commands {
-		if c.Internal {
-			continue
-		}
-
-		ns, action, _ := strings.Cut(c.Name, ".")
-		if n := len(v.Ops); n > 0 && v.Ops[n-1].Namespace == ns {
-			v.Ops[n-1].Names += ", " + action
-
-			continue
-		}
-
-		v.Ops = append(v.Ops, opGroup{ns, action})
 	}
 
 	for _, r := range in.Lint {
