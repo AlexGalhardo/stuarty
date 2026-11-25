@@ -4,7 +4,7 @@ import type { Page } from "@playwright/test";
 // the load-sensitive budgets, the soak, the failing-encoder and detection
 // servers, and the first run of the account, which has a server with no account of its own.
 export const NOT_IN_MATRIX =
-	/(perf|video-layers|soak-5min|export-failure|account-first-run|desktop-detect|desktop-detect-webkit)\.spec\.ts/;
+	/(perf|video-layers|soak-5min|export-failure|image-model-ops|image-scene-bar|account-first-run|desktop-detect|desktop-detect-webkit)\.spec\.ts/;
 
 // A test whose title carries this tag runs in Chromium only. Each use has the
 // reason in a comment next to it: an engine limit, never a defect to hide.

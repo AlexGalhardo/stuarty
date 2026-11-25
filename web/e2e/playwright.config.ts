@@ -8,7 +8,13 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "@playwright/test";
-import { failStatePath, mainStatePath } from "./support/accountTargets";
+import {
+	failStatePath,
+	mainStatePath,
+	personHome,
+	personPort,
+	personStatePath,
+} from "./support/accountTargets";
 import { CHROMIUM_ONLY, NOT_IN_MATRIX } from "./support/browsers";
 import { LAUNCHER_SECRET } from "./support/launcher";
 import {
@@ -115,12 +121,14 @@ const chosen = chosenProjects();
 const runs = (name: string): boolean =>
 	chosen.length === 0 || chosen.some((pattern) => pattern.test(name));
 const needsFailingEncoder = runs("failing-encoder");
+const needsPerson = runs("chromium-person");
 const needsDetect = runs("desktop-detect") || runs("desktop-detect-webkit");
 // Every other project (the browsers, perf, soak, and any added later) uses the
 // app and the network servers: a chosen pattern needs them unless it names only
 // the failing-encoder or detection projects.
 const ownServer = [
 	"failing-encoder",
+	"chromium-person",
 	"desktop-detect",
 	"desktop-detect-webkit",
 ];
@@ -242,6 +250,19 @@ export default defineConfig({
 				storageState: failStatePath,
 			},
 		},
+		// The specs that sign in with the password (image-model-ops and image-scene-bar: only that session may decide an approval).
+		// A sign-in ends every session of its server and holds the server closed while it unlocks, so these run
+		// on a server of their own and never lock the shared one.
+		{
+			name: "chromium-person",
+			testMatch: /image-(model-ops|scene-bar)\.spec\.ts/,
+			metadata: { home: personHome },
+			use: {
+				browserName: "chromium",
+				baseURL: `http://127.0.0.1:${personPort}`,
+				storageState: personStatePath,
+			},
+		},
 		// The first run and Logout (ADR-0052): a server whose workspace has no account, so the page that creates
 		// it is the first thing a person sees. No session is kept for it.
 		{
@@ -333,6 +354,28 @@ export default defineConfig({
 		{
 			command: serveCommand,
 			cwd: "../..",
+			url: `http://127.0.0.1:${personPort}/up`,
+			reuseExistingServer: !process.env.CI,
+			timeout: 180_000,
+			env: {
+				APP_KEY: `base64:${Buffer.alloc(32, "e2e").toString("base64")}`,
+				HOST: "127.0.0.1",
+				PORT: String(personPort),
+				STUARTY_HOME: personHome,
+				STUARTY_MASTER_KEY_FILE: `${personHome}.master.key`,
+				APP_ENV: "test",
+				STUARTY_LAUNCHER_SECRET: LAUNCHER_SECRET,
+				STUARTY_RATE_LIMIT_HEAVY_PER_MINUTE: "1000",
+				STUARTY_RATE_LIMIT_PER_MINUTE: "100000",
+				STUARTY_RATE_LIMIT_SESSION_PER_MINUTE: "100000",
+				STUARTY_MAX_EXPORTS: "8",
+				STUARTY_MAX_EXPORTS_PER_KEY: "8",
+				...ffmpegEnv(),
+			},
+		},
+		{
+			command: serveCommand,
+			cwd: "../..",
 			url: `http://127.0.0.1:${accountPort}/up`,
 			reuseExistingServer: !process.env.CI,
 			timeout: 180_000,
@@ -381,6 +424,7 @@ export default defineConfig({
 		if (server.url === `${detectUrl}/`) return needsDetect;
 		if (server.url === `http://127.0.0.1:${failPort}/up`)
 			return needsFailingEncoder;
+		if (server.url === `http://127.0.0.1:${personPort}/up`) return needsPerson;
 		return needsApp;
 	}),
 });
