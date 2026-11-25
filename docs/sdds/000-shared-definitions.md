@@ -408,6 +408,7 @@ Environment variables, all optional. Names are final. Ceilings that have no vari
 | `STUARTY_FFMPEG`, `STUARTY_FFPROBE` | discovered | explicit binaries |
 | `STUARTY_ENCODER` | automatic | force an H.264 encoder by FFmpeg name |
 | `STUARTY_ALLOW_USER_X264` | `false` | allow `libx264` when the user's own FFmpeg has it |
+| `STUARTY_OPENH264_DIR` | none | the folder of Cisco's OpenH264 library that the own FFmpeg build loads at run time (SDD-011 §8.4). The server sets it for the FFmpeg child process only, and only when the library passed verification; a person never sets it, and the server ignores a value it did not set. Read by the build `ffmpeg-9.0.2-3` and later; the builds up to `ffmpeg-9.0.2-2` read `VUKEM_VIDEO_OPENH264_DIR` (section 13.3), so the server sets both while those builds are installed |
 | `STUARTY_EXPORT_RENDERER` | `go` | what draws the exported frames: `go` (the compositor in Go), `rust` (the renderer of `renderer/`, a WebAssembly module under `wazero`, which draws the same bytes: SDD-013 §3.10) or `gpu` (the native GPU host `stuarty-render` when the machine has a graphics adapter, `rust` otherwise: SDD-013 §4.9). Any other value stops the server at start. The default changes only when the stage C gate passes on every system |
 | `STUARTY_IMPORT_ROOTS` | none | in network mode, directories from which import by path is allowed |
 | `STUARTY_MAX_EXPORTS` | `2` | concurrent exports per workspace |
@@ -579,6 +580,8 @@ Added after the rename, with no former name: `STUARTY_E2E_BIN`, a server binary 
 | `github.com/AlexGalhardo/vukem-video` | `github.com/AlexGalhardo/stuarty` | the Go module path |
 | `~/.vukem-video` | `~/.stuarty` | the workspace folder; adopted at the first start (SDD-005 §6.6) |
 | `vukem-video.log` | `stuarty.log` | the log file in `logs/` |
+| `VUKEM_VIDEO_OPENH264_DIR` | `STUARTY_OPENH264_DIR` | the folder of the OpenH264 library for the own FFmpeg build. The builds `ffmpeg-9.0.2-1` and `ffmpeg-9.0.2-2` read the former name, the build `ffmpeg-9.0.2-3` reads the new one; the server sets both for the child process, and `ffmpeg-verify.sh` requires the new one in the binary (VV-231). The former name is dropped from the server when no supported build reads it, at release 1.0.0 at the latest |
+| `--extra-version=vukem<N>` (the configure line of the own FFmpeg build) | `--extra-version=stuarty<N>` | the marker `engine/ffmpeg/flavour.go` reads to recognise the own build. The build `ffmpeg-9.0.2-3` and later carry `stuarty<N>`; the installed builds carry `vukem<N>` and are still recognised, so the engine accepts both until release 1.0.0 (VV-231) |
 | `Vukem-Video-Client`, `Vukem-Video-Launcher`, `Vukem-Video-Lang` | `Stuarty-Client`, `Stuarty-Launcher`, `Stuarty-Lang` | request headers (section 11) |
 | `urn:vukem-video:error:<code>` | `urn:stuarty:error:<code>` | the `type` of an HTTP problem body (SDD-003 §1.4); a client matches on `code`, which does not change |
 | `vukem_video_session` | `stuarty_session` | the session cookie (section 11); a browser signs in again once |
@@ -594,10 +597,8 @@ These identifiers outlive the rename on purpose, because changing them would bre
 | --- | --- |
 | `vvl_`, `vvk_` (token prefixes), `.vvbundle` (bundle extension) | existing tokens, API keys and bundle files; they carry the initials, not the name |
 | `vukem-video-update-feed-v1`, `vukem-video-update-artifact-v1` (the signing labels of the update feed, SDD-009 §10.5) | an installed Vukem Video verifies the feed with these labels; a feed signed under other labels would be refused, so Stuarty could not be offered to it as its update |
-| `VUKEM_VIDEO_OPENH264_DIR` | read by the pinned own FFmpeg build `ffmpeg-9.0.2-2` (its patch, `.config/ffmpeg-build/patches/`); it changes with the next rebuild of that build, and the server sets it for the FFmpeg child process only |
 | `https://vukem-video.dev/schema/timeline.v1.schema.json` (the `$id` of the timeline schema) | an identifier of the first release; the address of the documentation site is a setting of the author, so the identifier does not move with the name |
 | `dev.vukem.vukem-video`, `dev.vukem.vukem-video.launcher` and `dev.vukem.vukem-video.desktop` (the macOS package and bundle identifiers) | the identity macOS upgrades by: a package of Stuarty with them replaces an installed Vukem Video; the Windows `AppId` GUIDs stay for the same reason |
-| `--extra-version=vukem<N>` (the configure line of the own FFmpeg build) | read by `engine/ffmpeg/flavour.go` to recognise the own build; it changes with the next rebuild of that build |
 | `vukem` as the OTIO metadata namespace, `X-Vukem-*` response headers, `window.vukemDesktop` | the short name of the framework era, not the product name; a wire and file format identifier, changed only by a decision of its own |
 
 ## 14. Image documents (SDD-021)
