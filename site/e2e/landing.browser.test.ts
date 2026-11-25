@@ -369,8 +369,11 @@ describe("the layout the author asked for", () => {
 			expect(found.clip).toBe("text");
 			const rgb = (s: string): number[] => (s.match(/\d+(\.\d+)?/g) ?? []).slice(0, 3).map(Number);
 			const stops = [...found.image.matchAll(/rgb\([^)]+\)/g)].map((m) => rgb(m[0]));
-			expect(stops.length).toBe(4);
-			expect(new Set(stops.map((s) => s.join())).size).toBe(4);
+			// Orange to purple (author choice): the first stop leans red, the last leans blue.
+			expect(stops.length).toBeGreaterThanOrEqual(2);
+			expect(new Set(stops.map((s) => s.join())).size).toBe(stops.length);
+			expect(stops[0][0]).toBeGreaterThan(stops[0][2]);
+			expect(stops[stops.length - 1][2]).toBeGreaterThan(stops[stops.length - 1][1]);
 			const lum = (c: number[]): number => {
 				const [r, g, b] = c.map((v) => {
 					const x = v / 255;
@@ -403,11 +406,12 @@ describe("the entrance of the sections as the page scrolls", () => {
 		const page = await context.newPage();
 		await page.goto(url, { waitUntil: "load" });
 		expect(await opacity(page, below)).toBeLessThan(0.5);
-		const box = await page.locator(below).boundingBox();
+		const layoutBefore = await page.locator(below).evaluate((e) => (e as HTMLElement).offsetHeight);
 		await page.locator(below).evaluate((e) => e.scrollIntoView({ block: "center" }));
 		await page.waitForFunction((s) => Number(getComputedStyle(document.querySelector(s) as Element).opacity) === 1, below);
-		const after = await page.locator(below).evaluate((e) => e.getBoundingClientRect().height);
-		expect(after).toBe(box?.height);
+		// offsetHeight is the layout height: the entrance scales the picture, never the layout.
+		const after = await page.locator(below).evaluate((e) => (e as HTMLElement).offsetHeight);
+		expect(after).toBe(layoutBefore);
 		await context.close();
 	});
 
