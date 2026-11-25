@@ -18,7 +18,7 @@ const PAGES = [
 	{ path: "/connections", heading: "Connections" },
 	{ path: "/settings", heading: "Settings" },
 	{ path: "/webhooks", heading: "Webhooks" },
-	{ path: "/settings/no-such-page", heading: /Not Found/ },
+	{ path: "/settings/no-such-page", heading: "We could not find this page" },
 ] as const;
 
 test.describe("a11y-connections-settings", () => {
