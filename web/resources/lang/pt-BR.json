@@ -3532,6 +3532,21 @@
       "toggle": {
         "on": "Ligado",
         "off": "Desligado"
+      },
+      "zoom_panel": {
+        "title": "Zoom por clique",
+        "auto": "Zoom automático",
+        "use_clicks": "Usar os cliques",
+        "on": "Ligado",
+        "off": "Desligado",
+        "hint": "Cada zoom é um quadro-chave. Você pode editar ou apagar.",
+        "list": "{count} zooms na faixa Z1",
+        "none": "Este clipe ainda não tem zoom. Ligue Usar os cliques para criá-los a partir dos cliques da gravação.",
+        "zoom": "Zoom {n}"
+      },
+      "zoom_lane": {
+        "name": "Z1 Zoom",
+        "label": "Faixa de zoom Z1, {count} zooms"
       }
     },
     "account": {

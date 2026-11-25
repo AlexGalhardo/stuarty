@@ -13,6 +13,7 @@ import { useT } from "@/lib/i18n";
 import { rowFor } from "../commands/keymapStore";
 import { isEditable } from "../commands/keyTarget";
 import { useActions } from "../commands/useActions";
+import { useAnimatedAssets, useZooms } from "../stages/useZooms";
 import {
 	useDocumentState,
 	useRuntime,
@@ -58,6 +59,7 @@ import { TrackRow } from "./TrackRow";
 import { useSelectionAnnouncement } from "./useSelectionAnnouncement";
 import { type FrameWindow, frameWindow, VIRTUALIZE_ABOVE } from "./virtualize";
 import { TimelineWindowContext } from "./windowContext";
+import { ZoomLane, ZoomLaneHeader } from "./ZoomLane";
 
 // The same object while the window has the same edges.
 function useStableWindow(win: FrameWindow | null): FrameWindow | null {
@@ -349,6 +351,8 @@ export default function Timeline({
 	);
 	const stableWindow = useStableWindow(win);
 
+	// The zoom lane is drawn when a clip holds zooms; the service reads them from the keyframes.
+	const zooms = useZooms(useAnimatedAssets());
 	const axisPx = extentPx(viewportWidth, endFrame, ppf);
 	const playheadX = frameToContentX(playhead, ppf);
 
@@ -373,7 +377,7 @@ export default function Timeline({
 				ref={gridRef}
 				role="grid"
 				aria-label={t("ui.editor.timeline.tracks")}
-				aria-rowcount={trackIds.length * 2 + 1}
+				aria-rowcount={trackIds.length * 2 + 1 + (zooms.length > 0 ? 2 : 0)}
 				aria-busy={trackIds.length === 0 && loading ? true : undefined}
 				tabIndex={-1}
 				onKeyDown={onGridKeyDown}
@@ -421,6 +425,7 @@ export default function Timeline({
 					role="rowgroup"
 					className="overflow-hidden border-r border-ed-track-line bg-ed-panel"
 				>
+					{zooms.length > 0 && <ZoomLaneHeader />}
 					{trackIds.map((id) => (
 						// biome-ignore lint/a11y/useSemanticElements: a rowheader has to sit in a row; the row adds no box.
 						<div key={id} role="row" tabIndex={-1} className="contents">
@@ -445,6 +450,7 @@ export default function Timeline({
 				>
 					<TimelineWindowContext.Provider value={stableWindow}>
 						<div className="relative" style={{ width: axisPx }}>
+							{zooms.length > 0 && <ZoomLane zooms={zooms} ppf={ppf} />}
 							{trackIds.map((id) => (
 								<TrackRow key={id} id={id} />
 							))}

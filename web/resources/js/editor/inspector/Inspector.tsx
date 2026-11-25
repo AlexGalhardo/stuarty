@@ -7,11 +7,14 @@ import {
 	Shapes,
 	SlidersHorizontal,
 	Type,
+	ZoomIn,
 } from "lucide-react";
 import type { ReactNode } from "react";
 
 import UntrustedText from "@/components/UntrustedText";
 import { useT } from "@/lib/i18n";
+import { useCommandsExposed } from "../commands/useExposedCommands";
+import ZoomPanel from "../stages/ZoomPanel";
 import { useDocumentState, useUiState } from "../state/EditorContext";
 import { selectOrderedTrackIds } from "../state/selectors";
 import { trackLabel } from "../ui/trackLabel";
@@ -95,10 +98,27 @@ export default function Inspector(): ReactNode {
 		only === undefined ? undefined : s.document?.items[only],
 	);
 
+	// The finishing screen (final design 25): with the Effects tab of the rail open, the inspector of a clip is the
+	// panel of the zoom on the clicks.
+	const effectsTab = useUiState(
+		(s) => s.activePanelTab === "effects" && s.panels.left,
+	);
+	const zoomExposed = useCommandsExposed("recording.auto_zoom");
+
 	let title: ReactNode;
 	let Icon: LucideIcon = SlidersHorizontal;
 	let body: ReactNode;
-	if (selected.length > 1) {
+	if (
+		selected.length === 1 &&
+		item?.type === "clip" &&
+		effectsTab &&
+		zoomExposed &&
+		only !== undefined
+	) {
+		Icon = ZoomIn;
+		title = t("ui.editor.zoom_panel.title");
+		body = <ZoomPanel itemId={only} />;
+	} else if (selected.length > 1) {
 		title = t("ui.editor.inspector.items", { count: selected.length });
 		body = (
 			<>
