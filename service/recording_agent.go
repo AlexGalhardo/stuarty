@@ -13,6 +13,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/core/command"
 	"github.com/AlexGalhardo/stuarty/core/recording"
 	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/stuarty/engine/capturehost"
 	"github.com/AlexGalhardo/stuarty/service/recordings"
 )
 
@@ -39,8 +40,10 @@ type RecordingPrepareRequest struct {
 	Notes string `json:"notes,omitempty" untrusted:"true"`
 }
 
-// RecordingPlan is the stored plan of a prepared recording.
+// RecordingPlan is the stored plan of a prepared recording. SourceID is the display or window it records, for the
+// dialog to show the title the helper gives it: the plan keeps no title of its own.
 type RecordingPlan struct {
+	SourceID    string `json:"source_id"`
 	FPS         int    `json:"fps"`
 	Microphone  string `json:"microphone,omitempty"`
 	SystemAudio bool   `json:"system_audio,omitempty"`
@@ -187,11 +190,14 @@ func (s *svc) RecordingPrepare(ctx context.Context, req RecordingPrepareRequest)
 		return nil, internalError()
 	}
 
+	// The name of the source is not kept: it would be the text of the caller, shown to the person as the title of
+	// what they are asked to record, and kept as the title the person saw. The dialog shows the title the helper
+	// gives the source id, and a person's start checks the source is still there (SDD-025 section 19.2).
 	id, now := s.newIDs("rec"), s.nowMs()
 	row := recordings.Row{
 		ID: id, ProjectID: req.ProjectID, State: string(recording.Prepared), SourceKind: req.Source.Kind,
-		SourceLabel: recording.CleanLabel(req.Source.Name, maxLabelRunes), FPS: recording.FPSOrDefault(req.FPS),
-		Actor: c.Actor, CreatedMs: now, Tracks: string(askedJSON), Plan: string(plan),
+		FPS: recording.FPSOrDefault(req.FPS), Actor: c.Actor, CreatedMs: now, Tracks: string(askedJSON),
+		Plan: string(plan),
 	}
 
 	werr := s.store.Write(ctx, func(ctx context.Context, tx Tx) error {
@@ -601,7 +607,7 @@ func recordingAgentView(v *Recording, r recordings.Row) {
 
 	if p, ok := planOf(r); ok && recording.IsPrepared(recording.State(r.State), r.Plan) {
 		v.Plan = &RecordingPlan{
-			FPS: p.FPS, Microphone: p.Microphone, SystemAudio: p.SystemAudio, Camera: p.Camera, Events: p.Events,
+			SourceID: p.SourceID, FPS: p.FPS, Microphone: p.Microphone, SystemAudio: p.SystemAudio, Camera: p.Camera, Events: p.Events,
 			ScriptID: p.ScriptID, Notes: p.Notes,
 		}
 	}
@@ -682,12 +688,39 @@ func (s *svc) preparedFor(ctx context.Context, c Caller, req *RecordingStartRequ
 			withHint("a recording is prepared with recording:prepare")
 	}
 
+	// The person records what the helper lists under the id of the plan now, or nothing: an id that is gone is not
+	// guessed at.
+	if err := s.planSourceListed(ctx, p); err != nil {
+		return nil, err
+	}
+
 	req.ProjectID = r.ProjectID
 	req.Source = RecordingSource{Kind: p.SourceKind, ID: p.SourceID, Name: r.SourceLabel}
 	req.FPS, req.Microphone, req.SystemAudio, req.Camera, req.Events = p.FPS, p.Microphone, p.SystemAudio, p.Camera,
 		p.Events
 
 	return &r, nil
+}
+
+// planSourceListed checks that the display or window of a plan is one the helper lists now.
+func (s *svc) planSourceListed(ctx context.Context, p recording.Plan) error {
+	src, err := s.capture.Sources(ctx)
+	if err != nil {
+		return captureError(err)
+	}
+
+	list := src.Displays
+	if p.SourceKind == recording.SourceWindow {
+		list = src.Windows
+	}
+
+	if !slices.ContainsFunc(list, func(x capturehost.Source) bool { return x.ID == p.SourceID }) {
+		return newError(command.CodeInvalidState, "the %s of the plan is not there any more.", p.SourceKind).
+			withPath("recording_id").
+			withHint("pick what to record in the dialog, or prepare the recording again")
+	}
+
+	return nil
 }
 
 // claimOrInsert makes the row of a recording that is starting: a new one, or the prepared one, whose plan leaves

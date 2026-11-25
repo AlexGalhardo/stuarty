@@ -189,7 +189,10 @@ describe("the clock", () => {
 });
 
 describe("the plans and the proposals of agents (SDD-025 section 19)", () => {
-	const plan: Recording = { ...recording("prepared"), plan: { fps: 30 } };
+	const plan: Recording = {
+		...recording("prepared"),
+		plan: { source_id: "d1", fps: 30 },
+	};
 	const proposal = (state: "pending" | "accepted" | "rejected") => ({
 		proposal_id: "prp_0123456789",
 		state,

@@ -353,7 +353,11 @@ describe("the record dialog", () => {
 					state: "prepared",
 					actor: "local:claude-code",
 					source: { kind: "display", name: "Main <b>screen</b>" },
-					plan: { fps: 30, notes: "Say the hook first <img src=x>" },
+					plan: {
+						source_id: "d1",
+						fps: 30,
+						notes: "Say the hook first <img src=x>",
+					},
 				}),
 			],
 		});
@@ -365,6 +369,36 @@ describe("the record dialog", () => {
 		expect(html).toContain("Say the hook first");
 		expect(html).not.toContain("<img");
 		expect(html).not.toContain("<b>");
+	});
+
+	test("names the source of a plan by the title the helper gives it and lists every track it records", () => {
+		const html = draw({
+			step: "pick",
+			sources: {
+				displays: [{ id: "d1", name: "Display 1", width: 1920, height: 1080 }],
+				windows: [{ id: "w9", name: "Slides", width: 800, height: 600 }],
+				...noDevices,
+			},
+			kept: [],
+			prepared: [
+				rec({
+					recording_id: "rec_000000000p",
+					state: "prepared",
+					source: { kind: "display", name: "Only the slides window" },
+					plan: {
+						source_id: "d1",
+						fps: 30,
+						microphone: "default",
+						camera: "c0123456789abcdef",
+					},
+				}),
+			],
+		});
+		expect(html).toContain("Display 1");
+		expect(html).not.toContain("Only the slides window");
+		expect(html).toContain("data-record-prepared-tracks");
+		expect(html).toContain("Microphone");
+		expect(html).toContain("Camera");
 	});
 
 	test("shows every range of a pending proposal with its own accept and reject, and one apply", () => {

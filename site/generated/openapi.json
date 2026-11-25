@@ -8145,6 +8145,9 @@
           "script_id": {
             "type": "string"
           },
+          "source_id": {
+            "type": "string"
+          },
           "system_audio": {
             "type": "boolean"
           }
