@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"image"
+	"math"
 	"runtime"
 
 	"github.com/AlexGalhardo/stuarty/core/plan"
@@ -315,7 +316,7 @@ func (r *imageRun) drawWindowBand(
 			continue
 		}
 
-		if err := host.PutPrepared(ctx, d.layer.ItemID, d.pic); err != nil {
+		if err := host.PutPrepared(ctx, d.layer.ItemID, croppedTo(d, win.x0, y0, win.x1, y1)); err != nil {
 			return rendererError(err)
 		}
 
@@ -336,4 +337,46 @@ func (r *imageRun) drawWindowBand(
 	}
 
 	return nil
+}
+
+// cropMargin is the pixels added around the part of a picture a draw reads: the bilinear sampler reads the pixel
+// after the one it lands on, and the placement rounds its own rectangle.
+const cropMargin = 3
+
+// croppedTo is the prepared picture of d cut to the pixels that drawing the rectangle [x0, x1) by [y0, y1) of the
+// canvas can read, so a band receives a part of a picture and not all of it (SDD-021 section 6.3). The pixels it
+// keeps are the whole picture's, and the module reads them at the place they have in it, so the draw is the same
+// bytes. The corners of the rectangle are taken back to the picture for either sign of the angle, which holds
+// whichever way the module turns it, and a margin covers what the sampler reads beyond them.
+func croppedTo(d *drawLayer, x0, y0, x1, y1 int) renderhost.Prepared {
+	sz := d.pic.Size()
+	if sz.W <= 0 || sz.H <= 0 || sz.GrownW <= 0 || sz.GrownH <= 0 {
+		return d.pic
+	}
+
+	sin, cos := math.Sincos(d.layer.Rotation * math.Pi / 180)
+	cx, cy := d.layer.CX-sz.OffsetX, d.layer.CY-sz.OffsetY
+	kx, ky := float64(sz.W)/sz.GrownW, float64(sz.H)/sz.GrownH
+
+	lo, hi := [2]float64{math.Inf(1), math.Inf(1)}, [2]float64{math.Inf(-1), math.Inf(-1)}
+
+	for _, px := range []float64{float64(x0), float64(x1)} {
+		for _, py := range []float64{float64(y0), float64(y1)} {
+			for _, sgn := range []float64{-1, 1} {
+				dx, dy := px-cx, py-cy
+				s := sgn * sin
+				u := (dx*cos+dy*s)*kx + float64(sz.W)/2
+				v := (-dx*s+dy*cos)*ky + float64(sz.H)/2
+
+				lo[0], hi[0] = math.Min(lo[0], u), math.Max(hi[0], u)
+				lo[1], hi[1] = math.Min(lo[1], v), math.Max(hi[1], v)
+			}
+		}
+	}
+
+	mx, my := cropMargin+int(math.Ceil(kx)), cropMargin+int(math.Ceil(ky))
+
+	return d.pic.Window(
+		int(math.Floor(lo[0]))-mx, int(math.Floor(lo[1]))-my, int(math.Ceil(hi[0]))+mx, int(math.Ceil(hi[1]))+my,
+	)
 }

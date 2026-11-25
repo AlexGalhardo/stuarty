@@ -5,7 +5,7 @@
 use std::collections::BTreeMap;
 
 use crate::compose::{
-	Layer, LayerExt, Source, Target, compose, frame_fill, layer_opacity, premultiply,
+	Layer, LayerExt, Source, Target, Window, compose, frame_fill, layer_opacity, premultiply,
 	prepare_layer_offset,
 };
 use crate::error::{Error, Reason};
@@ -56,11 +56,16 @@ struct PreparedMeta {
 	off_x: f64,
 	off_y: f64,
 	scale: f64,
+	window: Option<Window>,
 }
 
 /// The bytes before the pixels of a prepared block: width, height, flags and a zero (4 x `u32`), then the
 /// five `f64` of [`PreparedMeta`].
 const PREPARED_HEADER: usize = 16 + 40;
+
+/// A block flagged as a window (flag bit 1) has four more `u32` after the header: where the window starts in
+/// the whole picture (`x0`, `y0`) and the size of the whole picture, and its width and height are the window's.
+const PREPARED_WINDOW: usize = 16;
 
 struct StoredBitmap {
 	image: Image,
@@ -182,6 +187,7 @@ impl Renderer {
 			off_x: f(32),
 			off_y: f(40),
 			scale: f(48),
+			window: None,
 		};
 		let finite = [
 			meta.grown_w,
@@ -192,19 +198,43 @@ impl Renderer {
 		]
 		.iter()
 		.all(|v| v.is_finite());
-		if !finite || !(meta.grown_w > 0.0 && meta.grown_h > 0.0) || flags > 1 {
+		let windowed = flags & 2 != 0;
+		if !finite || !(meta.grown_w > 0.0 && meta.grown_h > 0.0) || flags > 3 {
 			return Err(bad(
 				"a prepared block has a size or a flag that is not valid",
 			));
 		}
 		// No limit on a side: a look grows a layer past the side of a texture, and the draw of that layer takes it
 		// when the render is whole. The bytes are bounded by the block and by the budget of textures.
-		let pixels = &block[PREPARED_HEADER..];
+		let head = PREPARED_HEADER + if windowed { PREPARED_WINDOW } else { 0 };
+		if block.len() < head {
+			return Err(bad("a prepared block is shorter than its header"));
+		}
+		let mut meta = meta;
+		if windowed {
+			let win = Window {
+				x0: u(PREPARED_HEADER) as usize,
+				y0: u(PREPARED_HEADER + 4) as usize,
+				full_w: u(PREPARED_HEADER + 8) as usize,
+				full_h: u(PREPARED_HEADER + 12) as usize,
+			};
+			let inside =
+				|a: usize, n: usize, full: usize| a.checked_add(n).is_some_and(|e| e <= full);
+			if win.full_w == 0
+				|| win.full_h == 0
+				|| !inside(win.x0, w, win.full_w)
+				|| !inside(win.y0, h, win.full_h)
+			{
+				return Err(bad("a prepared window is not inside its picture"));
+			}
+			meta.window = Some(win);
+		}
+		let pixels = &block[head..];
 		let n = w.checked_mul(h).and_then(|p| p.checked_mul(4));
 		if n != Some(pixels.len()) || pixels.is_empty() {
 			return Err(bad("a prepared block is not the size of its pixels"));
 		}
-		self.store_texture(id, w, h, pixels, flags == 1)?;
+		self.store_texture(id, w, h, pixels, flags & 1 == 1)?;
 		self.prepared.insert(id.to_string(), meta);
 		Ok(())
 	}
@@ -321,6 +351,7 @@ impl Renderer {
 							off_x: m.off_x,
 							off_y: m.off_y,
 							scale: m.scale,
+							window: m.window,
 						}
 					}
 					(Some(img), None) => Source::Media(img),
@@ -616,6 +647,68 @@ mod tests {
 				"something is drawn"
 			);
 		}
+	}
+
+	/// The block of a prepared layer cut to the pixels `[x0, x1) x [y0, y1)` of its picture, flagged as a window.
+	fn windowed(block: &[u8], x0: usize, y0: usize, x1: usize, y1: usize) -> Vec<u8> {
+		let u = |i: usize| u32::from_le_bytes(block[i..i + 4].try_into().unwrap()) as usize;
+		let (w, h) = (u(0), u(4));
+		let mut out = block[..PREPARED_HEADER].to_vec();
+		out[0..4].copy_from_slice(&((x1 - x0) as u32).to_le_bytes());
+		out[4..8].copy_from_slice(&((y1 - y0) as u32).to_le_bytes());
+		out[8..12].copy_from_slice(&(u(8) as u32 | 2).to_le_bytes());
+		for v in [x0, y0, w, h] {
+			out.extend_from_slice(&(v as u32).to_le_bytes());
+		}
+		for y in y0..y1 {
+			let o = PREPARED_HEADER + (y * w + x0) * 4;
+			out.extend_from_slice(&block[o..o + (x1 - x0) * 4]);
+		}
+		out
+	}
+
+	#[test]
+	fn a_window_of_a_prepared_picture_draws_the_same_pixels_inside_a_window_of_the_frame() {
+		let mut r = bitmap_renderer();
+		let block = r
+			.prepare(bitmap_input(20.0, 15.0, false).as_bytes())
+			.unwrap();
+		let u = |i: usize| u32::from_le_bytes(block[i..i + 4].try_into().unwrap()) as usize;
+		let (w, h) = (u(0), u(4));
+		assert!(w > 12 && h > 8, "{w}x{h}");
+		let mut cropped = bitmap_renderer();
+		r.put_prepared("t", &block).unwrap();
+		cropped
+			.put_prepared("t", &windowed(&block, 2, 1, w - 2, h - 1))
+			.unwrap();
+		for (cx, cy) in [(20.0, 15.0), (14.5, 11.0), (27.0, 19.5)] {
+			for win in [
+				"\"x0\":12,\"x1\":26,\"y0\":8,\"y1\":20",
+				"\"x0\":0,\"x1\":40",
+			] {
+				let input = bitmap_input(cx, cy, true)
+					.replace("\"scale\":1", &format!("\"scale\":1,{win}"));
+				let (mut a, mut b) = (vec![9_u8; 40 * 30 * 4], vec![9_u8; 40 * 30 * 4]);
+				r.render(input.as_bytes(), &mut a).unwrap();
+				cropped.render(input.as_bytes(), &mut b).unwrap();
+				assert!(a == b, "a window of the picture at {cx},{cy} with {win}");
+			}
+		}
+	}
+
+	#[test]
+	fn a_window_outside_its_picture_is_refused() {
+		let mut r = bitmap_renderer();
+		let block = r
+			.prepare(bitmap_input(20.0, 15.0, false).as_bytes())
+			.unwrap();
+		let mut bad = windowed(&block, 1, 1, 5, 5);
+		let at = PREPARED_HEADER + 8;
+		bad[at..at + 4].copy_from_slice(&3_u32.to_le_bytes());
+		assert_eq!(
+			r.put_prepared("u", &bad).unwrap_err().reason,
+			Reason::InvalidArgument
+		);
 	}
 
 	#[test]
