@@ -1,3 +1,15 @@
+import {
+	ArrowDown,
+	ArrowUp,
+	AudioLines,
+	AudioWaveform,
+	Gauge,
+	type LucideIcon,
+	Mic,
+	SlidersHorizontal,
+	Trash2,
+	Volume2,
+} from "lucide-react";
 import { type ReactNode, useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -33,6 +45,14 @@ import ToggleField from "../fields/ToggleField";
 import Section from "../Section";
 import { useFieldCommit } from "../useFieldCommit";
 import VoicePreset from "./VoicePreset";
+
+const KIND_ICON: Record<string, LucideIcon> = {
+	eq: SlidersHorizontal,
+	compressor: Gauge,
+	limiter: Volume2,
+	deesser: Mic,
+	noise_reduction: AudioWaveform,
+};
 
 const BAND = /^b(\d)_(hz|gain_db|q)$/;
 const UNITLESS = new Set(["ratio", "Q", "fraction"]);
@@ -75,6 +95,7 @@ function ProcessorCard({
 	if (kind === undefined) return null;
 	const name = t(`ui.editor.processors.kind.${processor.kind}`);
 	const isItem = "itemId" in target;
+	const KindIcon = KIND_ICON[processor.kind] ?? AudioLines;
 	return (
 		<li
 			className="flex flex-col gap-2 rounded-lg border p-2"
@@ -82,12 +103,19 @@ function ProcessorCard({
 			data-processor-kind={processor.kind}
 		>
 			<div className="flex flex-wrap items-center justify-between gap-1">
-				<span className="text-sm font-medium">{name}</span>
+				<span className="flex items-center gap-2 text-sm font-medium">
+					<KindIcon
+						aria-hidden="true"
+						className="size-4 text-muted-foreground"
+					/>
+					{name}
+				</span>
 				<div className="flex gap-1">
 					<Button
 						type="button"
-						variant="outline"
-						size="sm"
+						variant="ghost"
+						size="icon-sm"
+						title={t("ui.editor.processors.move_up")}
 						disabled={!canEdit || index === 0}
 						aria-label={`${name} ${index + 1}: ${t("ui.editor.processors.move_up")}`}
 						onClick={() =>
@@ -96,12 +124,13 @@ function ProcessorCard({
 							)
 						}
 					>
-						{t("ui.editor.processors.move_up")}
+						<ArrowUp aria-hidden="true" />
 					</Button>
 					<Button
 						type="button"
-						variant="outline"
-						size="sm"
+						variant="ghost"
+						size="icon-sm"
+						title={t("ui.editor.processors.move_down")}
 						disabled={!canEdit || index === count - 1}
 						aria-label={`${name} ${index + 1}: ${t("ui.editor.processors.move_down")}`}
 						onClick={() =>
@@ -110,12 +139,13 @@ function ProcessorCard({
 							)
 						}
 					>
-						{t("ui.editor.processors.move_down")}
+						<ArrowDown aria-hidden="true" />
 					</Button>
 					<Button
 						type="button"
-						variant="outline"
-						size="sm"
+						variant="ghost"
+						size="icon-sm"
+						title={t("ui.editor.processors.remove")}
 						disabled={!canEdit}
 						aria-label={`${name} ${index + 1}: ${t("ui.editor.processors.remove")}`}
 						onClick={() =>
@@ -124,7 +154,7 @@ function ProcessorCard({
 							)
 						}
 					>
-						{t("ui.editor.processors.remove")}
+						<Trash2 aria-hidden="true" />
 					</Button>
 				</div>
 			</div>
@@ -431,7 +461,11 @@ export default function AudioProcessors({
 	if (!exposed) return null;
 	const list = chain ?? [];
 	return (
-		<Section title={t("ui.editor.processors.title")} name="audio-processors">
+		<Section
+			title={t("ui.editor.processors.title")}
+			name="audio-processors"
+			icon={AudioWaveform}
+		>
 			<div className="flex flex-col gap-2">
 				<VoicePreset target={target} />
 				<SelectField

@@ -14,7 +14,6 @@ import type { ReactNode } from "react";
 
 import type { AssetDragStart } from "../library/AssetCard";
 import AudioPanel from "../library/AudioPanel";
-import EffectsPanel from "../library/EffectsPanel";
 import FiltersPanel from "../library/FiltersPanel";
 import Library from "../library/Library";
 import MotionPanel from "../library/MotionPanel";
@@ -22,6 +21,7 @@ import TextPanel from "../library/TextPanel";
 import TransitionsPanel from "../library/TransitionsPanel";
 import type { LeftTab } from "../state/uiStore";
 import CaptionsTab from "./CaptionsTab";
+import EffectsTab from "./EffectsTab";
 import TemplatesTab from "./TemplatesTab";
 
 export interface LibraryTabDef {
@@ -78,7 +78,7 @@ export const LIBRARY_TABS: readonly LibraryTabDef[] = [
 		icon: Sparkles,
 		commands: ["clip.set_effects"],
 		bodyClass: "*:flex-1",
-		render: () => <EffectsPanel />,
+		render: () => <EffectsTab />,
 	},
 	{
 		id: "transitions",

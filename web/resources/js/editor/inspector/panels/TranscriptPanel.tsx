@@ -1,3 +1,4 @@
+import { FileText, Scissors } from "lucide-react";
 import { type ReactNode, useEffect, useId, useRef, useState } from "react";
 
 import UntrustedText from "@/components/UntrustedText";
@@ -148,7 +149,11 @@ export default function TranscriptPanel({
 	}
 
 	return (
-		<Section title={t("ui.editor.transcript.title")} name="transcript">
+		<Section
+			title={t("ui.editor.transcript.title")}
+			name="transcript"
+			icon={FileText}
+		>
 			{problem !== null && (
 				<p role="alert" className="text-xs text-destructive">
 					{problem}
@@ -176,7 +181,7 @@ export default function TranscriptPanel({
 									data-word-index={word.index}
 									data-cut={cut ? "true" : undefined}
 									aria-pressed={on}
-									className={`rounded-sm px-0.5 ${on ? "bg-accent text-accent-foreground" : ""} ${cut ? "text-muted-foreground line-through" : ""}`}
+									className={`rounded-sm px-0.5 hover:bg-surface-hover ${on ? "bg-surface-selected text-foreground" : ""} ${cut ? "text-muted-foreground line-through" : ""}`}
 									onClick={(event) =>
 										setSelection((was) =>
 											extendSelection(was, word.index, event.shiftKey),
@@ -191,11 +196,11 @@ export default function TranscriptPanel({
 					<div className="flex flex-wrap items-center gap-2">
 						<Button
 							type="button"
-							variant="outline"
 							size="sm"
 							disabled={!canEdit || busy || range === null}
 							onClick={() => void deleteSelected()}
 						>
+							<Scissors aria-hidden="true" />
 							{t("ui.editor.transcript.delete_selected")}
 						</Button>
 						<span className="text-xs text-muted-foreground" aria-live="polite">
@@ -267,7 +272,9 @@ export default function TranscriptPanel({
 											aria-label={suggestion.text}
 										/>
 										<UntrustedText>{suggestion.text}</UntrustedText>
-										<span className="text-xs text-muted-foreground">
+										<span
+											className={`ml-auto rounded-full border px-2 text-xs ${suggestion.kind === "filler" ? "border-warning text-warning-text" : "border-danger-text text-danger-text"}`}
+										>
 											{suggestion.kind === "filler"
 												? t("ui.editor.transcript.kind_filler")
 												: t("ui.editor.transcript.kind_repetition")}
@@ -280,7 +287,6 @@ export default function TranscriptPanel({
 							</ul>
 							<Button
 								type="button"
-								variant="outline"
 								size="sm"
 								disabled={!canEdit || busy || checked.size === 0}
 								onClick={() => void removeChecked()}

@@ -1,3 +1,4 @@
+import { EyeOff, Info, Plus } from "lucide-react";
 import { type ReactNode, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -7,7 +8,7 @@ import { useActions, useCanEdit } from "../../commands/useActions";
 import { useCommandsExposed } from "../../commands/useExposedCommands";
 import NumberField from "../fields/NumberField";
 import TimeCommitField from "../fields/TimeCommitField";
-import Section from "../Section";
+import Section, { ToolLine } from "../Section";
 
 // What a region starts with: a strip across the lower third, as wide as an e-mail line.
 const START_REGION = { x: 0.1, y: 0.62, width: 0.8, height: 0.08 };
@@ -48,14 +49,22 @@ export default function BlurRegionSection({
 		/>
 	);
 	return (
-		<Section title={t("ui.editor.blur_region.title")} name="blur-region">
-			<p className="text-xs text-muted-foreground">
-				{t("ui.editor.blur_region.hint")}
-			</p>
+		<Section
+			title={t("ui.editor.blur_region.title")}
+			name="blur-region"
+			icon={EyeOff}
+		>
+			<ToolLine name="clip.blur_region" />
+			<h4 className="text-xs font-semibold text-muted-foreground">
+				{t("ui.editor.blur_region.group_region")}
+			</h4>
 			{share("ui.editor.blur_region.x", "x")}
 			{share("ui.editor.blur_region.y", "y")}
 			{share("ui.editor.blur_region.width", "width")}
 			{share("ui.editor.blur_region.height", "height")}
+			<h4 className="pt-1 text-xs font-semibold text-muted-foreground">
+				{t("ui.editor.blur_region.group_time")}
+			</h4>
 			<TimeCommitField
 				label={t("ui.editor.blur_region.start")}
 				stored={start ?? ""}
@@ -74,6 +83,9 @@ export default function BlurRegionSection({
 					return { ok: true };
 				}}
 			/>
+			<h4 className="pt-1 text-xs font-semibold text-muted-foreground">
+				{t("ui.editor.blur_region.group_strength")}
+			</h4>
 			<NumberField
 				label={t("ui.editor.blur_region.radius")}
 				stored={radius === undefined ? "" : String(radius)}
@@ -90,9 +102,8 @@ export default function BlurRegionSection({
 			/>
 			<Button
 				type="button"
-				variant="outline"
-				size="sm"
 				disabled={!canEdit || busy}
+				className="mt-1 w-full"
 				onClick={async () => {
 					setBusy(true);
 					try {
@@ -109,8 +120,13 @@ export default function BlurRegionSection({
 					}
 				}}
 			>
+				<Plus aria-hidden="true" />
 				{t("ui.editor.blur_region.apply")}
 			</Button>
+			<p className="flex items-start gap-2 text-xs text-muted-foreground">
+				<Info aria-hidden="true" className="mt-0.5 size-3.5 shrink-0" />
+				{t("ui.editor.blur_region.hint")}
+			</p>
 		</Section>
 	);
 }
