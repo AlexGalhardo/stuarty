@@ -4305,7 +4305,11 @@
       "font_import": "Import font",
       "font_remove": "Remove font family {name}",
       "save": "Save brand kit",
-      "saved": "Brand kit saved."
+      "saved": "Brand kit saved.",
+      "preview": "How it looks in a video",
+      "preview_title": "5 mistakes when recording",
+      "preview_byline": "with your name",
+      "preview_note": "The preview uses the first two colours and the first font of the kit."
     },
     "assets": {
       "intro": {
@@ -4319,8 +4323,8 @@
         "origin": "Origin",
         "any_origin": "Any origin",
         "reusable": "Reusable only",
-        "apply": "Apply",
-        "clear": "Clear"
+        "bar": "Filter the files",
+        "text_hint": "Name, tag or project"
       },
       "origin": {
         "imported": "Imported",
@@ -4456,7 +4460,8 @@
         "import_path": "Path of the file on this computer",
         "import_submit": "Import",
         "import_started": "The file is being prepared. It appears in the list when it is ready; press Apply to read the list again.",
-        "import_no_project": "Create a project first: a sound is imported into one."
+        "import_no_project": "Create a project first: a sound is imported into one.",
+        "import_open": "Import audio"
       }
     },
     "write": {

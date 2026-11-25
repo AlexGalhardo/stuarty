@@ -273,8 +273,8 @@ test.describe("Generate images and voice", () => {
 			await expect(dialog).toBeHidden();
 
 			// The grid shows the two files with the origin Generated.
-			await page.getByRole("radio", { name: "Generated" }).check();
-			await page.getByRole("button", { name: "Apply" }).click();
+			await page.getByRole("combobox", { name: "Origin" }).click();
+			await page.getByRole("option", { name: "Generated" }).click();
 			await expect(
 				page.getByTestId("asset-grid").locator("li").first(),
 			).toContainText("Generated");

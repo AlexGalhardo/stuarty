@@ -1,4 +1,5 @@
 import { Link } from "@inertiajs/react";
+import { Upload, WandSparkles } from "lucide-react";
 import {
 	type FormEvent,
 	type ReactNode,
@@ -10,6 +11,7 @@ import {
 } from "react";
 
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
+import { PageHeaderAction } from "@/components/PageHeader";
 import RenameAssetDialog from "@/components/RenameAssetDialog";
 import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
@@ -26,6 +28,7 @@ import type {
 	AssetResult,
 	LibraryAsset,
 } from "../editor/api/types";
+import { thumbnailUrl } from "../editor/api/urls";
 import { AssetSize } from "./AssetSize";
 import { OriginBadge } from "./badges";
 import { GenerateDialog, type Kind as GenerateKind } from "./GenerateDialog";
@@ -283,6 +286,19 @@ export function AssetDetail({
 			className="flex flex-col gap-4 rounded-lg border border-border bg-surface p-4 text-text"
 			data-testid="asset-detail"
 		>
+			{asset?.poster !== undefined &&
+				(asset.kind === "image" || asset.kind === "video") && (
+					<img
+						src={thumbnailUrl(
+							asset.poster.timeline_id,
+							asset.poster.asset_id,
+							640,
+						)}
+						alt=""
+						data-testid="asset-preview"
+						className="aspect-video w-full rounded-md object-cover"
+					/>
+				)}
 			<div className="flex items-start justify-between gap-2">
 				<h2
 					id={`${id}-title`}
@@ -653,6 +669,7 @@ export function AssetLibrary({ section }: { section: Section }): ReactNode {
 		size: string;
 		unsized: number;
 	}>({ files: 0, size: "", unsized: 0 });
+	const [importing, setImporting] = useState(false);
 	const reveal = useReveal();
 	// The refusal or the confirmation of a menu action on a card or a row.
 	const [actionFailure, setActionFailure] = useState<Failure | null>(null);
@@ -718,18 +735,32 @@ export function AssetLibrary({ section }: { section: Section }): ReactNode {
 			navKey={NAV_KEY[section]}
 			description={t(`ui.assets.intro.${section}`)}
 			actions={
-				<Button
-					type="button"
-					onClick={() =>
-						setGenerating((was) => ({
-							open: true,
-							count: was.count + 1,
-							kind: GENERATES[section],
-						}))
-					}
-				>
-					{t(`ui.generate.open.${section}`)}
-				</Button>
+				<>
+					{section === "audio" && (
+						<PageHeaderAction
+							type="button"
+							variant="outline"
+							aria-expanded={importing}
+							onClick={() => setImporting((was) => !was)}
+						>
+							<Upload aria-hidden="true" />
+							{t("ui.assets.sound.import_open")}
+						</PageHeaderAction>
+					)}
+					<PageHeaderAction
+						type="button"
+						onClick={() =>
+							setGenerating((was) => ({
+								open: true,
+								count: was.count + 1,
+								kind: GENERATES[section],
+							}))
+						}
+					>
+						<WandSparkles aria-hidden="true" />
+						{t(`ui.generate.open.${section}`)}
+					</PageHeaderAction>
+				</>
 			}
 		>
 			{generating.count > 0 && (
@@ -743,7 +774,7 @@ export function AssetLibrary({ section }: { section: Section }): ReactNode {
 					onGenerated={() => void load(applied)}
 				/>
 			)}
-			{section === "audio" && (
+			{section === "audio" && importing && (
 				<SoundImport onImported={() => void load(applied)} />
 			)}
 			<LibraryFilters section={section} onApply={setApplied} />
@@ -814,7 +845,7 @@ export function AssetLibrary({ section }: { section: Section }): ReactNode {
 					)}
 					{items !== null && items.length > 0 && section !== "audio" && (
 						<ul
-							className="mt-3 grid grid-cols-[repeat(auto-fill,minmax(11rem,1fr))] gap-3"
+							className="mt-3 grid grid-cols-[repeat(auto-fill,minmax(12.5rem,1fr))] gap-3"
 							data-testid="asset-grid"
 						>
 							{items.map((asset) => (

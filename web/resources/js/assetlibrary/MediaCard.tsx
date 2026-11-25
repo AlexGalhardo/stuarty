@@ -119,20 +119,23 @@ export function MediaCard({
 					<span className="truncate text-sm font-medium">
 						<UntrustedText>{asset.name}</UntrustedText>
 					</span>
-					<span className="flex flex-wrap items-center gap-1">
-						<OriginBadge kind={asset.origin?.kind} />
-						{asset.reusable === true && <ReusableBadge />}
-					</span>
-					<span className="flex flex-wrap items-center gap-x-2 text-sm text-text-muted">
+					<span className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 text-sm text-text-muted">
+						<span className="flex flex-wrap items-center gap-1">
+							<OriginBadge kind={asset.origin?.kind} />
+							{asset.reusable === true && <ReusableBadge />}
+						</span>
 						<AssetSize asset={asset} />
-						{asset.created_at !== undefined && (
-							<span data-testid="asset-added">
-								{t("ui.assets.added", {
-									date: formatDate(asset.created_at, locale),
-								})}
-							</span>
-						)}
 					</span>
+					{asset.created_at !== undefined && (
+						<span
+							data-testid="asset-added"
+							className="text-sm text-text-subtle"
+						>
+							{t("ui.assets.added", {
+								date: formatDate(asset.created_at, locale),
+							})}
+						</span>
+					)}
 					{(asset.tags ?? []).length > 0 && (
 						<span className="flex flex-wrap gap-1">
 							{(asset.tags ?? []).map((tag) => (

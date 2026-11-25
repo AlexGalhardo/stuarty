@@ -29,6 +29,7 @@ test.describe("Sound Assets", () => {
 		).toBeVisible();
 		await expect(page.getByRole("link", { name: "Sounds" })).toBeVisible();
 
+		await page.getByRole("button", { name: "Import audio" }).click();
 		const form = page.getByTestId("sound-import");
 		await form.getByLabel("Project").selectOption({
 			label: `Sound source ${stamp}`,
@@ -44,7 +45,7 @@ test.describe("Sound Assets", () => {
 			.getByTestId("sound-row")
 			.filter({ hasText: "tone4-58.wav" });
 		await expect(async () => {
-			await page.getByRole("button", { name: "Apply" }).click();
+			await page.reload();
 			await expect(row.first()).toBeVisible({ timeout: 1500 });
 		}).toPass({ timeout: 30_000 });
 
