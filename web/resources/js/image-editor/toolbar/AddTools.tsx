@@ -21,6 +21,7 @@ import { useT } from "@/lib/i18n";
 import ImportDialog from "../import/ImportDialog";
 import { useImage } from "../state/context";
 import { useLibrary } from "../state/library";
+import { useAddImage } from "./addImage";
 import ToolButton from "./ToolButton";
 import { ToolGroup } from "./Toolbar";
 
@@ -34,7 +35,7 @@ export function AddTools(): ReactNode {
 	const importFile = useImage((s) => s.importFile);
 	const error = useImage((s) => s.error);
 	const library = useLibrary();
-	const [picking, setPicking] = useState(false);
+	const { picking, setPicking } = useAddImage();
 	const [importing, setImporting] = useState(false);
 	const off = doc === null || busy;
 	const logo = library.brand?.logo;

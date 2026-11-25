@@ -1325,7 +1325,8 @@
         "step_title_body": "Texto curto e grande funciona melhor.",
         "step_background": "Remova o fundo",
         "step_background_body": "Com um provedor conectado.",
-        "ask_agent": "Pedir ao agente"
+        "ask_agent": "Pedir ao agente",
+        "add_photo": "Adicionar foto"
       }
     },
     "editor": {

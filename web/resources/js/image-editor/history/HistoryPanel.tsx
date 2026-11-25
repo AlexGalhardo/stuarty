@@ -22,8 +22,9 @@ export default function HistoryPanel(): ReactNode {
 	const head = useImage((s) => s.doc?.revision ?? 0);
 	const [target, setTarget] = useState<RevertTarget | null>(null);
 	const [compare, setCompare] = useState<number | null>(null);
-	// Open by default; closing it gives the inspector the room (the list stays in the document, hidden).
-	const [open, setOpen] = useState(true);
+	// Closed by default, as in the final design: the inspector keeps the column (the list stays in the document,
+	// hidden, and the toggle opens it).
+	const [open, setOpen] = useState(false);
 
 	return (
 		<section

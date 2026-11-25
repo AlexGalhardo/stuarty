@@ -1325,7 +1325,8 @@
         "step_title_body": "Short, large text works best.",
         "step_background": "Remove the background",
         "step_background_body": "With a connected provider.",
-        "ask_agent": "Ask the agent"
+        "ask_agent": "Ask the agent",
+        "add_photo": "Add a photo"
       }
     },
     "editor": {

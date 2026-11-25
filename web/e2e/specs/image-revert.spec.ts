@@ -30,6 +30,8 @@ test.describe("image revert, named versions and the diff", () => {
 		]);
 		await page.goto(`/edit-image/${id}`);
 		await expect(row(page, "Title")).toBeVisible();
+		// The history, with its versions, starts closed in the final design.
+		await page.getByTestId("image-history-toggle").click();
 
 		// the person names the version they have now
 		await page.getByTestId("image-checkpoint-name").fill("Good title");
@@ -99,6 +101,7 @@ test.describe("image revert, named versions and the diff", () => {
 		const { id } = await newImage(request, { name: "Hostile name spec" });
 		await page.goto(`/edit-image/${id}`);
 		await expect(page.getByTestId("image-add-text")).toBeEnabled();
+		await page.getByTestId("image-history-toggle").click();
 
 		await page
 			.getByTestId("image-checkpoint-name")
