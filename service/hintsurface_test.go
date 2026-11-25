@@ -108,4 +108,10 @@ func TestBundleHintNamesTheFlagOfTheCommandLine(t *testing.T) {
 	if got := e.ForSurface(SurfaceHTTP).Hint; got != e.Hint {
 		t.Errorf("http hint = %q", got)
 	}
+
+	// The import into network mode, where the server chooses the id, says the same flag.
+	set := &Error{Code: "E_VALIDATION", Message: "chosen by the server.", Hint: "set as_new to true"}
+	if got := set.ForSurface(SurfaceCLI).Hint; got != "add --as-new" {
+		t.Errorf("cli hint of a server-chosen id = %q", got)
+	}
 }
