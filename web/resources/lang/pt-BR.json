@@ -1306,7 +1306,18 @@
         "arrange": "Organizar camadas",
         "model": "Editar com um modelo",
         "view": "Visualização",
-        "export": "Exportar"
+        "export": "Exportar",
+        "more": "Mais ferramentas"
+      },
+      "palette": {
+        "open": "Comandos",
+        "title": "Comandos",
+        "description": "Digite para filtrar as operações do editor de imagem e aperte Enter para executar uma.",
+        "placeholder": "Buscar um comando",
+        "list": "Comandos",
+        "empty": "Nenhum comando corresponde.",
+        "unavailable": "indisponível agora",
+        "hint": "Setas escolhem, Enter executa, Esc fecha"
       },
       "error": {
         "dismiss": "Dispensar o erro"

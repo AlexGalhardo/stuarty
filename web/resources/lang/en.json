@@ -1306,7 +1306,18 @@
         "arrange": "Arrange layers",
         "model": "Edit with a model",
         "view": "View",
-        "export": "Export"
+        "export": "Export",
+        "more": "More tools"
+      },
+      "palette": {
+        "open": "Commands",
+        "title": "Commands",
+        "description": "Type to filter the operations of the image editor, then press Enter to run one.",
+        "placeholder": "Search a command",
+        "list": "Commands",
+        "empty": "No command matches.",
+        "unavailable": "not available now",
+        "hint": "Arrows choose, Enter runs, Escape closes"
       },
       "error": {
         "dismiss": "Dismiss the error"

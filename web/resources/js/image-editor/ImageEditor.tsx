@@ -21,15 +21,16 @@ import HistoryPanel from "./history/HistoryPanel";
 import Inspector from "./inspector/Inspector";
 import { useEditorKeys } from "./keys";
 import LayerPanel from "./layers/LayerPanel";
-import { ModelEditTools } from "./modeledit/ModelEditTools";
 import { ModelJobStrip } from "./modeledit/ModelJobStrip";
+import { CommandPalette } from "./palette/CommandPalette";
 import { ImageEditorProvider, useImage } from "./state/context";
 import { LibraryProvider } from "./state/library";
 import { createImageStore } from "./state/store";
 import TopBar from "./TopBar";
-import { AddTools } from "./toolbar/AddTools";
-import { ArrangeTools, HistoryTools } from "./toolbar/ArrangeTools";
 import { AddImageProvider, useAddImage } from "./toolbar/addImage";
+import { OperationDialogs } from "./toolbar/OperationDialogs";
+import { OperationTools } from "./toolbar/OperationTools";
+import { OperationsProvider } from "./toolbar/operations";
 import { Toolbar, ViewTools } from "./toolbar/Toolbar";
 
 // The editor takes the room the frame of the page leaves (FullLayout): the window less the top bar of the
@@ -129,7 +130,11 @@ export default function ImageEditor({
 		<ImageEditorProvider store={store} api={api}>
 			<LibraryProvider>
 				<AddImageProvider>
-					<Shell live={live} />
+					<OperationsProvider>
+						<Shell live={live} />
+						<OperationDialogs />
+						<CommandPalette />
+					</OperationsProvider>
 				</AddImageProvider>
 			</LibraryProvider>
 		</ImageEditorProvider>
@@ -158,10 +163,10 @@ function Shell({ live }: { live: boolean }): ReactNode {
 			{!failed && <ErrorBar />}
 			<div className="flex min-h-0 flex-1">
 				<Toolbar label={t("ui.image.toolbar.label")} orientation="vertical">
-					<HistoryTools />
-					<AddTools />
-					<ArrangeTools />
-					<ModelEditTools />
+					<OperationTools group="history" />
+					<OperationTools group="add" />
+					<OperationTools group="arrange" />
+					<OperationTools group="model" />
 				</Toolbar>
 				<aside
 					aria-label={t("ui.image.layers.title")}

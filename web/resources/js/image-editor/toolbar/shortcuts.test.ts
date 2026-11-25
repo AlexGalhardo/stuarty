@@ -1,22 +1,23 @@
 import { describe, expect, test } from "vitest";
 
 import keys from "../keys.ts?raw";
-import add from "./AddTools.tsx?raw";
-import arrange from "./ArrangeTools.tsx?raw";
+import operations from "./operations.tsx?raw";
 import { SHORTCUTS } from "./shortcuts";
 import toolbar from "./Toolbar.tsx?raw";
 
 // The keymap of SDD-012 section 24.10, as the toolbar names it in its tooltips.
 describe("toolbar shortcuts", () => {
 	test("no button writes its key as a literal: it names a row of the table", () => {
-		for (const source of [add, arrange, toolbar]) {
-			expect(source).not.toMatch(/shortcut="[^"]*[^a-zA-Z"][^"]*"/);
+		for (const source of [operations, toolbar]) {
+			expect(source).not.toMatch(/shortcut(=|: )"[^"]*[^a-zA-Z"][^"]*"/);
 		}
 	});
 
 	test("every row a button names exists in the table", () => {
-		const rows = [add, arrange, toolbar].flatMap((source) =>
-			[...source.matchAll(/shortcut="([a-zA-Z]+)"/g)].map((m) => m[1] ?? ""),
+		const rows = [operations, toolbar].flatMap((source) =>
+			[...source.matchAll(/shortcut(?:=|: )"([a-zA-Z]+)"/g)].map(
+				(m) => m[1] ?? "",
+			),
 		);
 		expect(rows.length).toBeGreaterThan(8);
 		for (const row of rows) expect(SHORTCUTS).toHaveProperty(row);
