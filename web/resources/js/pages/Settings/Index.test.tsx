@@ -46,13 +46,22 @@ describe("the settings page", () => {
 		expect(nav).toContain('aria-label="Sections of the settings"');
 		const targets = [...nav.matchAll(/href="#([^"]+)"/g)].map((m) => m[1]);
 		expect(targets).toEqual([
+			"settings-about",
 			"settings-preferences",
 			"settings-brand",
 			"settings-account",
 			"settings-transcription",
-			"settings-about",
 		]);
 		for (const id of targets) expect(html).toContain(`id="${id}`);
+	});
+
+	test("puts the about card first in the one card column, above the preferences", () => {
+		const html = markup();
+		const about = html.indexOf('id="settings-about"');
+		const preferences = html.indexOf('id="settings-preferences"');
+		expect(about).toBeGreaterThan(-1);
+		expect(about).toBeLessThan(preferences);
+		expect(html).not.toContain("xl:grid-cols-");
 	});
 
 	test("wraps the list of sections instead of hiding some of them in a sideways scroll", () => {
