@@ -364,3 +364,44 @@ func TestBriefingFollowsTheKindOfTheProject(t *testing.T) {
 		t.Fatalf("with no project the set is the short video: %+v %v", q, err)
 	}
 }
+
+// VV-399 review: the brief of a text asked with another set is not guided for that set, and is not called a brief
+// written by hand either, since answering that set replaces it with no replace.
+func TestBriefingOfAnotherSetIsNotCalledHandWritten(t *testing.T) {
+	t.Parallel()
+
+	e := newEnv(t)
+	ctx := e.as(agent)
+
+	req := testproject.Request("Brief of another set")
+	req.Kind = "text"
+
+	created, err := e.svc.ProjectCreate(e.as(ui), req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	id := created.ProjectID
+
+	if _, err := e.svc.BriefingAnswer(ctx, service.BriefingAnswerRequest{ProjectID: id, Answers: map[string]string{
+		"audience": "indie makers", "tone": "warm", "call_to_action": "sign up", "channel": "blog", "length": "400",
+	}}); err != nil {
+		t.Fatal(err)
+	}
+
+	q, err := e.svc.BriefingQuestions(ctx, service.BriefingQuestionsRequest{ProjectID: id, Kind: "short"})
+	if err != nil || !q.HasBrief || q.Guided {
+		t.Fatalf("the text brief asked as a short: %+v %v", q, err)
+	}
+
+	if strings.Contains(q.Text, "written by hand") || !strings.Contains(q.Text, "another set of questions") {
+		t.Errorf("the text of a brief another set wrote: %q", q.Text)
+	}
+
+	if _, err := e.svc.BriefingAnswer(
+		ctx,
+		service.BriefingAnswerRequest{ProjectID: id, Kind: "short", Answers: briefingAnswers()},
+	); err != nil {
+		t.Errorf("answering another set needed replace: %v", err)
+	}
+}

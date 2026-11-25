@@ -136,10 +136,16 @@ func (s *svc) BriefingQuestions(ctx context.Context, req BriefingQuestionsReques
 				}
 			}
 
-			sb.WriteString("The project has a brief. " + map[bool]string{
-				true:  "It was written by the briefing; answer again to change it.",
-				false: "It was written by hand; answer with replace true to replace it, or clear it first.",
-			}[res.Guided] + "\n" + untrusted.Block(
+			// A brief another set wrote is replaced with no replace (CheckBriefingReplace), so it is not called
+			// one written by hand.
+			state := "It was written by hand; answer with replace true to replace it, or clear it first."
+			if res.Guided {
+				state = "It was written by the briefing; answer again to change it."
+			} else if project.CheckBriefingReplace(b.Body, false) == nil {
+				state = "It was written by the briefing with another set of questions; answering replaces it."
+			}
+
+			sb.WriteString("The project has a brief. " + state + "\n" + untrusted.Block(
 				untrusted.SourceProjectText, untrusted.Attrs{"project": head.ID}, b.Body, 0))
 		}
 	}
