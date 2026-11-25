@@ -424,13 +424,8 @@ describe("the entrance of the sections as the page scrolls", () => {
 		await page.goto(url, { waitUntil: "load" });
 		expect(await page.locator(".l-reveal-out").count()).toBe(0);
 		await page.locator(below).evaluate((e) => e.scrollIntoView({ block: "center" }));
-		// waitForFunction polls on animation frames, which a page without JavaScript does not run: poll from here instead.
-		let shown = 0;
-		for (let i = 0; i < 50 && shown !== 1; i++) {
-			shown = await opacity(page, below);
-			if (shown !== 1) await page.waitForTimeout(100);
-		}
-		expect(shown).toBe(1);
+		// A page without JavaScript runs no animation frame, so the wait polls on an interval instead.
+		await page.waitForFunction((s) => Number(getComputedStyle(document.querySelector(s) as Element).opacity) === 1, below, { polling: 100, timeout: 5000 });
 		await context.close();
 	});
 });
