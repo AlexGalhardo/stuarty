@@ -62,6 +62,9 @@ func Pages(d *httpapi.Deps) func(r *router.Router, app *vukem.App) error {
 		// Edit Image, the image editor (epic 28, image_pages.go).
 		imagePages(r)
 
+		// The teleprompter of a project, in a window of its own (epic 66, teleprompter_pages.go).
+		teleprompterPage(r)
+
 		r.Get("/projects", func(c *web.Ctx) error { return projectsPage(c, d) }).Name("projects.index")
 		r.Post("/projects", func(c *web.Ctx) error { return projectCreate(c, d) }).Name("projects.store")
 

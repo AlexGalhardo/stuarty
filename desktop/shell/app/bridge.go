@@ -25,6 +25,8 @@ type bridge struct {
 	// file may be revealed from (SDD-011 section 14.10). Empty until the workspace is known, and then every
 	// reveal is refused.
 	mediaRoot atomic.Pointer[string]
+	// tele is the teleprompter window of epic 66, which the page opens and closes through the bridge.
+	tele teleprompter
 }
 
 // backgroundAnswer is what the page gets for the background mode: the settings, and the reason the system
@@ -81,7 +83,28 @@ func (b *bridge) handle(_ application.Window, message string, origin *applicatio
 		go b.revealAsset(win, req)
 	case shell.OpGetBackground, shell.OpSetBackground:
 		go b.background(win, req)
+	case shell.OpOpenTeleprompter, shell.OpCloseTeleprompter:
+		go b.teleprompter(win, req)
 	}
+}
+
+// teleprompter opens or closes the teleprompter window. The page names a project; the address is built here, on the
+// origin of the server of this shell (T-170), and an id that is not a project opens nothing.
+func (b *bridge) teleprompter(win *application.WebviewWindow, req shell.BridgeRequest) {
+	msg := ""
+	port := int(b.port.Load())
+	address, ok := shell.TeleprompterURL(port, req.Project)
+
+	switch {
+	case req.Op == shell.OpCloseTeleprompter:
+		application.InvokeSync(b.tele.close)
+	case ok:
+		application.InvokeSync(func() { b.tele.open(b.app, port, address) })
+	default:
+		msg = "not a project"
+	}
+
+	win.ExecJS(shell.ResolveScript(req.ID, nil, msg))
 }
 
 // pickFiles shows the native dialog and gives the page the chosen absolute

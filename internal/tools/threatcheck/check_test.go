@@ -136,11 +136,12 @@ func TestTheRealModelParses(t *testing.T) {
 	// of epic 92 (ADR-0053); T-137 is the recording a browser uploads, epic 63; T-160 to T-163 are the threats
 	// of the MCP tool publication (VV-282, D-143); T-164: a development build never opens the default workspace
 	// (VV-421); T-165 to T-167 are the agents in the recording flow (epic 64); T-180 to T-183 are the threats of
-	// the day of the publishing calendar (epic 97, D-146).
-	// 109 + 15 - 6 removed + 1 + 7 + 1 + 4 + 1 + 3 + 4 = 139.
-	if len(threats) != 139 {
+	// the day of the publishing calendar (epic 97, D-146); T-170 is the teleprompter window of the desktop shell
+	// (epic 66).
+	// 109 + 15 - 6 removed + 1 + 7 + 1 + 4 + 1 + 3 + 4 + 1 = 140.
+	if len(threats) != 140 {
 		t.Errorf(
-			"the model has %d threats, want 139 (T-89, T-100 to T-125, T-130 to T-137, T-160 to T-167, T-180 to T-183)",
+			"the model has %d threats, want 140 (T-89, T-100 to T-125, T-130 to T-137, T-160 to T-167, T-170, T-180 to T-183)",
 			len(threats),
 		)
 	}
