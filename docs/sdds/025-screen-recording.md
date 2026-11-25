@@ -1,6 +1,6 @@
 # SDD-025: Screen recording
 
-- Status: Draft (2026-11-24). Written by epic 61 before its code; extended by epic 62 (section 16: audio, webcam, pause, pointer events), epic 65 (section 17: automatic zoom, smooth cursor, click highlight) epic 63 (section 18: basic recording in the browser) and epic 64 (section 19: agents in the recording flow).
+- Status: Draft (2026-11-24). Written by epic 61 before its code; extended by epic 62 (section 16: audio, webcam, pause, pointer events), epic 65 (section 17: automatic zoom, smooth cursor, click highlight) epic 63 (section 18: basic recording in the browser) epic 64 (section 19: agents in the recording flow) and epic 66 (section 20: layouts, backgrounds, teleprompter).
 - Depends on: ADR-0049 (the native capture helper), ADR-0051 (agents never start a capture), ADR-0011, ADR-0032, ADR-0052, SDD-000 (names), SDD-003 (surfaces), SDD-005 (persistence), SDD-007 (threats, section 6 process policy), SDD-011 (import), SDD-013 section 4.9 (the precedent of a native child).
 - Implements: PRD-004 section 4.11 (RF-430 to RF-442), NFR-067, NFR-068.
 - Owner area: epic 61 (`capture/`, `core/recording/`, `engine/capturehost/`, `service/recording*.go`, the `recordings` table, the adapters, the record dialog).
@@ -26,6 +26,7 @@
 17. Finishing a take: automatic zoom, smooth cursor and click highlight (epic 65)
 18. Basic recording in the browser (epic 63)
 19. Agents in the recording flow (epic 64)
+20. Layouts, backgrounds and the teleprompter (epic 66)
 
 ## 1. Overview
 
@@ -449,3 +450,52 @@ The table `recordings` gets three columns (SDD-005 section 5.18): `plan`, `marks
 ### 19.7 Tests
 
 `core/recording` tests the plan, the marks, the ranges and the batch planner. The service tests cover every operation and limit, the unchanged revision after a proposal, one batch and one undo after a decision, and a revision conflict. The security tests (T-165 to T-167 of SDD-007) cover: no sequence of agent operations over any surface starts the helper; each start-or-resume path (the five operations of 19.3) is refused for an agent; no rule shape authorizes a capture; an agent never decides a proposal; and the indicator follows a fake helper's process. The tray drawing is checked by hand (19.4).
+
+## 20. Layouts, backgrounds and the teleprompter (epic 66)
+
+A creator frames a screen take and a webcam take in a ready layout, puts them on a background, and reads the project's own script while recording. Two commands of the core do the first two; the third is a window and adds no write operation. Names are in SDD-000 section 19, the commands in SDD-002 C.96 and C.97.
+
+### 20.1 Layouts are data that become ordinary values
+
+A layout is a pure function of the frame, the size of the two assets and a few options, in `core/recording` (`layout.go`). `recording.apply_layout` writes its result into the clips as the values the editor already has (`x`, `y`, `scale`, `fit`, `crop`, `mask`), so every value stays editable afterwards and nothing remembers the layout: there is no new field in the document, no new item and no change to the renderer. It is one command, so one undo restores every clip.
+
+**The format.** The frame is one of the four project formats, taken as the nearest of 16:9, 1:1, 4:5 and 9:16 by the logarithm of the ratio, so a custom frame behaves as its nearest format. 16:9 is **wide**; the other three are **stacked** (the two takes are laid out one above the other).
+
+**The safe rectangle.** `padding` is a fraction of the shorter side of the frame, 0 to 0.25 (default 0). The safe rectangle `S` is the frame reduced by `padding` on every side; every clip lies inside it, so no clip exceeds the frame. `u` is the shorter side of `S`. Every length is in project pixels, computed in floating point with additions, subtractions, products, quotients, `min` and `max` only, and rounded to 3 decimals, so the same input gives the same document on every machine.
+
+**Placing a clip in a rectangle `R`.** *Contain*: the asset is fitted whole in `R`, centred. *Cover*: the asset is cropped to the aspect of `R` (the crop sides are equal, rounded to 3 decimals) and fills `R`. In both, `fit` is `contain`, the centre is the centre of `R`, and `scale` is the largest value, rounded **down** to 3 decimals, with which the cropped picture does not leave `R`: rounding never makes a clip exceed its rectangle. A clip that is laid out has `rotation` 0 and the other crop sides cleared.
+
+| Layout | Screen | Camera | In front |
+| --- | --- | --- | --- |
+| `screen_only` | contain in `S` | none (no `camera_item_id` is allowed) | the screen |
+| `pip` | contain in `S` | a square of side `0.26`, `0.30`, `0.32` or `0.36` of the shorter side of the screen rectangle (16:9, 1:1, 4:5, 9:16), cover, in the `corner` of the screen rectangle, inset by 4 % of that shorter side; a circle by default (`camera_shape` `circle` or `rect`) | the camera |
+| `split` | wide: contain in the left panel, the screen panel being 68 % of `S.w` minus the gap and the camera panel the rest, both as high as `S`. Stacked: contain in the top panel, as high as the picture is at the width of `S`, but at most 60 % of `S.h` minus the gap | cover in the other panel; always a rectangle | neither (they do not overlap) |
+| `camera_focus` | contain in an inset of 32 % of `S.w` (wide) or 50 % (stacked) anchored in the `corner` of `S`, inset by 3 % of `u` | cover in `S`; always a rectangle | the screen |
+
+The gap of `split` is 2 % of `u`. `corner` is `top_left`, `top_right`, `bottom_left` or `bottom_right` (default `bottom_right`) and is used by `pip` and `camera_focus` only. When the clip that must be in front is on a lower track, its track is moved directly above the other one (the same order rule as the overlays of section 17.3). A clip whose `x`, `y`, `scale` or crop sides have keyframes is `E_INVALID_STATE` (apply the layout before the automatic zoom of section 17, or clear them with `keyframe.clear`), because a keyframe defines its value.
+
+### 20.2 Backgrounds
+
+`recording.set_background` puts a `color` or an `image` behind the screen clip, on a visual track named `Background` at the bottom of the stack, for the time the screen clip plays, and sets a drop shadow on the screen clip (`shadow`, on by default: black at 0.5 opacity, `dy` 1.2 % of the frame height, blur 3 % of the shorter side). `kind` `none` removes both. A colour is one full-frame rectangle shape; an image is one clip of an image asset with fit `cover`. The items are named `Background <item id>`, and a second run replaces them in one undoable step. The padding of the framed screen is the `padding` of `recording.apply_layout`: the layout is what places the screen, so the screen does not move twice.
+
+Limits, decided here and recorded for the author: **no gradient and no rounded corners.** A gradient needs either a gradient fill in the renderer or an image the service renders and stores as an asset, and rounded corners need a `rounded_rect` mask in the renderer; `renderer/` is outside this epic, and a track cannot hold overlapping items, so a gradient of stacked shapes would take dozens of tracks. A person who wants a gradient makes the image in the image editor (SDD-021) and uses `kind` `image`.
+
+### 20.3 The teleprompter
+
+The teleprompter shows the project's script and scrolls it. It reads the script with the writing operations that exist (`TextList` with `text_kind` `script`, newest first, then `TextGet`, SDD-019 section 7) and writes nothing: it adds no operation, no route, no tool and no scope. The body is untrusted text (SDD-019 section 10) and is drawn as text, never as markup. A project with no script shows a message that says so. A project can be text only (D-134): the teleprompter assumes no video.
+
+The speed (10 to 400 pixels a second, default 60), the size (24 to 120 pixels, default 48) and the mirror (the text flipped left to right, for a glass in front of the lens) are a **preference of the person's UI**, kept in the local storage of the browser or the window, `stuarty.teleprompter`. The scroll is an animation of the page and decides nothing about an edit.
+
+**Two forms, one page.** The page `/projects/<id>/teleprompter` of the web UI is the teleprompter. On the web it is a panel of the record dialog, which a screen or tab capture records when that tab or screen is shared, and the dialog says so. On the desktop the dialog opens it in a **separate window** (`window.vukemDesktop.openTeleprompter(project)` of the bridge of SDD-012 section 13.1, which accepts a project id and builds the address itself, so a page cannot open any other address), always on top, with content protection on.
+
+### 20.4 Keeping the window out of the capture
+
+On Windows the window sets `WDA_EXCLUDEFROMCAPTURE` with `SetWindowDisplayAffinity` (Wails `ContentProtectionEnabled`; Windows 10 version 2004 or later), which the compositor honours for Windows Graphics Capture, the capture of the helper (section 8), and for screenshots and GDI capture of the screen. On macOS the same option sets the window sharing type to none. On Linux nothing excludes a window, and an older Windows ignores the flag: the dialog says that the teleprompter may be captured there. The helper itself changes in no way. The claim is tested with a real window of a test program and a real capture of the screen (20.6); that the Wails window of the shipped application keeps the flag is a check by hand.
+
+### 20.5 Threats
+
+T-170 (SDD-007 section 2): the bridge of the teleprompter opens a window, so it takes only a project id that matches the id pattern, builds the address from the server origin, and refuses everything else; the script it shows is untrusted text and is drawn as text.
+
+### 20.6 Tests
+
+Golden cases of the two commands (C.96 and C.97) with each of the four formats; a property test that no clip leaves the frame for every layout, format, corner and padding; an export test that draws a layout on a background and compares frames to golden images; the unit tests of the picker and of the teleprompter (the script is shown, the scroll runs at the set speed, the mirror and the size apply, a script with markup is text); the tests of the bridge; and on Windows a test that opens a real window of a solid colour with the flag, captures the screen and finds none of the window's pixels, with the same window without the flag found by the same test (so the test can fail). Not run: the Wails window of the shipped application captured by the real helper (a check by hand).

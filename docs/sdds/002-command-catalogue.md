@@ -1,9 +1,10 @@
 # SDD-002: Command catalogue of the core
 
 - Amended (2026-11-18) for Stuarty: this is the catalogue of the video domain. Other domains get their own catalogue (ADR-0031, ADR-0038).
+- Amended (2026-11-25, epic 66): one command, `recording.apply_layout` (C.96); names in SDD-000 section 19, the design in SDD-025 section 20.
 - Amended (2026-11-24, epic 65): three commands, `recording.auto_zoom`, `recording.set_cursor` and `recording.set_click_highlight` (C.93 to C.95); names in SDD-000 section 18, the design in SDD-025 section 17.
 - Amended (2026-11-24, epic 71): four commands, `caption.apply_style` and `caption.list_styles` (C.88, C.89), `clip.blur_region` (C.90) and `audio.apply_voice_preset` (C.91); names in SDD-000 section 17.
-- Status: Draft for freeze (2026-11-14). Parts A and B are the contract; Part C details each command. Part C is frozen: all 95 commands have golden cases and pass the registry-wide gates. The binary exposes all 95 commands, 94 of them public (epic 32 added three, C.84 to C.86, epic 69 one, C.87, epic 71 four, C.88 to C.91, epic 70 one, C.92, and epic 65 three, C.93 to C.95); `font.add` and `font.remove` have scope `media` like `asset.add` and `asset.remove`.
+- Status: Draft for freeze (2026-11-14). Parts A and B are the contract; Part C details each command. Part C is frozen: all 96 commands have golden cases and pass the registry-wide gates. The binary exposes all 96 commands, 95 of them public (epic 32 added three, C.84 to C.86, epic 69 one, C.87, epic 71 four, C.88 to C.91, epic 70 one, C.92, epic 65 three, C.93 to C.95, and epic 66 one, C.96); `font.add` and `font.remove` have scope `media` like `asset.add` and `asset.remove`.
 - Depends on: SDD-001 (document), ADR-0002 (command core), ADR-0004 (time), ADR-0006 (log, concurrency, undo), ADR-0014 (JSON Schema)
 - Implements: RF-010 to RF-016, RF-020 to RF-026, RF-030 to RF-036, RF-040, RF-041, RF-050, RF-051, RF-100, RF-105, RF-107, RF-112 to RF-115, RF-119, NFR-001, NFR-025
 - Owner area: senior-a (command core and schema)
@@ -312,6 +313,7 @@ Scope is `edit` unless stated. "Time" marks arguments parsed by A.4. Optional ar
 | `recording.auto_zoom` | `item_id`, `level?` (default 1.6), `lead_ms?` (400), `ramp_ms?` (700), `hold_ms?` (1200), `merge_ms?` (2500), `max_zooms?` (24) | Zooms a screen take in on its clicks: replaces the `x`, `y` and `scale` keyframes of the clip by the plan of `core/recording` (SDD-025 §17.4). See C.93 |
 | `recording.set_cursor` | `item_id`, `visible?`, `style?` (`dot`, `ring`), `size?`, `color?`, `smoothing_ms?` (150), `keyframe_ms?` (100) | Draws the smoothed pointer of a screen take as shape items on a `Cursor` track, or removes them (SDD-025 §17.5). See C.94 |
 | `recording.set_click_highlight` | `item_id`, `style?` (`ring`, `wave`, `pulse`, `none`), `color?`, `size?`, `duration_ms?` (600) | Marks every click of a screen take with a shape item on a `Click highlight` track, or removes them (SDD-025 §17.6). See C.95 |
+| `recording.apply_layout` | `layout`, `screen_item_id`, `camera_item_id?`, `corner?`, `camera_shape?`, `padding?` | Places a screen clip and a webcam clip by a named layout for the project format (SDD-025 §20.1). See C.96 |
 | `clip.set_speed` | `item_id`, `speed` (`"1.5x"`, `"0.5x"` or a rational object) or `curve` (2 to 8 `{t, speed}` points), `ripple?` (`"none"` default, `"track"`) | Changes speed keeping the same source range: the new duration is `ceil(duration × old / new)`, reduced by the rounding excess if that would read past the end of the asset. Keyframe times and transition and fade lengths are scaled by the same ratio and rounded. With `ripple: "track"`, later items on the track shift by the change in length; otherwise a resulting overlap is `E_OVERLAP`. Captions linked to the clip are not changed; the lint reports them as out of sync until `caption.retime_from_clip` runs. A `composition` item takes a constant `speed` by the same rule (epic 53, C.25); a `curve` or a `reverse` on it is `E_VALIDATION` |
 | `clip.set_color` | `item_id`, `brightness?`, `contrast?`, `saturation?`, `temperature?`, `tint?`, `hue?` | Sets colour adjustment; also white balance and hue rotation (TASK-0233). See C.26 |
 | `clip.set_filter` | `item_id`, `filter?`, `amount?` | Sets the colour filter of a clip and how much of it is mixed in |
@@ -7273,3 +7275,58 @@ Marks every click of a screen take with a short effect (epic 65, SDD-025 section
 - `err_type_mismatch_not_a_clip`
 - `err_invalid_state_no_clicks`
 - `err_limit_items`
+
+### C.96 `recording.apply_layout`
+
+Places a screen clip, and a webcam clip when the layout has one, by a named layout (epic 66, SDD-025 section 20.1). The geometry is the pure code of `core/recording`, so the same frame, assets and options always give the same values.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `layout` | `"screen_only"`, `"pip"`, `"split"`, `"camera_focus"` | yes | none | the arrangement |
+| `screen_item_id` | item id | yes | none | a `clip` of an asset with a width and a height |
+| `camera_item_id` | item id | no | none | a `clip` of such an asset, other than the screen clip; required by every layout but `screen_only`, which refuses it |
+| `corner` | `"top_left"`, `"top_right"`, `"bottom_left"`, `"bottom_right"` | no | `"bottom_right"` | `pip` and `camera_focus` only |
+| `camera_shape` | `"circle"`, `"rect"` | no | `"circle"` for `pip` | `pip` only; the other layouts are always `rect` |
+| `padding` | number | no | 0 | 0 to 0.25, a fraction of the shorter side of the frame left empty around everything |
+
+**Preconditions.**
+
+1. The arguments are in range, the ids have their form, and the layout, the camera and the options agree as the table says (`E_VALIDATION`).
+2. Both items exist (`E_NOT_FOUND`) and are clips (`E_TYPE_MISMATCH`) of an asset with a width and a height (`E_INVALID_STATE`).
+3. No `x`, `y`, `scale` or crop side of either clip has keyframes (`E_INVALID_STATE`).
+
+**Postconditions.** Each clip gets `fit` `contain`, `x`, `y`, `scale` (rounded down to 3 decimals), `rotation` 0, the `crop` that makes the picture fill its rectangle (a cover) or none, and a `mask` that is an ellipse over the whole picture for a circular camera and none otherwise. The clip that is in front is on a track above the other (its track is moved when it is not). No clip leaves the frame. `effective` has `layout`, `format` (`16:9`, `1:1`, `4:5` or `9:16`) and, for each clip, its rectangle in frame pixels (`screen`, `camera`: `x`, `y`, `width`, `height`).
+
+**Errors.** `E_VALIDATION`, `E_NOT_FOUND`, `E_TYPE_MISMATCH`, `E_INVALID_STATE`.
+
+**Inverse.** `patch` of the two items and of the track order. **Idempotency.** The same layout, clips and options give the same document.
+
+**Example.**
+
+```json
+{"op": "recording.apply_layout", "args": {"layout": "pip", "screen_item_id": "itm_m1n2p3q4r5", "camera_item_id": "itm_s6t7v8w9x0", "corner": "bottom_left"}}
+```
+
+**Golden cases.**
+
+- `ok_pip_16_9`
+- `ok_pip_9_16`
+- `ok_pip_rect_top_left`
+- `ok_split_16_9`
+- `ok_split_1_1`
+- `ok_split_4_5`
+- `ok_split_9_16`
+- `ok_camera_focus_16_9`
+- `ok_camera_focus_9_16`
+- `ok_screen_only_with_padding`
+- `ok_camera_brought_in_front`
+- `err_validation_screen_only_with_camera`
+- `err_validation_camera_missing`
+- `err_validation_padding_out_of_range`
+- `err_validation_same_clip`
+- `err_not_found`
+- `err_type_mismatch_not_a_clip`
+- `err_invalid_state_keyframed`
+- `err_invalid_state_asset_without_size`
