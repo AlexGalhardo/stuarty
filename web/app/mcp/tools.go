@@ -1046,7 +1046,8 @@ func checkKindMembers(in *itemArgs) error {
 	case in.Action == "briefing" && in.Kind != "":
 		return &service.Error{
 			Code: command.CodeValidation, Path: "kind", Message: "kind is not used by the action briefing.",
-			Hint: "the set of questions is production_kind: short, commercial, long, text or image (left out, the kind of the project)",
+			Hint: "the set of questions is production_kind: short, commercial, long, text or image; " +
+				"left out, it is the kind of the project",
 		}
 	case in.Action != "briefing" && in.ProductionKind != "":
 		return &service.Error{
