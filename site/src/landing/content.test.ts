@@ -158,10 +158,10 @@ describe("the changes of the author after the review", () => {
 		const page = readFileSync(resolve(import.meta.dir, "../pages/index.astro"), "utf8");
 		expect(page).not.toMatch(/rough edges/i);
 	});
-	test("screen recording is claimed only on Windows, with the epic that is done", () => {
+	test("screen recording is claimed only on Windows and the browser, with the epics that are done", () => {
 		const recording = areas.items.find((a) => a.id === "recording");
-		expect(recording?.epics).toEqual([62, 65]);
-		expect(recording?.text.toLowerCase()).not.toMatch(/\bweb\b|macos|linux/);
+		expect(recording?.epics).toEqual([62, 63, 65]);
+		expect(recording?.text.toLowerCase()).not.toMatch(/macos|linux/);
 	});
 });
 

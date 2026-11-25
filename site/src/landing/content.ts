@@ -301,7 +301,7 @@ export const areas = {
 		{ id: "image", icon: "image", title: "Image editor", text: "Layers, text, masks, presets and templates for thumbnails and posts.", epics: [28, 29] },
 		{ id: "agents", icon: "bot", title: "Agents", text: "Claude Code, Codex, OpenCode and Gemini CLI. You approve each tool request.", epics: [14, 83] },
 		{ id: "library", icon: "brain", title: "Skills, prompts, memory", text: "Reviewed procedures, reusable prompts and notes you approve before they stay.", epics: [15, 16, 83] },
-		{ id: "recording", icon: "video", title: "Screen recording", text: "On Windows, with sound, webcam, pause and pointer events, zoom on clicks, a smooth cursor and click highlights.", epics: [62, 65] },
+		{ id: "recording", icon: "video", title: "Screen recording", text: "On Windows and in the browser, with sound, webcam, pause, zoom on clicks, a smooth cursor and click highlights.", epics: [62, 63, 65] },
 		{ id: "edit-by-text", icon: "wand-sparkles", title: "Edit by text", text: "Cut a video by editing its transcript, drop filler words, style captions, blur private details and clean the voice.", epics: [69, 71] },
 		{ id: "connections", icon: "plug", title: "Connections", text: "Your own AI keys and social accounts, in an encrypted local vault.", epics: [4, 9, 12, 84] },
 		{ id: "publishing", icon: "shield-check", title: "Approvals and publishing", text: "A queue, cost ceilings and a calendar. Nothing is sent without your yes.", epics: [5, 20, 82] },
@@ -353,7 +353,7 @@ export type RoadmapItem = {
  * six cards here; three of them (edit by text, vertical cuts, caption styles with blur and studio voice) are epics 69, 70
  * and 71, which are DONE and ship with this page, so they are not here: the test of the roadmap refuses a finished epic.
  * Their places hold other planned work. Screen recording on Windows (epic 62) left this list after the review of epic 95
- * and is a card of `areas`; recording on the web, macOS and Linux stays here.
+ * and is a card of `areas`, joined by recording in the browser (epic 63); recording on macOS and Linux stays here.
  */
 export const roadmap = {
 	badge: "Also in Stuarty",
@@ -365,9 +365,9 @@ export const roadmap = {
 			id: "recording-more",
 			icon: "video",
 			title: "Recording on every system",
-			text: "Record on the web, macOS and Linux, just as on Windows.",
+			text: "Record on macOS and Linux, just as on Windows.",
 			state: "planned",
-			epics: [63, 67, 68],
+			epics: [67, 68],
 		},
 		{
 			id: "agents-recording",
@@ -407,7 +407,7 @@ export const roadmap = {
 /** Words that name a roadmap-only feature: they must not appear in the copy outside `roadmap`. */
 export const roadmapOnlyTerms = [
 	// Recording ships on Windows (epic 62); on the web, macOS and Linux, its finish and its agent tools it does not.
-	"recording on the web", "web recording", "recording on macos", "recording on linux", "record your", "screen capture",
+	"recording on macos", "recording on linux", "record your", "screen capture",
 	"mark takes", "teleprompter", "local model", "face-aware",
 	"auto zoom", "automatic zoom", "metrics",
 ];
