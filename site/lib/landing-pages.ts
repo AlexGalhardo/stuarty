@@ -16,7 +16,7 @@ export type Shot = {
 export const shots = {
 	videoEditor: {
 		src: "/landing/video-editor",
-		alt: "The Stuarty video editor on a demo project: a vertical clip with the caption \"Beans on the left, compost on the right\", the media bin on the left, the clip inspector on the right, and a timeline with caption, footage, voice and music tracks.",
+		alt: "The Stuarty video editor on a demo project: a vertical clip with the caption \"you are filming against the window\", the media bin on the left, the clip inspector on the right, and a timeline with caption, footage, voice and music tracks.",
 		width: 1600,
 		height: 1000,
 	},
@@ -112,7 +112,7 @@ export const shots = {
 	},
 	approvals: {
 		src: "/landing/approvals",
-		alt: "Approvals: what waits for your yes, the rules that approve without asking and the cost ceilings.",
+		alt: "Approvals: what waits for your yes, a voice-over with its estimated cost and a blog post with its text, each to approve or reject.",
 		width: 1600,
 		height: 1000,
 	},
