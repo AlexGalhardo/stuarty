@@ -33,3 +33,14 @@ describe("ReleaseMarkView inline", () => {
 		expect(html).not.toContain("fixed");
 	});
 });
+
+describe("ReleaseMarkView compact", () => {
+	test("uses a smaller type for the collapsed rail (VV-437)", () => {
+		const rail = renderToString(
+			<ReleaseMarkView version="0.28.0" inline compact />,
+		);
+		const wide = renderToString(<ReleaseMarkView version="0.28.0" inline />);
+		expect(rail).toContain("text-[10px]");
+		expect(wide).not.toContain("text-[10px]");
+	});
+});

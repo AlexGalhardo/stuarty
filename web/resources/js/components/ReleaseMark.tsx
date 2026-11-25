@@ -1,5 +1,6 @@
 import { type ReactNode, useEffect, useState } from "react";
 
+import { cn } from "@/lib/cn";
 import { createClient } from "../editor/api/client";
 import { HttpTransport } from "../editor/api/http";
 
@@ -16,9 +17,13 @@ export function releaseLabel(version: string): string {
 export function ReleaseMarkView({
 	version,
 	inline = false,
+	compact = false,
 }: {
 	version: string;
 	inline?: boolean;
+	// In the collapsed rail of the sidebar, which is 40 px wide inside its padding: a smaller type, so the tag
+	// is not cut at the edge of the window (VV-437).
+	compact?: boolean;
 }): ReactNode {
 	const label = releaseLabel(version);
 	if (label === "") return null;
@@ -26,7 +31,10 @@ export function ReleaseMarkView({
 		return (
 			<span
 				data-testid="release-mark"
-				className="font-mono text-xs text-muted-foreground"
+				className={cn(
+					"font-mono text-xs text-muted-foreground",
+					compact && "text-[10px] tracking-tighter",
+				)}
 			>
 				{label}
 			</span>
@@ -44,8 +52,10 @@ export function ReleaseMarkView({
 
 export default function ReleaseMark({
 	inline = false,
+	compact = false,
 }: {
 	inline?: boolean;
+	compact?: boolean;
 }): ReactNode {
 	const [version, setVersion] = useState("");
 	useEffect(() => {
@@ -60,5 +70,7 @@ export default function ReleaseMark({
 			live = false;
 		};
 	}, []);
-	return <ReleaseMarkView version={version} inline={inline} />;
+	return (
+		<ReleaseMarkView version={version} inline={inline} compact={compact} />
+	);
 }
