@@ -12,7 +12,7 @@ test.describe("field hints", () => {
 		const made = await api("POST", "/projects", { name: `Scope ${tag}` });
 
 		await page.goto("/memory");
-		await page.getByRole("button", { name: "New", exact: true }).click();
+		await page.getByRole("button", { name: "New note" }).click();
 		const scope = page.getByLabel("Scope");
 		await expect(scope).toHaveJSProperty("tagName", "SELECT");
 		await expect(scope.locator("option").first()).toHaveText(/Workspace/);

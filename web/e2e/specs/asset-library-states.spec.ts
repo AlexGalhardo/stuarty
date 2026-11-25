@@ -313,13 +313,14 @@ for (const theme of ["dark", "light"] as const) {
 						await expect(page.getByTestId("asset-detail")).toBeVisible();
 						await expect(page.getByTestId("asset-rights")).toBeVisible();
 					}
-					// Every origin choice is a target of at least 32 px (design system, section 7).
+					// Every filter control (the origin choice and the reusable toggle) is a target of at least 32 px
+					// (design system, section 7).
 					const heights = await page
-						.locator('search fieldset label:has(input[type="radio"])')
+						.locator("search button")
 						.evaluateAll((labels) =>
 							labels.map((label) => label.getBoundingClientRect().height),
 						);
-					expect(heights).toHaveLength(5);
+					expect(heights).toHaveLength(2);
 					expect(Math.min(...heights)).toBeGreaterThanOrEqual(32);
 					await noViolation(page);
 					await noSidewaysScroll(page);

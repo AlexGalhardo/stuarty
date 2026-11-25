@@ -4722,8 +4722,6 @@
         "prompt": "Prompts"
       },
       "search": "Search",
-      "search_button": "Search",
-      "new": "New",
       "rescan": "Read the files again",
       "rescanned": "Files read again: {memory} notes, {skills} skills, {prompts} prompts, {invalid} invalid.",
       "loading": "Loading.",
@@ -4739,7 +4737,9 @@
         "unreviewed": "Not reviewed: not offered to agents",
         "scripts": "Has scripts",
         "kept": "Kept: offered to agents",
-        "pending": "Waiting for you: not offered to agents"
+        "pending": "Waiting for you: not offered to agents",
+        "invalid_short": "Invalid file",
+        "kept_short": "Kept"
       },
       "origin": {
         "built-in": "Built in",
@@ -4775,7 +4775,12 @@
         "pending_hint": "This note was not written by a person in the app (an agent wrote it, or it came from a window that is not a person's session). Agents are not offered it until you keep it.",
         "pending_title": "Waiting for your approval",
         "reject": "Reject this note",
-        "reject_hint": "Rejecting removes the note: it is never kept and no agent is offered it."
+        "reject_hint": "Rejecting removes the note: it is never kept and no agent is offered it.",
+        "waiting": {
+          "one": "{count} note waits for your decision",
+          "other": "{count} notes wait for your decision"
+        },
+        "waiting_hint": "Agents do not receive these notes until you keep them."
       },
       "prompt": {
         "variables_hint": "Write {{variable}} where a value goes.",
@@ -4784,7 +4789,8 @@
         "value": "Value of {name}",
         "render": "Render",
         "rendered": "Rendered text",
-        "variables": "Variables"
+        "variables": "Variables",
+        "use_title": "Fill in and use"
       },
       "skill": {
         "origin": "Origin",
@@ -4802,7 +4808,9 @@
         "instructions": "Instructions",
         "offered_title": "Offered to agents",
         "offered_text": "A person read this skill, so agents may read it. Any change to it takes the mark away.",
-        "not_offered_title": "Not offered to agents"
+        "not_offered_title": "Not offered to agents",
+        "permissions_title": "Skills do not override permissions",
+        "permissions_text": "Every action of a skill still asks for your yes."
       },
       "lint": {
         "none": "No findings.",
@@ -4832,7 +4840,51 @@
         "memory": "When you or an agent write a note, it appears here. A note an agent wrote waits for you to keep it.",
         "skill": "Make a skill, or import one you downloaded. No agent is offered a skill until you have read it.",
         "prompt": "Save a text you use often, with {{variable}} for the parts that change."
-      }
+      },
+      "new": {
+        "skill": "New skill",
+        "prompt": "New prompt",
+        "memory": "New note"
+      },
+      "search_hint": {
+        "skill": "Name or description",
+        "prompt": "Name or tag",
+        "memory": "Note or tag"
+      },
+      "row": {
+        "skill": "{origin} · {review}",
+        "reviewed": "reviewed",
+        "unreviewed": "not reviewed",
+        "kept": "Kept, {ago}",
+        "pending": "Written by an agent, waits for you, {ago}"
+      },
+      "state": {
+        "available": "Available",
+        "blocked": "Blocked"
+      },
+      "tabs": {
+        "all": "All",
+        "pending": "Pending",
+        "kept": "Kept"
+      },
+      "empty_steps": {
+        "skill": {
+          "1": "Write a skill or import a folder",
+          "2": "Read it and mark it as read",
+          "3": "Agents offer it when it fits"
+        },
+        "prompt": {
+          "1": "Write a text with variables",
+          "2": "Save it with a name",
+          "3": "Fill the variables and use it"
+        },
+        "memory": {
+          "1": "Write a fact in one line",
+          "2": "Agents may propose notes too",
+          "3": "You keep or remove each one"
+        }
+      },
+      "search_bar": "Filter the list"
     }
   }
 }

@@ -1,24 +1,43 @@
 import { Head } from "@inertiajs/react";
-import { Brain, FileText, Sparkles } from "lucide-react";
+import {
+	Brain,
+	Check,
+	FileText,
+	Hourglass,
+	MessageSquareText,
+	Plus,
+	RefreshCw,
+	Sparkles,
+	WandSparkles,
+} from "lucide-react";
 import {
 	type FormEvent,
 	type ReactNode,
 	useCallback,
 	useEffect,
 	useMemo,
+	useRef,
 	useState,
 } from "react";
 
 import { EmptyState } from "@/components/EmptyState";
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
+import { FilterBar } from "@/components/FilterBar";
+import { ListRow } from "@/components/ListRow";
+import { LoadError } from "@/components/LoadError";
+import { LoadingState } from "@/components/LoadingState";
 import { Notice } from "@/components/Notice";
-import { PageHeader } from "@/components/PageHeader";
+import { PageHeader, PageHeaderAction } from "@/components/PageHeader";
+import { StatusBadge } from "@/components/StatusBadge";
+import { TabBar } from "@/components/TabBar";
 import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useT } from "@/lib/i18n";
+import { formatAgo } from "@/lib/format";
+import { useLocale, useT } from "@/lib/i18n";
+import { PersonOnlyNote, useSession } from "@/lib/session";
 import { confirmDiscard } from "@/lib/unsaved";
 import { HttpTransport } from "../../editor/api/http";
 import {
@@ -30,7 +49,7 @@ import {
 } from "./client";
 import MemoryPane from "./MemoryPane";
 import PromptPane from "./PromptPane";
-import { EntryBadges, groupEntries } from "./parts";
+import { groupEntries } from "./parts";
 import SkillPane from "./SkillPane";
 
 const EMPTY_ICON = {
@@ -39,25 +58,61 @@ const EMPTY_ICON = {
 	prompt: FileText,
 } as const;
 
+const ROW_ICON = {
+	skill: WandSparkles,
+	prompt: MessageSquareText,
+	memory: Hourglass,
+} as const;
+
 const SECTION: { [kind in LibraryKind]: string } = {
 	memory: "memory",
 	skill: "skills",
 	prompt: "prompts",
 };
 
+// A search waits for this pause after the last key, so the service is asked once per word.
+const TYPING_PAUSE_MS = 300;
+
 type Loaded =
 	| { state: "loading" }
-	| { state: "failed" }
+	| { state: "failed"; code: string }
 	| { state: "ready"; entries: readonly LibraryEntry[] };
 
-// A section of the library (SDD-018 section 14): the list with a search box, an editor with a preview, and for
-// skills the import and the export. The files are the truth; the page reads and writes them through the API.
+// What a row says under its name: the short words of what the service listed, never the long text of the
+// file (that is in the detail). A skill says where it came from and whether it was read; a note, whether it
+// is kept and how long ago it was written.
+function useRowText(entry: LibraryEntry, hit: boolean): string {
+	const t = useT();
+	const locale = useLocale();
+	if (hit) return String((entry as LibraryHit).snippet);
+	if (entry.state === "invalid") return entry.error ?? "";
+	if (entry.kind === "skill") {
+		return t("ui.library.row.skill", {
+			origin: t(`ui.library.origin.${entry.origin ?? "user"}`),
+			review: t(
+				entry.reviewed
+					? "ui.library.row.reviewed"
+					: "ui.library.row.unreviewed",
+			),
+		});
+	}
+	if (entry.kind === "memory") {
+		return t(entry.kept ? "ui.library.row.kept" : "ui.library.row.pending", {
+			ago: formatAgo(entry.updated_at, locale),
+		});
+	}
+	return entry.description;
+}
+
+// A section of the library (SDD-018 section 14): the list with a search box, and beside it the entry that is
+// open. The files are the truth; the page reads and writes them through the API.
 export default function LibraryPage({
 	kind,
 }: {
 	kind: LibraryKind;
 }): ReactNode {
 	const t = useT();
+	const { privileged } = useSession();
 	const client: LibraryClient = useMemo(
 		() => libraryClient(new HttpTransport("/api/v1")),
 		[],
@@ -71,13 +126,18 @@ export default function LibraryPage({
 	const [hits, setHits] = useState<readonly LibraryHit[] | null>(null);
 	const [failure, setFailure] = useState<Failure | null>(null);
 	const [notice, setNotice] = useState<string | null>(null);
+	const [tab, setTab] = useState("all");
+	const [busyRow, setBusyRow] = useState<string | null>(null);
 
 	const reload = useCallback(async (): Promise<void> => {
 		try {
 			const result = await client.list(kind);
 			setLoaded({ state: "ready", entries: result.entries });
-		} catch {
-			setLoaded({ state: "failed" });
+		} catch (error) {
+			setLoaded({
+				state: "failed",
+				code: (error as { code?: string }).code ?? "E_GENERIC",
+			});
 		}
 	}, [client, kind]);
 
@@ -85,20 +145,34 @@ export default function LibraryPage({
 		void reload();
 	}, [reload]);
 
-	async function search(event: FormEvent<HTMLFormElement>): Promise<void> {
-		event.preventDefault();
-		setFailure(null);
-		if (query.trim() === "") {
+	const first = useRef(true);
+	useEffect(() => {
+		if (first.current) {
+			first.current = false;
+			return;
+		}
+		const word = query.trim();
+		if (word === "") {
 			setHits(null);
 			return;
 		}
-		try {
-			const result = await client.search(kind, query.trim());
-			setHits(result.hits);
-		} catch (error) {
-			setFailure(failureOf(error));
-		}
-	}
+		let live = true;
+		const timer = window.setTimeout(() => {
+			setFailure(null);
+			client
+				.search(kind, word)
+				.then((result) => {
+					if (live) setHits(result.hits);
+				})
+				.catch((error: unknown) => {
+					if (live) setFailure(failureOf(error));
+				});
+		}, TYPING_PAUSE_MS);
+		return () => {
+			live = false;
+			window.clearTimeout(timer);
+		};
+	}, [query, client, kind]);
 
 	async function rescan(): Promise<void> {
 		setFailure(null);
@@ -127,8 +201,71 @@ export default function LibraryPage({
 		void reload();
 	}
 
-	const rows: readonly LibraryEntry[] =
-		hits ?? (loaded.state === "ready" ? loaded.entries : []);
+	// "Keep this note" from a row: the note is read, then written again with the mark that a person kept it. The
+	// service decides who may keep it; a refusal is shown as it came.
+	async function keepNote(name: string): Promise<void> {
+		setBusyRow(name);
+		setFailure(null);
+		try {
+			const note = await client.getMemory(name);
+			await client.writeMemory({
+				name,
+				description: note.entry.description,
+				scope:
+					note.entry.scope === undefined || note.entry.scope === "workspace"
+						? undefined
+						: note.entry.scope,
+				tags: note.entry.tags ?? [],
+				body: note.body,
+				keep: true,
+			});
+			if (selected === name) setPaneKey((k) => k + 1);
+			await reload();
+		} catch (error) {
+			setFailure(failureOf(error));
+		} finally {
+			setBusyRow(null);
+		}
+	}
+
+	async function removeNote(name: string): Promise<void> {
+		setBusyRow(name);
+		setFailure(null);
+		try {
+			await client.removeMemory(name);
+			if (selected === name) changed(null);
+			else await reload();
+		} catch (error) {
+			setFailure(failureOf(error));
+		} finally {
+			setBusyRow(null);
+		}
+	}
+
+	function pick(name: string): void {
+		if (!creating && selected === name) return;
+		if (!confirmDiscard(t("ui.unsaved.leave"))) return;
+		setCreating(false);
+		setSelected(name);
+		setPaneKey((k) => k + 1);
+	}
+
+	const all: readonly LibraryEntry[] =
+		loaded.state === "ready" ? loaded.entries : [];
+	const isMemory = kind === "memory";
+	const pendingCount = isMemory
+		? all.filter((e) => e.state === "ok" && !e.kept).length
+		: 0;
+	const keptCount = isMemory
+		? all.filter((e) => e.state === "ok" && e.kept).length
+		: 0;
+	let rows: readonly LibraryEntry[] = hits ?? all;
+	if (isMemory && tab === "pending") {
+		rows = rows.filter((e) => e.state === "ok" && !e.kept);
+	}
+	if (isMemory && tab === "kept") {
+		rows = rows.filter((e) => e.state === "ok" && e.kept);
+	}
 	const section = SECTION[kind];
 	// Memory shows the notes that wait for a person first (the service says which are kept); the other lists keep
 	// the order of the service.
@@ -139,56 +276,196 @@ export default function LibraryPage({
 	});
 	const pane = creating || selected !== null;
 	const name = creating ? null : selected;
+	const split = pane || !isMemory;
+	let layout = "flex flex-col gap-6";
+	if (split) {
+		layout =
+			kind === "prompt"
+				? "grid items-start gap-6 lg:grid-cols-[minmax(14rem,20rem)_minmax(0,1fr)]"
+				: "grid items-start gap-6 lg:grid-cols-[minmax(16rem,24rem)_minmax(0,1fr)]";
+	}
 
 	return (
 		<>
 			<Head title={t(`ui.nav.section.${section}`)} />
 			<section
 				aria-label={t(`ui.nav.section.${section}`)}
-				className="flex flex-col gap-4"
+				className="mx-auto flex max-w-7xl flex-col gap-6"
 				data-testid={`library-${kind}`}
 			>
 				<PageHeader
 					title={t(`ui.nav.section.${section}`)}
 					description={t(`ui.library.intro.${kind}`)}
+					actions={
+						<>
+							<PageHeaderAction
+								type="button"
+								variant="outline"
+								onClick={() => void rescan()}
+							>
+								<RefreshCw aria-hidden="true" />
+								{t("ui.library.rescan")}
+							</PageHeaderAction>
+							<PageHeaderAction
+								type="button"
+								onClick={() => {
+									if (!confirmDiscard(t("ui.unsaved.leave"))) return;
+									setCreating(true);
+									setSelected(null);
+									setPaneKey((k) => k + 1);
+								}}
+							>
+								<Plus aria-hidden="true" />
+								{t(`ui.library.new.${kind}`)}
+							</PageHeaderAction>
+						</>
+					}
 				/>
-				<div className="flex flex-wrap items-end gap-2">
-					<search className="flex-1">
-						<form className="flex flex-wrap items-end gap-2" onSubmit={search}>
-							<div className="flex min-w-48 flex-1 flex-col gap-1">
+				{notice !== null && <Notice tone="info" role="status" title={notice} />}
+				<FailureNote failure={failure} />
+				{isMemory && pendingCount > 0 && (
+					<Notice
+						tone="warning"
+						title={t("ui.library.memory.waiting", { count: pendingCount })}
+						data-testid="memory-waiting"
+					>
+						{t("ui.library.memory.waiting_hint")}
+					</Notice>
+				)}
+				{isMemory && (
+					<TabBar
+						label={t("ui.library.list.memory")}
+						value={tab}
+						onChange={setTab}
+						tabs={[
+							{ value: "all", label: t("ui.library.tabs.all") },
+							{
+								value: "pending",
+								label: t("ui.library.tabs.pending"),
+								count: pendingCount,
+							},
+							{
+								value: "kept",
+								label: t("ui.library.tabs.kept"),
+								count: keptCount,
+							},
+						]}
+					/>
+				)}
+				<div className={layout}>
+					<div className="flex min-w-0 flex-col gap-3">
+						<FilterBar label={t("ui.library.search_bar")}>
+							<div className="flex min-w-0 flex-1 flex-col gap-1">
 								<Label htmlFor="library-query">{t("ui.library.search")}</Label>
 								<Input
 									id="library-query"
 									type="search"
+									autoComplete="off"
+									placeholder={t(`ui.library.search_hint.${kind}`)}
 									value={query}
-									onChange={(e) => {
-										setQuery(e.target.value);
-										if (e.target.value === "") setHits(null);
-									}}
+									onChange={(e) => setQuery(e.target.value)}
 								/>
 							</div>
-							<Button type="submit" variant="outline">
-								{t("ui.library.search_button")}
-							</Button>
-						</form>
-					</search>
-					<Button
-						type="button"
-						onClick={() => {
-							if (!confirmDiscard(t("ui.unsaved.leave"))) return;
-							setCreating(true);
-							setSelected(null);
-							setPaneKey((k) => k + 1);
-						}}
-					>
-						{t("ui.library.new")}
-					</Button>
-					<Button type="button" variant="outline" onClick={() => void rescan()}>
-						{t("ui.library.rescan")}
-					</Button>
+						</FilterBar>
+						<nav aria-label={t(`ui.library.list.${kind}`)}>
+							{loaded.state === "loading" && (
+								<LoadingState message={t("ui.library.loading")} />
+							)}
+							{loaded.state === "failed" && (
+								<LoadError
+									failure={{ code: loaded.code, message: "" }}
+									onRetry={() => {
+										setLoaded({ state: "loading" });
+										void reload();
+									}}
+								/>
+							)}
+							{loaded.state === "ready" &&
+								rows.length === 0 &&
+								(hits !== null || tab !== "all") && (
+									<p className="text-sm text-text-muted">
+										{t("ui.library.no_match")}
+									</p>
+								)}
+							{loaded.state === "ready" &&
+								rows.length === 0 &&
+								hits === null &&
+								tab === "all" && (
+									<EmptyState
+										icon={EMPTY_ICON[kind]}
+										level={2}
+										title={t("ui.library.empty")}
+										description={t(`ui.library.empty_text.${kind}`)}
+										steps={[1, 2, 3].map((n) => ({
+											title: t(`ui.library.empty_steps.${kind}.${n}`),
+										}))}
+									/>
+								)}
+							{rows.length > 0 && (
+								<div className="flex flex-col divide-y divide-border rounded-lg border border-border bg-surface">
+									{groups.map((group) => (
+										<ul
+											key={group.key}
+											aria-label={group.label ?? undefined}
+											data-group={group.key}
+											className="flex flex-col divide-y divide-border"
+										>
+											{group.entries.map((entry) => (
+												<EntryRow
+													key={entry.name}
+													entry={entry}
+													hit={hits !== null}
+													selected={!creating && selected === entry.name}
+													busy={busyRow === entry.name}
+													privileged={privileged}
+													onPick={() => pick(entry.name)}
+													onKeep={() => void keepNote(entry.name)}
+													onRemove={() => void removeNote(entry.name)}
+												/>
+											))}
+										</ul>
+									))}
+								</div>
+							)}
+							{isMemory && pendingCount > 0 && !privileged && (
+								<PersonOnlyNote id="keep-person-only-list" />
+							)}
+						</nav>
+					</div>
+					{split && (
+						<div className="min-w-0">
+							{!pane && (
+								<p className="text-sm text-text-muted">
+									{t("ui.library.pick")}
+								</p>
+							)}
+							{pane && kind === "memory" && (
+								<MemoryPane
+									key={paneKey}
+									client={client}
+									name={name}
+									onChanged={changed}
+								/>
+							)}
+							{pane && kind === "prompt" && (
+								<PromptPane
+									key={paneKey}
+									client={client}
+									name={name}
+									onChanged={changed}
+								/>
+							)}
+							{pane && kind === "skill" && (
+								<SkillPane
+									key={paneKey}
+									client={client}
+									name={name}
+									onChanged={changed}
+								/>
+							)}
+						</div>
+					)}
 				</div>
-				{notice !== null && <Notice tone="info" role="status" title={notice} />}
-				<FailureNote failure={failure} />
 				{kind === "skill" && (
 					<SkillTools
 						client={client}
@@ -200,126 +477,113 @@ export default function LibraryPage({
 						}}
 					/>
 				)}
-				<div className="grid gap-4 md:grid-cols-[minmax(14rem,22rem)_1fr]">
-					<nav aria-label={t(`ui.library.list.${kind}`)}>
-						{loaded.state === "loading" && (
-							<p className="text-sm text-text-muted">
-								{t("ui.library.loading")}
-							</p>
-						)}
-						{loaded.state === "failed" && (
-							<Notice
-								tone="danger"
-								role="alert"
-								title={t("ui.library.load_failed")}
-							/>
-						)}
-						{loaded.state === "ready" && rows.length === 0 && hits !== null && (
-							<p className="text-sm text-text-muted">
-								{t("ui.library.no_match")}
-							</p>
-						)}
-						{loaded.state === "ready" && rows.length === 0 && hits === null && (
-							<EmptyState
-								icon={EMPTY_ICON[kind]}
-								level={2}
-								title={t("ui.library.empty")}
-								description={t(`ui.library.empty_text.${kind}`)}
-							/>
-						)}
-						{groups.map((group) => (
-							<section
-								key={group.key}
-								className="mb-3 flex flex-col gap-1"
-								aria-label={group.label ?? undefined}
-								data-group={group.key}
-							>
-								{group.label !== null && (
-									<h2 className="px-1 text-xs font-semibold text-text-muted">
-										{group.label}
-									</h2>
-								)}
-								<ul className="flex flex-col gap-1">
-									{group.entries.map((entry) => (
-										<li key={entry.name}>
-											<button
-												type="button"
-												data-entry={entry.name}
-												aria-current={
-													!creating && selected === entry.name
-														? "true"
-														: undefined
-												}
-												className="flex w-full flex-col gap-1 rounded-lg border border-border bg-surface px-3 py-2 text-start hover:bg-surface-hover aria-[current=true]:border-accent aria-[current=true]:bg-surface-selected"
-												onClick={() => {
-													if (!creating && selected === entry.name) return;
-													if (!confirmDiscard(t("ui.unsaved.leave"))) return;
-													setCreating(false);
-													setSelected(entry.name);
-													setPaneKey((k) => k + 1);
-												}}
-											>
-												<span className="flex flex-wrap items-center gap-2">
-													<span className="font-medium text-text break-all">
-														{entry.name}
-													</span>
-													<EntryBadges entry={entry} />
-												</span>
-												<span className="text-sm text-text-muted">
-													<UntrustedText>
-														{"snippet" in entry
-															? String((entry as LibraryHit).snippet)
-															: entry.description}
-													</UntrustedText>
-												</span>
-												{entry.state === "invalid" &&
-													entry.error !== undefined && (
-														<span
-															className="text-xs text-danger-text"
-															lang="en"
-														>
-															<UntrustedText>{entry.error}</UntrustedText>
-														</span>
-													)}
-											</button>
-										</li>
-									))}
-								</ul>
-							</section>
-						))}
-					</nav>
-					<div>
-						{!pane && (
-							<p className="text-sm text-text-muted">{t("ui.library.pick")}</p>
-						)}
-						{pane && kind === "memory" && (
-							<MemoryPane
-								key={paneKey}
-								client={client}
-								name={name}
-								onChanged={changed}
-							/>
-						)}
-						{pane && kind === "prompt" && (
-							<PromptPane
-								key={paneKey}
-								client={client}
-								name={name}
-								onChanged={changed}
-							/>
-						)}
-						{pane && kind === "skill" && (
-							<SkillPane
-								key={paneKey}
-								client={client}
-								name={name}
-								onChanged={changed}
-							/>
-						)}
-					</div>
-				</div>
 			</section>
 		</>
+	);
+}
+
+// One row of a list: what the service listed, in short words, and the actions a note that waits needs.
+function EntryRow({
+	entry,
+	hit,
+	selected,
+	busy,
+	privileged,
+	onPick,
+	onKeep,
+	onRemove,
+}: {
+	entry: LibraryEntry;
+	hit: boolean;
+	selected: boolean;
+	busy: boolean;
+	privileged: boolean;
+	onPick(): void;
+	onKeep(): void;
+	onRemove(): void;
+}): ReactNode {
+	const t = useT();
+	const text = useRowText(entry, hit);
+	const memory = entry.kind === "memory" && entry.state === "ok";
+	const waiting = memory && !entry.kept;
+	let Leading = ROW_ICON[entry.kind];
+	if (memory) Leading = waiting ? Hourglass : Check;
+	let tone = "bg-surface-hover text-icon";
+	if (waiting) tone = "bg-warning-soft text-warning-text";
+	else if (memory) tone = "bg-success-soft text-success-text";
+	return (
+		<ListRow
+			selected={selected}
+			className={memory ? "py-4" : undefined}
+			leading={
+				<span
+					className={`flex size-9 items-center justify-center rounded-md ${tone}`}
+				>
+					<Leading aria-hidden="true" className="size-4" />
+				</span>
+			}
+			title={
+				<button
+					type="button"
+					data-entry={entry.name}
+					className="block w-full truncate text-start focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+					onClick={onPick}
+				>
+					<UntrustedText>
+						{memory && entry.description !== ""
+							? entry.description
+							: entry.name}
+					</UntrustedText>
+				</button>
+			}
+			description={text}
+			trailing={
+				<>
+					{entry.state === "invalid" && (
+						<StatusBadge status="danger">
+							{t("ui.library.badge.invalid_short")}
+						</StatusBadge>
+					)}
+					{entry.kind === "skill" && entry.state === "ok" && (
+						<span className="text-sm text-text-muted">
+							{t(
+								entry.reviewed
+									? "ui.library.state.available"
+									: "ui.library.state.blocked",
+							)}
+						</span>
+					)}
+					{memory && !waiting && (
+						<StatusBadge status="success">
+							{t("ui.library.badge.kept_short")}
+						</StatusBadge>
+					)}
+					{waiting && (
+						<>
+							<Button
+								type="button"
+								variant="ghost"
+								disabled={busy}
+								onClick={onRemove}
+							>
+								{t("ui.library.action.remove")}
+							</Button>
+							<Button
+								type="button"
+								disabled={busy || !privileged}
+								aria-describedby={
+									privileged ? undefined : "keep-person-only-list"
+								}
+								onClick={onKeep}
+							>
+								<Check aria-hidden="true" />
+								{t("ui.library.memory.keep")}
+							</Button>
+						</>
+					)}
+				</>
+			}
+		/>
 	);
 }
 

@@ -4722,8 +4722,6 @@
         "prompt": "Lista de prompts"
       },
       "search": "Buscar",
-      "search_button": "Buscar",
-      "new": "Novo",
       "rescan": "Ler os arquivos de novo",
       "rescanned": "Arquivos lidos de novo: {memory} notas, {skills} skills, {prompts} prompts, {invalid} inválidos.",
       "loading": "Carregando.",
@@ -4739,7 +4737,9 @@
         "unreviewed": "Não revisada: não oferecida aos agentes",
         "scripts": "Tem scripts",
         "kept": "Mantida: oferecida aos agentes",
-        "pending": "Aguardando você: não oferecida aos agentes"
+        "pending": "Aguardando você: não oferecida aos agentes",
+        "invalid_short": "Arquivo inválido",
+        "kept_short": "Mantida"
       },
       "origin": {
         "built-in": "Do produto",
@@ -4775,7 +4775,12 @@
         "pending_hint": "Esta nota não foi escrita por uma pessoa no aplicativo (um agente a escreveu, ou ela veio de uma janela que não é a sessão de uma pessoa). Os agentes não a recebem antes de você mantê-la.",
         "pending_title": "Aguardando a sua aprovação",
         "reject": "Rejeitar esta nota",
-        "reject_hint": "Rejeitar remove a nota: ela nunca é mantida e nenhum agente a recebe."
+        "reject_hint": "Rejeitar remove a nota: ela nunca é mantida e nenhum agente a recebe.",
+        "waiting": {
+          "one": "{count} nota espera a sua decisão",
+          "other": "{count} notas esperam a sua decisão"
+        },
+        "waiting_hint": "Os agentes não recebem estas notas até você mantê-las."
       },
       "prompt": {
         "variables_hint": "Escreva {{variable}} onde entra um valor.",
@@ -4784,7 +4789,8 @@
         "value": "Valor de {name}",
         "render": "Gerar o texto",
         "rendered": "Texto gerado",
-        "variables": "Variáveis"
+        "variables": "Variáveis",
+        "use_title": "Preencher e usar"
       },
       "skill": {
         "origin": "Origem",
@@ -4802,7 +4808,9 @@
         "instructions": "Instruções",
         "offered_title": "Oferecida aos agentes",
         "offered_text": "Uma pessoa leu esta skill, então os agentes podem lê-la. Qualquer mudança nela tira a marca.",
-        "not_offered_title": "Não oferecida aos agentes"
+        "not_offered_title": "Não oferecida aos agentes",
+        "permissions_title": "Skills não passam por cima das permissões",
+        "permissions_text": "Toda ação da skill ainda pede o seu sim."
       },
       "lint": {
         "none": "Nenhum achado.",
@@ -4832,7 +4840,51 @@
         "memory": "Quando você ou um agente escreve uma nota, ela aparece aqui. Uma nota escrita por um agente espera você mantê-la.",
         "skill": "Crie uma skill ou importe uma que você baixou. Nenhum agente recebe uma skill antes de você lê-la.",
         "prompt": "Guarde um texto que você usa sempre, com {{variable}} para o que muda."
-      }
+      },
+      "new": {
+        "skill": "Nova skill",
+        "prompt": "Novo prompt",
+        "memory": "Nova nota"
+      },
+      "search_hint": {
+        "skill": "Nome ou descrição",
+        "prompt": "Nome ou tag",
+        "memory": "Nota ou tag"
+      },
+      "row": {
+        "skill": "{origin}, {review}",
+        "reviewed": "revisada",
+        "unreviewed": "não revisada",
+        "kept": "Mantida, {ago}",
+        "pending": "Escrita por um agente, espera por você, {ago}"
+      },
+      "state": {
+        "available": "Disponível",
+        "blocked": "Bloqueada"
+      },
+      "tabs": {
+        "all": "Todas",
+        "pending": "Pendentes",
+        "kept": "Mantidas"
+      },
+      "empty_steps": {
+        "skill": {
+          "1": "Escreva uma skill ou importe uma pasta",
+          "2": "Leia e marque como lida",
+          "3": "Os agentes a oferecem quando serve"
+        },
+        "prompt": {
+          "1": "Escreva um texto com variáveis",
+          "2": "Salve com um nome",
+          "3": "Preencha as variáveis e use"
+        },
+        "memory": {
+          "1": "Escreva um fato em uma linha",
+          "2": "Os agentes também podem propor notas",
+          "3": "Você mantém ou remove cada uma"
+        }
+      },
+      "search_bar": "Filtrar a lista"
     }
   }
 }
