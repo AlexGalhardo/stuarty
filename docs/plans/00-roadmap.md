@@ -109,7 +109,7 @@ The order, the critical path and the groups are in `docs/planning/screen-recordi
 | [63](63-basic-web-recording.md) | Basic web recording | M | 61 | DONE (2026-11-25, `7bf6d9c67`..`51668e588`; Firefox and WebKit runs reported by the hand-off) |
 | [64](64-agent-operation-of-recording.md) | Agents in the recording flow | L | 61, 62 | DONE (2026-11-25, `a77a827b6`..`91d977ddc`; threats T-165 to T-167; the tray indicator check by eye and the MCP actions wait for the author, QUESTIONS) |
 | [65](65-auto-zoom-smooth-cursor-click-highlight.md) | Automatic zoom, smooth cursor and click highlight | L | 62 | DONE (2026-11-25, `58d315aa9`..`ad5c8c0cf`) |
-| [66](66-recording-layouts-backgrounds-teleprompter.md) | Recording layouts, backgrounds and teleprompter | M | 62 | TODO |
+| [66](66-recording-layouts-backgrounds-teleprompter.md) | Recording layouts, backgrounds and teleprompter | M | 62 | DONE (2026-11-25, `b449de842`..`8daaa8d7b`; threat T-170; no gradient or radius, which need the renderer, and the Wails window capture check wait for the author) |
 | [67](67-macos-capture.md) | Recording on macOS | L | 62, 43, the signing decision | TODO |
 | [68](68-linux-capture.md) | Recording on Linux | L | 62, 43 | TODO |
 | [69](69-edit-by-text-and-filler-words.md) | Edit by text, filler words and repetitions | L | the transcription of today | DONE (2026-11-24, `55e5e49fd`..`a003450b9`) |
