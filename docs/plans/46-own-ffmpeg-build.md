@@ -40,7 +40,7 @@ A creator installs Stuarty and exporting just works, with hardware encoding wher
 - [ ] 3. Build for Windows and for the Linux image, twice each. Verify: `bash scripts/ffmpeg-build.sh` gives the same digest on both runs; `bash scripts/ffmpeg-verify.sh` passes.
 - [ ] 4. Run the export and ingest suites against the own build. Verify: `go test ./engine/...` passes with the build forced.
 - [ ] 5. Make the installers and the image carry it. Verify: `task image:build && task image:smoke` and `bash scripts/desktop-verify.sh` pass.
-- [ ] 6. Update notices and licences. Verify: `task notices:check` exits 0.
+- [x] 6. Update notices and licences. Verify: `task notices:check` exits 0.
 - [ ] 7. Publish the assets with the release the author designates. Verify: `bash scripts/release-verify.sh` passes for that release (the author triggers it).
 
 ## Test strategy
