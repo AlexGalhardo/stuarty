@@ -78,6 +78,8 @@ export function ApprovalItem({
 	const locale = useLocale();
 	const { privileged } = useSession();
 	const [reason, setReason] = useState("");
+	// The reason is asked only when a person starts to reject: the first press opens the field, the second sends.
+	const [rejecting, setRejecting] = useState(false);
 	const free = request.estimate.micros === 0;
 	const { row, publication, target, post } = context;
 	const notReported = <>{t("ui.approvals.not_reported")}</>;
@@ -194,18 +196,21 @@ export function ApprovalItem({
 					<Lock aria-hidden="true" className="size-4 shrink-0" />
 					{t("ui.approvals.person_decides")}
 				</p>
-				<div className="flex min-w-48 flex-col gap-1">
-					<Label htmlFor={`reason-${request.id}`} className="text-xs">
-						{t("ui.approvals.reason")}
-					</Label>
-					<Input
-						id={`reason-${request.id}`}
-						autoComplete="off"
-						maxLength={500}
-						value={reason}
-						onChange={(event) => setReason(event.target.value)}
-					/>
-				</div>
+				{rejecting && (
+					<div className="flex min-w-48 flex-col gap-1">
+						<Label htmlFor={`reason-${request.id}`} className="text-xs">
+							{t("ui.approvals.reason")}
+						</Label>
+						<Input
+							autoFocus
+							id={`reason-${request.id}`}
+							autoComplete="off"
+							maxLength={500}
+							value={reason}
+							onChange={(event) => setReason(event.target.value)}
+						/>
+					</div>
+				)}
 				<Button
 					type="button"
 					variant="outline"
@@ -213,7 +218,10 @@ export function ApprovalItem({
 					className="min-w-24"
 					disabled={busy || !privileged}
 					aria-describedby={privileged ? undefined : "approvals-person-only"}
-					onClick={() => onDecide("reject", reason)}
+					onClick={() => {
+						if (rejecting) onDecide("reject", reason);
+						else setRejecting(true);
+					}}
 				>
 					<X aria-hidden="true" />
 					{t("ui.approvals.reject")}
