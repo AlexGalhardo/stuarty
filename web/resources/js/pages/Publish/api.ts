@@ -20,8 +20,16 @@ export interface PublishApi {
 	create(input: PublicationCreateInput): Promise<Publication>;
 	update(id: string, input: PublicationUpdateInput): Promise<Publication>;
 	schedule(id: string, input: ScheduleInput): Promise<Publication>;
-	sendNow(id: string, targetId: string): Promise<Publication>;
-	retry(id: string, targetId: string): Promise<Publication>;
+	sendNow(
+		id: string,
+		targetId: string,
+		confirmQuietDay?: boolean,
+	): Promise<Publication>;
+	retry(
+		id: string,
+		targetId: string,
+		confirmQuietDay?: boolean,
+	): Promise<Publication>;
 	cancel(id: string, targetId?: string): Promise<Publication>;
 }
 
@@ -69,10 +77,16 @@ export function createPublishApi(
 		update: (id, input) => call("PUT", path(id), WRITE_MS, input),
 		schedule: (id, input) =>
 			call("POST", path(id, "/schedule"), WRITE_MS, input),
-		sendNow: (id, targetId) =>
-			call("POST", path(id, "/send-now"), WRITE_MS, { target_id: targetId }),
-		retry: (id, targetId) =>
-			call("POST", path(id, "/retry"), WRITE_MS, { target_id: targetId }),
+		sendNow: (id, targetId, confirmQuietDay) =>
+			call("POST", path(id, "/send-now"), WRITE_MS, {
+				target_id: targetId,
+				...(confirmQuietDay === true ? { confirm_quiet_day: true } : {}),
+			}),
+		retry: (id, targetId, confirmQuietDay) =>
+			call("POST", path(id, "/retry"), WRITE_MS, {
+				target_id: targetId,
+				...(confirmQuietDay === true ? { confirm_quiet_day: true } : {}),
+			}),
 		cancel: (id, targetId) =>
 			call(
 				"POST",

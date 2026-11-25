@@ -35,6 +35,7 @@ import { type TextItem, writingClient } from "../Write/client";
 import type { PublishApi } from "./api";
 import { useBackgroundAsk } from "./BackgroundAsk";
 import { browserZone } from "./calendar";
+import type { CalendarApi } from "./calendarApi";
 import {
 	type ContentKind,
 	type Destination,
@@ -45,6 +46,7 @@ import { TargetResult } from "./ListView";
 import { actionsOf } from "./publicationState";
 import { TargetStateBadge } from "./TargetStateBadge";
 import type { Publication, Target, TargetInput, TargetState } from "./types";
+import { QuietDeclined, useQuietConfirm } from "./useQuietConfirm";
 
 const VISIBILITIES = ["private", "unlisted", "public"] as const;
 // A post is a draft (private) or published (public) at its destination.
@@ -143,6 +145,29 @@ function inputOf(d: Draft, was: Draft | undefined): TargetInput {
 		...(d.at !== "" && timeChanged ? { at: d.at, zone: d.zone } : {}),
 		late_window_minutes: Number(d.late) || 0,
 	};
+}
+
+// Where a post planned from an hour or from a slot of the day goes: the account the slot names, else a ready account of
+// its network, else the first ready one; the person changes it in the editor.
+function accountFor(
+	accounts: readonly SocialAccount[],
+	initial: EditorInitial,
+): SocialAccount | undefined {
+	const ready = accounts.filter((a) => a.state === "ready");
+	return (
+		ready.find((a) => a.connection_id === initial.connection) ??
+		ready.find((a) => a.network === initial.network) ??
+		ready[0]
+	);
+}
+
+// What a new publication starts with when it is made from the day (SDD-020 section 30A.6): the date and time of the
+// hour that was clicked, and the network or account of the slot.
+export interface EditorInitial {
+	// YYYY-MM-DDTHH:mm, the form of a datetime-local field
+	at: string;
+	network?: string;
+	connection?: string;
 }
 
 function exportsOf(jobs: Job[], formats: string[] | null): Job[] {
@@ -247,11 +272,18 @@ export function PublicationEditor({
 	networks,
 	blogs = [],
 	api,
+	calendarApi,
+	initial,
 	onClose,
 	onChanged,
+	onDuplicated,
 }: {
 	// null makes a new publication
 	publication: Publication | null;
+	// The date and time (and the account) a new publication starts with, when it is made from a day or a slot.
+	initial?: EditorInitial;
+	calendarApi?: CalendarApi;
+	onDuplicated?(copy: Publication): void;
 	projects: readonly ProjectSummary[];
 	accounts: readonly SocialAccount[];
 	networks: readonly SocialNetwork[];
@@ -282,9 +314,16 @@ export function PublicationEditor({
 	const [isPost, setIsPost] = useState((publication?.post ?? "") !== "");
 	const [post, setPost] = useState(publication?.post ?? "");
 	const [posts, setPosts] = useState<TextItem[]>([]);
-	const [drafts, setDrafts] = useState<Draft[]>(
-		publication?.targets.map(draftOf) ?? [],
-	);
+	const [drafts, setDrafts] = useState<Draft[]>(() => {
+		if (publication !== null) return publication.targets.map(draftOf);
+		if (initial === undefined) return [];
+		return [
+			{
+				...blankDraft(accountFor(accounts, initial)?.connection_id ?? "", zone),
+				at: initial.at,
+			},
+		];
+	});
 	const [saved, setSaved] = useState<Draft[]>(
 		publication?.targets.map(draftOf) ?? [],
 	);
@@ -292,6 +331,7 @@ export function PublicationEditor({
 	const [failure, setFailure] = useState<Failure | null>(null);
 	const [busy, setBusy] = useState(false);
 	const backgroundAsk = useBackgroundAsk();
+	const quiet = useQuietConfirm();
 	const isNew = current === null;
 
 	useEffect(() => {
@@ -341,13 +381,18 @@ export function PublicationEditor({
 		onChanged();
 	}
 
-	async function run(action: () => Promise<Publication>): Promise<boolean> {
+	// A day marked as quiet is a person's rule (SDD-020 section 30A.1): the service refuses the first call, the person is
+	// asked, and only a yes repeats it with the confirmation. `action` receives that flag.
+	async function run(
+		action: (confirmQuietDay: boolean) => Promise<Publication>,
+	): Promise<boolean> {
 		setBusy(true);
 		setFailure(null);
 		try {
-			adopt(await action());
+			adopt(await quiet.run(action));
 			return true;
 		} catch (error) {
+			if (error instanceof QuietDeclined) return false;
 			setFailure(failureOf(error));
 			return false;
 		} finally {
@@ -362,7 +407,7 @@ export function PublicationEditor({
 	}
 
 	async function save(): Promise<void> {
-		await run(() => {
+		await run((confirm) => {
 			const targets = drafts.map((d) =>
 				inputOf(
 					d,
@@ -392,6 +437,7 @@ export function PublicationEditor({
 						text,
 						...(isPost ? { post } : { export: video, thumbnail: still }),
 						targets: [...targets, ...removed],
+						...(confirm ? { confirm_quiet_day: true } : {}),
 					});
 		});
 	}
@@ -882,12 +928,13 @@ export function PublicationEditor({
 											}
 											onSchedule={() =>
 												current !== null &&
-												run(() =>
+												run((confirm) =>
 													api.schedule(current.id, {
 														target_id: d.id,
 														at: d.at === "" ? undefined : d.at,
 														zone: d.zone,
 														late_window_minutes: Number(d.late) || 0,
+														...(confirm ? { confirm_quiet_day: true } : {}),
 													}),
 												).then((scheduled) =>
 													scheduled ? backgroundAsk.ask() : undefined,
@@ -896,12 +943,16 @@ export function PublicationEditor({
 											onSendNow={() =>
 												current !== null &&
 												d.id !== undefined &&
-												run(() => api.sendNow(current.id, d.id ?? ""))
+												run((confirm) =>
+													api.sendNow(current.id, d.id ?? "", confirm),
+												)
 											}
 											onRetry={() =>
 												current !== null &&
 												d.id !== undefined &&
-												run(() => api.retry(current.id, d.id ?? ""))
+												run((confirm) =>
+													api.retry(current.id, d.id ?? "", confirm),
+												)
 											}
 											onCancel={() =>
 												current !== null &&
@@ -933,6 +984,19 @@ export function PublicationEditor({
 							{t("ui.publish.editor.add_target")}
 						</Button>
 					</div>
+					{current !== null && calendarApi !== undefined && (
+						<DuplicateBox
+							publication={current}
+							zone={zone}
+							busy={busy}
+							calendarApi={calendarApi}
+							onDuplicated={(copy) => {
+								onChanged();
+								onDuplicated?.(copy);
+							}}
+							onFail={(error) => setFailure(failureOf(error))}
+						/>
+					)}
 					{notes.map((note) => (
 						<p
 							key={note}
@@ -954,8 +1018,72 @@ export function PublicationEditor({
 					</div>
 				</form>
 				{backgroundAsk.dialog}
+				{quiet.dialog}
 			</DialogContent>
 		</Dialog>
+	);
+}
+
+// Copy a publication to another day or hour (SDD-020 section 30A.3): the service makes a new publication of drafts at the
+// time typed here, with no approval, and leaves the original as it is. The page opens the copy.
+function DuplicateBox({
+	publication,
+	zone,
+	busy,
+	calendarApi,
+	onDuplicated,
+	onFail,
+}: {
+	publication: Publication;
+	zone: string;
+	busy: boolean;
+	calendarApi: CalendarApi;
+	onDuplicated(copy: Publication): void;
+	onFail(error: unknown): void;
+}): ReactNode {
+	const t = useT();
+	const [at, setAt] = useState("");
+	const [working, setWorking] = useState(false);
+
+	async function copy(): Promise<void> {
+		setWorking(true);
+		try {
+			onDuplicated(await calendarApi.duplicate(publication.id, { at, zone }));
+		} catch (error) {
+			onFail(error);
+		} finally {
+			setWorking(false);
+		}
+	}
+
+	return (
+		<div
+			className="flex flex-wrap items-end gap-2 rounded-lg border p-3"
+			data-testid="duplicate-box"
+		>
+			<div className="flex flex-col gap-1">
+				<Label htmlFor="duplicate-at">{t("ui.publish.duplicate.at")}</Label>
+				<Input
+					id="duplicate-at"
+					type="datetime-local"
+					value={at}
+					data-testid="duplicate-at"
+					onChange={(event) => setAt(event.target.value)}
+				/>
+			</div>
+			<Button
+				type="button"
+				variant="outline"
+				disabled={busy || working || at === ""}
+				data-testid="duplicate-go"
+				onClick={() => void copy()}
+			>
+				{t("ui.publish.duplicate.go")}
+			</Button>
+			<p className="basis-full text-xs text-muted-foreground">
+				{t("ui.publish.duplicate.help")}
+			</p>
+		</div>
 	);
 }
 
