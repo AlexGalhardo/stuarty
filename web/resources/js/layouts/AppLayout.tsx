@@ -58,7 +58,7 @@ function Shell({ children }: { children: ReactNode }) {
 						<LocaleSwitcher />
 						<ThemeToggle />
 					</div>
-					<ReleaseMark />
+					<ReleaseMark known={page.props.version ?? ""} />
 					<main className="flex flex-1 flex-col justify-center p-4 pt-16 md:p-6 md:pt-16">
 						{children}
 					</main>

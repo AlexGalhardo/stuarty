@@ -47,6 +47,8 @@ export interface LocalAccount {
 
 export interface SharedProps {
 	appName: string;
+	// The release of the server, shared on every page so a page with no session need not ask GET /system.
+	version?: string;
 	errors: Record<string, string>;
 	// Present in network mode; `user` is null before the login.
 	auth?: { user: User | null };

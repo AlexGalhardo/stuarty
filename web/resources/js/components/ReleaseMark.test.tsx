@@ -1,7 +1,7 @@
 import { renderToString } from "react-dom/server";
 import { describe, expect, test } from "vitest";
 
-import { ReleaseMarkView, releaseLabel } from "./ReleaseMark";
+import ReleaseMark, { ReleaseMarkView, releaseLabel } from "./ReleaseMark";
 
 describe("releaseLabel", () => {
 	test("prefixes the server version", () => {
@@ -42,5 +42,12 @@ describe("ReleaseMarkView compact", () => {
 		const wide = renderToString(<ReleaseMarkView version="0.28.0" inline />);
 		expect(rail).toContain("text-[10px]");
 		expect(wide).not.toContain("text-[10px]");
+	});
+});
+
+describe("ReleaseMark with a known release (VV-444)", () => {
+	test("draws the shared release and asks GET /system for nothing", () => {
+		const html = renderToString(<ReleaseMark known="0.58.0" />);
+		expect(html).toContain("v0.58.0");
 	});
 });

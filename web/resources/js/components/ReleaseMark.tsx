@@ -53,12 +53,17 @@ export function ReleaseMarkView({
 export default function ReleaseMark({
 	inline = false,
 	compact = false,
+	known,
 }: {
 	inline?: boolean;
 	compact?: boolean;
+	// The release the page already has (a shared prop): no request is made. A page with no session must pass it,
+	// because GET /system answers it 401 and leaves an error in the console (VV-444).
+	known?: string;
 }): ReactNode {
 	const [version, setVersion] = useState("");
 	useEffect(() => {
+		if (known !== undefined) return;
 		let live = true;
 		createClient(new HttpTransport("/api/v1"))
 			.getSystem()
@@ -69,8 +74,12 @@ export default function ReleaseMark({
 		return () => {
 			live = false;
 		};
-	}, []);
+	}, [known]);
 	return (
-		<ReleaseMarkView version={version} inline={inline} compact={compact} />
+		<ReleaseMarkView
+			version={known ?? version}
+			inline={inline}
+			compact={compact}
+		/>
 	);
 }

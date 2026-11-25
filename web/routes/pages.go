@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/web/app/agentdocs"
 	httpapi "github.com/AlexGalhardo/stuarty/web/app/http"
 	"github.com/AlexGalhardo/stuarty/web/resources"
 
@@ -190,6 +191,8 @@ func sharedProps(d *httpapi.Deps) func(http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
 			inertia.Share(ctx, "appName", appName)
+			// The release tag, for the pages that have no session to ask GET /system with (VV-444).
+			inertia.Share(ctx, "version", agentdocs.Version)
 
 			// Whether this session may do what only a person does (approve, set a price, keep a note, mark a skill
 			// as read), so the pages disable those controls and say why instead of refusing after the click
