@@ -184,6 +184,36 @@ func TestImageCacheRefusesAnAssetTheCallerLostWhileItIsCached(t *testing.T) {
 	}
 }
 
+// TestImageCachePreparesAShrunkPhotoAgainWhenItIsTurned: a photo larger than its box and not turned is scaled down
+// to the box before it is uploaded, and a turned one is not, so the first turn must not find the picture prepared
+// from the scaled-down file: "turned or not" stays in the key though the angle does not.
+func TestImageCachePreparesAShrunkPhotoAgainWhenItIsTurned(t *testing.T) {
+	d := imageDoc("image_and_group")
+	photo := firstLayerOfKind(d, coreimage.KindImage)
+
+	l, _ := coreimage.Find(d, photo)
+	l.W, l.H = 32, 18 // the crop is 64 by 36: the box is smaller than the file
+
+	cache := NewImageCache(0)
+	cfg := cachedConfig(t, cache, "u1")
+	plain := ImageConfig{AssetPath: cfg.AssetPath}
+
+	renderWith(t, d, cfg)
+
+	turned := applyLook(t, d, lookOp("layer.transform", fmt.Sprintf(`{"layer_id": %q, "rotation": 30}`, photo)))
+	before := cache.Stats()
+
+	got := renderWith(t, turned, cfg)
+
+	if cache.Stats().PreparedMisses == before.PreparedMisses {
+		t.Fatal("the first turn of a scaled-down photo found the picture prepared from the scaled-down file")
+	}
+
+	if want := renderWith(t, turned, plain); !bytes.Equal(got.Pix, want.Pix) {
+		t.Fatalf("the turned photo differs from the full render in %d bytes", differingBytes(got.Pix, want.Pix))
+	}
+}
+
 // TestImageCacheKeepsThePreparedLayerWhenItIsTurned: the module turns a prepared picture when it draws it and no look
 // reads the angle, so turning a layer that is already turned (the handle of the editor, one frame per step)
 // prepares nothing again, and the picture is the one the full render gives. A photo that was not turned is the one
