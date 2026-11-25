@@ -1,0 +1,27 @@
+{
+  "op": "recording.set_click_highlight",
+  "args": {
+    "item_id": "itm_m1n2p3q4r5",
+    "style": "ring",
+    "resolved": {
+      "width": 1920,
+      "height": 1080,
+      "events": [
+        {
+          "t_ms": 4000,
+          "kind": "down",
+          "button": "left",
+          "x": 300,
+          "y": 200
+        },
+        {
+          "t_ms": 10000,
+          "kind": "down",
+          "button": "left",
+          "x": 960,
+          "y": 540
+        }
+      ]
+    }
+  }
+}

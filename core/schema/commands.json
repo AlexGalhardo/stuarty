@@ -5731,6 +5731,67 @@
       "additionalProperties": false,
       "properties": {
         "color": {
+          "description": "A colour; default #FFC400.",
+          "type": "string"
+        },
+        "duration_ms": {
+          "description": "How long one highlight lasts, 200 to 2000 ms. Default 600.",
+          "maximum": 2000,
+          "minimum": 200,
+          "type": "integer"
+        },
+        "item_id": {
+          "description": "A clip of a screen recording.",
+          "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+          "type": "string"
+        },
+        "size": {
+          "description": "Pixels of the frame, 16 to 400. Default a twelfth of the frame height.",
+          "maximum": 400,
+          "minimum": 16,
+          "type": "number"
+        },
+        "style": {
+          "description": "ring (default), wave, pulse, or none to remove the highlights.",
+          "enum": [
+            "ring",
+            "wave",
+            "pulse",
+            "none"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "item_id"
+      ],
+      "type": "object"
+    },
+    "description": "Marks each click of the recording of the clip's asset with a short effect, a shape item on a Click highlight track above the clip: style ring (a ring that fades), wave (a ring that grows while it fades) or pulse (a disc that shrinks while it fades); none removes the highlights. Each lasts duration_ms and is cut short by the next click. It is placed through the zoom and position the clip has when the command runs, so run it after recording.auto_zoom and again after changing the zoom or moving the clip; each run replaces the highlights of the clip. The clicks come from the pointer events of the recording and are supplied by the service in resolved. The same clicks and options always give the same items.",
+    "domain": "video",
+    "errors": [
+      "E_VALIDATION",
+      "E_NOT_FOUND",
+      "E_TYPE_MISMATCH",
+      "E_INVALID_STATE",
+      "E_LIMIT"
+    ],
+    "example": {
+      "color": "#33CCFF",
+      "item_id": "itm_m1n2p3q4r5",
+      "style": "wave"
+    },
+    "internal": false,
+    "name": "recording.set_click_highlight",
+    "scope": "edit",
+    "summary": "Highlights every click of a screen recording."
+  },
+  {
+    "args_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "color": {
           "description": "A colour; default #FFFFFF.",
           "type": "string"
         },

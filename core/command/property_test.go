@@ -309,6 +309,9 @@ var lateOps = map[string]func(p *docPick) string{
 	"recording.auto_zoom": func(p *docPick) string {
 		return fmt.Sprintf(`{"item_id":%q,%s}`, p.clip(), randomClicks(p))
 	},
+	"recording.set_click_highlight": func(p *docPick) string {
+		return fmt.Sprintf(`{"item_id":%q,"style":%q,%s}`, p.clip(), p.oneOf("ring", "wave", "pulse"), randomClicks(p))
+	},
 	"recording.set_cursor": func(p *docPick) string {
 		return fmt.Sprintf(`{"item_id":%q,%s}`, p.clip(), randomClicks(p))
 	},

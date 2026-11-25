@@ -46,19 +46,13 @@ func (t *takeClip) transformAt(c *Context, frame int) (scale, cx, cy int64) {
 		milli(timeline.ValueAt(t.it.Keyframes["y"], frame, cys))
 }
 
-// removeOverlays deletes the shape items whose name matches and returns how many.
-func (c *Context) removeOverlays(match func(name string) bool) int {
-	n := 0
-
+// removeOverlays deletes the shape items whose name matches.
+func (c *Context) removeOverlays(match func(name string) bool) {
 	for id := range c.Doc.Items {
 		if it := c.Doc.Items[id]; it.Type == timeline.ItemShape && match(it.Name) {
 			delete(c.Doc.Items, id)
-
-			n++
 		}
 	}
-
-	return n
 }
 
 // overlayName reports whether name is the name an overlay of the clip carries: the base and the id, and for the

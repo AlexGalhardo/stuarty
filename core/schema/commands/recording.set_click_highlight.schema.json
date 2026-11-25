@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "color": {
+      "description": "A colour; default #FFC400.",
+      "type": "string"
+    },
+    "duration_ms": {
+      "description": "How long one highlight lasts, 200 to 2000 ms. Default 600.",
+      "maximum": 2000,
+      "minimum": 200,
+      "type": "integer"
+    },
+    "item_id": {
+      "description": "A clip of a screen recording.",
+      "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+      "type": "string"
+    },
+    "size": {
+      "description": "Pixels of the frame, 16 to 400. Default a twelfth of the frame height.",
+      "maximum": 400,
+      "minimum": 16,
+      "type": "number"
+    },
+    "style": {
+      "description": "ring (default), wave, pulse, or none to remove the highlights.",
+      "enum": [
+        "ring",
+        "wave",
+        "pulse",
+        "none"
+      ],
+      "type": "string"
+    }
+  },
+  "required": [
+    "item_id"
+  ],
+  "type": "object"
+}

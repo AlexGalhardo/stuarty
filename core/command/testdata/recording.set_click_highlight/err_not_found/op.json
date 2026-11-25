@@ -1,0 +1,40 @@
+{
+  "op": "recording.set_click_highlight",
+  "args": {
+    "item_id": "itm_zzzzzzzzzz",
+    "resolved": {
+      "width": 1920,
+      "height": 1080,
+      "events": [
+        {
+          "t_ms": 4000,
+          "kind": "down",
+          "button": "left",
+          "x": 300,
+          "y": 200
+        },
+        {
+          "t_ms": 5000,
+          "kind": "down",
+          "button": "left",
+          "x": 960,
+          "y": 540
+        },
+        {
+          "t_ms": 6000,
+          "kind": "down",
+          "button": "left",
+          "x": 1500,
+          "y": 800
+        },
+        {
+          "t_ms": 6250,
+          "kind": "down",
+          "button": "left",
+          "x": 1600,
+          "y": 850
+        }
+      ]
+    }
+  }
+}
