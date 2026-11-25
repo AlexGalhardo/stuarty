@@ -367,6 +367,8 @@ const SAME_IN_PORTUGUESE: ReadonlySet<string> = new Set([
 	"ui.nav.section.webhooks",
 	// The final design names the agent column of the scene bar and of an approval "Skill".
 	"ui.shell.scene.skill",
+	// "Chat" is the word the final design uses for the agent chat button.
+	"ui.shell.chat",
 	"ui.approvals.skill",
 	// A sentence that is only a placeholder and a full stop reads the same in both languages.
 	"ui.dashboard.home.summary.only",

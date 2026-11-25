@@ -561,8 +561,14 @@ func TestNoStepIsDoneAfterTheCurrentOne(t *testing.T) {
 
 	post := item(Text, TextKindPost, "words here")
 	cases := map[string]Workflow{
-		"a text written with no brief":     ComputeWorkflow(KindText, &Facts{Items: []Item{post}, PublicationsKnown: true}),
-		"a video with a clip and no brief": ComputeWorkflow(KindVideo, &Facts{TimelineAssets: 1, TimelineItems: 1, PublicationsKnown: true}),
+		"a text written with no brief": ComputeWorkflow(
+			KindText,
+			&Facts{Items: []Item{post}, PublicationsKnown: true},
+		),
+		"a video with a clip and no brief": ComputeWorkflow(
+			KindVideo,
+			&Facts{TimelineAssets: 1, TimelineItems: 1, PublicationsKnown: true},
+		),
 	}
 
 	for name, w := range cases {
