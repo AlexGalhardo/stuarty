@@ -100,6 +100,32 @@
     "unsaved": {
       "leave": "You have text that is not saved yet. If you leave, it is lost. Leave anyway?"
     },
+    "state": {
+      "retry": "Try again",
+      "how_to_fix": "How to fix",
+      "empty_steps": "First steps",
+      "error": {
+        "network": {
+          "title": "Could not reach Stuarty",
+          "body": "The local server did not answer. Your files are still on your computer.",
+          "step1": "Check that Stuarty is still open.",
+          "step2": "If the address changed, open Stuarty again from its shortcut.",
+          "step3": "Press Try again."
+        },
+        "locked": {
+          "title": "Stuarty is locked",
+          "body": "Sign in with your password to continue.",
+          "step1": "Open the sign-in page.",
+          "step2": "Type the password of your local account."
+        },
+        "generic": {
+          "title": "This page could not be loaded",
+          "body": "Something went wrong on the Stuarty side. Nothing was lost.",
+          "step1": "Press Try again.",
+          "step2": "If it keeps happening, reload the page."
+        }
+      }
+    },
     "nav": {
       "label": "Main navigation",
       "skip": "Skip to the main content",
@@ -408,6 +434,11 @@
           "more": {
             "one": "And {count} more request in the queue.",
             "other": "And {count} more requests in the queue."
+          },
+          "action": {
+            "publish": "Publish",
+            "generate": "Generate with AI",
+            "approval": "Approval request"
           },
           "promise": "Nothing leaves without your yes.",
           "nothing": "Nothing waits for you now."
