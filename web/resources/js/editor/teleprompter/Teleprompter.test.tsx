@@ -6,7 +6,7 @@ import en from "../../../lang/en.json";
 import type { TextItem, WritingClient } from "../../pages/Write/client";
 import { DEFAULT_PREFS, type TeleprompterPrefs } from "./prefs";
 import { loadScript } from "./script";
-import { NoScript, TeleprompterView } from "./Teleprompter";
+import { NoScript, ProjectNotFound, TeleprompterView } from "./Teleprompter";
 
 function flat(
 	tree: Record<string, unknown>,
@@ -146,5 +146,16 @@ describe("the teleprompter", () => {
 		);
 		expect(html).toContain("This project has no script yet");
 		expect(html).toContain('data-slot="teleprompter-empty"');
+	});
+
+	test("says the project does not exist, with a way back and no API route (VV-441)", () => {
+		const html = renderToString(
+			<I18nProvider messages={messages} locale="en">
+				<ProjectNotFound />
+			</I18nProvider>,
+		);
+		expect(html).toContain("Project not found");
+		expect(html).toContain('href="/projects"');
+		expect(html).not.toContain("/api/v1");
 	});
 });

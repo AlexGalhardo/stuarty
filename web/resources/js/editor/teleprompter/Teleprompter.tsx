@@ -127,6 +127,9 @@ export default function Teleprompter({
 		);
 	}
 	if (loaded.state === "failed") {
+		if (loaded.failure.code === "E_NOT_FOUND") {
+			return <ProjectNotFound className={className} />;
+		}
 		return <FailureNote failure={loaded.failure} />;
 	}
 	if (loaded.state === "none") return <NoScript className={className} />;
@@ -146,6 +149,31 @@ export default function Teleprompter({
 			}}
 			onChange={change}
 		/>
+	);
+}
+
+// What a project that does not exist shows (VV-441): words and a way back, never the route of the API.
+export function ProjectNotFound({
+	className = "",
+}: {
+	className?: string;
+}): ReactNode {
+	const t = useT();
+	return (
+		<div
+			className={`${className} flex flex-col items-start gap-3`}
+			data-slot="teleprompter-not-found"
+		>
+			<h1 className="text-lg font-semibold">
+				{t("ui.editor.teleprompter.not_found_title")}
+			</h1>
+			<p className="text-sm text-text-muted">
+				{t("ui.editor.teleprompter.not_found_body")}
+			</p>
+			<Button asChild>
+				<a href="/projects">{t("ui.editor.teleprompter.not_found_back")}</a>
+			</Button>
+		</div>
 	);
 }
 
