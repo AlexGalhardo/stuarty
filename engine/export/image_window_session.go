@@ -69,14 +69,22 @@ type windowSession struct {
 	timer *time.Timer
 }
 
-// slot is the instance of band b; nil for no session, in which case the band takes one from the pool.
-func (s *windowSession) slot(b int) *bandSlot {
+// reserve makes the slots of n bands. The caller holds the gate and no band runs yet, so the bands, which run in
+// parallel, only read the list.
+func (s *windowSession) reserve(n int) {
 	if s == nil {
-		return nil
+		return
 	}
 
-	for len(s.slots) <= b {
+	for len(s.slots) < n {
 		s.slots = append(s.slots, &bandSlot{})
+	}
+}
+
+// slot is the instance of band b; nil for no session, in which case the band takes one from the pool.
+func (s *windowSession) slot(b int) *bandSlot {
+	if s == nil || b >= len(s.slots) {
+		return nil
 	}
 
 	return s.slots[b]
@@ -109,6 +117,26 @@ func (s *windowSession) release() {
 	})
 
 	<-s.gate
+}
+
+// releaseAfter releases the session once done is closed: at once when the bands are over, and otherwise when the
+// last band in flight returns, so that no other render uses an instance a band still draws on.
+func (s *windowSession) releaseAfter(done <-chan struct{}) {
+	if done == nil {
+		s.release()
+
+		return
+	}
+
+	select {
+	case <-done:
+		s.release()
+	default:
+		go func() {
+			<-done
+			s.release()
+		}()
+	}
 }
 
 // freeAll gives every instance back. The caller holds the gate.

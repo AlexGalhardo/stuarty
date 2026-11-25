@@ -2,8 +2,10 @@ package export
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/AlexGalhardo/stuarty/core/command"
 	coreimage "github.com/AlexGalhardo/stuarty/core/image"
@@ -268,5 +270,36 @@ func TestImageWindowDragKeepsTheInstancesAndTheBytes(t *testing.T) {
 	d = withOpacity(t, d, ids[7], 61)
 	if got, want := renderWith(t, d, cfg), renderWith(t, d, plain); !bytes.Equal(got.Pix, want.Pix) {
 		t.Fatal("back to the first shape differs from the full render")
+	}
+}
+
+// TestImageWindowAfterACancelledRenderGivesTheBytes: a render whose context ends while its bands draw returns at
+// once, and the bands in flight keep the instances of the session until they are over; the next render of the
+// same shape waits for them and gives the bytes of the full render (run with -race: no band of an abandoned render
+// shares an instance with the next one).
+func TestImageWindowAfterACancelledRenderGivesTheBytes(t *testing.T) {
+	d := windowDocument(t)
+	ids := layerIDs(d)
+
+	cache := NewImageCache(0)
+	cfg := cachedConfig(t, cache, "u1")
+	plain := cachedConfig(t, nil, "")
+
+	renderWith(t, d, cfg)
+
+	for n := range 12 {
+		d = withOpacity(t, d, ids[n%len(ids)], 25+n*5)
+
+		ctx, cancel := context.WithCancel(context.Background())
+		stop := time.AfterFunc(time.Duration(n%4)*time.Millisecond, cancel)
+		_, _ = RenderImage(ctx, d, cfg)
+
+		stop.Stop()
+		cancel()
+
+		d = withOpacity(t, d, ids[(n+3)%len(ids)], 30+n*4)
+		if got, want := renderWith(t, d, cfg), renderWith(t, d, plain); !bytes.Equal(got.Pix, want.Pix) {
+			t.Fatalf("edit %d after a cancelled render differs from the full render", n)
+		}
 	}
 }
