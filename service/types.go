@@ -168,6 +168,9 @@ type EditRequest struct {
 	Operations     []command.Operation `json:"operations"` // 1 to 200
 	IdempotencyKey string              `json:"idempotency_key,omitempty"`
 	DryRun         bool                `json:"dry_run,omitempty"`
+	// exactBase refuses the batch unless BaseRevision is the current revision, with no merge over what others
+	// did since: for a batch the service planned on the document of that revision (SDD-025 section 19.5).
+	exactBase bool
 }
 
 // OpEffect is what one operation of a batch did.

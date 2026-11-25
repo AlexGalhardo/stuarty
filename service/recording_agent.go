@@ -588,8 +588,10 @@ func (s *svc) applyCuts(
 		ops = append(ops, command.Operation{Op: string(st.Op), Args: args})
 	}
 
+	// The steps are frames of the document of pg.Revision: an edit made since, even by the same person, could move
+	// them onto other frames, so it is a conflict and not merged (SDD-025 section 19.5).
 	return s.Edit(ctx, EditRequest{
-		ProjectID: r.ProjectID, TimelineID: timelineID, BaseRevision: pg.Revision, Operations: ops,
+		ProjectID: r.ProjectID, TimelineID: timelineID, BaseRevision: pg.Revision, Operations: ops, exactBase: true,
 	})
 }
 

@@ -413,6 +413,16 @@ func (s *svc) checkBase(
 			withHint("read the project with project_get and use its revision")
 	case req.BaseRevision == current:
 		return nil
+	case req.exactBase:
+		return newError(
+			command.CodeRevisionConflict,
+			"the project moved from revision %d to %d after the batch was planned.",
+			req.BaseRevision,
+			current,
+		).
+			withHint("%s", hintReadAgain).
+			withDetail("base_revision", req.BaseRevision).
+			withDetail("current_revision", current)
 	case req.BaseRevision < current-maxConflictLag:
 		return newError(
 			command.CodeRevisionConflict,
