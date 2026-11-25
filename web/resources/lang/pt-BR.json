@@ -2651,19 +2651,24 @@
       },
       "blur_region": {
         "title": "Desfoque de dados sensíveis",
-        "hint": "Esconda um e-mail, uma chave ou um endereço. A região é uma parte da imagem; deixe o tempo vazio para borrar o clipe inteiro. O clipe não muda: o borrão é um item numa faixa Blur acima dele.",
-        "x": "Esquerda",
-        "y": "Topo",
-        "width": "Largura",
-        "height": "Altura",
-        "start": "De",
-        "duration": "Por",
+        "hint": "Sem detecção automática: você marca o retângulo e o tempo. O clipe em si não muda: o desfoque é um item numa faixa Blur acima dele.",
+        "x": "X",
+        "y": "Y",
+        "width": "L",
+        "height": "A",
+        "start": "Início",
+        "duration": "Duração",
         "radius": "Força do borrão",
         "radius_default": "Padrão forte",
-        "apply": "Borrar esta região",
+        "apply": "Adicionar desfoque",
         "group_region": "Região",
         "group_time": "Tempo",
-        "group_strength": "Força"
+        "group_strength": "Força",
+        "strength_hint": "O padrão é forte, para o texto não voltar a ser lido.",
+        "strengths": {
+          "strong": "Forte",
+          "medium": "Média"
+        }
       },
       "layout": {
         "title": "Layout e fundo",
