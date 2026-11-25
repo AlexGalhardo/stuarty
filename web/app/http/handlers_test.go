@@ -581,6 +581,22 @@ func TestUndoOversizedBodyKeepsTheRouteLimit(t *testing.T) {
 	}
 }
 
+// VV-435: a body over the transport cap is refused with a message and a hint, not with the bare reason phrase.
+func TestOversizedBodyAnswersWithAMessageAndAHint(t *testing.T) {
+	t.Parallel()
+
+	h := newHarness(t)
+	id := h.newProject("a")
+
+	res := h.post("/api/v1/projects/"+id+"/undo", `{"dry_run":false,"pad":"`+strings.Repeat("x", 11<<20)+`"}`)
+	body := res.json(t)
+
+	if res.status != http.StatusRequestEntityTooLarge || body["code"] != "E_PAYLOAD_TOO_LARGE" ||
+		body["message"] == "Request Entity Too Large" || body["hint"] == nil || body["hint"] == "" {
+		t.Errorf("oversized body = %d %.300s", res.status, res.body)
+	}
+}
+
 // A validation error may quote a short excerpt of the value. It must not send
 // the value back whole (SDD-003 section 1.2 rule 9), and the refusal must not
 // create a project.

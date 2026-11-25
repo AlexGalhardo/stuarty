@@ -110,6 +110,12 @@ func decorate(c *web.Ctx, p *web.Problem) {
 			message = "the operation failed because of an internal error."
 		}
 
+		if p.Status == http.StatusRequestEntityTooLarge {
+			message = "the request is larger than the server accepts."
+			p.Extensions["hint"] = "send less in one request: a text is at most 256 KiB, a batch of edits at most 512 KiB; " +
+				"media goes in by its path with media:import"
+		}
+
 		p.Extensions["code"], p.Extensions["message"], p.Extensions["retryable"] = code, message, false
 		p.Detail = message
 	}
