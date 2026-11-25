@@ -296,7 +296,7 @@ while IFS= read -r f; do
 	case "$f" in --enable-libvpl | --enable-amf) [ -d "$work/src/libvpl" ] || continue ;; esac
 	flags+=("$f")
 done < <({ flags_of common; flags_of "$os"; })
-flags+=("--extra-version=vukem${FFMPEG_BUILD_TAG##*-}")
+flags+=("--extra-version=stuarty${FFMPEG_BUILD_TAG##*-}")
 
 # The configure flags are checked before the build: a licence mistake costs nothing then.
 (cd "$root" && go run ./internal/tools/ffmpegconf -allow .config/ffmpeg-build/configure-allowlist.txt \
@@ -344,6 +344,16 @@ pkg="$work/pkg/$name"
 mkdir -p "$pkg/bin"
 cp "$work/install/bin/ffmpeg$exe" "$work/install/bin/ffprobe$exe" "$pkg/bin/"
 cp "$work/src/ffmpeg/COPYING.LGPLv2.1" "$pkg/LICENSE.txt"
+# The licence texts of FFmpeg and of every library linked or whose headers are used, next to the binaries (NFR-043).
+for src in ffmpeg libvpx opus zlib lame ogg vorbis libwebp zimg nvcodec libvpl amf; do
+	[ -d "$work/src/$src" ] || continue
+	# FFmpeg's COPYING.GPLv2 and GPLv3 are not copied: no GPL part is built (ffmpeg-verify.sh refuses one).
+	for f in COPYING COPYING.LGPLv2.1 COPYING.LGPLv3 LICENSE LICENSE.txt LICENSE.md; do
+		[ -f "$work/src/$src/$f" ] || continue
+		mkdir -p "$pkg/licenses/$src"
+		cp "$work/src/$src/$f" "$pkg/licenses/$src/$f"
+	done
+done
 "$work/install/bin/ffmpeg" -version 2>/dev/null | sed -n 's/^configuration: //p' >"$pkg/configure.txt" || true
 if [ ! -s "$pkg/configure.txt" ]; then
 	# A cross compiled windows binary cannot run here: take the line from the build itself.
@@ -353,14 +363,17 @@ fi
 {
 	printf 'FFmpeg %s, own LGPL build %s, built from the source tarball below by scripts/ffmpeg-build.sh.\n' "$FFMPEG_BUILD_VERSION" "$FFMPEG_BUILD_TAG"
 	printf 'Corresponding FFmpeg source: %s (SHA-256 %s)\n' "$FFMPEG_SRC_URL" "$FFMPEG_SRC_SHA256"
-	printf 'libvpx: %s\nopus: %s\nzlib: %s\n' "$LIBVPX_SRC_URL" "$OPUS_SRC_URL" "$ZLIB_SRC_URL"
-	printf 'lame: %s\nlibogg: %s\nlibvorbis: %s\nlibwebp: %s\n' "$LAME_SRC_URL" "$OGG_SRC_URL" "$VORBIS_SRC_URL" "$LIBWEBP_SRC_URL"
+	printf 'libvpx: %s (SHA-256 %s)\nopus: %s (SHA-256 %s)\nzlib: %s (SHA-256 %s)\n' "$LIBVPX_SRC_URL" "$LIBVPX_SRC_SHA256" "$OPUS_SRC_URL" "$OPUS_SRC_SHA256" "$ZLIB_SRC_URL" "$ZLIB_SRC_SHA256"
+	printf 'lame: %s (SHA-256 %s)\nlibogg: %s (SHA-256 %s)\nlibvorbis: %s (SHA-256 %s)\nlibwebp: %s (SHA-256 %s)\n' "$LAME_SRC_URL" "$LAME_SRC_SHA256" "$OGG_SRC_URL" "$OGG_SRC_SHA256" "$VORBIS_SRC_URL" "$VORBIS_SRC_SHA256" "$LIBWEBP_SRC_URL" "$LIBWEBP_SRC_SHA256"
+	printf 'zimg: %s (SHA-256 %s)\n' "$ZIMG_SRC_URL" "$ZIMG_SRC_SHA256"
+	if [ -d "$work/src/nvcodec" ]; then printf 'nv-codec-headers (headers only, the encoder loads the NVIDIA driver at run time): %s (SHA-256 %s)\n' "$NVCODEC_SRC_URL" "$NVCODEC_SRC_SHA256"; fi
+	if [ -d "$work/src/libvpl" ]; then printf 'libvpl (the dispatcher, static): %s (SHA-256 %s)\nAMF headers (headers only, the encoder loads the AMD driver at run time): %s (SHA-256 %s)\n' "$LIBVPL_SRC_URL" "$LIBVPL_SRC_SHA256" "$AMF_SRC_URL" "$AMF_SRC_SHA256"; fi
 	printf 'OpenH264 (four API headers only, BSD-2-Clause; the library is loaded at run time, not included): %s/{codec_api,codec_app_def,codec_def,codec_ver}.h (SHA-256 %s %s %s %s)\n' "$OPENH264_RAW_URL" "$OPENH264_CODEC_API_SHA256" "$OPENH264_CODEC_APP_DEF_SHA256" "$OPENH264_CODEC_DEF_SHA256" "$OPENH264_CODEC_VER_SHA256"
 	printf 'Patch: .config/ffmpeg-build/patches/%s (SHA-256 %s)\n' "$FFMPEG_PATCH_FILE" "$FFMPEG_PATCH_SHA256"
-	printf 'Build scripts and flags:https://github.com/AlexGalhardo/stuarty/tree/%s/.config/ffmpeg-build\n' "$FFMPEG_BUILD_TAG"
+	printf 'Build scripts and flags: https://github.com/AlexGalhardo/stuarty/tree/%s/.config/ffmpeg-build\n' "$FFMPEG_BUILD_TAG"
 } >"$pkg/SOURCE.txt"
 
-touch -d "@$SOURCE_DATE_EPOCH" "$pkg" "$pkg/bin" "$pkg"/* "$pkg"/bin/* 2>/dev/null \
+find "$pkg" -exec touch -d "@$SOURCE_DATE_EPOCH" {} + 2>/dev/null \
 	|| find "$pkg" -exec touch -t "$(date -u -r "$SOURCE_DATE_EPOCH" +%Y%m%d%H%M.%S)" {} +
 
 if [ "$os" = windows ]; then

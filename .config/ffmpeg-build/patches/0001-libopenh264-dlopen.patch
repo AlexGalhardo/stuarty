@@ -1,10 +1,10 @@
-Vukem Video: load Cisco OpenH264 at run time (D-017, ADR-0011, SDD-011 section 8.4).
+Stuarty: load Cisco OpenH264 at run time (D-017, ADR-0011, SDD-011 section 8.4).
 
 FFmpeg 9.0.2. The libopenh264 encoder is built without --enable-libopenh264 and without
 linking the library: the Cisco headers (v2.6.0, BSD-2-Clause, copied into the prefix by
 scripts/ffmpeg-build.sh) give only the types, and WelsCreateSVCEncoder, WelsDestroySVCEncoder
 and WelsGetCodecVersionEx are resolved with dlopen or LoadLibrary from the one file
-OPENH264_LIBNAME inside $VUKEM_VIDEO_OPENH264_DIR (no system search path). A library whose
+OPENH264_LIBNAME inside $STUARTY_OPENH264_DIR (no system search path). A library whose
 version is not exactly the pinned one is refused. Without the library the encoder fails to
 open and the product reports E_NO_ENCODER. The decoder is not built.
 
@@ -50,8 +50,8 @@ open and the product reports E_NO_ENCODER. The decoder is not built.
 +#endif
 +#endif
 +
-+// Vukem Video: the Cisco library is never linked. The headers only give the types; the three
-+// functions are resolved from the file OPENH264_LIBNAME inside $VUKEM_VIDEO_OPENH264_DIR. There
++// Stuarty: the Cisco library is never linked. The headers only give the types; the three
++// functions are resolved from the file OPENH264_LIBNAME inside $STUARTY_OPENH264_DIR. There
 +// is no fallback to a system search path, so no other copy can be picked up.
 +static int (*load_create)(ISVCEncoder **);
 +static void (*load_destroy)(ISVCEncoder *);
@@ -59,7 +59,7 @@ open and the product reports E_NO_ENCODER. The decoder is not built.
 +
 +static void load_library(void)
 +{
-+    const char *dir = getenv("VUKEM_VIDEO_OPENH264_DIR");
++    const char *dir = getenv("STUARTY_OPENH264_DIR");
 +    void (*version_fn)(OpenH264Version *) = NULL;
 +    OpenH264Version v = { 0 };
 +    char path[4096];
@@ -67,7 +67,7 @@ open and the product reports E_NO_ENCODER. The decoder is not built.
 +
 +    load_result = AVERROR_ENCODER_NOT_FOUND;
 +    if (!dir || !*dir) {
-+        av_log(NULL, AV_LOG_ERROR, "OpenH264 is not installed: VUKEM_VIDEO_OPENH264_DIR is not set\n");
++        av_log(NULL, AV_LOG_ERROR, "OpenH264 is not installed: STUARTY_OPENH264_DIR is not set\n");
 +        return;
 +    }
 +    if (snprintf(path, sizeof(path), "%s/%s", dir, OPENH264_LIBNAME) >= (int)sizeof(path)) {
@@ -133,7 +133,7 @@ open and the product reports E_NO_ENCODER. The decoder is not built.
  void ff_libopenh264_trace_callback(void *ctx, int level, const char *msg);
  
 +// The library is not linked: it is loaded at run time from the directory named by
-+// VUKEM_VIDEO_OPENH264_DIR. Both functions return 0 on success, like the Wels functions.
++// STUARTY_OPENH264_DIR. Both functions return 0 on success, like the Wels functions.
 +int ff_libopenh264_create_encoder(ISVCEncoder **encoder);
 +void ff_libopenh264_destroy_encoder(ISVCEncoder *encoder);
 +

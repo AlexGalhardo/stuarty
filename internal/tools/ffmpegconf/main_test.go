@@ -67,7 +67,7 @@ func TestHardwareEncoderFlagsAreAllowed(t *testing.T) {
 	}
 
 	allowed := allowedFlags(string(raw))
-	line := "--enable-zlib --enable-ffnvcodec --enable-libvpl --enable-amf --extra-version=vukem1"
+	line := "--enable-zlib --enable-ffnvcodec --enable-libvpl --enable-amf --extra-version=stuarty1"
 
 	if got := check(line, allowed); len(got) != 0 {
 		t.Fatalf("unexpected problems: %v", got)
