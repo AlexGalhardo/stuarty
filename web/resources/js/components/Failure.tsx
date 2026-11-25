@@ -36,6 +36,16 @@ export function failureIsAbout(
 	return path === field || (path?.endsWith(`.${field}`) ?? false);
 }
 
+// Whether a note that appears is brought into view. Only a note in a dialog is: the dialog has its own scroll and
+// the person just pressed a button in it. A note on a page can come from a background read (the models of a
+// connection that needs a sign-in), and scrolling the whole page to it moves the person away from what they
+// were reading (VV-431); the alert role announces it where it is.
+export function revealsFailure(
+	note: { closest(selector: string): unknown } | null,
+): boolean {
+	return note?.closest('[role="dialog"]') != null;
+}
+
 // `id` lets the fields of the form that failed point at the note with aria-describedby (SDD-012 section 18.10).
 export function FailureNote({
 	failure,
@@ -48,7 +58,8 @@ export function FailureNote({
 	const note = useRef<HTMLDivElement>(null);
 	// In a long dialog the note can sit below the fold: it comes into view when it appears.
 	useEffect(() => {
-		if (failure !== null) note.current?.scrollIntoView?.({ block: "nearest" });
+		if (failure !== null && revealsFailure(note.current))
+			note.current?.scrollIntoView?.({ block: "nearest" });
 	}, [failure]);
 	if (failure === null) return null;
 	return (
