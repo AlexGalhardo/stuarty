@@ -74,6 +74,9 @@ func run() error {
 	// and the adoption is shown in a dialog once the loop runs (PRD-003 RF-221).
 	var notices strings.Builder
 	workspace.Notice = io.MultiWriter(os.Stderr, &notices)
+	// The desktop stamps main.version, not workspace.Release: a development shell does not open the default
+	// workspace of the installed application (VV-421).
+	workspace.Release = version
 	ws, wsErr := workspace.Resolve(os.Getenv)
 	settingsDir, _ := service.Dir()
 	settings := service.Load(settingsDir)
