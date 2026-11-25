@@ -50,7 +50,7 @@ export default function ProjectCardText({
 					<FileText className="size-5" />
 				</span>
 				<div className="min-w-0 flex-1">
-					<p className="truncate font-medium">
+					<p className="truncate font-semibold">
 						<UntrustedText>{project.name}</UntrustedText>
 					</p>
 					<div className="mt-1 flex flex-wrap gap-1">
@@ -102,7 +102,7 @@ export default function ProjectCardText({
 				</span>
 			</p>
 			<div className="mt-auto flex flex-wrap gap-2">
-				<Button asChild variant="outline">
+				<Button asChild variant="ghost" size="sm">
 					{summary === undefined ? (
 						<Link href={write}>
 							{t("ui.projects.open")}
@@ -121,7 +121,7 @@ export default function ProjectCardText({
 						</a>
 					)}
 				</Button>
-				<Button asChild variant="outline">
+				<Button asChild variant="ghost" size="sm">
 					<Link href={`/projects/${project.id}`}>
 						{t("ui.projects.card.details")}
 						<span className="sr-only">

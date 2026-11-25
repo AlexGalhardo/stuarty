@@ -69,7 +69,8 @@ export function BundleExport({ projectId }: { projectId: string }): ReactNode {
 		<>
 			<Button
 				type="button"
-				variant="outline"
+				variant="ghost"
+				size="sm"
 				disabled={busy}
 				onClick={() => void run()}
 			>
