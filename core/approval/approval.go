@@ -236,7 +236,7 @@ func matchRule(a Action, rules []Rule, spent Spent) (string, bool) {
 }
 
 func covers(r *Rule, a Action, spent Spent) bool {
-	if !r.Enabled || r.Kind != a.Kind {
+	if NeverAuto(r.Kind) || NeverAuto(a.Kind) || !r.Enabled || r.Kind != a.Kind {
 		return false
 	}
 
@@ -293,6 +293,10 @@ func NormalizeRule(r Rule) (Rule, *FieldError) {
 
 	if !kindRe.MatchString(r.Kind) {
 		return r, bad("kind", "must be 1 to 80 characters of a-z, 0-9, _, ., : and -")
+	}
+
+	if NeverAuto(r.Kind) {
+		return r, bad("kind", "no rule can authorize a screen capture: only a person starts one (ADR-0051)")
 	}
 
 	if r.Connection != "" && !validID("con", r.Connection) {
@@ -378,4 +382,13 @@ func validText(s string, minLen, maxLen int) bool {
 	}
 
 	return true
+}
+
+// NeverAuto reports whether a kind is one a rule must never authorize: a screen capture (ADR-0051 item 2).
+// Every name that starts with `capture` or `recording`, in any case, is one: the kinds of the jobs of a
+// capture, and the names of its operations. A person starts a capture, and nothing standing or automatic does.
+func NeverAuto(kind string) bool {
+	k := strings.ToLower(strings.TrimSpace(kind))
+
+	return strings.HasPrefix(k, "capture") || strings.HasPrefix(k, "recording")
 }

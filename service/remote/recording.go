@@ -132,3 +132,46 @@ func (c *Client) RecordingUploadFinish(
 
 	return post[service.Recording](ctx, c, "/recordings/"+segment(req.ID)+"/finish", body)
 }
+
+// RecordingPrepare implements service.Service.
+func (c *Client) RecordingPrepare(
+	ctx context.Context, req service.RecordingPrepareRequest,
+) (*service.Recording, error) {
+	return post[service.Recording](ctx, c, "/recordings/prepare", req)
+}
+
+// RecordingMark implements service.Service.
+func (c *Client) RecordingMark(ctx context.Context, req service.RecordingMarkRequest) (*service.Recording, error) {
+	body := struct {
+		Kind  string `json:"kind"`
+		AtMS  int64  `json:"at_ms"`
+		EndMS int64  `json:"end_ms,omitempty"`
+		Note  string `json:"note,omitempty"`
+	}{req.Kind, req.AtMS, req.EndMS, req.Note}
+
+	return post[service.Recording](ctx, c, "/recordings/"+segment(req.ID)+"/marks", body)
+}
+
+// RecordingProposeCuts implements service.Service.
+func (c *Client) RecordingProposeCuts(
+	ctx context.Context, req service.RecordingProposeCutsRequest,
+) (*service.Recording, error) {
+	body := struct {
+		Ranges []service.RecordingCutRange `json:"ranges"`
+	}{req.Ranges}
+
+	return post[service.Recording](ctx, c, "/recordings/"+segment(req.ID)+"/proposals", body)
+}
+
+// RecordingProposalDecide implements service.Service.
+func (c *Client) RecordingProposalDecide(
+	ctx context.Context, req service.RecordingProposalDecideRequest,
+) (*service.RecordingProposalDecideResult, error) {
+	body := struct {
+		Accept     []bool `json:"accept"`
+		TimelineID string `json:"timeline_id,omitempty"`
+	}{req.Accept, req.TimelineID}
+
+	return post[service.RecordingProposalDecideResult](
+		ctx, c, "/recordings/"+segment(req.ID)+"/proposals/"+segment(req.ProposalID)+"/decide", body)
+}

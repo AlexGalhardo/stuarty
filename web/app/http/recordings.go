@@ -21,14 +21,53 @@ type recordingSourceIn struct {
 }
 
 type recordingStartIn struct {
-	ProjectID string            `json:"project_id"    validate:"required" doc:"The project the recording will join once a person adds it."`
-	Source    recordingSourceIn `json:"source"        validate:"required"`
-	FPS       int               `json:"fps,omitempty"                     doc:"24, 30 (the default) or 60."`
+	ProjectID   string            `json:"project_id,omitempty"   doc:"The project the recording will join once a person adds it. Required unless recording_id is sent."`
+	Source      recordingSourceIn `json:"source"                 doc:"What to capture. Required unless recording_id is sent."`
+	FPS         int               `json:"fps,omitempty"          doc:"24, 30 (the default) or 60."`
+	RecordingID string            `json:"recording_id,omitempty" doc:"A recording that was prepared (POST /recordings/prepare): its stored plan is the request, and nothing else may be sent."`
 
 	Microphone  string `json:"microphone,omitempty"   doc:"A microphone id from GET /recording/sources, or default; empty records no microphone."`
 	SystemAudio bool   `json:"system_audio,omitempty" doc:"Record the sound the computer plays on a track of its own."`
 	Camera      string `json:"camera,omitempty"       doc:"A camera id from GET /recording/sources; empty records no camera."`
 	Events      bool   `json:"events,omitempty"       doc:"Save the pointer position and the clicks (never a key) beside the recording."`
+}
+
+type recordingPrepareIn struct {
+	ProjectID   string            `json:"project_id"             validate:"required" doc:"The project the recording will join once a person adds it."`
+	Source      recordingSourceIn `json:"source"                 validate:"required"`
+	FPS         int               `json:"fps,omitempty"                              doc:"24, 30 (the default) or 60."`
+	Microphone  string            `json:"microphone,omitempty"                       doc:"A microphone id from GET /recording/sources, or default; empty records no microphone."`
+	SystemAudio bool              `json:"system_audio,omitempty"                     doc:"Record the sound the computer plays on a track of its own."`
+	Camera      string            `json:"camera,omitempty"                           doc:"A camera id from GET /recording/sources; empty records no camera."`
+	Events      bool              `json:"events,omitempty"                           doc:"Save the pointer position and the clicks (never a key) beside the recording."`
+	ScriptID    string            `json:"script_id,omitempty"                        doc:"A script of the project (a text item of kind script) the person will read."`
+	Notes       string            `json:"notes,omitempty"                            doc:"A note for the person who presses record; at most 2000 characters, plain text."`
+}
+
+type recordingMarkIn struct {
+	ID    string `json:"id"               validate:"required" doc:"A recording id, rec_ and 10 characters."`
+	Kind  string `json:"kind"             validate:"required" doc:"good, bad or mistake."`
+	AtMS  int64  `json:"at_ms"                                doc:"Where in the take, in milliseconds of recording time."`
+	EndMS int64  `json:"end_ms,omitempty"                     doc:"The end of a stretch; empty for a point."`
+	Note  string `json:"note,omitempty"                       doc:"A short note, plain text, at most 200 characters."`
+}
+
+type recordingCutRangeIn struct {
+	FromMS int64  `json:"from_ms"`
+	ToMS   int64  `json:"to_ms"`
+	Reason string `json:"reason"  validate:"required" doc:"Why this stretch should go, plain text, at most 200 characters."`
+}
+
+type recordingProposeIn struct {
+	ID     string                `json:"id"     validate:"required" doc:"A recording id, rec_ and 10 characters."`
+	Ranges []recordingCutRangeIn `json:"ranges" validate:"required" doc:"1 to 200 ranges in milliseconds of recording time, sorted, not overlapping, each at least 100 ms."`
+}
+
+type recordingDecideIn struct {
+	ID         string `json:"id"                    validate:"required" doc:"A recording id, rec_ and 10 characters."`
+	ProposalID string `json:"proposal_id"           validate:"required" doc:"A proposal id, prp_ and 10 characters."`
+	Accept     []bool `json:"accept"                validate:"required" doc:"One yes or no for every range of the proposal, in order."`
+	TimelineID string `json:"timeline_id,omitempty"                     doc:"The timeline the recording was placed on; required when the project has several."`
 }
 
 type recordingEventsIn struct {
@@ -59,9 +98,48 @@ func (h *apiHandler) recordingSources(c *web.Ctx, _ noIn) (service.RecordingSour
 
 func (h *apiHandler) recordingStart(c *web.Ctx, in recordingStartIn) (service.Recording, error) {
 	res, err := h.Service.RecordingStart(c.Context(), service.RecordingStartRequest{
+		ProjectID: in.ProjectID, FPS: in.FPS, RecordingID: in.RecordingID,
+		Source:     service.RecordingSource{Kind: in.Source.Kind, ID: in.Source.ID, Name: in.Source.Name},
+		Microphone: in.Microphone, SystemAudio: in.SystemAudio, Camera: in.Camera, Events: in.Events,
+	})
+
+	return deref(res), err
+}
+
+func (h *apiHandler) recordingPrepare(c *web.Ctx, in recordingPrepareIn) (service.Recording, error) {
+	res, err := h.Service.RecordingPrepare(c.Context(), service.RecordingPrepareRequest{
 		ProjectID: in.ProjectID, FPS: in.FPS,
 		Source:     service.RecordingSource{Kind: in.Source.Kind, ID: in.Source.ID, Name: in.Source.Name},
 		Microphone: in.Microphone, SystemAudio: in.SystemAudio, Camera: in.Camera, Events: in.Events,
+		ScriptID: in.ScriptID, Notes: in.Notes,
+	})
+
+	return deref(res), err
+}
+
+func (h *apiHandler) recordingMark(c *web.Ctx, in recordingMarkIn) (service.Recording, error) {
+	res, err := h.Service.RecordingMark(c.Context(), service.RecordingMarkRequest{
+		ID: in.ID, Kind: in.Kind, AtMS: in.AtMS, EndMS: in.EndMS, Note: in.Note,
+	})
+
+	return deref(res), err
+}
+
+func (h *apiHandler) recordingPropose(c *web.Ctx, in recordingProposeIn) (service.Recording, error) {
+	ranges := make([]service.RecordingCutRange, len(in.Ranges))
+	for i, r := range in.Ranges {
+		ranges[i] = service.RecordingCutRange{FromMS: r.FromMS, ToMS: r.ToMS, Reason: r.Reason}
+	}
+
+	res, err := h.Service.RecordingProposeCuts(
+		c.Context(), service.RecordingProposeCutsRequest{ID: in.ID, Ranges: ranges})
+
+	return deref(res), err
+}
+
+func (h *apiHandler) recordingDecide(c *web.Ctx, in recordingDecideIn) (service.RecordingProposalDecideResult, error) {
+	res, err := h.Service.RecordingProposalDecide(c.Context(), service.RecordingProposalDecideRequest{
+		ID: in.ID, ProposalID: in.ProposalID, Accept: in.Accept, TimelineID: in.TimelineID,
 	})
 
 	return deref(res), err

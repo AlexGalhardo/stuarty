@@ -155,6 +155,11 @@ var OperationDomains = map[string]string{
 	"RecordingDismiss": command.DomainVideo,
 	"RecordingPlace":   command.DomainVideo,
 
+	"RecordingPrepare":        command.DomainVideo,
+	"RecordingMark":           command.DomainVideo,
+	"RecordingProposeCuts":    command.DomainVideo,
+	"RecordingProposalDecide": command.DomainVideo,
+
 	"RecordingUploadBegin":  command.DomainVideo,
 	"RecordingUploadChunk":  command.DomainVideo,
 	"RecordingUploadFinish": command.DomainVideo,

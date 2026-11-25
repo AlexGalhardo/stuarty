@@ -83,6 +83,9 @@ type RecordingStartRequest struct {
 	Camera string `json:"camera,omitempty"`
 	// Events saves the pointer position and the clicks (never a key) beside the recording.
 	Events bool `json:"events,omitempty"`
+	// RecordingID starts a recording an agent or a person prepared (SDD-025 section 19.2): its stored plan is the
+	// request, and every other member must be empty.
+	RecordingID string `json:"recording_id,omitempty"`
 }
 
 // RecordingTrack is one source of a recording: its kind, where it starts on the shared clock, and how long it is.
@@ -183,12 +186,17 @@ type Recording struct {
 	EventsCount int64            `json:"events_count"`
 	Levels      *RecordingLevels `json:"levels,omitempty"`
 	// Upload is where a browser recording is, while it receives chunks (SDD-025 section 18.3).
-	Upload    *RecordingUpload `json:"upload,omitempty"`
-	Actor     string           `json:"actor"`
-	CreatedAt time.Time        `json:"created_at"`
-	StartedAt *time.Time       `json:"started_at,omitempty"`
-	EndedAt   *time.Time       `json:"ended_at,omitempty"`
-	Text      string           `json:"text"`
+	Upload *RecordingUpload `json:"upload,omitempty"`
+	// Plan is set while a person has still to start the recording; Marks and Proposals are what agents and people
+	// added (SDD-025 section 19).
+	Plan      *RecordingPlan      `json:"plan,omitempty"`
+	Marks     []RecordingMark     `json:"marks"`
+	Proposals []RecordingProposal `json:"proposals"`
+	Actor     string              `json:"actor"`
+	CreatedAt time.Time           `json:"created_at"`
+	StartedAt *time.Time          `json:"started_at,omitempty"`
+	EndedAt   *time.Time          `json:"ended_at,omitempty"`
+	Text      string              `json:"text"`
 }
 
 // recSession is a recording that is running in this process.
@@ -375,6 +383,18 @@ func (s *svc) RecordingStart(ctx context.Context, req RecordingStartRequest) (*R
 		return nil, s.unavailable()
 	}
 
+	// A recording that was prepared is started from its plan (SDD-025 section 19.2).
+	var prepared *recordings.Row
+
+	if req.RecordingID != "" {
+		p, perr := s.preparedFor(ctx, c, &req)
+		if perr != nil {
+			return nil, perr
+		}
+
+		prepared = p
+	}
+
 	spec := recording.StartSpec{
 		ProjectID: req.ProjectID, SourceKind: req.Source.Kind, SourceID: req.Source.ID, FPS: req.FPS,
 		Microphone: req.Microphone, SystemAudio: req.SystemAudio, Camera: req.Camera, Events: req.Events,
@@ -416,6 +436,10 @@ func (s *svc) RecordingStart(ctx context.Context, req RecordingStartRequest) (*R
 		Tracks: string(askedJSON),
 	}
 
+	if prepared != nil {
+		id = prepared.ID
+	}
+
 	werr := s.store.Write(ctx, func(ctx context.Context, tx Tx) error {
 		open, err := tx.Recordings().Open(ctx)
 		if err != nil {
@@ -431,7 +455,7 @@ func (s *svc) RecordingStart(ctx context.Context, req RecordingStartRequest) (*R
 				withHint("stop the recording in progress first")
 		}
 
-		if err := tx.Recordings().Insert(ctx, row); err != nil {
+		if err := claimOrInsert(ctx, tx, prepared, row); err != nil {
 			return err
 		}
 
@@ -979,6 +1003,27 @@ func (s *svc) RecordingCancel(ctx context.Context, req RecordingRef) (*Recording
 
 	st, rv := recording.State(r.State), recording.Review(r.Review)
 
+	if recording.IsPrepared(st, r.Plan) {
+		// A plan no helper started: removing it only reduces what is waiting, so any caller with media may.
+		got, uerr := s.updateRecording(ctx, req.ID, func(x *recordings.Row) error {
+			next, terr := recording.Next(recording.State(x.State), recording.EventCancel)
+			if terr != nil {
+				return terr
+			}
+
+			x.State, x.Plan, x.Review, x.EndedMs = string(next), "", "", s.nowMs()
+
+			return nil
+		})
+		if uerr != nil {
+			return nil, asError(uerr)
+		}
+
+		s.auditRecording(ctx, c, "recording.cancel", got)
+
+		return s.liveView(got), nil
+	}
+
 	if !st.Final() && r.SourceKind == recording.SourceBrowser {
 		return s.uploadDiscard(ctx, r)
 	}
@@ -1479,7 +1524,9 @@ func (s *svc) recordingView(r recordings.Row) *Recording {
 		v.Pauses = append(v.Pauses, RecordingPause{FromMS: p.FromMS, ToMS: p.ToMS})
 	}
 
-	v.Text = recordingText(v)
+	recordingAgentView(v, r)
+
+	v.Text = recordingText(v) + agentText(v)
 
 	return v
 }
@@ -1489,6 +1536,10 @@ func recordingText(v *Recording) string {
 
 	switch recording.State(v.State) {
 	case recording.Prepared:
+		if v.Plan != nil {
+			return "Recording " + v.ID + " is prepared for the project; a person presses record."
+		}
+
 		return "Recording " + v.ID + " is starting."
 	case recording.Recording:
 		return "Recording " + v.ID + " is running: " + secs + " s so far."

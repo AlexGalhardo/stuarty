@@ -141,3 +141,41 @@ func TestRecordingsStoreRoundTrip(t *testing.T) {
 		t.Errorf("update of nothing: %v", err)
 	}
 }
+
+// The plan, the marks and the proposals survive a write and a read, and a prepared recording with a plan is not
+// open (SDD-025 section 19): recovery would otherwise settle what no helper ever started.
+func TestRecordingAgentFlowColumnsAndOpen(t *testing.T) {
+	st := openStore(t, newDir(t), Options{})
+
+	prepared := recordingRow("prepared")
+	prepared.ID, prepared.Plan = "rec_prepared", `{"source_id":"d1"}`
+
+	starting := recordingRow("prepared")
+	starting.ID = "rec_starting"
+
+	for _, r := range []recordings.Row{prepared, starting} {
+		if err := st.Recordings().Insert(ctx, r); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	open, err := st.Recordings().Open(ctx)
+	if err != nil || len(open) != 1 || open[0].ID != "rec_starting" {
+		t.Fatalf("open = %+v, %v; want only the recording a helper is starting", open, err)
+	}
+
+	got, err := st.Recordings().Get(ctx, "rec_prepared")
+	if err != nil || got.Plan != prepared.Plan || got.Marks != "[]" || got.Proposals != "[]" {
+		t.Fatalf("get = %+v, %v", got, err)
+	}
+
+	got.Marks, got.Proposals = `[{"n":1}]`, `[{"id":"prp_x"}]`
+	if err := st.Recordings().Update(ctx, got); err != nil {
+		t.Fatal(err)
+	}
+
+	again, err := st.Recordings().Find(ctx, "rec_prepared")
+	if err != nil || again.Marks != got.Marks || again.Proposals != got.Proposals || again.Plan != got.Plan {
+		t.Fatalf("after update = %+v, %v", again, err)
+	}
+}

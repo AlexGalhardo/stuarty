@@ -143,6 +143,8 @@ var privilegedHints = map[string]string{
 		"keys and the agent surfaces cannot start a capture of the screen (ADR-0051)",
 	"RecordingResume": "a person resumes a paused recording in the record dialog of the Stuarty app; resuming " +
 		"restarts the capture of the screen, so the local token, API keys and the agent surfaces cannot do it (ADR-0051)",
+	"RecordingProposalDecide": "a person accepts or rejects each cut of a proposal in the recording review of the Stuarty app; " +
+		"an agent proposes cuts and never applies them",
 	"RecordingConfirm": "a person adds a recording to the project in the record dialog of the Stuarty app",
 	"RecordingDismiss": "a person decides about a recording in the record dialog of the Stuarty app",
 	"RecordingUploadBegin": "a person records in the browser from the record dialog of the Stuarty app; the local " +

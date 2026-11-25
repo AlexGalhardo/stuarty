@@ -468,3 +468,67 @@ func TestValidSummaryRefusesLookAlikes(t *testing.T) {
 		t.Error("ValidReason is wrong")
 	}
 }
+
+// captureKinds are the names a rule could be written against to authorize a capture (ADR-0051 item 2).
+var captureKinds = []string{
+	"capture", "capture.start", "recording", "recording.start", "recording:start", "recording.resume",
+	"RecordingStart", " Recording.Start ", "RECORDING:UPLOAD",
+}
+
+// Every shape of a rule, for every name of a capture, against Decide: no rule authorizes it (SDD-025 section 19.3).
+func TestSecurity_T165_NoApprovalRuleShapeAuthorizesACapture(t *testing.T) {
+	item, day := int64(1_000_000), int64(5_000_000)
+
+	var shapes []Rule
+
+	for _, conn := range []string{"", conA} {
+		for _, prj := range []string{"", prjA} {
+			for _, limits := range []struct{ item, day *int64 }{{}, {&item, nil}, {nil, &day}, {&item, &day}} {
+				for _, on := range []bool{true, false} {
+					shapes = append(shapes, Rule{
+						ID: "rul_x", Connection: conn, Project: prj, Currency: "USD", PerItem: limits.item,
+						PerDay: limits.day, Enabled: on,
+					})
+				}
+			}
+		}
+	}
+
+	for _, kind := range captureKinds {
+		if !NeverAuto(kind) {
+			t.Errorf("NeverAuto(%q) = false", kind)
+		}
+
+		for _, shape := range shapes {
+			rule := shape
+			rule.Kind = kind
+
+			if _, ferr := NormalizeRule(rule); ferr == nil || ferr.Path != "kind" {
+				t.Errorf("a rule for %q was written: %+v", kind, ferr)
+			}
+
+			// a rule that exists anyway (written by hand into the database) still authorizes nothing
+			for _, action := range []Action{
+				{Kind: kind, Connection: conA, Project: prjA},
+				{Kind: kind, Connection: conA, Project: prjA, Cost: usd(1)},
+				{Kind: kind},
+			} {
+				if out := Decide(action, []Rule{rule}, nil, Spent{}); out.Verdict == AutoApproved {
+					t.Errorf("rule %+v auto-approved the action %+v", rule, action)
+				}
+			}
+		}
+	}
+
+	// the control: an ordinary kind is still approved by its rule
+	post := Rule{ID: "rul_ok", Kind: "publish.post", Enabled: true}
+	if out := Decide(Action{Kind: "publish.post"}, []Rule{post}, nil, Spent{}); out.Verdict != AutoApproved {
+		t.Errorf("a rule for an ordinary kind stopped working: %+v", out)
+	}
+
+	for _, kind := range []string{"publish.post", "generate.image", "publish.scheduled", "image.export"} {
+		if NeverAuto(kind) {
+			t.Errorf("NeverAuto(%q) = true", kind)
+		}
+	}
+}
