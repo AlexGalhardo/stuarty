@@ -45,6 +45,7 @@ fn every_image_operation_is_within_the_gpu_tolerance_of_the_cpu_path() {
 				width: w,
 				height: h,
 				rows: 0..h,
+				cols: 0..w,
 			},
 			stuarty_renderer::compose::frame_fill(&decoded.background, decoded.transparent),
 			&layers,

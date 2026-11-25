@@ -476,3 +476,67 @@ func TestRenderHostCancels(t *testing.T) {
 		t.Errorf("%d goroutines after the cancel, %d before", n, before)
 	}
 }
+
+// TestRenderWindowWritesOnlyItsColumns: a window (X0, X1 with Y0, Y1) draws the same pixels as the whole frame
+// inside it and leaves the pixels of dst outside it as they were (SDD-013 section 2.1).
+func TestRenderWindowWritesOnlyItsColumns(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+	h := newHost(t, Config{})
+
+	if err := h.PutTexture(ctx, "a", 2, 2, bytes.Repeat([]byte{255}, 16), true); err != nil {
+		t.Fatal(err)
+	}
+
+	in := RenderInput{
+		Output: Output{Width: 6, Height: 6, Scale: 1},
+		Plan: plan.FramePlan{
+			Background: "#102030",
+			Layers:     []plan.Layer{{ItemID: "a", Kind: plan.Media, CX: 3, CY: 3, W: 2, H: 2, Opacity: 0.5}},
+		},
+	}
+
+	whole := image.NewRGBA(image.Rect(0, 0, 6, 6))
+	if err := h.Render(ctx, in, whole); err != nil {
+		t.Fatal(err)
+	}
+
+	for _, view := range []bool{false, true} {
+		dst := image.NewRGBA(image.Rect(0, 0, 6, 6))
+		for i := range dst.Pix {
+			dst.Pix[i] = 7
+		}
+
+		in.Output.Y0, in.Output.Y1, in.Output.X0, in.Output.X1 = 2, 4, 3, 5
+
+		target := dst
+		if view {
+			var ok bool
+
+			if target, ok = dst.SubImage(image.Rect(0, 2, 6, 4)).(*image.RGBA); !ok {
+				t.Fatal("not a view")
+			}
+		}
+
+		if err := h.Render(ctx, in, target); err != nil {
+			t.Fatal(err)
+		}
+
+		for y := range 6 {
+			for x := range 6 {
+				got, full := dst.Pix[(y*6+x)*4:(y*6+x)*4+4], whole.Pix[(y*6+x)*4:(y*6+x)*4+4]
+				if y >= 2 && y < 4 && x >= 3 && x < 5 {
+					if !bytes.Equal(got, full) {
+						t.Errorf("view %t (%d, %d) = %v, the whole frame has %v", view, x, y, got, full)
+					}
+				} else if !bytes.Equal(got, []byte{7, 7, 7, 7}) {
+					t.Errorf("view %t (%d, %d) was written outside the window: %v", view, x, y, got)
+				}
+			}
+		}
+	}
+
+	in.Output.X0, in.Output.X1 = 4, 9
+	wantReason(t, h.Render(ctx, in, whole), InvalidArgument)
+}

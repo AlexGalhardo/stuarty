@@ -186,12 +186,21 @@ impl GpuRenderer {
 	/// as on the CPU path.
 	pub fn render(&self, host: &Renderer, input: &[u8], out: &mut [u8]) -> Result<(), GpuError> {
 		let r = decode(input)?;
+		if r.output.cols != (0..r.output.width) {
+			// The window of an edit is a CPU path feature (SDD-013 section 2.1); the preview never sends one.
+			return Err(Error::new(
+				Reason::InvalidArgument,
+				"output: x0 and x1 are drawn by the CPU path only",
+			)
+			.into());
+		}
 		let layers = host.layers(&r)?;
 		let mut target = Target {
 			pix: out,
 			width: r.output.width,
 			height: r.output.height,
 			rows: r.output.rows.clone(),
+			cols: 0..r.output.width,
 		};
 		self.compose(
 			&mut target,

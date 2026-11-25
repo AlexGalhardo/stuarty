@@ -402,6 +402,15 @@ func (h *Host) Render(ctx context.Context, in RenderInput, dst *image.RGBA) erro
 		y0, y1 = in.Output.Y0, in.Output.Y1
 	}
 
+	x0, x1 := 0, w
+	if in.Output.X1 > in.Output.X0 {
+		x0, x1 = in.Output.X0, in.Output.X1
+	}
+
+	if x0 < 0 || x1 > w {
+		return &Error{InvalidArgument, "the columns are not inside the frame"}
+	}
+
 	whole := dst.Rect.Min == (image.Point{}) && dst.Rect.Dx() == w && dst.Rect.Dy() == ht && dst.Stride == 4*w
 	rows := y1 > y0 && y1 <= ht && dst.Rect == image.Rect(0, y0, w, y1) && dst.Stride == 4*w
 
@@ -415,21 +424,22 @@ func (h *Host) Render(ctx context.Context, in RenderInput, dst *image.RGBA) erro
 	}
 
 	if whole {
-		return h.renderText(ctx, text, dst, y0, y1)
+		return h.renderRows(ctx, text, dst, w, ht, y0, y1, x0, x1)
 	}
 
 	// The rows of the band alone: the module draws into a buffer of their size and the view takes it as it is.
-	return h.renderRows(ctx, text, dst, w, y1-y0, 0, y1-y0)
+	return h.renderRows(ctx, text, dst, w, y1-y0, 0, y1-y0, x0, x1)
 }
 
 // renderText runs vr_render on an encoded render input and copies rows [y0, y1) of the frame into dst.
 func (h *Host) renderText(ctx context.Context, text []byte, dst *image.RGBA, y0, y1 int) error {
-	return h.renderRows(ctx, text, dst, dst.Rect.Dx(), dst.Rect.Dy(), y0, y1)
+	return h.renderRows(ctx, text, dst, dst.Rect.Dx(), dst.Rect.Dy(), y0, y1, 0, dst.Rect.Dx())
 }
 
 // renderRows runs vr_render into a block of w by ht pixels and copies its rows [y0, y1) into dst.Pix at the same
-// place.
-func (h *Host) renderRows(ctx context.Context, text []byte, dst *image.RGBA, w, ht, y0, y1 int) error {
+// place; with a window (x0 > 0 or x1 < w) only the columns [x0, x1) of each row are copied, so the pixels of dst
+// outside it stay as they were.
+func (h *Host) renderRows(ctx context.Context, text []byte, dst *image.RGBA, w, ht, y0, y1, x0, x1 int) error {
 	if w > maxOutputSide || ht > maxOutputSide {
 		return &Error{LimitExceeded, "render_frame_side"}
 	}
@@ -472,7 +482,16 @@ func (h *Host) renderRows(ctx context.Context, text []byte, dst *image.RGBA, w, 
 		return &Error{OutOfMemory, "reading the frame"}
 	}
 
-	copy(dst.Pix[y0*w*4:y1*w*4], rows)
+	if x0 == 0 && x1 == w {
+		copy(dst.Pix[y0*w*4:y1*w*4], rows)
+
+		return nil
+	}
+
+	for y := range y1 - y0 {
+		o := (y0+y)*w*4 + x0*4
+		copy(dst.Pix[o:o+(x1-x0)*4], rows[y*w*4+x0*4:y*w*4+x1*4])
+	}
 
 	return nil
 }

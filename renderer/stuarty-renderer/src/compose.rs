@@ -204,6 +204,9 @@ pub struct Target<'a> {
 	pub height: usize,
 	/// The rows to fill and draw (a band of the export); the rows outside are not touched.
 	pub rows: Range<usize>,
+	/// The columns to fill and draw (the dirty window of an edit); the columns outside are not touched. A
+	/// buffer is still `width` pixels wide.
+	pub cols: Range<usize>,
 }
 
 impl Target<'_> {
@@ -223,16 +226,20 @@ impl Target<'_> {
 /// `dst` are filled with `background` first, which is opaque unless the plan is transparent.
 pub fn compose(dst: &mut Target<'_>, background: [u8; 4], layers: &[Layer<'_>], out_scale: f64) {
 	dst.rows = dst.rows.start.min(dst.height)..dst.rows.end.min(dst.height);
-	if dst.rows.is_empty() || dst.pix.len() < (dst.rows.end - dst.origin()) * dst.width * 4 {
+	dst.cols = dst.cols.start.min(dst.width)..dst.cols.end.min(dst.width);
+	if dst.rows.is_empty()
+		|| dst.cols.is_empty()
+		|| dst.pix.len() < (dst.rows.end - dst.origin()) * dst.width * 4
+	{
 		return;
 	}
 	let origin = dst.origin();
-	let (a, b) = (
-		(dst.rows.start - origin) * dst.width * 4,
-		(dst.rows.end - origin) * dst.width * 4,
-	);
-	for px in dst.pix[a..b].as_chunks_mut::<4>().0.iter_mut() {
-		px.copy_from_slice(&background);
+	for y in dst.rows.clone() {
+		let row = (y - origin) * dst.width;
+		let (a, b) = ((row + dst.cols.start) * 4, (row + dst.cols.end) * 4);
+		for px in dst.pix[a..b].as_chunks_mut::<4>().0.iter_mut() {
+			px.copy_from_slice(&background);
+		}
 	}
 	for (i, l) in layers.iter().enumerate() {
 		if l.ext.stencil {
@@ -280,6 +287,7 @@ pub fn prepare_clipped(
 			width,
 			height,
 			rows: rows.clone(),
+			cols: 0..width,
 		};
 		draw_layer(&mut t, &own, out_scale);
 	}
@@ -296,6 +304,7 @@ pub fn prepare_clipped(
 			width,
 			height,
 			rows: rows.clone(),
+			cols: 0..width,
 		};
 		draw_layer(&mut t, &src, out_scale);
 	}
@@ -934,8 +943,8 @@ fn blit(
 	mask: Option<&MaskState>,
 ) {
 	let (dw, origin) = (dst.width, dst.origin());
-	let cx0 = x0.max(0);
-	let cx1 = x0.saturating_add(src.w as i64).min(dw as i64);
+	let cx0 = x0.max(dst.cols.start as i64);
+	let cx1 = x0.saturating_add(src.w as i64).min(dst.cols.end as i64);
 	let cy0 = y0.max(dst.rows.start as i64);
 	let cy1 = y0.saturating_add(src.h as i64).min(dst.rows.end as i64);
 	if cx0 >= cx1 || cy0 >= cy1 {
@@ -1043,8 +1052,8 @@ pub fn sample(
 	let (hw, hh) = (p.w / 2.0, p.h / 2.0);
 	let ex = mul(hw, cos.abs()) + mul(hh, sin.abs());
 	let ey = mul(hw, sin.abs()) + mul(hh, cos.abs());
-	let bx0 = ((p.cx - ex).floor() as i64).max(0);
-	let bx1 = ((p.cx + ex).ceil() as i64).min(dw as i64);
+	let bx0 = ((p.cx - ex).floor() as i64).max(dst.cols.start as i64);
+	let bx1 = ((p.cx + ex).ceil() as i64).min(dst.cols.end as i64);
 	let by0 = ((p.cy - ey).floor() as i64)
 		.max(0)
 		.max(dst.rows.start as i64);

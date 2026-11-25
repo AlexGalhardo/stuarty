@@ -38,6 +38,7 @@ pub fn resize(src: &Image, w: usize, h: usize) -> Image {
 			width: w,
 			height: h,
 			rows: 0..h,
+			cols: 0..w,
 		},
 		cur,
 		&p,
