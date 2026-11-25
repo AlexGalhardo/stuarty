@@ -231,6 +231,7 @@ var toolDomains = map[string][]string{
 	"font_import":   {command.DomainAsset},
 	"image":         {command.DomainImage},
 	"library":       {command.DomainMemory},
+	"publication":   {command.DomainPublish},
 	// command_help answers for every domain; it is itself an operation of the workspace domain.
 	"command_help": command.DomainNames(),
 	"connection":   {command.DomainWorkspace},

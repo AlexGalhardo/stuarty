@@ -155,7 +155,8 @@
         "connection": "Lista os seus destinos conectados. Nunca mostra uma credencial.",
         "image": "Trabalha com imagens.",
         "project_item": "Trabalha com os itens de um projeto: linhas do tempo, textos, briefings e exportações.",
-        "library": "Lê ou escreve as suas notas de memória, skills e prompts."
+        "library": "Lê ou escreve as suas notas de memória, skills e prompts.",
+        "publication": "Planeja ou lê as suas publicações. Nada é enviado até você aprovar."
       },
       "action": {
         "history_list": "Lista o registro de alterações, da mais recente para a mais antiga.",
@@ -181,6 +182,10 @@
         "library_write": "Escreve uma nota, uma skill ou um prompt.",
         "library_render": "Preenche um prompt com valores e devolve o texto.",
         "library_lint": "Verifica se uma skill tem problemas.",
+        "publication_create": "Planeja uma publicação. Nada é enviado.",
+        "publication_schedule": "Pede que você aprove o horário de um post.",
+        "publication_show": "Mostra uma publicação e o estado de cada post.",
+        "publication_list": "Lista as suas publicações.",
         "project_item_add": "Adiciona um item a um projeto.",
         "project_item_move": "Move um item de um projeto.",
         "project_item_rename": "Renomeia um item de um projeto.",

@@ -425,5 +425,6 @@ tool project_get
 tool project_item
 tool project_list
 tool project_trash
+tool publication
 tool template
 tool view

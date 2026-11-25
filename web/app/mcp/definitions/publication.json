@@ -1,0 +1,97 @@
+{
+ "name": "publication",
+ "description": "Publications. action=create (project_id, title, export or post, targets: connection_id, at, zone, fields; see command_help domain=publish), schedule (id, target_id, at, zone), show (id), list (state, from, until). A person approves before anything is sent.",
+ "inputSchema": {
+  "type": "object",
+  "properties": {
+   "action": {
+    "enum": [
+     "create",
+     "schedule",
+     "show",
+     "list"
+    ]
+   },
+   "id": {
+    "type": "string",
+    "pattern": "^pub_[0-9a-hjkmnp-tv-z]{10}$"
+   },
+   "target_id": {
+    "type": "string",
+    "pattern": "^tgt_[0-9a-hjkmnp-tv-z]{10}$"
+   },
+   "project_id": {
+    "type": "string",
+    "pattern": "^prj_[0-9a-hjkmnp-tv-z]{10}$"
+   },
+   "title": {
+    "type": "string"
+   },
+   "text": {
+    "type": "string"
+   },
+   "export": {
+    "type": "string"
+   },
+   "thumbnail": {
+    "type": "string"
+   },
+   "post": {
+    "type": "string"
+   },
+   "targets": {
+    "type": "array",
+    "items": {
+     "type": "object"
+    }
+   },
+   "at": {
+    "type": "string"
+   },
+   "zone": {
+    "type": "string"
+   },
+   "late_window_minutes": {
+    "type": "integer"
+   },
+   "state": {
+    "type": "string"
+   },
+   "network": {
+    "type": "string"
+   },
+   "from": {
+    "type": "string"
+   },
+   "until": {
+    "type": "string"
+   },
+   "limit": {
+    "type": "integer"
+   },
+   "offset": {
+    "type": "integer"
+   }
+  },
+  "required": [
+   "action"
+  ],
+  "additionalProperties": false
+ },
+ "outputSchema": {
+  "type": "object",
+  "properties": {
+   "text": {
+    "type": "string",
+    "x-untrusted": true
+   }
+  }
+ },
+ "annotations": {
+  "title": "Publications",
+  "readOnlyHint": false,
+  "destructiveHint": false,
+  "idempotentHint": false,
+  "openWorldHint": false
+ }
+}

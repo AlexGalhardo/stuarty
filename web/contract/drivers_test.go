@@ -925,6 +925,10 @@ func toolCall(s step) (tool string, args map[string]any, err error) {
 		return tool, args, err
 	}
 
+	if tool, args, ok := publicationToolCall(s.Call, args); ok {
+		return tool, args, nil
+	}
+
 	return "", nil, fmt.Errorf("no tool for %s", s.Call)
 }
 

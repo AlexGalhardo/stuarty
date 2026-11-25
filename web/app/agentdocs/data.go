@@ -36,6 +36,7 @@ var Tools = []ToolRow{
 		[]string{"item:add", "brief:set"},
 	},
 	{"library", []string{"library:search"}},
+	{"publication", []string{"publication:create", "publication:schedule", "publication:show", "publication:list"}},
 }
 
 // ErrorRow is one error code of SDD-000 section 8 and SDD-002 section A.8, with
@@ -61,7 +62,7 @@ var Errors = []ErrorRow{
 	{"E_IN_USE", false, "remove its users first"},
 	{"E_NOT_EMPTY", false, "empty it first"},
 	{"E_LIMIT", false, "split the batch"},
-	{"E_FONT_UNKNOWN", false, "use a listed font"},
+	{"E_FONT_UNKNOWN", false, ""},
 	{"E_SLOT", false, "fill every required slot"},
 	{"E_REVISION_CONFLICT", true, "read details.diff, re-plan, resend"},
 	{"E_IDEMPOTENCY_MISMATCH", false, "use a new key"},
@@ -71,11 +72,11 @@ var Errors = []ErrorRow{
 	{"E_WORKSPACE_LOCKED", true, "wait"},
 	{"E_PATH_NOT_ALLOWED", false, "use an allowed path"},
 	{"E_FILE_NOT_FOUND", false, "check the path"},
-	{"E_UNSUPPORTED_MEDIA", false, "convert the file"},
+	{"E_UNSUPPORTED_MEDIA", false, ""},
 	{"E_INGEST_FAILED", false, "see details.reason"},
 	{"E_ASSET_NOT_READY", true, "poll job:show until ready"},
-	{"E_FFMPEG_MISSING", false, "install FFmpeg"},
-	{"E_NO_ENCODER", false, "use another codec"},
+	{"E_FFMPEG_MISSING", false, ""},
+	{"E_NO_ENCODER", false, ""},
 	{"E_EXPORT_FAILED", false, "see details.reason"},
 	{"E_VERIFY_FAILED", false, "see details.checks"},
 	{"E_TRANSCRIBE_UNAVAILABLE", false, "install the helper"},
@@ -83,10 +84,10 @@ var Errors = []ErrorRow{
 	{"E_QUEUE_FULL", true, "wait for a job"},
 	{"E_RATE_LIMITED", true, "wait Retry-After s"},
 	{"E_LIMIT_EXCEEDED", false, "over a ceiling"},
-	{"E_CANCELLED", false, "start it again"},
+	{"E_CANCELLED", false, ""},
 	// The code says it all: an empty way out keeps the skill under its limit.
 	{"E_NOTHING_TO_UNDO", false, ""},
 	{"E_NOTHING_TO_REDO", false, ""},
 	{"E_LINT_BLOCKING", false, "fix details.findings"},
-	{"E_PAYLOAD_TOO_LARGE", false, "send a smaller batch"},
+	{"E_PAYLOAD_TOO_LARGE", false, ""},
 }

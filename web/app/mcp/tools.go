@@ -38,6 +38,7 @@ func (a *adapter) handlers() map[string]callFunc {
 		"image":          imageTool,
 		"project_item":   projectItem,
 		"library":        libraryTool,
+		"publication":    publicationTool,
 	}
 }
 

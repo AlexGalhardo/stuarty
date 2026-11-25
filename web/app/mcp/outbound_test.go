@@ -62,7 +62,7 @@ func TestNoOutboundTools(t *testing.T) {
 }
 
 // TestToolsListIsByteEqualAcrossCalls: tools/list is static (ADR-0020), so two
-// calls answer the same bytes, and the 20 tools of the build are all there.
+// calls answer the same bytes, and the 21 tools of the build are all there.
 func TestToolsListIsByteEqualAcrossCalls(t *testing.T) {
 	t.Parallel()
 
@@ -82,7 +82,7 @@ func TestToolsListIsByteEqualAcrossCalls(t *testing.T) {
 		t.Error("two tools/list calls differ")
 	}
 
-	if len(first.Tools) != 20 {
-		t.Errorf("tools/list has %d tools, want the 20 of SDD-000 section 1", len(first.Tools))
+	if len(first.Tools) != 21 {
+		t.Errorf("tools/list has %d tools, want the 21 of SDD-000 section 1", len(first.Tools))
 	}
 }
