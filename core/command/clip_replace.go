@@ -5,7 +5,7 @@ import "github.com/AlexGalhardo/stuarty/core/timeline"
 func init() {
 	Register(Define(Spec{
 		Name:    "clip.replace_media",
-		Summary: "Swaps the asset of a clip for another of the same kind and keeps everything else.",
+		Summary: "Swaps the asset of a clip for another of the same kind, keeping the rest.",
 		Description: "Replaces the asset a clip plays, a video by a video or an image by an image, and keeps its position, " +
 			"duration, trim, speed, transform, keyframes and effects: the animation an external engine rendered again takes " +
 			"the place of the one it replaces. Nothing is stretched or trimmed: a video the clip's range does not fit is refused.",

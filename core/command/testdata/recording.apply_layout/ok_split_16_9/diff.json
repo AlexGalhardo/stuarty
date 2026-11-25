@@ -1,0 +1,49 @@
+[
+  {
+    "kind": "item.updated",
+    "id": "itm_c3d4e5f6g7",
+    "changes": {
+      "crop": [
+        null,
+        {
+          "left": 0.3418,
+          "right": 0.3418
+        }
+      ],
+      "fit": [
+        "cover",
+        "contain"
+      ],
+      "x": [
+        null,
+        1616.256
+      ],
+      "y": [
+        null,
+        540
+      ]
+    }
+  },
+  {
+    "kind": "item.updated",
+    "id": "itm_m1n2p3q4r5",
+    "changes": {
+      "fit": [
+        "cover",
+        "contain"
+      ],
+      "scale": [
+        1,
+        0.6723
+      ],
+      "x": [
+        null,
+        645.456
+      ],
+      "y": [
+        null,
+        540
+      ]
+    }
+  }
+]

@@ -13,7 +13,7 @@ import (
 func init() {
 	Register(Define(Spec{
 		Name:    "font.add",
-		Summary: "Adds a user font family to the project, or more weights to one it already has.",
+		Summary: "Adds a font family to the project, or more weights to an existing one.",
 		Description: "Names a font that is already stored by hash in the workspace as a family of the project, so that " +
 			"styles can use it. The family name must not be a bundled family. Adding to an existing family adds the " +
 			"weights and replaces the file of a weight it already has. The command never reads or stores a file; the " +

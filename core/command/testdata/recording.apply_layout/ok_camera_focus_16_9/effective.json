@@ -1,0 +1,16 @@
+{
+  "camera": {
+    "height": 1080,
+    "width": 1920,
+    "x": 0,
+    "y": 0
+  },
+  "format": "16:9",
+  "layout": "camera_focus",
+  "screen": {
+    "height": 345.6,
+    "width": 614.4,
+    "x": 1273.2,
+    "y": 32.4
+  }
+}

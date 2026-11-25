@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.camera_item_id: the layout screen_only has no camera.",
+  "hint": "Remove camera_item_id, or use pip, split or camera_focus.",
+  "retryable": false,
+  "path": "args.camera_item_id"
+}

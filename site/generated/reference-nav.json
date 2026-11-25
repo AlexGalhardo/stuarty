@@ -452,6 +452,7 @@
       "marker.remove",
       "marker.set",
       "project.rename",
+      "recording.apply_layout",
       "recording.auto_zoom",
       "recording.set_click_highlight",
       "recording.set_cursor",
