@@ -596,12 +596,12 @@ CSS grid of the shell: rows `48px 1fr var(--timeline-h)`, columns `var(--library
 
 ### 6.3 Responsive behaviour
 
-The editor is a desktop tool. The supported minimum is 1280 by 720 CSS pixels. The library is twice the width it had before epic 60 (D-125), so the panels in it have room; it is capped so that the preview keeps at least 360 px, and it still collapses to its rail. Defaults and rules:
+The editor is a desktop tool. The supported minimum is 1280 by 720 CSS pixels. The library region is the rail of 44 px plus a panel of 240 px (epic 99, final design 05), and the inspector is 340 px; the preview keeps at least 360 px beside the open panels, and the library still collapses to its rail. The edit by text screen gives its transcript every pixel the preview and the inspector can spare, and with it the vertical cuts screen hides the timeline. Defaults and rules:
 
 | Viewport width | Library | Inspector | Notes |
 | --- | --- | --- | --- |
-| 1600 and wider | 640 px open | 360 px open | timeline height default 300 px |
-| 1280 to 1599 | 480 px open | 280 px open | timeline height default 240 px |
+| 1600 and wider | 284 px open (rail 44 and panel 240) | 340 px open | timeline height default 300 px |
+| 1280 to 1599 | 284 px open | 340 px open | timeline height default 240 px |
 | 1024 to 1279 | drawer (`Sheet`) opened by a top-bar button | drawer, opens by itself when a selection is made | tolerated, not supported: a notice "best used at 1280 pixels or wider" is shown once per session |
 | below 1024 | not supported: a full-screen notice with a link back to the projects list | | |
 
@@ -640,7 +640,7 @@ Decision D-038: a person who edits in CapCut should find the same places in the 
 
 #### Material panel (the library region)
 
-The library region keeps its width (§6.3) and gets a vertical tab rail of 40 px at its left edge: `role="tablist"` with `aria-orientation="vertical"`, one icon button of 32 px per tab (24 px at least, §18.1 item 7), an `aria-label` and a tooltip from `t()`, roving `tabindex` with `Up`, `Down`, `Home` and `End`. The panel of the selected tab is `ui/Panel` (design system §4.3.2) with the header and body of §6.1. A tab is drawn only when the registry has the command it needs. The tabs, in this order:
+The library region keeps its width (§6.3) and gets a vertical tab rail of 44 px at its left edge, whose last icon is the history button: `role="tablist"` with `aria-orientation="vertical"`, one icon button of 32 px per tab (24 px at least, §18.1 item 7), an `aria-label` and a tooltip from `t()`, roving `tabindex` with `Up`, `Down`, `Home` and `End`. The panel of the selected tab is `ui/Panel` (design system §4.3.2) with the header and body of §6.1. A tab is drawn only when the registry has the command it needs. The tabs, in this order:
 
 | Tab | Body | Command or surface | State today |
 | --- | --- | --- | --- |
@@ -705,7 +705,7 @@ The context menu of a clip repeats the Clip menu and adds Copy, Cut, Paste, Dupl
 **Epic 60 (D-125).** Four changes of this layout, all in `web/resources/js/editor/`:
 
 - **The edit strip is gone.** The strip of the "Add text" and "Add shape" buttons above the preview is removed: the same actions are in the Text tab of the left panel (and the keys `T` and `C` stay). The Add caption dialog is still opened by the key and by the timeline.
-- **The history is a sidebar.** It is not a tab of the rail any more: it is a region of its own (an `aside` named "History sidebar", with the list, a region named "History", inside) placed right next to the library, between it and the preview, with the button of its own 40 px rail and `Alt+3` that open and collapse it, like the library (a rail collapsed, 320 px open; closed until a person opens it, and the library gives way to it before the preview does, down to 192 px each below 1280 px). `F6` visits it between the library and the preview, and when `Alt+3` closes it with the focus inside, the focus moves to its button. It lists the newest step first. Its open state is remembered per person, at this browser (`historyOpen` of `vv.layout`). Section 15 describes what it holds.
+- **The history is a sidebar.** It is not a tab of the rail any more: it is a region of its own (an `aside` named "History sidebar", with the list, a region named "History", inside) placed right next to the library, between it and the preview, with its button as the last icon of the library rail and `Alt+3` that open and collapse it, like the library (no room collapsed, 320 px open; closed until a person opens it, and the library gives way to it before the preview does, down to 192 px each below 1280 px). `F6` visits it between the library and the preview, and when `Alt+3` closes it with the focus inside, the focus moves to its button on the rail. It lists the newest step first. Its open state is remembered per person, at this browser (`historyOpen` of `vv.layout`). Section 15 describes what it holds.
 - **Menus follow the theme.** Every dropdown, context menu, popover and native `select` of the editor is drawn with the popover tokens (`bg-popover text-popover-foreground`), so the dark theme shows a dark surface and light text, and a native `select` takes `color-scheme: dark` in the dark theme. `check:contrast` and `web/e2e/specs/editor-menus-dark.spec.ts` check the computed colours.
 - **Rename.** An imported file, in the library of the editor and in the library pages, has a context menu (right click, the context-menu key or `Shift+F10`) with "Rename". It opens a small dialog with the name in a field; Enter sends `AssetRename` (SDD-011 §14.8), Esc leaves it. On the Sound Assets page the menu is on the header of a row, so the player keeps the menu of the browser. The dialog shows a refusal of the service as it came and checks nothing itself, and when it closes the focus returns to the file. The editor draws the name the media list carries wherever a clip with no name of its own is named: its timeline cell, the list view of the timeline, the selection a screen reader hears and the find bar.
 
