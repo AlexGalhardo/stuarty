@@ -361,7 +361,8 @@
       "connection",
       "image",
       "project_item",
-      "library"
+      "library",
+      "publication"
     ],
     "operations": [
       "animation.apply_preset",

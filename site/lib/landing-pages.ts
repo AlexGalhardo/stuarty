@@ -274,14 +274,14 @@ export const drive: DriveTab[] = [
 	{
 		id: "mcp",
 		label: "MCP",
-		title: "Twenty tools, grouped by intent",
+		title: "Twenty-one tools, grouped by intent",
 		text: "stuarty mcp serves the tools on standard input and output. One edit call applies a whole batch as one undo step; history lists every step with who made it.",
 		lines: [
 			{ kind: "cmd", text: "claude mcp add stuarty -- stuarty mcp --actor claude" },
-			{ kind: "note", text: "# 20 tools: project_list project_create project_get project_trash" },
+			{ kind: "note", text: "# 21 tools: project_list project_create project_get project_trash" },
 			{ kind: "note", text: "#   edit command_help history media_import media_inspect view lint" },
 			{ kind: "note", text: "#   job_start job_get job_cancel template font_import connection" },
-			{ kind: "note", text: "#   image project_item library" },
+			{ kind: "note", text: "#   image project_item library publication" },
 			{ kind: "cmd", text: "claude" },
 			{ kind: "prompt", text: "Who edited Launch teaser last?" },
 			{ kind: "tool", text: 'stuarty - history (MCP)(project_id: "prj_6jzec0m2nn", action: "list", limit: 2)' },
