@@ -45,6 +45,9 @@ function draw(view: RecordView, over: Partial<RecordFlow> = {}): string {
 		failure: null,
 		busy: false,
 		placed: false,
+		notice: null,
+		startPrepared: async () => {},
+		decide: async () => {},
 		start: async () => {},
 		startBrowser: async () => {},
 		stopBrowser: async () => {},
@@ -337,6 +340,106 @@ describe("the record dialog", () => {
 		expect(html).toContain(
 			"Agents with access to this project will be able to read this recording.",
 		);
+	});
+
+	test("lists a prepared recording with its notes as text and a Record button, and starts nothing by itself", () => {
+		const html = draw({
+			step: "pick",
+			sources: { displays: [], windows: [], ...noDevices },
+			kept: [],
+			prepared: [
+				rec({
+					recording_id: "rec_000000000p",
+					state: "prepared",
+					actor: "local:claude-code",
+					source: { kind: "display", name: "Main <b>screen</b>" },
+					plan: { fps: 30, notes: "Say the hook first <img src=x>" },
+				}),
+			],
+		});
+		expect(html).toContain("Ready to record");
+		expect(html).toContain("Nothing records until you press Record.");
+		expect(html).toContain('data-record-prepared-start="rec_000000000p"');
+		expect(html).toContain('data-record-prepared-delete="rec_000000000p"');
+		expect(html).toContain("Prepared by local:claude-code");
+		expect(html).toContain("Say the hook first");
+		expect(html).not.toContain("<img");
+		expect(html).not.toContain("<b>");
+	});
+
+	test("shows every range of a pending proposal with its own accept and reject, and one apply", () => {
+		const html = draw({
+			step: "pick",
+			sources: { displays: [], windows: [], ...noDevices },
+			kept: [],
+			proposals: [
+				rec({
+					state: "ready",
+					review: "added",
+					proposals: [
+						{
+							proposal_id: "prp_000000000a",
+							state: "pending",
+							actor: "local:claude-code",
+							created_at: "2026-11-24T00:00:00Z",
+							ranges: [
+								{ from_ms: 1200, to_ms: 3400, reason: "a long pause <i>x</i>" },
+								{ from_ms: 10_000, to_ms: 10_500, reason: "um" },
+							],
+						},
+						{
+							proposal_id: "prp_000000000b",
+							state: "accepted",
+							actor: "local:claude-code",
+							created_at: "2026-11-24T00:00:00Z",
+							ranges: [{ from_ms: 1, to_ms: 2, reason: "done" }],
+						},
+					],
+				}),
+			],
+		});
+		expect(html).toContain("Cuts to decide");
+		expect(html).toContain('data-record-proposal="prp_000000000a"');
+		expect(html).not.toContain('data-record-proposal="prp_000000000b"');
+		expect(html).toContain('data-record-range-accept="0"');
+		expect(html).toContain('data-record-range-reject="1"');
+		expect(html).toContain("0:01.2 to 0:03.4");
+		expect(html).toContain("0:10.0 to 0:10.5");
+		expect(html).toContain("2 of 2 ranges will be cut");
+		expect(html).toContain('data-record-proposal-apply="prp_000000000a"');
+		expect(html).not.toContain("<i>");
+	});
+
+	test("says what the service answered after a decision", () => {
+		const html = draw(
+			{
+				step: "pick",
+				sources: { displays: [], windows: [], ...noDevices },
+				kept: [],
+			},
+			{ notice: "1 of 2 ranges were cut in one batch (revision 7)." },
+		);
+		expect(html).toContain("1 of 2 ranges were cut in one batch (revision 7).");
+	});
+
+	test("the added step shows the cuts that wait for a person", () => {
+		const html = draw({
+			step: "added",
+			recording: rec({
+				state: "ready",
+				review: "added",
+				proposals: [
+					{
+						proposal_id: "prp_000000000a",
+						state: "pending",
+						actor: "key abcd",
+						created_at: "2026-11-24T00:00:00Z",
+						ranges: [{ from_ms: 0, to_ms: 500, reason: "dead air" }],
+					},
+				],
+			}),
+		});
+		expect(html).toContain('data-record-proposal="prp_000000000a"');
 	});
 
 	const withDevices = {

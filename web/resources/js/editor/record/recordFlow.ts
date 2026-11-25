@@ -1,5 +1,9 @@
 import { ApiError } from "../api/errors";
-import type { Recording, RecordingSourcesResult } from "../api/types";
+import type {
+	Recording,
+	RecordingProposal,
+	RecordingSourcesResult,
+} from "../api/types";
 import type { Capability } from "./browserCapture";
 import type { RecorderState } from "./browserRecorder";
 
@@ -9,12 +13,26 @@ import type { RecorderState } from "./browserRecorder";
 export type RecordView =
 	| { step: "loading" }
 	| { step: "unavailable"; reason: string }
-	// kept: the recordings a person set aside with "Not now", which only a person can add or delete later
-	| { step: "pick"; sources: RecordingSourcesResult; kept: Recording[] }
+	// kept: the recordings a person set aside with "Not now", which only a person can add or delete later;
+	// prepared: the plans an agent or a person made, which a person starts (SDD-025 section 19); proposals: the
+	// recordings with cuts that wait for a person to decide
+	| {
+			step: "pick";
+			sources: RecordingSourcesResult;
+			kept: Recording[];
+			prepared?: Recording[];
+			proposals?: Recording[];
+	  }
 	| { step: "recording"; recording: Recording }
 	// where native capture does not exist the browser records and uploads (SDD-025 section 18): what this browser can
 	// do, read before the person starts, and the takes set aside
-	| { step: "browser"; capability: Capability; kept: Recording[] }
+	| {
+			step: "browser";
+			capability: Capability;
+			kept: Recording[];
+			prepared?: Recording[];
+			proposals?: Recording[];
+	  }
 	// a recording this tab is making in the browser: the state is the recorder's, until the server answers the finish
 	| { step: "browser_live"; state: RecorderState }
 	// a browser recording whose tab is gone: it can be finished with the chunks the server has, or deleted
@@ -33,6 +51,10 @@ export function viewOf(recording: Recording): RecordView {
 				? { step: "interrupted", recording }
 				: { step: "recording", recording };
 		case "prepared":
+			// a plan is not a recording that runs: the picker lists it, and viewOf never has to draw it
+			return isPrepared(recording)
+				? { step: "gone" }
+				: { step: "recording", recording };
 		case "paused":
 		case "finishing":
 			return { step: "recording", recording };
@@ -57,8 +79,38 @@ export function browserViewOf(state: RecorderState): RecordView {
 		: viewOf(state.recording);
 }
 
+// A plan nobody has started: the service sets `plan` only on a prepared recording that waits for a person
+// (SDD-025 section 19.1). It runs no helper and does not change, so it is not live.
+export function isPrepared(recording: Recording): boolean {
+	return recording.state === "prepared" && recording.plan !== undefined;
+}
+
+// The proposals of cuts that wait for a person to decide, as the service said them.
+export function pendingProposals(recording: Recording): RecordingProposal[] {
+	return (recording.proposals ?? []).filter((p) => p.state === "pending");
+}
+
+// A recording a person added whose cuts wait for a decision (SDD-025 section 19.5).
+export function needsDecision(recording: Recording): boolean {
+	return (
+		recording.state === "ready" &&
+		recording.review === "added" &&
+		pendingProposals(recording).length > 0
+	);
+}
+
+// The recording that is capturing now, running or paused, as the service said: what the banner of the editor
+// shows on every page (SDD-025 section 19.4). A plan, a finishing take and a finished one are not capturing.
+export function capturing(recordings: Recording[]): Recording | null {
+	return (
+		recordings.find((r) => r.state === "recording" || r.state === "paused") ??
+		null
+	);
+}
+
 // The recording is still changing: the dialog asks again.
 export function isLive(recording: Recording): boolean {
+	if (isPrepared(recording)) return false;
 	return (
 		recording.state === "prepared" ||
 		recording.state === "recording" ||
@@ -102,6 +154,15 @@ export function unavailableKey(reason: string): string {
 	return (KNOWN_REASONS as readonly string[]).includes(reason)
 		? `ui.editor.record.unavailable.${reason}`
 		: "ui.editor.record.unavailable.platform";
+}
+
+// The time of a range of a proposal, with tenths: the ranges are as short as 100 ms.
+export function formatClockTenths(ms: number): string {
+	const total = Math.max(0, Math.floor(ms / 100));
+	const tenths = total % 10;
+	const seconds = Math.floor(total / 10) % 60;
+	const minutes = Math.floor(total / 600);
+	return `${minutes}:${String(seconds).padStart(2, "0")}.${tenths}`;
 }
 
 // The time the service reported, as minutes and seconds for the eye.
