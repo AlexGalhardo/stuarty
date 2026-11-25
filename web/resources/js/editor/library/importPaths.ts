@@ -55,6 +55,3 @@ export function createImportQueue(
 		},
 	};
 }
-
-// Asks the library to show its import controls (Mod+I and the menu): they are folded under the button of its header.
-export const OPEN_IMPORT_EVENT = "stuarty:open-import";
