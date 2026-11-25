@@ -77,6 +77,11 @@ Object.assign(env, {
 	STUARTY_MIN_FREE_BYTES: "1",
 	STUARTY_MASTER_KEY_FILE: join(work, "master.key"),
 });
+// The server refuses a time in the past, so every date of the demo is counted from the day of the capture.
+function day(offset: number, at?: string): string {
+	const d = new Date(Date.now() + offset * 86_400_000).toISOString().slice(0, 10);
+	return at ? `${d}T${at}` : d;
+}
 const PASSWORD = "Demo-Password-1!";
 const JSON_HEADERS = { "Content-Type": "application/json" };
 // A person decides and prices from the page, so the product expects what a browser sends from its own origin.
@@ -160,7 +165,7 @@ async function seed(context: BrowserContext): Promise<{ video: string; text: str
 		"--achievable", "The notes are ready and the footage is shot",
 		"--relevant", "It brings followers to the channel",
 		"--time-bound", "Before the end of the month",
-		"--due", "2026-11-30",
+		"--due", day(7),
 	];
 	// The video project: a brief, a script saved four times, media and a timeline with captions, a voice and music.
 	const video = cliJson<{ project_id: string }>([
@@ -224,10 +229,10 @@ async function seed(context: BrowserContext): Promise<{ video: string; text: str
 		return /pit_[0-9a-z]{10}/.exec(cli(["text:write", "--project", text, "--title", `Post: ${title.toLowerCase()}`, "--kind", "post", "--text", file]))?.[0] ?? "";
 	};
 	const posts = [
-		["Natural light at home", "natural-light-at-home", "Stand with your back to the room and let the window light your face. A thin curtain turns a harsh sun into a gentle glow. Put your phone at eye level and film near the window, not in front of a lamp.", "2026-11-27T09:00"],
-		["Sound before picture", "sound-before-picture", "Spend one minute on sound before you press record. Turn off the fan, close the door and say one sentence out loud. Listen to it with headphones. A clear voice does more for a short than a sharp picture.", "2026-11-30T10:00"],
-		["Window light checklist", "window-light-checklist", "Face the window, never put it behind you. Check the curtain, the time of day and the colour of the walls. Film a five second test and look at it on a big screen before you film the real take.", "2026-11-25T12:00"],
-		["Three phone tips", "three-phone-tips", "Lean the phone on a stack of books. Clean the lens with a soft cloth. Switch on the grid lines so the horizon stays level. These three habits make every clip look calmer.", "2026-11-26T18:00"],
+		["Natural light at home", "natural-light-at-home", "Stand with your back to the room and let the window light your face. A thin curtain turns a harsh sun into a gentle glow. Put your phone at eye level and film near the window, not in front of a lamp.", day(3, "09:00")],
+		["Sound before picture", "sound-before-picture", "Spend one minute on sound before you press record. Turn off the fan, close the door and say one sentence out loud. Listen to it with headphones. A clear voice does more for a short than a sharp picture.", day(6, "10:00")],
+		["Window light checklist", "window-light-checklist", "Face the window, never put it behind you. Check the curtain, the time of day and the colour of the walls. Film a five second test and look at it on a big screen before you film the real take.", day(1, "12:00")],
+		["Three phone tips", "three-phone-tips", "Lean the phone on a stack of books. Clean the lens with a soft cloth. Switch on the grid lines so the horizon stays level. These three habits make every clip look calmer.", day(2, "18:00")],
 	] as const;
 
 	// A folder for the blog posts, and a key for the voice-over: the product keeps both in its vault.
@@ -337,7 +342,10 @@ const SHOTS: Shot[] = [
 	},
 	{ name: "video-assets", path: () => "/video-assets" },
 	{ name: "visual-assets", path: () => "/visual-assets" },
-	{ name: "image-editor", path: (ids) => `/edit-image/${ids.image}`, prepare: (page) => clickIfShown(page, page.getByText("Title", { exact: true }).first()) },
+	{ name: "image-editor", path: (ids) => `/edit-image/${ids.image}`, prepare: async (page) => {
+		await clickIfShown(page, page.getByText("Title", { exact: true }).first());
+		await clickIfShown(page, page.getByRole("button", { name: "History" }));
+	} },
 	{ name: "agent-chat", path: (ids) => `/projects/${ids.video}`, prepare: (page) => clickIfShown(page, page.getByRole("button", { name: "Open chat" }).first()) },
 	{ name: "skills", path: () => "/skills", prepare: (page) => clickIfShown(page, page.getByText("captions-for-shorts").first()) },
 	{ name: "prompts", path: () => "/prompts", prepare: (page) => clickIfShown(page, page.getByText("five-hooks").first()) },
@@ -363,7 +371,7 @@ async function shoot(browser: import("@playwright/test").Browser, ids: Ids): Pro
 			if (!login.ok()) throw new Error(`login: ${await login.text()}`);
 			const page = await context.newPage();
 			// The home greets by the hour of the browser: the captures are taken at half past nine, in the morning, in the UTC of their context.
-			await page.clock.setFixedTime(new Date("2026-11-24T09:30:00Z"));
+			await page.clock.setFixedTime(new Date(`${day(0)}T09:30:00Z`));
 			await page.goto(shot.path(ids), { waitUntil: "networkidle" });
 			await shot.prepare?.(page);
 			await page.waitForTimeout(1500);
