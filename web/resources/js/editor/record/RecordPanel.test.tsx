@@ -214,7 +214,9 @@ describe("the record dialog", () => {
 			html.match(/<input[^>]*data-record-system-audio[^>]*>/)?.[0],
 		).not.toContain("checked");
 		expect(html).toContain("never the keys");
-		expect(html).toContain("deleted with the recording");
+		// it says where the positions are, and promises no deletion an added recording does not have
+		expect(html).toContain("stay on this machine");
+		expect(html).not.toContain("deleted with the recording");
 	});
 
 	test("says when there is no camera and hides the computer sound where it cannot be recorded", () => {

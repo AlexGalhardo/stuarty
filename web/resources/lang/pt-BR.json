@@ -1461,7 +1461,7 @@
         "camera_none": "Sem câmera",
         "camera_missing": "Nenhuma câmera foi encontrada.",
         "events": "Salvar o cursor e os cliques (nunca as teclas)",
-        "events_note": "As posições ficam nesta máquina e são apagadas junto com a gravação.",
+        "events_note": "As posições ficam nesta máquina, na pasta da gravação.",
         "pause": "Pausar",
         "resume": "Continuar",
         "paused": "Pausado",
