@@ -43,14 +43,18 @@ func TestChildEnvKeepsOnlyTheAllowList(t *testing.T) {
 	}
 }
 
-func TestHelperPrintEnv(t *testing.T) {
-	if !slices.Contains(os.Args, "print-env") {
-		t.Skip("helper process")
+// TestMain makes the test binary the child of TestExecRunnerNeverPassesAProviderKey when it is started
+// with the single argument print-env: it prints the environment it was given and exits.
+func TestMain(m *testing.M) {
+	if len(os.Args) == 2 && os.Args[1] == "print-env" {
+		for _, kv := range os.Environ() {
+			_, _ = os.Stdout.WriteString(kv + "\n")
+		}
+
+		os.Exit(0)
 	}
 
-	for _, kv := range os.Environ() {
-		os.Stdout.WriteString(kv + "\n")
-	}
+	os.Exit(m.Run())
 }
 
 func TestExecRunnerNeverPassesAProviderKey(t *testing.T) {
@@ -63,7 +67,7 @@ func TestExecRunnerNeverPassesAProviderKey(t *testing.T) {
 
 	run := execRunner(os.Args[0])(t.TempDir(), t.TempDir())
 
-	out, code, err := run(context.Background(), []string{"-test.run=^TestHelperPrintEnv$", "print-env"}, "")
+	out, code, err := run(context.Background(), []string{"print-env"}, "")
 	if err != nil || code != 0 {
 		t.Fatalf("the helper failed: %v %d: %s", err, code, out)
 	}
