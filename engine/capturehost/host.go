@@ -17,6 +17,7 @@ import (
 	"slices"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
@@ -74,6 +75,9 @@ type Config struct {
 	Deadline time.Duration
 	// Zero values take the defaults of the constants above.
 	ReadyTimeout, StartedTimeout, Silence time.Duration
+	// Indicator, when set, is raised when the helper is asked to capture and lowered when its process has exited
+	// (SDD-025 section 19.4).
+	Indicator *Indicator
 }
 
 // Source is a display or a window the helper can capture.
@@ -244,6 +248,10 @@ type Helper struct {
 
 	wmu sync.Mutex
 
+	// lit is set while this helper holds the indicator; exited is set once its process is gone, so a start that
+	// races with the exit never leaves the indicator on.
+	lit, exited atomic.Bool
+
 	mu     sync.Mutex
 	runErr error
 	stderr string
@@ -292,6 +300,10 @@ func Start(ctx context.Context, r *ffmpeg.Runner, cfg Config) (*Helper, error) {
 			Tool: tool, Dir: cfg.Dir, Deadline: cfg.Deadline, Stdin: inR,
 			Stdout: &endWriter{w: outW, onEnd: func() { _ = inW.Close() }},
 		})
+
+		// The process is gone, however it ended: the indicator goes off before anything else is told.
+		h.exited.Store(true)
+		h.unlight()
 
 		h.mu.Lock()
 		h.runErr, h.stderr = err, res.Stderr
@@ -474,6 +486,9 @@ func (h *Helper) Begin(ctx context.Context, req StartRequest) (Started, <-chan E
 		msg["outputs"] = outputs
 	}
 
+	// From here the helper may capture: the indicator is on until its process has exited (T-167).
+	h.light()
+
 	err := h.send(msg)
 	if err != nil {
 		return Started{}, nil, fmt.Errorf("%w: %w", ErrLost, err)
@@ -627,6 +642,26 @@ func finishedEvent(m message) Finished {
 	}
 
 	return f
+}
+
+// light raises the indicator for this helper, once.
+func (h *Helper) light() {
+	if h.cfg.Indicator == nil || h.exited.Load() || !h.lit.CompareAndSwap(false, true) {
+		return
+	}
+
+	h.cfg.Indicator.Enter()
+
+	if h.exited.Load() {
+		h.unlight()
+	}
+}
+
+// unlight lowers the indicator for this helper, once.
+func (h *Helper) unlight() {
+	if h.lit.CompareAndSwap(true, false) {
+		h.cfg.Indicator.Leave()
+	}
 }
 
 // Kill ends the helper and its whole process tree at once.

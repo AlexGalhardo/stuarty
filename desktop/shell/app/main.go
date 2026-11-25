@@ -142,6 +142,11 @@ func run() error {
 	bg.install(win)
 	// The framework closes the windows after the shutdown tasks: an update or the system quits, never hides.
 	app.OnShutdown(bg.shuttingDown)
+	// The indicator of a capture is the host's, not the window's: it runs for as long as the application does.
+	indCtx, stopInd := context.WithCancel(context.Background())
+	defer stopInd()
+	app.OnShutdown(stopInd)
+	(&recordingIndicator{app: app}).start(indCtx, srv)
 	bgp.Store(bg)
 	br.bg.Store(bg)
 	guardNavigation(win, srv.Port, home)

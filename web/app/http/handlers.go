@@ -572,6 +572,7 @@ func (h *apiHandler) registerAll() {
 	register(h, "audit.list", h.auditList)
 	register(h, "system.launch", h.systemLaunch)
 	register(h, "system.scheduler", h.systemScheduler)
+	register(h, "system.capture", h.systemCapture)
 	register(h, "handshake.get", func(_ *web.Ctx, in handshakeIn) (handshakeOut, error) {
 		if !auth.ValidNonce(in.Nonce) {
 			return handshakeOut{}, &service.Error{
