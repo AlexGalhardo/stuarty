@@ -259,6 +259,58 @@ test.describe("recording in the browser", () => {
 		await second.close();
 	});
 
+	test("Stop sharing in the browser ends the take and the dialog moves on to the review", async ({
+		page,
+		request,
+	}) => {
+		const seeded = await seedProject(request, { tracks: 0, assets: 1 });
+		// keep the stream the browser gives, so the test can do what the browser's own Stop sharing does
+		await page.addInitScript(() => {
+			const devices = navigator.mediaDevices;
+			const give = devices.getDisplayMedia.bind(devices);
+			devices.getDisplayMedia = async (constraints) => {
+				const stream = await give(constraints);
+				(window as unknown as { shared: MediaStream }).shared = stream;
+				return stream;
+			};
+		});
+		await openDialog(page, seeded.id);
+		await page.locator("[data-record-start]").click();
+		await expect(page.locator("[data-record-browser-live]")).toHaveAttribute(
+			"data-record-browser-live",
+			"recording",
+			{ timeout: 30_000 },
+		);
+		await expect
+			.poll(
+				async () =>
+					(await recordingsOf(request, seeded.id))[0]?.upload?.tracks[0]
+						?.next_index ?? 0,
+				{ timeout: 30_000 },
+			)
+			.toBeGreaterThanOrEqual(2);
+
+		// Stop sharing: the browser stops the track of the screen and says it ended
+		await page.evaluate(() => {
+			const shared = (window as unknown as { shared: MediaStream }).shared;
+			const [track] = shared.getVideoTracks();
+			track?.stop();
+			track?.dispatchEvent(new Event("ended"));
+		});
+
+		// the take is finished with what was sent, and the dialog asks the person instead of waiting forever
+		await expect(page.locator("[data-record-notice]")).toBeVisible({
+			timeout: 90_000,
+		});
+		await expect(page.locator("[data-record-step]")).toHaveAttribute(
+			"data-record-step",
+			"review",
+		);
+		const [done] = await recordingsOf(request, seeded.id);
+		expect(done?.state).toBe("ready");
+		expect(done?.review).toBe("pending");
+	});
+
 	test("an agent token cannot upload a recording", async ({ request }) => {
 		const seeded = await seedProject(request, { tracks: 0, assets: 1 });
 		const begin = await request.post("/api/v1/recordings/upload", {
