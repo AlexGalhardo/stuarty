@@ -99,16 +99,21 @@ export const screens = {
 	},
 } satisfies Record<string, Screen>;
 
+/**
+ * The hero, as the author changed it after the review of epic 95 (2026-11-24): no eyebrow, a centred title with no final
+ * full stop whose first words carry the colours of the accent palette, no alpha note, and the download and setup cards in
+ * place of the two buttons.
+ */
 export const hero = {
-	eyebrow: "Open source studio for creators",
-	title: "Create, edit, manage and publish your content in one place.",
+	title: "Create, edit, manage and publish your audiovisual and text content in one place",
+	/** The start of `title` drawn in the colours of the accent palette: the reading focus. */
+	titleFocus: "Create, edit, manage and publish",
 	lead: "Plan, describe, cut, caption, thumbnail, post texts, images and videos from one studio on your own machine. Your AI agent works for and beside you, all integrated.",
 	/** The phone layout of the design shortens the lead and the note under the buttons. */
 	leadMobile: "Write, cut, caption and post from one studio on your own machine. Your AI agent works for and beside you.",
-	primary: "Get started",
-	secondary: "Read the docs",
-	note: "Free and open source. No subscriptions. Stuarty is in alpha: expect rough edges.",
-	noteMobile: "Free and open source. No subscriptions.",
+	/** The name of the download and setup cards under the lead, which replaced the two buttons of the hero. */
+	downloads: "Download Stuarty or set it up",
+	note: "Free and open source. No subscriptions.",
 	claims: [
 		{ text: "An AI agent works for and beside you, through the same commands.", epics: [13, 14] },
 		{ text: "Texts, images and videos from one studio.", epics: [17, 28, 37, 78] },
@@ -200,6 +205,7 @@ export const areas = {
 		{ id: "image", icon: "image", title: "Image editor", text: "Layers, text, masks, presets and templates for thumbnails and posts.", epics: [28, 29] },
 		{ id: "agents", icon: "bot", title: "Agents", text: "Claude Code, Codex, OpenCode and Gemini CLI. You approve each tool request.", epics: [14, 83] },
 		{ id: "library", icon: "brain", title: "Skills, prompts, memory", text: "Reviewed procedures, reusable prompts and notes you approve before they stay.", epics: [15, 16, 83] },
+		{ id: "recording", icon: "video", title: "Screen recording", text: "On Windows, with sound, webcam, pause and pointer events.", epics: [62] },
 		{ id: "connections", icon: "plug", title: "Connections", text: "Your own AI keys and social accounts, in an encrypted local vault.", epics: [4, 9, 12, 84] },
 		{ id: "publishing", icon: "shield-check", title: "Approvals and publishing", text: "A queue, cost ceilings and a calendar. Nothing is sent without your yes.", epics: [5, 20, 82] },
 	] satisfies { id: string; icon: IconName; title: string; text: string; epics: number[] }[],
@@ -229,8 +235,7 @@ export const downloads = {
 	lead: "Runs on Windows, macOS, Linux and your own server.",
 	primary: "Get started",
 	secondary: "Read the docs",
-	note: "Stuarty is in alpha: expect rough edges.",
-	noteMobile: "Alpha: expect rough edges.",
+	label: "Downloads and setup guides",
 };
 
 export type RoadmapItem = {
@@ -250,7 +255,8 @@ export type RoadmapItem = {
  * The only place for what is not released. A feature leaves this list in the change that releases it. The design shows
  * six cards here; three of them (edit by text, vertical cuts, caption styles with blur and studio voice) are epics 69, 70
  * and 71, which are DONE and ship with this page, so they are not here: the test of the roadmap refuses a finished epic.
- * Their places hold other planned work.
+ * Their places hold other planned work. Screen recording on Windows (epic 62) left this list after the review of epic 95
+ * and is a card of `areas`; recording on the web, macOS and Linux stays here.
  */
 export const roadmap = {
 	badge: "On the roadmap",
@@ -259,12 +265,12 @@ export const roadmap = {
 	stateLabel: { "in-progress": "In progress", planned: "Planned" } as Record<RoadmapItem["state"], string>,
 	items: [
 		{
-			id: "recording",
+			id: "recording-more",
 			icon: "video",
-			title: "Screen recording",
-			text: "Screen, window, microphone and webcam. Only a person can start a capture.",
-			state: "in-progress",
-			epics: [61, 63, 67, 68],
+			title: "Recording on more systems",
+			text: "Recording on the web, macOS and Linux, as it works on Windows today.",
+			state: "planned",
+			epics: [63, 67, 68],
 		},
 		{
 			id: "recording-finish",
@@ -310,7 +316,12 @@ export const roadmap = {
 };
 
 /** Words that name a roadmap-only feature: they must not appear in the copy outside `roadmap`. */
-export const roadmapOnlyTerms = ["recording", "record your", "screen capture", "webcam", "teleprompter", "local model", "face-aware", "auto zoom", "automatic zoom", "metrics"];
+export const roadmapOnlyTerms = [
+	// Recording ships on Windows (epic 62); on the web, macOS and Linux, its finish and its agent tools it does not.
+	"recording on the web", "web recording", "recording on macos", "recording on linux", "record your", "screen capture",
+	"zoom on clicks", "smooth cursor", "click highlight", "mark takes", "teleprompter", "local model", "face-aware",
+	"auto zoom", "automatic zoom", "metrics",
+];
 
 export const credits = "The pictures, clips and sounds in the screenshots were made for the demo. No real person, brand or number is shown.";
 

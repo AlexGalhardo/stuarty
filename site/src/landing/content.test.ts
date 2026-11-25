@@ -152,13 +152,29 @@ describe("the product images", () => {
 	});
 });
 
+describe("the changes of the author after the review", () => {
+	test("the page no longer says that Stuarty is in alpha", () => {
+		for (const { where, text } of contentCopy) expect(text.toLowerCase(), `${where} speaks of the alpha`).not.toMatch(/alpha|rough edges/);
+		const page = readFileSync(resolve(import.meta.dir, "../pages/index.astro"), "utf8");
+		expect(page).not.toMatch(/rough edges/i);
+	});
+	test("screen recording is claimed only on Windows, with the epic that is done", () => {
+		const recording = areas.items.find((a) => a.id === "recording");
+		expect(recording?.epics).toEqual([62]);
+		expect(recording?.text.toLowerCase()).not.toMatch(/\bweb\b|macos|linux/);
+	});
+});
+
 describe("the design", () => {
 	test("the hero and the sections keep the words of the final design", () => {
-		expect(hero.title).toBe("Create, edit, manage and publish your content in one place.");
+		// The author changed the hero after the review of epic 95 (2026-11-24); the change overrides the frames.
+		expect(hero.title).toBe("Create, edit, manage and publish your audiovisual and text content in one place");
+		expect(hero.title.startsWith(hero.titleFocus)).toBe(true);
+		expect(hero.note).toBe("Free and open source. No subscriptions.");
 		expect(path.steps.map((s) => s.title)).toEqual(["Plan it", "Make it", "Approve it", "Publish it"]);
 		expect(privacy.title).toBe("On your machine. On your terms.");
 		expect(privacy.subtitle).toBe("No subscriptions. No pay once. Open Source.");
-		expect(areas.items).toHaveLength(10);
+		expect(areas.items).toHaveLength(11);
 		expect(roadmap.items).toHaveLength(6);
 		expect(roadmap.title).toBe("Planned. Not available yet.");
 	});

@@ -3,31 +3,23 @@
 // the numbered path whose steps alternate image and text, "Nothing hidden", "Not only video", "One studio", "Agent-first",
 // "On the roadmap", the privacy statement and the downloads. The copy and its claims are in src/landing/content.ts and
 // checked against the roadmap by its test; the demo of the agent tab is in lib/landing-pages.ts. Every image is a real
-// capture of the product in both themes (HomeShot), and opens enlarged on a click (ZoomDialog).
+// capture of the product in both themes (HomeShot), and opens enlarged on a click (ZoomDialog). The [data-reveal]
+// elements enter as the visitor scrolls (home.css, and src/landing/reveal.ts where scroll-driven animations are missing).
 import "@/src/landing/landing.css";
 import "@/src/landing/home.css";
 import Base from "../layouts/Base.astro";
 import { landing } from "@/lib/landing";
-import { latestRelease } from "@/lib/releases";
 import { withBase } from "@/lib/site";
 import { agents, areas, downloads, hero, path, privacy, roadmap, screens, textProject, transparency } from "@/src/landing/content";
+import HomeDownloads from "../components/landing/HomeDownloads.astro";
 import HomeFooter from "../components/landing/HomeFooter.astro";
 import HomeDrive from "../components/landing/HomeDrive.astro";
 import HomeShot from "../components/landing/HomeShot.astro";
 import Icon from "../components/landing/Icon.astro";
 import ZoomDialog from "../components/landing/ZoomDialog.astro";
 
-const release = await latestRelease();
-const alpha = release.confirmed ? `Alpha v${release.version}` : "Alpha";
 const start = withBase("/docs/getting-started/quick-start/");
 const docs = withBase("/docs/introduction/");
-const cards = [
-	{ id: "windows", title: "Windows", sub: alpha, icon: "monitor", href: release.downloads.find((d) => d.os === "windows")?.href ?? release.url, external: true },
-	{ id: "macos", title: "macOS", sub: alpha, icon: "laptop", href: release.downloads.find((d) => d.os === "macos")?.href ?? release.url, external: true },
-	{ id: "linux", title: "Linux", sub: alpha, icon: "terminal", href: release.downloads.find((d) => d.os === "linux")?.href ?? release.url, external: true },
-	{ id: "docker-local", title: "Docker Local", sub: "Setup guide", icon: "container", href: withBase("/docs/self-hosting/docker/"), external: false },
-	{ id: "docker-vps", title: "Docker VPS", sub: "Setup guide", icon: "server", href: withBase("/docs/self-hosting/vps/"), external: false },
-] as const;
 const stepSizes = "(min-width: 64rem) 45rem, 100vw";
 ---
 
@@ -36,17 +28,13 @@ const stepSizes = "(min-width: 64rem) 45rem, 100vw";
 		<!-- 1. Hero -->
 		<section aria-labelledby="hero-title" class="l-section l-hero">
 			<div class="l-container l-stack">
-				<div class="l-stack l-stack-tight">
-					<p class="l-eyebrow">{hero.eyebrow}</p>
-					<h1 id="hero-title" class="l-hero-title">{hero.title}</h1>
+				<div class="l-stack l-stack-tight l-hero-head">
+					<h1 id="hero-title" class="l-hero-title"><span class="l-hero-focus">{hero.titleFocus}</span>{hero.title.slice(hero.titleFocus.length)}</h1>
 					<p class="l-lead"><span class="l-desktop-only">{hero.lead}</span><span class="l-mobile-only">{hero.leadMobile}</span></p>
-					<div class="l-actions">
-						<a class="l-btn l-btn-primary l-btn-lg" href={start}><Icon name="arrow-right" size={16} />{hero.primary}</a>
-						<a class="l-btn l-btn-secondary l-btn-lg" href={docs}><Icon name="book-open" size={16} />{hero.secondary}</a>
-					</div>
+					<HomeDownloads label={hero.downloads} />
 					<p class="l-note">
 						<Icon name="circle-check" size={16} class="l-ok" />
-						<span class="l-desktop-only">{hero.note}</span><span class="l-mobile-only">{hero.noteMobile}</span>
+						<span>{hero.note}</span>
 					</p>
 				</div>
 				<figure class="l-shot l-shot-hero m-0">
@@ -59,7 +47,7 @@ const stepSizes = "(min-width: 64rem) 45rem, 100vw";
 		<!-- 2. One path -->
 		<section id="path" aria-labelledby="path-title" class="l-section l-section-path">
 			<div class="l-container l-stack">
-				<div class="l-head">
+				<div class="l-head" data-reveal>
 					<p class="l-eyebrow">{path.eyebrow}</p>
 					<h2 id="path-title" class="l-title">{path.title}</h2>
 					<p class="l-lead l-desktop-only">{path.lead}</p>
@@ -67,7 +55,7 @@ const stepSizes = "(min-width: 64rem) 45rem, 100vw";
 				<ol class="l-steps">
 					{
 						path.steps.map((s, i) => (
-							<li class="l-step" aria-labelledby={`step-${s.id}`}>
+							<li class="l-step" data-reveal aria-labelledby={`step-${s.id}`}>
 								<div class="l-step-text">
 									<p class="l-step-n" aria-hidden="true">{i + 1}</p>
 									<h3 id={`step-${s.id}`} class="l-step-title">{s.title}</h3>
@@ -86,7 +74,7 @@ const stepSizes = "(min-width: 64rem) 45rem, 100vw";
 		<!-- 3. Nothing hidden -->
 		<section id="transparency" aria-labelledby="transparency-title" class="l-section l-band-wide">
 			<div class="l-container l-stack">
-				<div class="l-head">
+				<div class="l-head" data-reveal>
 					<p class="l-eyebrow">{transparency.eyebrow}</p>
 					<h2 id="transparency-title" class="l-title">{transparency.title}</h2>
 					<p class="l-lead">{transparency.lead}</p>
@@ -94,7 +82,7 @@ const stepSizes = "(min-width: 64rem) 45rem, 100vw";
 				<ul class="l-notes">
 					{
 						transparency.points.map((p) => (
-							<li class="l-note-item">
+							<li class="l-note-item" data-reveal>
 								<Icon name={p.icon} size={24} class="l-icon-accent" />
 								<h3 class="l-h3">{p.title}</h3>
 								<p class="l-body">{p.text}</p>
@@ -102,33 +90,33 @@ const stepSizes = "(min-width: 64rem) 45rem, 100vw";
 						))
 					}
 				</ul>
-				<figure class="l-shot m-0"><HomeShot screen={screens[transparency.screen]} /></figure>
+				<figure class="l-shot m-0" data-reveal><HomeShot screen={screens[transparency.screen]} /></figure>
 			</div>
 		</section>
 
 		<!-- 4. A text is a complete project -->
 		<section id="text" aria-labelledby="text-title" class="l-section l-section-text">
 			<div class="l-container l-stack">
-				<div class="l-head">
+				<div class="l-head" data-reveal>
 					<p class="l-eyebrow">{textProject.eyebrow}</p>
 					<h2 id="text-title" class="l-title">{textProject.title}</h2>
 					<p class="l-lead">{textProject.lead}</p>
 				</div>
-				<figure class="l-shot m-0"><HomeShot screen={screens[textProject.screen]} /></figure>
+				<figure class="l-shot m-0" data-reveal><HomeShot screen={screens[textProject.screen]} /></figure>
 			</div>
 		</section>
 
 		<!-- 5. One studio -->
 		<section id="areas" aria-labelledby="areas-title" class="l-section l-band-wide">
 			<div class="l-container l-stack">
-				<div class="l-head">
+				<div class="l-head" data-reveal>
 					<p class="l-eyebrow">{areas.eyebrow}</p>
 					<h2 id="areas-title" class="l-title">{areas.title}</h2>
 				</div>
 				<ul class="l-cards l-cards-wide">
 					{
 						areas.items.map((a) => (
-							<li class="l-card">
+							<li class="l-card" data-reveal>
 								<span class="l-tile"><Icon name={a.icon} size={20} /></span>
 								<h3 class="l-h3">{a.title}</h3>
 								<p class="l-small">{a.text}</p>
@@ -142,19 +130,19 @@ const stepSizes = "(min-width: 64rem) 45rem, 100vw";
 		<!-- 6. Agent-first -->
 		<section id="agents" aria-labelledby="agents-title" class="l-section">
 			<div class="l-container l-stack">
-				<div class="l-head">
+				<div class="l-head" data-reveal>
 					<p class="l-eyebrow">{agents.eyebrow}</p>
 					<h2 id="agents-title" class="l-title">{agents.title}</h2>
 					<p class="l-lead">{agents.lead}</p>
 				</div>
-				<HomeDrive idPrefix="home" />
+				<div data-reveal><HomeDrive idPrefix="home" /></div>
 			</div>
 		</section>
 
 		<!-- 7. On the roadmap: the only place for what is not released -->
 		<section id="roadmap" aria-labelledby="roadmap-title" class="l-section l-band l-roadmap">
 			<div class="l-container l-stack">
-				<div class="l-head">
+				<div class="l-head" data-reveal>
 					<p class="l-badge"><Icon name="clock" size={16} />{roadmap.badge}</p>
 					<h2 id="roadmap-title" class="l-title">{roadmap.title}</h2>
 					<p class="l-lead">{roadmap.lead}</p>
@@ -162,7 +150,7 @@ const stepSizes = "(min-width: 64rem) 45rem, 100vw";
 				<ul class="l-cards">
 					{
 						roadmap.items.map((r) => (
-							<li class="l-card" data-state={r.state}>
+							<li class="l-card" data-reveal data-state={r.state}>
 								<span class="l-tile"><Icon name={r.icon} size={20} /></span>
 								<h3 class="l-h3">{r.title}</h3>
 								<p class="l-small">{r.text}</p>
@@ -176,14 +164,14 @@ const stepSizes = "(min-width: 64rem) 45rem, 100vw";
 		<!-- 8. On your machine, on your terms -->
 		<section id="privacy" aria-labelledby="privacy-title" class="l-section l-yours">
 			<div class="l-container l-stack">
-				<div class="l-stack l-stack-tight">
+				<div class="l-stack l-stack-tight l-hero-head" data-reveal>
 					<h2 id="privacy-title" class="l-hero-title">{privacy.title}</h2>
 					<p class="l-subtitle">{privacy.subtitle}</p>
 				</div>
 				<ul class="l-notes">
 					{
 						privacy.points.map((p) => (
-							<li class="l-note-item">
+							<li class="l-note-item" data-reveal>
 								<Icon name={p.icon} size={24} class="l-icon-accent" />
 								<h3 class="l-h3">{p.title}</h3>
 								<p class="l-body">{p.text}</p>
@@ -197,7 +185,7 @@ const stepSizes = "(min-width: 64rem) 45rem, 100vw";
 		<!-- 9. Downloads -->
 		<section id="download" aria-labelledby="download-title" class="l-section">
 			<div class="l-container l-stack">
-				<div class="l-head">
+				<div class="l-head" data-reveal>
 					<p class="l-eyebrow">{downloads.eyebrow}</p>
 					<h2 id="download-title" class="l-title">{downloads.title}</h2>
 					<p class="l-lead">{downloads.lead}</p>
@@ -206,26 +194,7 @@ const stepSizes = "(min-width: 64rem) 45rem, 100vw";
 					<a class="l-btn l-btn-primary l-btn-lg" href={start}><Icon name="arrow-right" size={16} />{downloads.primary}</a>
 					<a class="l-btn l-btn-secondary l-btn-lg l-desktop-only" href={docs}><Icon name="book-open" size={16} />{downloads.secondary}</a>
 				</div>
-				<ul class="l-downloads">
-					{
-						cards.map((c) => (
-							<li>
-								<a class="l-download" href={c.href} rel={c.external ? "noreferrer" : undefined}>
-									<Icon name={c.icon} size={20} class="l-icon-muted" />
-									<span class="l-download-text">
-										<span class="l-download-title">{c.title}</span>
-										<span class="l-download-sub">{c.sub}</span>
-									</span>
-									<Icon name="download" size={16} class="l-icon-muted" />
-								</a>
-							</li>
-						))
-					}
-				</ul>
-				<p class="l-note">
-					<Icon name="triangle-alert" size={16} class="l-warn" />
-					<span class="l-desktop-only">{downloads.note}</span><span class="l-mobile-only">{downloads.noteMobile}</span>
-				</p>
+				<HomeDownloads label={downloads.label} />
 			</div>
 		</section>
 
@@ -236,5 +205,7 @@ const stepSizes = "(min-width: 64rem) 45rem, 100vw";
 
 <script>
 	import { enhanceTabs } from "../landing/tabs";
+	import { enhanceReveal } from "../landing/reveal";
 	enhanceTabs(document);
+	enhanceReveal(document);
 </script>

@@ -110,10 +110,17 @@ main[data-page="home"] p {
 	}
 }
 
-/* Layout: a 1200 px column with the sections as bands. */
+/* Layout: the column of the navbar, so the edges of the content and of the header line up at every width (an author
+   change after the review of epic 95). The landing header is the .site-container zoomed by landing.css: 1440 px wide at
+   most with 30 px inside it from 640 px up, and 15 px inside it on a narrower phone. */
 .l-container {
-	width: min(100% - 2 * var(--l-gutter), 1200px);
+	width: min(100% - 60px, 1380px);
 	margin-inline: auto;
+}
+@media (max-width: 39.99rem) {
+	.l-container {
+		width: calc(100% - 30px);
+	}
 }
 .l-section {
 	padding-block: 80px;
@@ -138,14 +145,40 @@ main[data-page="home"] p {
 .l-stack-tight {
 	gap: 24px;
 }
-.l-head {
+/* Every heading and subheading of a section is centred (author change after the review); card texts stay left. */
+.l-head,
+.l-hero-head {
 	display: flex;
 	flex-direction: column;
+	align-items: center;
 	gap: 12px;
+	margin-inline: auto;
+	text-align: center;
+}
+.l-head {
 	max-width: 760px;
 }
 .l-head > .l-badge {
-	align-self: flex-start;
+	align-self: center;
+}
+.l-head .l-lead,
+.l-hero-head .l-lead {
+	margin-inline: auto;
+}
+.l-hero-head {
+	gap: 24px;
+	max-width: 1100px;
+}
+#download .l-actions {
+	justify-content: center;
+}
+.l-hero-head .l-note {
+	justify-content: center;
+}
+.l-hero-head .l-downloads {
+	align-self: stretch;
+	margin-top: 16px;
+	text-align: start;
 }
 
 /* Type. */
@@ -394,8 +427,11 @@ html:not(.dark) .shot-zoom .shot-light {
 .l-card .l-tile {
 	margin-bottom: 8px;
 }
-.l-cards-wide > .l-card:last-child {
+.l-cards-wide > .l-card:last-child:nth-child(3n + 1) {
 	grid-column: 1 / -1;
+}
+.l-cards-wide > .l-card:last-child:nth-child(3n + 2) {
+	grid-column: span 2;
 }
 .l-tile {
 	display: grid;
@@ -617,8 +653,8 @@ html:not(.dark) .shot-zoom .shot-light {
 	background: var(--l-surface);
 }
 
-/* Downloads: five cards and the alpha notice. */
-.l-section:has(.l-downloads) {
+/* Downloads: five cards, in the hero and in the closing section. */
+#download {
 	padding-block: 88px;
 }
 .l-downloads {
@@ -712,6 +748,7 @@ html:not(.dark) .shot-zoom .shot-light {
 }
 .l-footer-notes {
 	padding-bottom: 32px;
+	text-align: center;
 	font-size: 0.8125rem;
 	line-height: 1.25rem;
 }
@@ -852,7 +889,7 @@ html:has(.zoom-dialog[open]) {
 	.l-notes {
 		grid-template-columns: repeat(2, minmax(0, 1fr));
 	}
-	.l-cards-wide > .l-card:last-child {
+	.l-cards-wide > .l-card:last-child:nth-child(n) {
 		grid-column: auto;
 	}
 }
@@ -867,7 +904,7 @@ html:has(.zoom-dialog[open]) {
 		padding-bottom: 40px;
 	}
 	.l-yours,
-	.l-section:has(.l-downloads) {
+	#download {
 		padding-block: 48px;
 	}
 	.l-stack,
@@ -1008,5 +1045,68 @@ html:has(.zoom-dialog[open]) {
 	.zoom-img,
 	.zoom-close {
 		border-color: CanvasText;
+	}
+}
+
+/* The landing hides the release badge of the shared navbar (author change after the review of epic 95); the docs keep it. */
+html:has(main[data-page="home"]) header[data-variant="landing"] [data-release-badge] {
+	display: none;
+}
+
+/* The first words of the hero title carry the accent palette, one colour per word flowing left to right like one
+   gradient. Every stop, and every colour between two stops, is at least 4.5:1 on the page in its theme (checked by the
+   browser test). The text stays text: where background-clip does not apply, or in forced colours, it is plain. */
+@supports ((background-clip: text) or (-webkit-background-clip: text)) {
+	.l-hero-focus {
+		background-image: linear-gradient(90deg, #26299c 0%, #4339cc 33%, #5c58e8 66%, #0f6f67 100%);
+		-webkit-background-clip: text;
+		background-clip: text;
+		-webkit-text-fill-color: transparent;
+		color: transparent;
+	}
+	.dark .l-hero-focus {
+		background-image: linear-gradient(90deg, #afb3ff 0%, #9694ff 33%, #8078fb 66%, #7cebdb 100%);
+	}
+}
+@media (forced-colors: active) {
+	.l-hero-focus {
+		background: none;
+		-webkit-text-fill-color: currentColor;
+		color: CanvasText;
+	}
+}
+
+/* The sections and cards enter as they scroll into view: a fade and a 24 px rise, with no change of layout. Only
+   with motion allowed and not paused; with scroll-driven animations it is CSS alone, else src/landing/reveal.ts adds
+   .l-reveal-out to what is still below the window and removes it as it enters. Without either, nothing is hidden. */
+@keyframes l-reveal {
+	from {
+		opacity: 0;
+		translate: 0 24px;
+	}
+	to {
+		opacity: 1;
+		translate: 0 0;
+	}
+}
+@media (prefers-reduced-motion: no-preference) {
+	@supports (animation-timeline: view()) {
+		html:not([data-motion="paused"]) main[data-page="home"] [data-reveal] {
+			animation: l-reveal linear both;
+		}
+		/* A rule of its own: the CSS minifier folds the timeline into the shorthand, which Chromium then refuses. */
+		html:not([data-motion="paused"]) main[data-page="home"] [data-reveal][data-reveal] {
+			animation-timeline: view();
+			animation-range: entry 0% entry 60%;
+		}
+	}
+	html:not([data-motion="paused"]) main[data-page="home"] [data-reveal] {
+		transition:
+			opacity 480ms cubic-bezier(0.2, 0, 0, 1),
+			translate 480ms cubic-bezier(0.2, 0, 0, 1);
+	}
+	html:not([data-motion="paused"]) main[data-page="home"] .l-reveal-out {
+		opacity: 0;
+		translate: 0 24px;
 	}
 }
