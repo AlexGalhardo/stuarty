@@ -305,6 +305,10 @@
         "bell_waiting": "Notificações, {count} esperando por você",
         "scope": "Tudo o que espera por você, do chat com o agente e da fila de Aprovações: o que vai acontecer, com o quê, onde, a que custo e se pode ser desfeito.",
         "empty": "Nada espera por você.",
+        "group": {
+          "waiting": "Esperando por você",
+          "history": "Respondidos"
+        },
         "open_chat": "Abrir a conversa",
         "review": "Revisar em Aprovações",
         "item": "Com o quê",

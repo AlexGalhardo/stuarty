@@ -305,6 +305,10 @@
         "bell_waiting": "Notifications, {count} waiting for you",
         "scope": "Everything that waits for you, from the agent chat and from the Approvals queue: what will happen, to what, where, at what cost and whether it can be undone.",
         "empty": "Nothing waits for you.",
+        "group": {
+          "waiting": "Waiting for you",
+          "history": "Answered"
+        },
         "open_chat": "Open the conversation",
         "review": "Review in Approvals",
         "item": "To what",
