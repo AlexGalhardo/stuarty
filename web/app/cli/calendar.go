@@ -32,6 +32,20 @@ func rangeFlags() []flagDef {
 	}
 }
 
+// needRange asks for the two ends of a range by the names of the flags (the service names its fields from and to).
+func needRange(c *call) error {
+	for _, f := range []string{"from", "until"} {
+		if c.args.str(f) == "" {
+			e := validation(f, "--%s is required.", f)
+			e.Hint = "give a date such as 2026-12-01 in --" + f
+
+			return e
+		}
+	}
+
+	return nil
+}
+
 var calendarPlanCmd = &spec{
 	name: "calendar:plan",
 	summary: "read a range of the calendar: its days with notes, themes and quiet marks, its recurring slots and " +
@@ -47,6 +61,10 @@ var calendarPlanCmd = &spec{
 		flagDef{Name: "offset", Kind: kindInt, Usage: "how many publications to skip"},
 	),
 	run: func(ctx context.Context, c *call) (*output, error) {
+		if err := needRange(c); err != nil {
+			return nil, err
+		}
+
 		res, err := c.svc.CalendarPlan(ctx, service.CalendarPlanRequest{
 			From: c.args.str("from"), To: c.args.str("until"), Zone: c.args.str("zone"),
 			ProjectID: c.args.str("project"), Publications: c.args.boolean("publications"),
@@ -198,6 +216,10 @@ var calendarExportCmd = &spec{
 		flagDef{Name: "project", Kind: kindString, Usage: "only the publications of this project"},
 	),
 	run: func(ctx context.Context, c *call) (*output, error) {
+		if err := needRange(c); err != nil {
+			return nil, err
+		}
+
 		res, err := c.svc.CalendarExport(ctx, service.CalendarExportRequest{
 			From: c.args.str(
 				"from",

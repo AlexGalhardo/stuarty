@@ -177,3 +177,30 @@ func TestReadTextErrorShortensWhatWasTypedAndSaysWhatTheFlagTakes(t *testing.T) 
 		t.Errorf("answers hint = %v", err)
 	}
 }
+
+// VV-447: a command given no input names the flags of the CLI, not the fields of the API.
+func TestWritingAndCalendarCommandsNameTheirFlags(t *testing.T) {
+	t.Parallel()
+
+	for _, tc := range []struct {
+		argv []string
+		want string
+	}{
+		{[]string{"caption:validate"}, "--body <file|->"},
+		{[]string{"script:estimate"}, "--text <file|->"},
+		{[]string{"calendar:plan", "--until", "2026-12-02"}, "--from is required"},
+		{[]string{"calendar:export", "--from", "2026-12-01"}, "--until is required"},
+	} {
+		h := newHarness(t)
+
+		if code := h.run(tc.argv...); code != ExitFailure {
+			t.Errorf("%v: exit %d", tc.argv, code)
+		}
+
+		got := h.stderr.String()
+		if !strings.Contains(got, "error E_VALIDATION") || !strings.Contains(got, tc.want) ||
+			strings.Contains(got, "item_id, body") || strings.Contains(got, "The from field") {
+			t.Errorf("%v: %q", tc.argv, got)
+		}
+	}
+}

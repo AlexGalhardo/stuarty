@@ -8,6 +8,7 @@ import (
 	"context"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/AlexGalhardo/stuarty/service"
 )
@@ -53,6 +54,15 @@ func onePositional(c *call, name string, required bool) (string, error) {
 	default:
 		return "", validation("", "%s takes one text id, got %d.", name, n)
 	}
+}
+
+// needOneText is the error of a writing command given no text at all, in the words of the CLI (the service says
+// item_id, body and text, which are the names of its fields).
+func needOneText(name string, flags ...string) error {
+	e := validation("", "%s needs a text to read.", name)
+	e.Hint = "give the id of a saved text, or " + strings.Join(flags, " or ")
+
+	return e
 }
 
 var optionalProjectFlag = flagDef{
@@ -325,6 +335,10 @@ var captionValidateCmd = &spec{
 			return nil, err
 		}
 
+		if item == "" && !c.args.has("body") && !c.args.has("text") {
+			return nil, needOneText("caption:validate", "--body <file|->", "--text <file|-> --network <n>")
+		}
+
 		req := service.CaptionValidateRequest{ProjectID: projectOf(c), ItemID: item, Network: c.args.str("network")}
 
 		for flag, dest := range map[string]*string{"body": &req.Body, "text": &req.Text} {
@@ -364,6 +378,10 @@ var scriptEstimateCmd = &spec{
 		item, err := onePositional(c, "script:estimate", false)
 		if err != nil {
 			return nil, err
+		}
+
+		if item == "" && !c.args.has("text") {
+			return nil, needOneText("script:estimate", "--text <file|->")
 		}
 
 		req := service.ScriptEstimateRequest{
