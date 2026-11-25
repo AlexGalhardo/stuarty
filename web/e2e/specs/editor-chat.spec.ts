@@ -205,7 +205,10 @@ test.describe("the agent chat in the editor", () => {
 			/hello from the editor[\s\S]*echo: [\s\S]*hello from the editor/,
 		);
 
-		// Escape closes the panel and the focus goes back to the bar
+		// the composer is disabled while the turn runs, which drops its focus: wait for the turn to end, then
+		// Escape from inside the panel closes it and the focus goes back to the bar
+		await expect(composer).toBeEnabled();
+		await composer.focus();
 		await page.keyboard.press("Escape");
 		await expect(panel).toHaveCount(0);
 		await expect(page.getByTestId("scene-open-chat")).toBeFocused();
