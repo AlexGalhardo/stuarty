@@ -261,6 +261,8 @@
         "connect": "Connect an agent",
         "allow": "Allow once",
         "deny": "Deny",
+        "next": "Next",
+        "next_none": "No next step reported",
         "state": {
           "idle": "Waiting for you",
           "working": "Working",
