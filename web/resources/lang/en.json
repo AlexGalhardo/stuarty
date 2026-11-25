@@ -4568,10 +4568,27 @@
         "more": "More",
         "in_project": "in {project}"
       },
+      "review": {
+        "title": {
+          "post": "Post review",
+          "copy": "Text review",
+          "script": "Script review",
+          "caption": "Caption review"
+        },
+        "lead": "Compare the revisions of {title} and check it before it goes on.",
+        "words": "Words",
+        "reading": "Reading",
+        "revisions": "Revisions"
+      },
+      "reading": {
+        "title": "Reading time"
+      },
       "pick": "Choose a text, or make a new one.",
       "pick_hint": "The text opens here, with its revisions, its checks and what the agent may do.",
       "editor": {
-        "review": "Review",
+        "review": "Send for review",
+        "revisions": "Revisions",
+        "back_to_writing": "Back to writing",
         "retry": "Read the text again",
         "title": "Title",
         "body": "Text (Markdown)",

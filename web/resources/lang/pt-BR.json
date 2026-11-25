@@ -4568,10 +4568,27 @@
         "more": "Mais",
         "in_project": "em {project}"
       },
+      "review": {
+        "title": {
+          "post": "Revisão do post",
+          "copy": "Revisão do texto",
+          "script": "Revisão do roteiro",
+          "caption": "Revisão da legenda"
+        },
+        "lead": "Compare as revisões de {title} e confira antes de seguir.",
+        "words": "Palavras",
+        "reading": "Leitura",
+        "revisions": "Revisões"
+      },
+      "reading": {
+        "title": "Tempo de leitura"
+      },
       "pick": "Escolha um texto ou crie um novo.",
       "pick_hint": "O texto abre aqui, com as revisões, as verificações e o que o agente pode fazer.",
       "editor": {
-        "review": "Revisar",
+        "review": "Enviar para revisão",
+        "revisions": "Revisões",
+        "back_to_writing": "Voltar à escrita",
         "retry": "Ler o texto de novo",
         "title": "Título",
         "body": "Texto (Markdown)",

@@ -76,10 +76,136 @@ export default function ProjectsIndex() {
 		</PageHeaderAction>
 	);
 
-	if (pick !== null) {
-		return (
-			<>
-				<Head title={t("ui.projects.new_project.title")} />
+	const dialog = (
+		<NewProject
+			open={creating}
+			onOpenChange={setCreating}
+			onContinue={setPick}
+		/>
+	);
+
+	return (
+		<>
+			<Head
+				title={
+					pick === null
+						? t("ui.projects.title")
+						: t("ui.projects.new_project.title")
+				}
+			/>
+			{pick === null ? (
+				<div className="mx-auto flex max-w-7xl flex-col gap-6">
+					<PageHeader
+						title={t("ui.projects.title")}
+						description={t("ui.projects.lead")}
+						actions={
+							projects.length > 0 ? (
+								<>
+									{importTemplate}
+									{newProject}
+								</>
+							) : undefined
+						}
+					/>
+					{projects.length > 0 ? (
+						<section
+							aria-label={t("ui.projects.next.title")}
+							className="flex flex-wrap items-center gap-3 rounded-lg border border-border bg-surface px-4 py-3"
+						>
+							<span
+								aria-hidden="true"
+								className="flex size-9 items-center justify-center rounded-md bg-accent-soft text-accent-text"
+							>
+								<Compass className="size-5" />
+							</span>
+							<div className="min-w-0 flex-1 basis-64">
+								<p className="text-sm font-semibold text-accent-text">
+									{t("ui.projects.next.title")}
+								</p>
+								<p className="text-sm text-text-muted">
+									{t("ui.projects.next.description")}
+								</p>
+							</div>
+							<Button
+								type="button"
+								variant="ghost"
+								onClick={() => setCreating(true)}
+							>
+								{t("ui.projects.next.action")}
+							</Button>
+						</section>
+					) : null}
+
+					<TabBar
+						label={t("ui.projects.views.label")}
+						value={view}
+						onChange={(next) => setView(next as typeof view)}
+						tabs={[
+							{
+								value: "projects",
+								label: t("ui.projects.list"),
+								count: projects.length,
+							},
+							{ value: "templates", label: t("ui.projects.templates.title") },
+							{ value: "trash", label: t("ui.projects.trash.title") },
+						]}
+					/>
+					{view === "projects" ? (
+						<section
+							aria-labelledby="project-list"
+							className="flex flex-col gap-4"
+						>
+							<h2 id="project-list" className="text-lg font-semibold">
+								{t("ui.projects.list")}
+							</h2>
+							<FailureNote failure={failure} />
+							{projects.length === 0 ? (
+								<>
+									<EmptyState
+										level={3}
+										icon={FolderPlus}
+										title={t("ui.projects.empty_title")}
+										description={t("ui.projects.empty")}
+									>
+										{newProject}
+									</EmptyState>
+									<FirstSteps />
+								</>
+							) : (
+								<ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+									{projects.map((project) => {
+										const Card =
+											project.kind === "text" ? ProjectCardText : ProjectCard;
+										return (
+											<Card
+												key={project.id}
+												project={project}
+												locale={locale}
+												onTrash={() => void moveToTrash(project.id)}
+												onChanged={() => router.reload({ only: ["projects"] })}
+											/>
+										);
+									})}
+								</ul>
+							)}
+						</section>
+					) : null}
+					{view === "templates" ? (
+						<>
+							<Templates />
+							<BundleImport />
+						</>
+					) : null}
+					{view === "trash" ? (
+						<Trash
+							version={trashVersion}
+							onRestored={() => {
+								router.reload({ only: ["projects"] });
+							}}
+						/>
+					) : null}
+				</div>
+			) : (
 				<NewProjectPage
 					pick={pick}
 					onBack={() => {
@@ -87,129 +213,8 @@ export default function ProjectsIndex() {
 						setCreating(true);
 					}}
 				/>
-			</>
-		);
-	}
-
-	return (
-		<>
-			<Head title={t("ui.projects.title")} />
-			<div className="mx-auto flex max-w-7xl flex-col gap-6">
-				<PageHeader
-					title={t("ui.projects.title")}
-					description={t("ui.projects.lead")}
-					actions={
-						projects.length > 0 ? (
-							<>
-								{importTemplate}
-								{newProject}
-							</>
-						) : undefined
-					}
-				/>
-				{projects.length > 0 ? (
-					<section
-						aria-label={t("ui.projects.next.title")}
-						className="flex flex-wrap items-center gap-3 rounded-lg border border-border bg-surface px-4 py-3"
-					>
-						<span
-							aria-hidden="true"
-							className="flex size-9 items-center justify-center rounded-md bg-accent-soft text-accent-text"
-						>
-							<Compass className="size-5" />
-						</span>
-						<div className="min-w-0 flex-1 basis-64">
-							<p className="text-sm font-semibold text-accent-text">
-								{t("ui.projects.next.title")}
-							</p>
-							<p className="text-sm text-text-muted">
-								{t("ui.projects.next.description")}
-							</p>
-						</div>
-						<Button
-							type="button"
-							variant="ghost"
-							onClick={() => setCreating(true)}
-						>
-							{t("ui.projects.next.action")}
-						</Button>
-					</section>
-				) : null}
-				<NewProject
-					open={creating}
-					onOpenChange={setCreating}
-					onContinue={setPick}
-				/>
-
-				<TabBar
-					label={t("ui.projects.views.label")}
-					value={view}
-					onChange={(next) => setView(next as typeof view)}
-					tabs={[
-						{
-							value: "projects",
-							label: t("ui.projects.list"),
-							count: projects.length,
-						},
-						{ value: "templates", label: t("ui.projects.templates.title") },
-						{ value: "trash", label: t("ui.projects.trash.title") },
-					]}
-				/>
-				{view === "projects" ? (
-					<section
-						aria-labelledby="project-list"
-						className="flex flex-col gap-4"
-					>
-						<h2 id="project-list" className="text-lg font-semibold">
-							{t("ui.projects.list")}
-						</h2>
-						<FailureNote failure={failure} />
-						{projects.length === 0 ? (
-							<>
-								<EmptyState
-									level={3}
-									icon={FolderPlus}
-									title={t("ui.projects.empty_title")}
-									description={t("ui.projects.empty")}
-								>
-									{newProject}
-								</EmptyState>
-								<FirstSteps />
-							</>
-						) : (
-							<ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-								{projects.map((project) => {
-									const Card =
-										project.kind === "text" ? ProjectCardText : ProjectCard;
-									return (
-										<Card
-											key={project.id}
-											project={project}
-											locale={locale}
-											onTrash={() => void moveToTrash(project.id)}
-											onChanged={() => router.reload({ only: ["projects"] })}
-										/>
-									);
-								})}
-							</ul>
-						)}
-					</section>
-				) : null}
-				{view === "templates" ? (
-					<>
-						<Templates />
-						<BundleImport />
-					</>
-				) : null}
-				{view === "trash" ? (
-					<Trash
-						version={trashVersion}
-						onRestored={() => {
-							router.reload({ only: ["projects"] });
-						}}
-					/>
-				) : null}
-			</div>
+			)}
+			{dialog}
 		</>
 	);
 }
