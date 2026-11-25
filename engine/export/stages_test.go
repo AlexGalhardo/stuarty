@@ -39,6 +39,9 @@ func TestFixtureStagesAreTheSameOnEveryMachine(t *testing.T) {
 
 	for stage, sum := range got {
 		want, ok := stageDigests[stage]
+		if own, differs := ownStageDigests[stage]; differs && usesOwnBuild() {
+			want, ok = own, true
+		}
 		if !ok {
 			t.Errorf("stage %q has no digest: %s", stage, sum)
 
@@ -59,6 +62,12 @@ func fileDigest(t *testing.T, path string) string {
 	s := sha256.Sum256(b)
 
 	return hex.EncodeToString(s[:])
+}
+
+// ownStageDigests are the stages whose bytes differ with the own build: its zimg (3.0.6) rounds the zscale
+// colour conversion of the normalization pass differently from the zimg of the BtbN build (epic 46).
+var ownStageDigests = map[string]string{
+	"artifact normalized-1.mov": "861afb797c807e0ecca894ecca6c6003a24ea105826f7c44d9eafb495704adfd",
 }
 
 var stageDigests = map[string]string{

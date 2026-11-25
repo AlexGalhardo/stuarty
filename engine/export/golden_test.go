@@ -79,7 +79,17 @@ func TestReferenceScenesEqualTheirGoldenFrames(t *testing.T) {
 				got = append(got, goldenFrame{f, hex.EncodeToString(sum[:])})
 			}
 			path := filepath.Join("testdata", "golden", name+".json")
+			if usesOwnBuild() {
+				// The own build has another zimg (framePNG): a frame list of its own, read first.
+				own := filepath.Join("testdata", "golden-own", name+".json")
+				if _, err := os.Stat(own); err == nil || *update {
+					path = own
+				}
+			}
 			if *update {
+				if err := os.MkdirAll(filepath.Dir(path), 0o750); err != nil {
+					t.Fatal(err)
+				}
 				b, err := json.MarshalIndent(got, "", "  ")
 				if err != nil {
 					t.Fatal(err)

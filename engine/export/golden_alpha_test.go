@@ -19,6 +19,7 @@ import (
 	"testing"
 
 	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
 )
 
 // The golden cases of the ALPHA scenes (SDD-004 section 11, P2-RND-004). Each case is a folder of
@@ -770,7 +771,27 @@ func uncoveredClip(name, background string) alphaCase {
 
 func goldenDir(name string) string { return filepath.Join("testdata", "golden", name) }
 
-func framePNG(dir string, f int) string { return filepath.Join(dir, "frame-"+strconv.Itoa(f)+".png") }
+// framePNG is the reference of a frame. The references were made with the BtbN build. The own build has another
+// zimg (3.0.6 against a snapshot), whose zscale rounds a few frames differently, so the frames that differ have
+// their own reference in <dir>/own/ and an own build reads those first. `go test -update` against the own build
+// writes every frame there; delete the ones whose bytes equal the file of the same name one folder up, and keep
+// only the frames that differ.
+func framePNG(dir string, f int) string {
+	name := "frame-" + strconv.Itoa(f) + ".png"
+	if usesOwnBuild() {
+		own := filepath.Join(dir, "own", name)
+		if _, err := os.Stat(own); err == nil || *update {
+			return own
+		}
+	}
+
+	return filepath.Join(dir, name)
+}
+
+// usesOwnBuild says whether the FFmpeg of the run is the build this project makes.
+func usesOwnBuild() bool {
+	return shared.runner != nil && shared.runner.In.Flavour().Name == ffmpeg.FlavourOwn
+}
 
 func sum(pix []byte) string {
 	s := sha256.Sum256(pix)

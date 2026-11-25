@@ -103,8 +103,12 @@ var windowsOnlyFilters = map[string]bool{
 
 // The snapshots are the listings of the pinned build, name for name. A pin bump that adds or drops a demuxer
 // or a filter fails here until the new names are read against FF-04 and FF-10 and the snapshot is rewritten
-// from "ffmpeg -demuxers" and "ffmpeg -filters".
+// from "ffmpeg -demuxers" and "ffmpeg -filters". The own build is built with --disable-autodetect and no GPL,
+// so it lists fewer names than the BtbN build (no Vulkan, CUDA, OpenCL or VAAPI filters, no network or libass
+// ones): for it every name may be missing, and none may be new.
 func TestSnapshotsAreTheListingsOfThePinnedBuild(t *testing.T) {
+	own := pinned(t).Flavour().Name == FlavourOwn
+
 	for _, c := range []struct{ flag, file string }{{"-demuxers", "demuxers.txt"}, {"-filters", "filters.txt"}} {
 		want, got := snapshot(t, c.file), listing(t, c.flag)
 
@@ -117,7 +121,7 @@ func TestSnapshotsAreTheListingsOfThePinnedBuild(t *testing.T) {
 		for n := range want {
 			windowsOnly := c.flag == "-filters" && runtime.GOOS != "windows" && windowsOnlyFilters[n]
 
-			if !got[n] && !windowsOnly {
+			if !got[n] && !windowsOnly && !own {
 				t.Errorf("%s: %s is in the snapshot and gone from the pinned build", c.flag, n)
 			}
 		}

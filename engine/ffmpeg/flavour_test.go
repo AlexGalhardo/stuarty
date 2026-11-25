@@ -75,7 +75,8 @@ func ownBuildHasNoGPLFlags(t *testing.T) {
 
 func TestPinnedBuildIsRecognised(t *testing.T) {
 	f := pinned(t).Flavour()
-	if f.Name != FlavourBtbN || !f.LGPLOnly() || len(f.Problems()) != 0 {
+	// The pin is the BtbN build until the own build is adopted (epic 46); either one must be clean.
+	if (f.Name != FlavourBtbN && f.Name != FlavourOwn) || !f.LGPLOnly() || len(f.Problems()) != 0 {
 		t.Errorf("the pinned build: %+v", f)
 	}
 }
