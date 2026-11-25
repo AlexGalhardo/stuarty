@@ -671,6 +671,14 @@ func (s *svc) preparePublish(ctx context.Context, req JobStartRequest) (Prepared
 		return Prepared{}, newError(CodeUnauthorized, "no caller.")
 	}
 
+	// A post that goes at the moment of the approval has no time to be checked against a quiet day: refuse the
+	// caller that is not a person when today is one (SDD-020 section 30A.1).
+	if s.pubs != nil {
+		if qerr := s.pubs.QuietNow(ctx, c.OwnerUserID); qerr != nil {
+			return Prepared{}, publicationError(qerr)
+		}
+	}
+
 	a, aerr := decodePublishArgs(req.Args)
 	if aerr != nil {
 		return Prepared{}, aerr

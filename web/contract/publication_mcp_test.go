@@ -38,6 +38,36 @@ func publicationToolCall(call string, args map[string]any) (tool string, out map
 		}
 	case "PublicationSchedule":
 		args["action"] = "schedule"
+	case "PublicationDuplicate":
+		args["action"] = "duplicate"
+	case "CalendarPlan":
+		args["action"] = "plan"
+
+		if v, has := args["to"]; has {
+			delete(args, "to")
+
+			args["until"] = v
+		}
+	case "CalendarDaySet":
+		args["action"] = "day"
+	case "CalendarSlotSave", "CalendarSlotDelete":
+		args["action"] = "slot"
+
+		if v, has := args["id"]; has {
+			delete(args, "id")
+
+			args["slot"] = v
+		}
+
+		if v, has := args["connection_id"]; has {
+			delete(args, "connection_id")
+
+			args["account"] = v
+		}
+
+		if call == "CalendarSlotDelete" {
+			args["remove"] = true
+		}
 	default:
 		return "", nil, false
 	}

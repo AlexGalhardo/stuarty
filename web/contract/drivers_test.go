@@ -263,6 +263,20 @@ func callService(ctx context.Context, svc service.Service, s step) (any, error) 
 		return invoke(ctx, s, svc.PublicationRetry)
 	case "PublicationCancel":
 		return invoke(ctx, s, svc.PublicationCancel)
+	case "PublicationDuplicate":
+		return invoke(ctx, s, svc.PublicationDuplicate)
+	case "CalendarPlan":
+		return invoke(ctx, s, svc.CalendarPlan)
+	case "CalendarDaySet":
+		return invoke(ctx, s, svc.CalendarDaySet)
+	case "CalendarQuietSet":
+		return invoke(ctx, s, svc.CalendarQuietSet)
+	case "CalendarSlotSave":
+		return invoke(ctx, s, svc.CalendarSlotSave)
+	case "CalendarSlotDelete":
+		return invoke(ctx, s, svc.CalendarSlotDelete)
+	case "CalendarExport":
+		return invoke(ctx, s, svc.CalendarExport)
 	case "ApprovalList":
 		return invoke(ctx, s, svc.ApprovalList)
 	case "ApprovalGet":
@@ -1469,7 +1483,8 @@ func commandOf(s step) (name string, argv []string, stdin string, err error) {
 	case "PublishStatus":
 		return "publish:status", []string{a.JobID}, "", nil
 	case "PublicationCreate", "PublicationGet", "PublicationList", "PublicationUpdate", "PublicationSchedule",
-		"PublicationSendNow", "PublicationRetry", "PublicationCancel":
+		"PublicationSendNow", "PublicationRetry", "PublicationCancel", "PublicationDuplicate", "CalendarPlan",
+		"CalendarDaySet", "CalendarQuietSet", "CalendarSlotSave", "CalendarSlotDelete", "CalendarExport":
 		return publicationCommand(s)
 	case "ApprovalList":
 		return "approval:list", slices.Concat(flag("state", a.State), flag("project", a.ProjectID)), "", nil

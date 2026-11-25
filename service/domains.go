@@ -178,6 +178,14 @@ var OperationDomains = map[string]string{
 	"PublicationSendNow":  command.DomainPublish,
 	"PublicationRetry":    command.DomainPublish,
 	"PublicationCancel":   command.DomainPublish,
+	// The day of the calendar (SDD-020 section 30A).
+	"PublicationDuplicate": command.DomainPublish,
+	"CalendarPlan":         command.DomainPublish,
+	"CalendarDaySet":       command.DomainPublish,
+	"CalendarQuietSet":     command.DomainPublish,
+	"CalendarSlotSave":     command.DomainPublish,
+	"CalendarSlotDelete":   command.DomainPublish,
+	"CalendarExport":       command.DomainPublish,
 
 	"CostSummary":            command.DomainProvider,
 	"CostCeilingSet":         command.DomainProvider,

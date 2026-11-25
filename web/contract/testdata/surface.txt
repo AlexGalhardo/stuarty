@@ -22,6 +22,12 @@ command briefing:answer
 command briefing:questions
 command bundle:export
 command bundle:import
+command calendar:day
+command calendar:export
+command calendar:plan
+command calendar:quiet
+command calendar:slot
+command calendar:slot-remove
 command caption:validate
 command chat:activity
 command chat:session
@@ -112,6 +118,7 @@ command provider:models
 command provider:price
 command publication:cancel
 command publication:create
+command publication:duplicate
 command publication:list
 command publication:retry
 command publication:schedule
@@ -180,6 +187,7 @@ command webhook:test
 command webhook:update
 route DELETE /agents/profiles/{}
 route DELETE /approval-rules/{}
+route DELETE /calendar/slots/{}
 route DELETE /chat/sessions/{}
 route DELETE /connections/{}
 route DELETE /images/{}/checkpoints/{}
@@ -198,6 +206,8 @@ route GET /assets/{}/uses
 route GET /audit
 route GET /brand-kit
 route GET /briefing/questions
+route GET /calendar/export
+route GET /calendar/plan
 route GET /chat/sessions/{}
 route GET /chat/sessions/{}/activity
 route GET /chat/sessions/{}/events
@@ -362,6 +372,7 @@ route POST /providers/signin
 route POST /providers/signin/complete
 route POST /publications
 route POST /publications/{}/cancel
+route POST /publications/{}/duplicate
 route POST /publications/{}/retry
 route POST /publications/{}/schedule
 route POST /publications/{}/send-now
@@ -401,6 +412,9 @@ route POST /webhooks/{}/test
 route PUT /agents/profiles/{}
 route PUT /assets/{}
 route PUT /brand-kit
+route PUT /calendar/days/{}
+route PUT /calendar/quiet/{}
+route PUT /calendar/slots
 route PUT /cost/ceilings
 route PUT /library/prompts/{}
 route PUT /library/skills/{}

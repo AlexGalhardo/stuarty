@@ -33,6 +33,13 @@ CLI: `stuarty publish` lists the commands of the domain and `stuarty publish <ve
 - `publication:send-now`: ask for approval to send a target as soon as it is approved; use it for a missed target too
 - `publication:retry`: ask for approval to send a failed target again; read why it failed with publication:show
 - `publication:cancel`: cancel a target, or every target that has not gone out when --target is left out
+- `calendar:plan`: read a range of the calendar: its days with notes, themes and quiet marks, its recurring slots and the target that fills each one
+- `calendar:day`: write the note and the theme of a day (a flag you leave out stays; an empty one clears it); a person marks a day as quiet with calendar:quiet
+- `calendar:quiet`: mark a day as quiet (no posts) or clear the mark; only a person in the app does, every other caller is refused
+- `calendar:slot`: create or change a recurring slot: a weekday and a local time on a network, shown as an empty slot to fill; it never sends anything
+- `calendar:slot-remove`: remove a recurring slot
+- `calendar:export`: print the targets of a range as an .ics file (read only, times in UTC, no credential); redirect it to a file to open it in another calendar app
+- `publication:duplicate`: copy a publication to another day or hour as a new draft; nothing is asked or sent until you schedule the copy
 
 ## Operations
 

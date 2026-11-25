@@ -5147,6 +5147,248 @@
       ]
     },
     {
+      "name": "calendar:plan",
+      "domain": "publish",
+      "summary": "read a range of the calendar: its days with notes, themes and quiet marks, its recurring slots and the target that fills each one",
+      "usage": [
+        "stuarty calendar:plan --from <date> --until <date> [--zone <zone>] [--publications] [--project <id>]"
+      ],
+      "example": "stuarty calendar:plan --from 2026-12-01 --until 2026-12-02 --zone America/Sao_Paulo --publications",
+      "flags": [
+        {
+          "name": "from",
+          "type": "string",
+          "usage": "the start of the range: a date such as 2026-12-01, a local time or an instant"
+        },
+        {
+          "name": "until",
+          "type": "string",
+          "usage": "the end of the range, exclusive, in the same forms"
+        },
+        {
+          "name": "zone",
+          "type": "string",
+          "usage": "the zone dates and local times are read in (default UTC)"
+        },
+        {
+          "name": "publications",
+          "type": "boolean",
+          "usage": "also list the publications of the range"
+        },
+        {
+          "name": "project",
+          "type": "string",
+          "usage": "only the publications of this project"
+        },
+        {
+          "name": "limit",
+          "type": "integer",
+          "usage": "the page size of the publications, 1 to 500 (default 100)"
+        },
+        {
+          "name": "offset",
+          "type": "integer",
+          "usage": "how many publications to skip"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "calendar:day",
+      "domain": "publish",
+      "summary": "write the note and the theme of a day (a flag you leave out stays; an empty one clears it); a person marks a day as quiet with calendar:quiet",
+      "usage": [
+        "stuarty calendar:day <date> [--note <text>] [--theme <name>] [--zone <zone>]"
+      ],
+      "example": "stuarty calendar:day 2026-12-01 --note \"long video day\" --theme amber --zone America/Sao_Paulo",
+      "flags": [
+        {
+          "name": "note",
+          "type": "string",
+          "usage": "the note, at most 2000 characters; empty clears it"
+        },
+        {
+          "name": "theme",
+          "type": "string",
+          "usage": "blue, green, amber, red, teal or gray; empty clears it"
+        },
+        {
+          "name": "zone",
+          "type": "string",
+          "usage": "the zone the day is planned in (default: the one it has, or UTC)"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "calendar:quiet",
+      "domain": "publish",
+      "summary": "mark a day as quiet (no posts) or clear the mark; only a person in the app does, every other caller is refused",
+      "usage": [
+        "stuarty calendar:quiet <date> [--off] [--zone <zone>]"
+      ],
+      "example": "stuarty calendar:quiet 2026-12-25 --zone America/Sao_Paulo",
+      "flags": [
+        {
+          "name": "off",
+          "type": "boolean",
+          "usage": "clear the mark instead of setting it"
+        },
+        {
+          "name": "zone",
+          "type": "string",
+          "usage": "the zone the day is planned in (default: the one it has, or UTC)"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "calendar:slot",
+      "domain": "publish",
+      "summary": "create or change a recurring slot: a weekday and a local time on a network, shown as an empty slot to fill; it never sends anything",
+      "usage": [
+        "stuarty calendar:slot --network <n> --weekday mon..sun --time HH:MM [--zone <zone>] [--connection <id>] [--id <slot>]"
+      ],
+      "example": "stuarty calendar:slot --network instagram --weekday tue --time 18:00 --zone America/Sao_Paulo",
+      "flags": [
+        {
+          "name": "id",
+          "type": "string",
+          "usage": "the slot to change; leave out to make a new one"
+        },
+        {
+          "name": "network",
+          "type": "string",
+          "usage": "the network, for example instagram (required)"
+        },
+        {
+          "name": "weekday",
+          "type": "string",
+          "usage": "mon, tue, wed, thu, fri, sat or sun (required)"
+        },
+        {
+          "name": "time",
+          "type": "string",
+          "usage": "the local time, 24 hours, such as 18:00 (required)"
+        },
+        {
+          "name": "zone",
+          "type": "string",
+          "usage": "the zone of the time (default UTC)"
+        },
+        {
+          "name": "connection",
+          "type": "string",
+          "usage": "only this account of the network (default any)"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "calendar:slot-remove",
+      "domain": "publish",
+      "summary": "remove a recurring slot",
+      "usage": [
+        "stuarty calendar:slot-remove <slot id>"
+      ],
+      "example": "stuarty calendar:slot-remove slt_0123456789",
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "calendar:export",
+      "domain": "publish",
+      "summary": "print the targets of a range as an .ics file (read only, times in UTC, no credential); redirect it to a file to open it in another calendar app",
+      "usage": [
+        "stuarty calendar:export --from <date> --until <date> [--zone <zone>] [--project <id>] > plan.ics"
+      ],
+      "example": "stuarty calendar:export --from 2026-12-01 --until 2027-01-01 > plan.ics",
+      "flags": [
+        {
+          "name": "from",
+          "type": "string",
+          "usage": "the start of the range: a date such as 2026-12-01, a local time or an instant"
+        },
+        {
+          "name": "until",
+          "type": "string",
+          "usage": "the end of the range, exclusive, in the same forms"
+        },
+        {
+          "name": "zone",
+          "type": "string",
+          "usage": "the zone dates and local times are read in (default UTC)"
+        },
+        {
+          "name": "project",
+          "type": "string",
+          "usage": "only the publications of this project"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "publication:duplicate",
+      "domain": "publish",
+      "summary": "copy a publication to another day or hour as a new draft; nothing is asked or sent until you schedule the copy",
+      "usage": [
+        "stuarty publication:duplicate <publication id> --at <time> [--zone <zone>] [--target <id>]"
+      ],
+      "example": "stuarty publication:duplicate pub_0123456789 --at 2026-12-02T18:00 --zone America/Sao_Paulo",
+      "flags": [
+        {
+          "name": "at",
+          "type": "string",
+          "usage": "the new time: 2026-12-02T18:00 read in --zone, or an instant (required)"
+        },
+        {
+          "name": "zone",
+          "type": "string",
+          "usage": "the zone the time is read in (default: the zone of each target)"
+        },
+        {
+          "name": "target",
+          "type": "string",
+          "usage": "copy only this target (default: every target that is not cancelled)"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
       "name": "text:list",
       "domain": "writing",
       "summary": "list the scripts, copy and captions of a project, or of every project",

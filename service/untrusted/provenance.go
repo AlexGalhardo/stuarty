@@ -97,6 +97,7 @@ var Provenance = map[string]string{
 	// the calendar of publications (SDD-020 section 23): the text of a post and what the network named
 	"publish.Publication.Title":  SourceProjectText,
 	"publish.Publication.Text":   SourceProjectText,
+	"publish.Day.Note":           SourceProjectText,
 	"publish.Fields.Title":       SourceProjectText,
 	"publish.Fields.Description": SourceProjectText,
 	"publish.Fields.Tags":        SourceProjectText,

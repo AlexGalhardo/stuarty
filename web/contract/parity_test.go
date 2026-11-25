@@ -288,6 +288,21 @@ var parity = []row{
 	{method: "PublicationSendNow", command: "publication:send-now", route: "POST /publications/{}/send-now"},
 	{method: "PublicationRetry", command: "publication:retry", route: "POST /publications/{}/retry"},
 	{method: "PublicationCancel", command: "publication:cancel", route: "POST /publications/{}/cancel"},
+	// The day of the calendar (SDD-020 section 30A, D-146): four more actions of the tool publication. Marking a quiet
+	// day and the .ics export have no tool: a person marks a day, and the file is a download.
+	{
+		method: "PublicationDuplicate", tool: "publication", command: "publication:duplicate",
+		route: "POST /publications/{}/duplicate",
+	},
+	{method: "CalendarPlan", tool: "publication", command: "calendar:plan", route: "GET /calendar/plan"},
+	{method: "CalendarDaySet", tool: "publication", command: "calendar:day", route: "PUT /calendar/days/{}"},
+	{method: "CalendarQuietSet", command: "calendar:quiet", route: "PUT /calendar/quiet/{}"},
+	{method: "CalendarSlotSave", tool: "publication", command: "calendar:slot", route: "PUT /calendar/slots"},
+	{
+		method: "CalendarSlotDelete", tool: "publication", command: "calendar:slot-remove",
+		route: "DELETE /calendar/slots/{}",
+	},
+	{method: "CalendarExport", command: "calendar:export", route: "GET /calendar/export"},
 	// The AI providers (SDD-016 section 10): a generation starts with job_start (kind text.generate), the
 	// byte budget of the tool list leaves no room for a tool of its own. Setting a price is for a person.
 	{method: "ProviderList", command: "provider:list", route: "GET /providers"},

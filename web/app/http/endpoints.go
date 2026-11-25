@@ -787,6 +787,48 @@ var Endpoints = []Endpoint{
 		Summary: "Cancel a target, or every target that has not gone out",
 	},
 	{
+		ID: "publications.duplicate", Method: http.MethodPost, Path: "/publications/{id}/duplicate",
+		Scope: service.ScopeEdit, Service: "PublicationDuplicate", Status: 200,
+		Summary: "Copy a publication to another day or hour as a new draft; nothing is asked for approval",
+	},
+	{
+		ID:      "calendar.plan",
+		Method:  http.MethodGet,
+		Path:    "/calendar/plan",
+		Scope:   service.ScopeRead,
+		Service: "CalendarPlan",
+		Status:  200,
+		Summary: "Read a range of the calendar: its days with notes, themes and quiet marks, its slots and, when asked, its publications",
+	},
+	{
+		ID: "calendar.export", Method: http.MethodGet, Path: "/calendar/export", Scope: service.ScopeRead,
+		Service: "CalendarExport", Status: 200,
+		Summary: "Download the targets of a range as an .ics file, read only, with times in UTC",
+	},
+	{
+		ID: "calendar.days.set", Method: http.MethodPut, Path: "/calendar/days/{date}", Scope: service.ScopeEdit,
+		Service: "CalendarDaySet", Status: 200,
+		Summary: "Write the note and the theme of a day; an empty note and theme clear it",
+	},
+	{
+		ID:      "calendar.quiet.set",
+		Method:  http.MethodPut,
+		Path:    "/calendar/quiet/{date}",
+		Scope:   service.ScopeEdit,
+		Service: "CalendarQuietSet",
+		Status:  200,
+		Summary: "Mark a day as quiet (no posts) or clear the mark (a person in the browser only; the local token and keys get 403)",
+	},
+	{
+		ID: "calendar.slots.save", Method: http.MethodPut, Path: "/calendar/slots", Scope: service.ScopeEdit,
+		Service: "CalendarSlotSave", Status: 200,
+		Summary: "Create or replace a recurring slot: a weekday and a local time on a network; it sends nothing",
+	},
+	{
+		ID: "calendar.slots.remove", Method: http.MethodDelete, Path: "/calendar/slots/{id}", Scope: service.ScopeEdit,
+		Service: "CalendarSlotDelete", Status: 200, Summary: "Remove a recurring slot",
+	},
+	{
 		ID:      "providers.list",
 		Method:  http.MethodGet,
 		Path:    "/providers",

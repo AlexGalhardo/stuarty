@@ -210,5 +210,5 @@ var toolCatalogue = map[string][]string{
 		"update", "skip", "unskip",
 	},
 	"library":     {"search", "list", "get", "write", "render", "lint"},
-	"publication": {"create", "schedule", "show", "list"},
+	"publication": {"create", "schedule", "show", "list", "duplicate", "plan", "day", "slot"},
 }

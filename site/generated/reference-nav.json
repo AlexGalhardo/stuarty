@@ -248,6 +248,12 @@
     {
       "tag": "Publishing",
       "pages": [
+        "calendar.days.set",
+        "calendar.export",
+        "calendar.plan",
+        "calendar.quiet.set",
+        "calendar.slots.save",
+        "calendar.slots.remove",
         "posts.list",
         "posts.get",
         "posts.media",
@@ -256,6 +262,7 @@
         "publications.get",
         "publications.update",
         "publications.cancel",
+        "publications.duplicate",
         "publications.retry",
         "publications.schedule",
         "publications.send-now",

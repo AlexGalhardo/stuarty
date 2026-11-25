@@ -584,6 +584,38 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 			_, err := e.svc.PublicationCancel(ctx, service.PublicationCancelRequest{ID: "pub_0000000001"})
 			return err
 		},
+		"PublicationDuplicate": func() error {
+			_, err := e.svc.PublicationDuplicate(
+				ctx, service.PublicationDuplicateRequest{ID: "pub_0000000001", At: "2026-12-02T18:00"},
+			)
+			return err
+		},
+		"CalendarPlan": func() error {
+			_, err := e.svc.CalendarPlan(ctx, service.CalendarPlanRequest{From: "2026-12-01", To: "2026-12-02"})
+			return err
+		},
+		"CalendarDaySet": func() error {
+			_, err := e.svc.CalendarDaySet(ctx, service.CalendarDaySetRequest{Date: "2026-12-01"})
+			return err
+		},
+		"CalendarQuietSet": func() error {
+			_, err := e.svc.CalendarQuietSet(ctx, service.CalendarQuietSetRequest{Date: "2026-12-01", Quiet: true})
+			return err
+		},
+		"CalendarSlotSave": func() error {
+			_, err := e.svc.CalendarSlotSave(
+				ctx, service.CalendarSlotSaveRequest{Network: "instagram", Weekday: "tue", Time: "18:00"},
+			)
+			return err
+		},
+		"CalendarSlotDelete": func() error {
+			_, err := e.svc.CalendarSlotDelete(ctx, service.CalendarSlotDeleteRequest{ID: "slt_0000000001"})
+			return err
+		},
+		"CalendarExport": func() error {
+			_, err := e.svc.CalendarExport(ctx, service.CalendarExportRequest{From: "2026-12-01", To: "2026-12-02"})
+			return err
+		},
 		"ProviderList": func() error {
 			_, err := e.svc.ProviderList(ctx, service.ProviderListRequest{})
 			return err

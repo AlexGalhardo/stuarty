@@ -29,6 +29,7 @@ Content type `application/json`.
 
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
+| `confirm_quiet_day` | `boolean` | no | A person's yes to a post on a day marked as quiet; any other caller is refused on that day. |
 | `export` | `string` or `null` | no | The new video; leave out to keep it. |
 | `post` | `string` or `null` | no | The new post; leave out to keep it. |
 | `targets` | array of [`TargetInput`](/docs/api/schemas#targetinput) | no | Targets to change (with their id), add (without one) or remove (remove: true). A target that was waiting for approval, approved or scheduled and whose post changed goes back to waiting for approval. |

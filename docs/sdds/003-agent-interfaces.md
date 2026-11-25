@@ -1687,7 +1687,7 @@ A frame is one JPEG (quality 80, 4:2:0). A sheet is one JPEG:
 | `tools/list` | the 21 tools below, always in the order of the table, never paged, with `ttlMs` 3,600,000 and `cacheScope` `public` (the SDK type `Cacheable`, `mcp/protocol.go` lines 1148 to 1166; the list changes only when the binary is upgraded). |
 | Tool registration | each tool is registered with the SDK's raw `(*Server).AddTool` (`mcp/server.go` line 315) with `inputSchema` and `outputSchema` taken from the registry generator, **not** with the generic `mcp.AddTool[In, Out]`, which infers schemas from Go types and would not produce the `edit` schema of §4.4. The adapter validates `arguments` against `inputSchema` with the validator of ADR-0014 and converts a failure into `E_VALIDATION` with the `path` of the first invalid value (an operation name the Service does not know is `E_UNKNOWN_COMMAND`, §2.4 rule 5). The message names the path and the constraint, never the value (§1.2 rule 9) |
 | Call result | `CallToolResult` (`Content`, `StructuredContent`, `IsError`) built as §1.3 and §1.4 say |
-| Cost | NFR-020 as set by epic 13 (D-069) and raised by the author (D-094, when epics 10 and 17 met the ceiling at 22,400 bytes and 7,500 characters), measured by `go run ./internal/tools/surfacebudget` (which `task lint` runs) and held by `TestToolDefinitionBudget`: the minified `tools/list` result is at most **24,711 bytes** (about 7,720 tokens at the 3.2 characters per token of §3.10), no single tool definition is larger than **1,700 bytes**, there are at most **21 tools**, the text of the first discovery call (`command_help` with no argument, §4.8) is at most **8,500 characters** (about 2,650 tokens), and the description of a domain is at most 160 characters. Measured when the limits were set: the list a client receives 21,830 bytes (6,821 tokens), the largest definitions `edit` (1,589 bytes) and `media_inspect` (1,567), the discovery call 7,201 characters (2,250 tokens: about 90 more for every operation a later epic adds to the video domain, which is why its limit leaves room for a few). The shape of §4.8 is what made the figure: the operation names left the definition of `edit` (about 950 bytes, and 25 more for every command a later epic registers), which paid for the `domain` and `image_id` arguments of `edit` and `history`, the `domains` of `command_help` and the cost sentence of `project_get`. The history of the figure (6,000 tokens by D-040, then raised for `font_import`, `project_item` and `library`, each time as an interim measure) continued with D-094 and then D-143 (VV-282): the author added the 21st tool, `publication`, and raised the list from 23,400 to **24,711 bytes** (7,300 to 7,720 tokens) and the count from 20 to 21, by exactly what that tool measures (`surfacebudget` before: 23,387 bytes, 7,308 tokens, 20 tools; after: 24,698 bytes, 7,718 tokens, 21 tools; the same 13 bytes of room as before), with the largest definition (1,700 bytes), the discovery call (8,500 characters) and the domain description (160 characters) unchanged. D-094: **only the author raises the budget**, never an epic. A new domain adds operations and no tool, and its only cost is its description line in the discovery call; a tool is added only when no existing intent fits, with the reason written in §4.8, and the budget is then measured again by the epic that adds it. `project_get` with `detail` `document` is outside the per-call caps of §3.10 (D-088): the document is unbounded, and the description of the tool says what it costs. **Verified by** `surfacebudget`, `TestToolDefinitionBudget` and, once per release, a count with the model vendor's token counting endpoint (`TestToolListVendorTokens`: if it exceeds 7,720 tokens the descriptions are shortened; no field is removed) |
+| Cost | NFR-020 as set by epic 13 (D-069) and raised by the author (D-094, when epics 10 and 17 met the ceiling at 22,400 bytes and 7,500 characters), measured by `go run ./internal/tools/surfacebudget` (which `task lint` runs) and held by `TestToolDefinitionBudget`: the minified `tools/list` result is at most **25,083 bytes** (about 7,836 tokens at the 3.2 characters per token of §3.10), no single tool definition is larger than **1,700 bytes**, there are at most **21 tools**, the text of the first discovery call (`command_help` with no argument, §4.8) is at most **8,500 characters** (about 2,650 tokens), and the description of a domain is at most 160 characters. Measured when the limits were set: the list a client receives 21,830 bytes (6,821 tokens), the largest definitions `edit` (1,589 bytes) and `media_inspect` (1,567), the discovery call 7,201 characters (2,250 tokens: about 90 more for every operation a later epic adds to the video domain, which is why its limit leaves room for a few). The shape of §4.8 is what made the figure: the operation names left the definition of `edit` (about 950 bytes, and 25 more for every command a later epic registers), which paid for the `domain` and `image_id` arguments of `edit` and `history`, the `domains` of `command_help` and the cost sentence of `project_get`. The history of the figure (6,000 tokens by D-040, then raised for `font_import`, `project_item` and `library`, each time as an interim measure) continued with D-094 and then D-143 (VV-282): the author added the 21st tool, `publication`, and raised the list from 23,400 to **24,711 bytes** (7,300 to 7,720 tokens) and the count from 20 to 21, by exactly what that tool measures (`surfacebudget` before: 23,387 bytes, 7,308 tokens, 20 tools; after: 24,698 bytes, 7,718 tokens, 21 tools; the same 13 bytes of room as before), with the largest definition (1,700 bytes), the discovery call (8,500 characters) and the domain description (160 characters) unchanged. The day of the publishing calendar (epic 97, D-146) added four actions to that tool (`duplicate`, `plan`, `day` and `slot`, with the nine members they use) and no tool, and raised the list a second time by exactly what they measure: `surfacebudget` before 24,701 bytes and 7,719 tokens, after 25,073 bytes and 7,835 tokens (372 bytes, 116 tokens), so the limit went from 24,711 to **25,083 bytes** (7,720 to 7,836 tokens), the same 10 bytes of room as before; the largest definition (1,700 bytes: `publication` is now the second largest, under `job_start`), the discovery call (8,497 of 8,500 characters, since the new operations are named by `command_help` with `domain` `publish` and not by the first call), the tool count and the domain descriptions are unchanged. D-094: **only the author raises the budget**, never an epic. A new domain adds operations and no tool, and its only cost is its description line in the discovery call; a tool is added only when no existing intent fits, with the reason written in §4.8, and the budget is then measured again by the epic that adds it. `project_get` with `detail` `document` is outside the per-call caps of §3.10 (D-088): the document is unbounded, and the description of the tool says what it costs. **Verified by** `surfacebudget`, `TestToolDefinitionBudget` and, once per release, a count with the model vendor's token counting endpoint (`TestToolListVendorTokens`: if it exceeds 7,720 tokens the descriptions are shortened; no field is removed) |
 | Order | deterministic (MCP `2026-07-28` Tools: "SHOULD return tools in a deterministic order"), so prompt caches hit |
 
 Tool and Service mapping, scope and annotations (annotations are hints and clients treat them as untrusted; they are never a security control, ADR-0020):
@@ -3619,7 +3619,7 @@ The tool is the MCP form of the library operations of SDD-018 (memory notes, ski
 ```json
 {
   "name": "publication",
-  "description": "Publications. action=create (project_id, title, export or post, targets: connection_id, at, zone, fields; see command_help domain=publish), schedule (id, target_id, at, zone), show (id), list (state, from, until). A person approves before anything is sent.",
+  "description": "Publications. action=create (project_id, title, export or post, targets: connection_id, at, zone, fields; see command_help domain=publish), schedule (id, target_id, at, zone), show (id), list (state, from, until), duplicate (id, at), plan (from, until), day (date, note, theme), slot (network, weekday, time). A person approves before anything is sent.",
   "inputSchema": {
     "type": "object",
     "properties": {
@@ -3628,7 +3628,11 @@ The tool is the MCP form of the library operations of SDD-018 (memory notes, ski
           "create",
           "schedule",
           "show",
-          "list"
+          "list",
+          "duplicate",
+          "plan",
+          "day",
+          "slot"
         ]
       },
       "id": {
@@ -3690,6 +3694,33 @@ The tool is the MCP form of the library operations of SDD-018 (memory notes, ski
       },
       "offset": {
         "type": "integer"
+      },
+      "date": {
+        "type": "string"
+      },
+      "note": {
+        "type": "string"
+      },
+      "theme": {
+        "type": "string"
+      },
+      "weekday": {
+        "type": "string"
+      },
+      "time": {
+        "type": "string"
+      },
+      "slot": {
+        "type": "string"
+      },
+      "account": {
+        "type": "string"
+      },
+      "publications": {
+        "type": "boolean"
+      },
+      "remove": {
+        "type": "boolean"
       }
     },
     "required": [
@@ -3717,6 +3748,8 @@ The tool is the MCP form of the library operations of SDD-018 (memory notes, ski
 ```
 
 The 21st tool, added by the author's decision D-143 (VV-282, which revises D-094): an agent that speaks only MCP could not plan a publication, because the calendar of SDD-020 §29 had no tool. `action` picks the Service operation, as in `image`: `create` is `PublicationCreate`, `schedule` is `PublicationSchedule`, `show` is `PublicationGet` and `list` is `PublicationList`, and a member the action does not use is refused with `E_VALIDATION`. The member names are those of the HTTP bodies and of the Service requests (`id` is the publication, `target_id` a target, `from` and `until` the range of `list` (`until` is the `to` of the Service request, a name the outbound check of §9 refuses as a member, as the CLI flag shows), with `zone` and the paging `limit` and `offset`). `targets` are the targets of SDD-020 §28 (`connection_id`, `at`, `zone`, `late_window_minutes` and `fields`: `title`, `description`, `tags`, `visibility`, `made_for_kids`, `ai_disclosure`); `command_help` with `domain` `publish` names the operations.
+
+**The day of the calendar (epic 97, D-146).** Four more actions, and no new tool: `duplicate` is `PublicationDuplicate` (`id`, `at`, with `target_id` and `zone`: a new draft publication at that time, nothing asked for approval), `plan` is `CalendarPlan` (`from` and `until`, with `zone`, `project_id`, `publications` to carry the publications of the range, and `limit` and `offset`: the days with their notes, themes and quiet marks, the recurring slots with the target that fills each, and the publications), `day` is `CalendarDaySet` (`date`, with `zone`, `note` and `theme`: a member left out stays, an empty one clears it) and `slot` is `CalendarSlotSave` (`network`, `weekday`, `time`, with `zone`, `account` (the id of one account of the network, the `connection_id` of the Service) and `slot` to change one) or, with `remove` true and a `slot`, `CalendarSlotDelete`. The two names are not `slot_id` and `connection_id` because a member that ends in `_id` carries the id pattern of §4.2 in the schema, which this tool has no bytes for. The scopes are the Service's (`edit` for all but `plan`, which needs `read`). **No action marks or clears a quiet day, confirms one, or exports:** `CalendarQuietSet` is for a person in a privileged browser session, `schedule` on a quiet day is `E_PRIVILEGED_SESSION` with the hint that a person schedules on it in the Publish page (SDD-020 §30A.1), and the `.ics` export is a download of the app, the CLI and HTTP. A member that names no destination, credential or address stays refused by the outbound check of §9: `date`, `time`, `weekday`, `note`, `theme`, `slot`, `account`, `publications` and `remove` are not on its list. `plan` and `day` answer in `structuredContent` a `CalendarPlanResult` and a `CalendarDay`, and the note is delimited as untrusted in the text part. The four actions add **372 bytes** to the 1,311 of the tool, which is exactly what the limits of §4.1 were raised by (D-146).
 
 What the tool is not: it has no action that publishes, sends now, retries, changes, cancels or approves, and no member that names a credential or a destination. Publishing waits for a person (ADR-0032): `schedule` asks for the approval of SDD-020 §26 exactly as on HTTP and in the CLI, so an agent's target is `waiting_approval` until a person, or a rule the person wrote, approves it; the tool never decides. `schedule` on a post that was approved (`approved` or `scheduled`) is `E_PRIVILEGED_SESSION` with the hint that a person changes it in the Publish page of the app (D-145, SDD-020 §28), so an agent cannot withdraw a person's yes; on a target that still waits it withdraws that request and asks again, and on a `failed` or `missed` target it waits for approval too. It reaches no network and returns no credential (it reads the plan and the id of a connection, never its secret). The caller checks and scopes are the Service's: `PublicationCreate` needs `edit`, `PublicationSchedule` needs `render`, `PublicationGet` and `PublicationList` need `read`, and a key limited to a project sees only that project (`E_NOT_FOUND` otherwise). The result is a `Publication` or a `PublicationListResult` in `structuredContent`, and the text part is the one of the CLI (`service.PublicationText`) with the title delimited as untrusted. The tool is **1,311 bytes** of `tools/list`, which is exactly what the limits of §4.1 were raised by (D-143); the discovery call is unchanged, since the operations were already in the domain `publish`.
 
@@ -4684,7 +4717,7 @@ The implementation of this SDD is complete when every check below passes. "Test"
 | # | Check | How verified |
 | --- | --- | --- |
 | 1 | Every `service.Service` method has an MCP tool, CLI command and HTTP route, or is in the exceptions of §7.1; the §7.1 table equals the one derived from the code | `TestParityTableCoversTheService`, `TestDriversCoverService`, `TestEveryOperationIsReachableOnEverySurface` (`web/contract`) |
-| 2 | `tools/list` holds exactly the 21 tools of SDD-000 §1 in the order of §4.1, byte-equal across two calls, at most 24,711 bytes minified, no tool larger than 1,700 bytes, the first discovery call at most 8,500 characters and every domain description at most 160 characters (NFR-020, D-069, D-094 and D-143) | `go run ./internal/tools/surfacebudget` (run by `task lint`), `TestToolDefinitionBudget`; release checklist: token count with the vendor endpoint at most 7,720 |
+| 2 | `tools/list` holds exactly the 21 tools of SDD-000 §1 in the order of §4.1, byte-equal across two calls, at most 25,083 bytes minified, no tool larger than 1,700 bytes, the first discovery call at most 8,500 characters and every domain description at most 160 characters (NFR-020, D-069, D-094, D-143 and D-146) | `go run ./internal/tools/surfacebudget` (run by `task lint`), `TestToolDefinitionBudget`; release checklist: token count with the vendor endpoint at most 7,836 |
 | 3 | Every `inputSchema` and `outputSchema` is valid JSON Schema 2020-12; every `inputSchema` has `additionalProperties: false`; the `edit` definition lists no operation name (§4.8); the annotations equal the table of §4.1; every output path that holds text from media or other actors carries `"x-untrusted": true` and a result with such a value has `untrusted_notice` | `TestToolSchemas` |
 | 4 | The first 512 characters of `instructions` (after the generated header line is stripped) are those of §4.6, the whole is at most 2,100 bytes, it names the tools by their exact names and does not mention locks | `TestInstructionsHead` |
 | 5 | The MCP server is stateless: no `Mcp-Session-Id` is sent or read, `GET /mcp` and `DELETE /mcp` answer 405, two interleaved clients do not influence each other; revisions `2026-07-28` and `2025-11-25` both work over stdio and HTTP | `TestHTTPIsStateless` (`web/app/mcp`), `TestMCPOverStdioThroughTheBinary` (`web/cmd/app`); no single test runs both revisions with the SDK client |
@@ -4722,8 +4755,8 @@ Numbers measured on the reference machine (AMD Ryzen 7 5700X3D, Windows 11, FFmp
 
 | Budget | Measured | Limit |
 | --- | --- | --- |
-| `tools/list` as a client receives it, 21 tools | 24,698 bytes, about 7,718 tokens by the 3.2 characters per token estimate; largest definition `job_start` 1,698 bytes, with `image.edit` (epic 30) and `publish.upload` (D-093), the arguments of `export` being the `args` properties of its schema; first discovery call 8,497 characters (`surfacebudget`, D-143, with the 21st tool `publication` at 1,311 bytes) | at most 24,711 bytes, 8,500 characters (check 2) |
-| `tools/list` by the vendor token count | not measured: needs `ANTHROPIC_API_KEY` (`TestToolListVendorTokens`, release only) | at most 7,720 tokens |
+| `tools/list` as a client receives it, 21 tools | 25,073 bytes, about 7,835 tokens by the 3.2 characters per token estimate; largest definition `job_start` 1,698 bytes, with `image.edit` (epic 30) and `publish.upload` (D-093), the arguments of `export` being the `args` properties of its schema; first discovery call 8,497 characters (`surfacebudget`, D-146, with the `publication` tool at 1,683 bytes after its four new actions) | at most 25,083 bytes, 8,500 characters (check 2) |
+| `tools/list` by the vendor token count | not measured: needs `ANTHROPIC_API_KEY` (`TestToolListVendorTokens`, release only) | at most 7,836 tokens |
 | Concise view of the reference project | 1 page, 11,785 characters | at most 2 pages, cap 12,800 characters (check 7) |
 | Frame and sheet image tokens | `TestViewImageSizeTable` passes for the four presets | frame at most 800, sheet at most 1,500 (check 8) |
 | 9-cell sheet, median | 149 ms (`BenchmarkViewSheet9`) | under 2 s (check 9) |
