@@ -561,6 +561,9 @@
       }
     },
     "projects": {
+      "views": {
+        "label": "Project views"
+      },
       "title": "Projects",
       "new": "New project",
       "lead": "Everything you are making, one project at a time.",
@@ -579,7 +582,11 @@
         "submit": "Add the video"
       },
       "new_project": {
-        "title": "New project",
+        "title": "Start a new project",
+        "name": "Project name",
+        "name_placeholder": "E.g. Course launch",
+        "chosen": "Chosen",
+        "text_note": "No format and no media: just the text, and media is optional later.",
         "description": "Choose what you want to create. You can add the others later.",
         "step_two": "Step 2 of 2: the briefing. The project is created when you send it.",
         "kind_legend": "What do you want to create?",

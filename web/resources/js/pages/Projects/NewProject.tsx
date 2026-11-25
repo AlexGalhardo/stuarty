@@ -11,13 +11,13 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
+import { Segment } from "@/components/Segment";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { cn } from "@/lib/cn";
 import { useT } from "@/lib/i18n";
 import { createClient } from "../../editor/api/client";
 import { HttpTransport } from "../../editor/api/http";
 import type { ProjectContextInput } from "../../editor/api/types";
-import { SELECT_CLASS } from "../Settings/SettingsSection";
 import {
 	CHOICE_ICON,
 	CHOICES,
@@ -28,9 +28,10 @@ import {
 	type TextType,
 } from "./kinds";
 import NewProjectBriefing from "./NewProjectBriefing";
+import { emptyContext } from "./projectSchema";
 
 const RADIO_CARD =
-	"flex cursor-pointer flex-col gap-1 rounded-lg border border-border bg-surface p-4 text-text hover:bg-surface-hover has-[:checked]:border-accent has-[:checked]:bg-accent-soft has-[:focus-visible]:border-focus has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-focus";
+	"relative flex cursor-pointer flex-col items-center gap-1 rounded-lg text-center border border-border bg-surface p-4 text-text hover:bg-surface-hover has-[:checked]:border-accent has-[:checked]:bg-accent-soft has-[:focus-visible]:border-focus has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-focus";
 
 // The first decision of a project, in four equal cards: a text, a video, an image, or later. A format is asked
 // only for a video and a type only for a text. "Continue to the briefing" opens the briefing in the same dialog,
@@ -48,6 +49,7 @@ export default function NewProject({
 	const [choice, setChoice] = useState<Choice | null>(null);
 	const [textType, setTextType] = useState<TextType>("post");
 	const [format, setFormat] = useState<string>(SIZE_PRESETS[0]);
+	const [name, setName] = useState("");
 	const [failure, setFailure] = useState<Failure | null>(null);
 	const [busy, setBusy] = useState(false);
 	// The project exists but its first item was refused: the person goes on from its page.
@@ -60,6 +62,7 @@ export default function NewProject({
 		if (!next) {
 			setStep("kind");
 			setChoice(null);
+			setName("");
 			setFailure(null);
 			setCreated(null);
 		}
@@ -114,6 +117,17 @@ export default function NewProject({
 							if (choice !== null) setStep("briefing");
 						}}
 					>
+						<div className="flex flex-col gap-1">
+							<Label htmlFor="new-project-name">
+								{t("ui.projects.new_project.name")}
+							</Label>
+							<Input
+								id="new-project-name"
+								value={name}
+								onChange={(event) => setName(event.target.value)}
+								placeholder={t("ui.projects.new_project.name_placeholder")}
+							/>
+						</div>
 						<fieldset className="flex flex-col gap-2">
 							<legend className="mb-2 text-sm font-medium text-text">
 								{t("ui.projects.new_project.kind_legend")}
@@ -131,64 +145,69 @@ export default function NewProject({
 												onChange={() => setChoice(c)}
 												className="sr-only"
 											/>
-											<Icon aria-hidden="true" className="size-5 text-icon" />
+											<Icon aria-hidden="true" className="size-6 text-icon" />
 											<span className="font-medium">
 												{t(`ui.projects.new_project.choice.${c}.title`)}
 											</span>
 											<span className="text-sm text-text-muted">
 												{t(`ui.projects.new_project.choice.${c}.hint`)}
 											</span>
+											{choice === c ? (
+												<span className="mt-1 text-xs font-medium text-accent-text">
+													{t("ui.projects.new_project.chosen")}
+												</span>
+											) : null}
 										</label>
 									);
 								})}
 							</div>
 						</fieldset>
 						{choice === "video" ? (
-							<div className="flex flex-col gap-1">
-								<Label htmlFor="new-project-format">
-									{t("ui.projects.new_project.format")}
-								</Label>
-								<select
-									id="new-project-format"
-									value={format}
-									onChange={(event) => setFormat(event.target.value)}
-									className={cn(SELECT_CLASS, "w-fit")}
-								>
-									{SIZE_PRESETS.map((p) => (
-										<option key={p} value={p}>
-											{p}
-										</option>
-									))}
-								</select>
-								<p className="text-sm text-text-muted">
-									{t("ui.projects.new_project.format_hint")}
-								</p>
-							</div>
-						) : null}
-						{choice === "text" ? (
 							<fieldset className="flex flex-col gap-2">
 								<legend className="mb-1 text-sm font-medium text-text">
-									{t("ui.projects.new_project.text_legend")}
+									{t("ui.projects.new_project.format")}
 								</legend>
-								<div className="flex flex-wrap gap-x-5 gap-y-2">
-									{TEXT_TYPES.map((type) => (
-										<label
-											key={type}
-											className="flex items-center gap-2 text-sm"
-										>
+								<div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+									{SIZE_PRESETS.map((p) => (
+										<label key={p} className={RADIO_CARD}>
 											<input
 												type="radio"
-												name="new-project-text-type"
-												value={type}
-												checked={textType === type}
-												onChange={() => setTextType(type)}
-												className="accent-accent"
+												name="new-project-format"
+												value={p}
+												checked={format === p}
+												onChange={() => setFormat(p)}
+												className="sr-only"
 											/>
-											{t(`ui.write.kind.${type}`)}
+											<span className="font-medium">{p}</span>
+											<span className="text-xs text-text-muted">
+												{t(`ui.projects.presets.${p}`)}
+											</span>
 										</label>
 									))}
 								</div>
+								<p className="text-sm text-text-muted">
+									{t("ui.projects.new_project.format_hint")}
+								</p>
 							</fieldset>
+						) : null}
+						{choice === "text" ? (
+							<div className="flex flex-col gap-2">
+								<span className="text-sm font-medium text-text">
+									{t("ui.projects.new_project.text_legend")}
+								</span>
+								<Segment
+									label={t("ui.projects.new_project.text_legend")}
+									value={textType}
+									onChange={(next) => setTextType(next as TextType)}
+									options={TEXT_TYPES.map((type) => ({
+										value: type,
+										label: t(`ui.write.kind.${type}`),
+									}))}
+								/>
+								<p className="text-sm text-text-muted">
+									{t("ui.projects.new_project.text_note")}
+								</p>
+							</div>
 						) : null}
 						<DialogFooter>
 							<Button
@@ -205,6 +224,7 @@ export default function NewProject({
 					</form>
 				) : (
 					<NewProjectBriefing
+						initial={{ ...emptyContext(), name: name.trim() }}
 						kind={choice ?? "undecided"}
 						busy={busy}
 						failure={failure}

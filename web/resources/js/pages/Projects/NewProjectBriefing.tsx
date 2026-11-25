@@ -15,6 +15,7 @@ import { emptyContext } from "./projectSchema";
 // When the project was made but its first item was refused, the form gives way to a note that leads to the
 // project, so that sending it again does not make a second one.
 export default function NewProjectBriefing({
+	initial,
 	kind,
 	busy,
 	failure,
@@ -23,6 +24,7 @@ export default function NewProjectBriefing({
 	onSubmit,
 	onBack,
 }: {
+	initial?: ProjectContextInput;
 	kind: Choice;
 	busy: boolean;
 	failure: Failure | null;
@@ -44,7 +46,7 @@ export default function NewProjectBriefing({
 			{created === null ? (
 				<ProjectContextForm
 					kind={kind}
-					initial={emptyContext()}
+					initial={initial ?? emptyContext()}
 					submitLabel={t("ui.projects.create")}
 					cancelLabel={t("ui.projects.new_project.back")}
 					busy={busy}
