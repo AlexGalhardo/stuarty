@@ -2171,3 +2171,67 @@ export function blurRegionOperations(
 		},
 	];
 }
+
+// The effects of a screen take (SDD-002 C.93 to C.95, SDD-025 section 17): one operation each. The service reads
+// the pointer events of the recording, the core plans the zoom, draws the cursor and the highlights. An option the
+// person left alone is left out so that the core's default applies.
+export const CURSOR_STYLES = ["dot", "ring"] as const;
+export type CursorStyle = (typeof CURSOR_STYLES)[number];
+export const HIGHLIGHT_STYLES = ["ring", "wave", "pulse", "none"] as const;
+export type HighlightStyle = (typeof HIGHLIGHT_STYLES)[number];
+
+export function autoZoomOperations(
+	itemId: string,
+	options: { level?: number },
+): Operations {
+	return [
+		{
+			op: "recording.auto_zoom",
+			args: {
+				item_id: itemId,
+				...(options.level === undefined ? {} : { level: options.level }),
+			},
+		},
+	];
+}
+
+export function cursorOperations(
+	itemId: string,
+	options: {
+		visible: boolean;
+		style?: CursorStyle;
+		smoothingMs?: number;
+	},
+): Operations {
+	return [
+		{
+			op: "recording.set_cursor",
+			args: {
+				item_id: itemId,
+				...(options.visible ? {} : { visible: false }),
+				...(options.style === undefined ? {} : { style: options.style }),
+				...(options.smoothingMs === undefined
+					? {}
+					: { smoothing_ms: options.smoothingMs }),
+			},
+		},
+	];
+}
+
+export function clickHighlightOperations(
+	itemId: string,
+	options: { style: HighlightStyle; durationMs?: number },
+): Operations {
+	return [
+		{
+			op: "recording.set_click_highlight",
+			args: {
+				item_id: itemId,
+				style: options.style,
+				...(options.durationMs === undefined
+					? {}
+					: { duration_ms: options.durationMs }),
+			},
+		},
+	];
+}

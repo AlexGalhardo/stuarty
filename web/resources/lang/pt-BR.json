@@ -2097,6 +2097,17 @@
             "title": "Renomear projeto"
           }
         },
+        "recording": {
+          "auto_zoom": {
+            "title": "Dar zoom nos cliques de uma gravação de tela"
+          },
+          "set_cursor": {
+            "title": "Desenhar um cursor suave numa gravação de tela"
+          },
+          "set_click_highlight": {
+            "title": "Destacar os cliques de uma gravação de tela"
+          }
+        },
         "settings": {
           "reframe": {
             "title": "Reenquadrar projeto"
@@ -2451,6 +2462,27 @@
         "radius": "Força do borrão",
         "radius_default": "Padrão forte",
         "apply": "Borrar esta região"
+      },
+      "screen_take": {
+        "title": "Gravação de tela",
+        "hint": "Para uma gravação feita com eventos do ponteiro: dá zoom nos cliques, desenha um cursor suave e marca cada clique. Cada botão cria itens na linha do tempo que você pode alterar ou apagar. Rode de novo depois de mudar o zoom ou mover o clipe.",
+        "default": "Padrão",
+        "zoom_level": "Nível do zoom",
+        "zoom_apply": "Dar zoom nos cliques",
+        "cursor_style": "Estilo do cursor",
+        "cursor_dot": "Ponto",
+        "cursor_ring": "Anel",
+        "cursor_smoothing": "Suavização",
+        "cursor_apply": "Desenhar o cursor",
+        "cursor_remove": "Remover o cursor",
+        "highlight_style": "Destaque do clique",
+        "highlight_ring": "Anel",
+        "highlight_wave": "Onda",
+        "highlight_pulse": "Pulso",
+        "highlight_none": "Nenhum",
+        "highlight_duration": "Duração",
+        "highlight_apply": "Destacar os cliques",
+        "highlight_remove": "Remover os destaques"
       },
       "voice_preset": {
         "hint": "Uma ação para uma voz limpa e uniforme. A exportação leva o som à meta de volume do projeto.",

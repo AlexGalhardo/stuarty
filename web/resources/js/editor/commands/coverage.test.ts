@@ -5,6 +5,7 @@ import {
 	addAudioOperations,
 	addClipOperations,
 	audioOperations,
+	autoZoomOperations,
 	blendOperations,
 	blurOperations,
 	blurRegionOperations,
@@ -20,10 +21,12 @@ import {
 	captionStyleOperations,
 	captionWordsOperations,
 	chromaKeyOperations,
+	clickHighlightOperations,
 	closeGapOperations,
 	colorOperations,
 	createCompositionOperations,
 	crossfadeOperations,
+	cursorOperations,
 	deleteOperations,
 	dropAssetOperations,
 	duckOperations,
@@ -152,7 +155,7 @@ describe("command coverage (SDD-012 section 9.3)", () => {
 	test("every non-internal command has a key", () => {
 		const keys = commands.filter((c) => !c.internal).map((c) => c.name);
 		expect(Object.keys(COVERAGE).sort()).toEqual(keys.sort());
-		expect(keys).toHaveLength(91);
+		expect(keys).toHaveLength(94);
 	});
 
 	test("every command has a palette entry, and the commands with an inspector control keep it", () => {
@@ -563,6 +566,18 @@ describe("command coverage (SDD-012 section 9.3)", () => {
 				height: 0.1,
 				start: "1s",
 				radius: 40,
+			}).map((o) => o.op),
+			"inspector.screen_zoom": autoZoomOperations("itm_a", { level: 1.8 }).map(
+				(o) => o.op,
+			),
+			"inspector.screen_cursor": cursorOperations("itm_a", {
+				visible: true,
+				style: "ring",
+				smoothingMs: 200,
+			}).map((o) => o.op),
+			"inspector.screen_highlight": clickHighlightOperations("itm_a", {
+				style: "wave",
+				durationMs: 800,
 			}).map((o) => o.op),
 			"inspector.vertical_cuts": ["clip.face_frame"],
 			"inspector.voice_preset": applyVoicePresetOperations(
