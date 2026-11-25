@@ -148,16 +148,29 @@ utc() {
 	date -u -d "@$1" +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date -u -r "$1" +%Y-%m-%dT%H:%M:%SZ
 }
 
-# mcp TOOL ARGS: one call of an MCP tool of `stuarty mcp`, the answer line of the call.
-mcp() {
-	local out
-	out="$(printf '%s\n' \
+# mcp_raw TOOL ARGS: one call of an MCP tool of `stuarty mcp`, the answer line of the call, failed or not.
+mcp_raw() {
+	printf '%s\n' \
 		'{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"first-flow","version":"1"}}}' \
 		'{"jsonrpc":"2.0","method":"notifications/initialized"}' \
 		"{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/call\",\"params\":{\"name\":\"$1\",\"arguments\":$2}}" |
-		stuarty mcp | grep '"id":2')" || die "no answer from the MCP tool $1"
+		stuarty mcp | grep '"id":2'
+}
+
+# mcp TOOL ARGS: mcp_raw, and the script stops when the call failed.
+mcp() {
+	local out
+	out="$(mcp_raw "$1" "$2")" || die "no answer from the MCP tool $1"
 	case "$out" in *'"isError":true'* | *'"error":{'*) die "the MCP tool $1 failed: $out" ;; esac
 	printf '%s' "$out"
+}
+
+# mcp_refused TOOL ARGS: succeeds when the MCP server refused the call.
+mcp_refused() {
+	local out
+	out="$(mcp_raw "$1" "$2")" || return 0
+	case "$out" in *'"isError":true'* | *'"error":{'*) return 0 ;; esac
+	return 1
 }
 
 # A person's session, the way the desktop app signs one in: the launcher secret the server was told, then the
@@ -287,24 +300,26 @@ stuarty social:account:list --json | grep -q '"state":"ready"' || die "the accou
 
 # ---- 8. the publication: create, schedule, approve ---------------------------------------------------------
 
-step "8. create the publication, schedule it, and approve it as a person"
+step "8. create the publication, schedule it (MCP), and approve it as a person"
 # The time is a few seconds ahead, so the post is due while its request still waits: it must not go out, even
 # past its time, until a person approves (ADR-0032). The approval comes inside the grace of a minute
 # (core/publish), so the post then goes out at once.
 AT="$(utc $(($(date -u +%s) + 5)))"
-pub="$(stuarty publication:create --project "$P" --title "Sourdough short" \
-	--text "From starter to slice in four seconds #sourdough" --export "$EXPORT_JOB" --thumbnail "$COVER_JOB" \
-	--connection "$SOCIAL_CONN" --at "$AT" --made-for-kids no --visibility public --json)"
+# The agent plans and schedules with the MCP tool publication alone (D-143, VV-282): create, schedule, show and
+# list are its actions, and none of them publishes or approves.
+pub="$(mcp publication "{\"action\":\"create\",\"project_id\":\"$P\",\"title\":\"Sourdough short\",\"text\":\"From starter to slice in four seconds #sourdough\",\"export\":\"$EXPORT_JOB\",\"thumbnail\":\"$COVER_JOB\",\"targets\":[{\"connection_id\":\"$SOCIAL_CONN\",\"at\":\"$AT\",\"fields\":{\"made_for_kids\":false,\"visibility\":\"public\"}}]}")"
 PUB="$(need publication "$(printf '%s' "$pub" | field id)" "$pub")"
 [ "$(printf '%s' "$pub" | field thumbnail)" = "$COVER_JOB" ] || die "the cover is not the thumbnail of the post: $pub"
 [ "$(upload_count)" = 0 ] || die "something was sent before the post was scheduled"
-sched="$(stuarty publication:schedule "$PUB" --json)"
+sched="$(mcp publication "{\"action\":\"schedule\",\"id\":\"$PUB\"}")"
 SCHEDULED="$(date -u +%s)"
 case "$sched" in *'"state":"waiting_approval"'*) ;; *) die "the scheduled post is not waiting for approval: $sched" ;; esac
 PUB_APPROVAL="$(need approval_id "$(printf '%s' "$sched" | field approval_id)" "$sched")"
 if stuarty approval:decide "$PUB_APPROVAL" --approve >/dev/null 2>&1; then
 	die "the local token approved a publication: only a person may"
 fi
+mcp_refused publication "{\"action\":\"approve\",\"id\":\"$PUB\"}" || die "the publication tool accepted the action approve"
+mcp_refused publication "{\"action\":\"send_now\",\"id\":\"$PUB\"}" || die "the publication tool accepted the action send_now"
 # Nothing goes out while the request waits. The scheduler of the server looks at the calendar when it changes
 # and at least every 30 seconds (service/publish), so watching for 32 seconds after the schedule spans one of
 # its passes made after the time of the post: a scheduler that skipped the approval would have sent it.
@@ -313,7 +328,7 @@ while [ "$(date -u +%s)" -lt $((SCHEDULED + 32)) ]; do
 	sleep 2
 done
 [ "$(upload_count)" = 0 ] || die "a post went out before a person approved it"
-waiting="$(stuarty publication:show "$PUB" --json)"
+waiting="$(mcp publication "{\"action\":\"show\",\"id\":\"$PUB\"}")"
 case "$waiting" in
 *'"state":"waiting_approval"'*) ;;
 *) die "past its time, the post no longer waits for a person: $waiting" ;;
@@ -325,7 +340,7 @@ person POST "/approvals/$PUB_APPROVAL/decide" '{"decision":"approve"}' >/dev/nul
 step "9. wait for the post to go out"
 shown=""
 for _ in $(seq 1 60); do
-	shown="$(stuarty publication:show "$PUB" --json)"
+	shown="$(mcp publication "{\"action\":\"show\",\"id\":\"$PUB\"}")"
 	case "$shown" in *'"state":"published"'*) break ;; *'"state":"failed"'*) die "the post failed: $shown" ;; esac
 	sleep 2
 done
@@ -341,7 +356,7 @@ step "10. the post is on the calendar"
 now="$(date -u +%s)"
 from="$(utc $((now - 86400)))"
 until_="$(utc $((now + 86400)))"
-cal="$(stuarty publication:list --from "$from" --until "$until_" --json)"
+cal="$(mcp publication "{\"action\":\"list\",\"from\":\"$from\",\"until\":\"$until_\"}")"
 case "$cal" in *"$PUB"*'"state":"published"'*) ;; *) die "the post is not on the calendar as published: $cal" ;; esac
 
 echo "first-flow: OK" >&2
