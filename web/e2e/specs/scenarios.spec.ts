@@ -159,12 +159,18 @@ test.describe("event-gap-resync", () => {
 	}) => {
 		const seeded = await seedProject(request, { tracks: 1, perTrack: 1 });
 		let streams = 0;
-		await page.route("**/events**", async (route) => {
-			streams++;
-			// The first stream is killed; the client reconnects with `since`.
-			if (streams === 1) await route.abort();
-			else await route.continue();
-		});
+		// Only the stream of this project: a bare `**/events**` also matched the
+		// `events-<hash>.js` chunk, the inbox and approval streams, and WebKit
+		// requested one of those first, so the editor never loaded (VV-393).
+		await page.route(
+			`**/api/v1/projects/${seeded.id}/events*`,
+			async (route) => {
+				streams++;
+				// The first stream is killed; the client reconnects with `since`.
+				if (streams === 1) await route.abort();
+				else await route.continue();
+			},
+		);
 		await page.goto(`/editor/${seeded.id}`);
 		await expect(page.locator("[data-item-id]")).toHaveCount(1);
 
