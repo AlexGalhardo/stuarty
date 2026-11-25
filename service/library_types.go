@@ -8,14 +8,20 @@ import "time"
 
 // LibraryEntry is one row of a list: what is known of an entry without its body.
 type LibraryEntry struct {
-	Kind        string    `json:"kind"` // memory, skill or prompt
-	Name        string    `json:"name"`
-	Description string    `json:"description"             untrusted:"true"`
-	Scope       string    `json:"scope,omitempty"`  // memory: workspace or a project id
-	Origin      string    `json:"origin,omitempty"` // skills: built-in, user or imported
-	Reviewed    bool      `json:"reviewed"`         // skills: a person read it as it is now
-	Kept        bool      `json:"kept"`             // memory: a person kept it
-	Actor       string    `json:"actor,omitempty"`
+	Kind        string `json:"kind"` // memory, skill or prompt
+	Name        string `json:"name"`
+	Description string `json:"description"             untrusted:"true"`
+	Scope       string `json:"scope,omitempty"`  // memory: workspace or a project id
+	Origin      string `json:"origin,omitempty"` // skills: built-in, user or imported
+	Reviewed    bool   `json:"reviewed"`         // skills: a person read it as it is now
+	Loaded      bool   `json:"loaded,omitempty"` // skills: the agent session of the request has read it (SDD-018 section 7)
+	Kept        bool   `json:"kept"`             // memory: a person kept it
+	Actor       string `json:"actor,omitempty"`
+	// ActorName is how a screen names the agent that wrote the entry ("Claude Code"); empty for a person
+	// (SDD-018 section 18).
+	ActorName string `json:"actor_name,omitempty"`
+	// ProjectName is the name of the project a memory note is scoped to, beside Scope, which holds its id.
+	ProjectName string    `json:"project_name,omitempty"  untrusted:"true"`
 	Tags        []string  `json:"tags,omitempty"          untrusted:"true"`
 	State       string    `json:"state"` // ok, or invalid when the file cannot be read
 	Error       string    `json:"error,omitempty"         untrusted:"true"`
@@ -104,6 +110,9 @@ type SkillListRequest struct {
 	Origin            string `json:"origin,omitempty"`
 	IncludeUnreviewed bool   `json:"include_unreviewed,omitempty"`
 	AgentView         bool   `json:"agent_view,omitempty"`
+	// SessionID is the agent session whose loaded skills are marked `loaded`. Left out, it is the session an
+	// agent's own token is bound to; a person with no session marks none.
+	SessionID string `json:"session_id,omitempty"`
 }
 
 // SkillFileView is one file of a skill folder.

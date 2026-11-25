@@ -694,3 +694,12 @@ The operations of the registry of domain `image` (`core/command` registry built 
 | `layout`, `format`, `screen`, `camera`, `kind`, `items`, `track_id` | effective member | what the two commands report in `effective` |
 | `openTeleprompter`, `closeTeleprompter` | bridge operation | the two requests of `window.vukemDesktop` that open and close the teleprompter window (SDD-025 section 20.3) |
 | `stuarty.teleprompter` | browser storage key | the speed, size and mirror of the teleprompter, a preference of the UI |
+
+## 20. Fields for the screens of the final design (epic 99, group A)
+
+Members added to results that already existed, so that a page draws a fact the service gave and computes nothing (SDD-012 §1). None is an operation or an MCP tool (NFR-020).
+
+| Name | Kind | Meaning |
+| --- | --- | --- |
+| `loaded`, `session_id` (on `SkillList`) | field | a skill the agent session has read comes back with `loaded: true`; `session_id` names the session, or is the one an agent's token is bound to (SDD-018 §18, epic 99) |
+| `actor_name`, `project_name` | field | on a library entry: how a screen names the agent that wrote it (`core/library.AgentName`, empty for a person) and the name of the project a memory note is scoped to, beside `actor` and `scope` (SDD-018 §18, epic 99) |

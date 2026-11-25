@@ -63,6 +63,12 @@ type Activity struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
+// HasLoaded reports whether the session read the skill of that name (SDD-018 section 7, the "Loaded" mark of
+// the skills list).
+func (a *Activity) HasLoaded(name string) bool {
+	return slices.ContainsFunc(a.SkillsLoaded, func(s LoadedSkill) bool { return s.Name == name })
+}
+
 // Reduce is the one function that tells what a session is doing. reviewedSkills says whether the
 // library holds a skill that a person reviewed, which is what separates "available" from "none".
 func Reduce(sessionID string, state State, events []Event, reviewedSkills bool) Activity {

@@ -705,3 +705,46 @@ func TestSecurity_T44_OnlyAPersonReviews(t *testing.T) {
 		}
 	}
 }
+
+// Epic 99: a memory row reads "written by <agent> in <project>": the service names both, so a page draws them.
+func TestLibraryMemoryEntriesNameTheAgentAndTheProject(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{})
+	seedLibrary(t, m)
+
+	project := m.newProject("Launch plan")
+
+	if _, err := m.svc.MemoryWrite(libAgent(m), service.MemoryWriteRequest{
+		Name: "agent-scoped", Description: "Learned for this project", Scope: project, Body: "x",
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	res, err := m.svc.MemoryList(libPerson(m), service.MemoryListRequest{IncludeUnreviewed: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	byName := map[string]service.LibraryEntry{}
+	for _, e := range res.Entries {
+		byName[e.Name] = e
+	}
+
+	got := byName["agent-scoped"]
+	if got.ActorName != "Claude Code" || got.ProjectName != "Launch plan" || got.Scope != project {
+		t.Errorf("the agent's note = %+v", got)
+	}
+
+	if mine := byName["viewers-skip-intros"]; mine.ActorName != "" || mine.ProjectName != "" {
+		t.Errorf("a person's workspace note names no agent and no project: %+v", mine)
+	}
+
+	one, err := m.svc.MemoryGet(libPerson(m), service.LibraryRef{Name: "agent-scoped"})
+	if err != nil || one.Entry.ActorName != "Claude Code" || one.Entry.ProjectName != "Launch plan" {
+		t.Errorf("MemoryGet = %+v, %v", one, err)
+	}
+
+	hits, err := m.svc.LibrarySearch(libPerson(m), service.LibrarySearchRequest{Query: "learned", IncludeUnreviewed: true})
+	if err != nil || len(hits.Hits) != 1 || hits.Hits[0].ProjectName != "Launch plan" {
+		t.Errorf("search = %+v, %v", hits, err)
+	}
+}

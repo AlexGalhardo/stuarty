@@ -24,6 +24,7 @@
 15. Tests
 16. The built-in skills
 17. Recipes: a product commercial and a long talking video
+18. Data for the library screens (epic 99)
 
 ## 1. Overview
 
@@ -318,3 +319,10 @@ The colours of a timeline template are named (`brand`, `ink`, `accent`), so that
 **Adapted material** follows section 16: `commercial-copy` names `marketingskills` in `license`, `metadata.stuarty-source` and `metadata.stuarty-adapted-from`, and `licenses/vendored/NOTICE-skills.md` lists it with what was changed. `product-commercial`, `long-talking-video` and `chapter-titles` are written for Stuarty and name no source.
 
 **Known gaps, kept as product issues.** The labelled markers leave the MP4 export as its chapters (SDD-004 section 8.1, VV-290), but a platform reads chapters from the description, so they travel as its text too. The transcript of a long video is the work of the transcription helper; the scripted run uses the stub of the first flow.
+
+## 18. Data for the library screens (epic 99, group A)
+
+The skills and memory pages draw what the service says; they derive nothing from an actor string or a session. Both facts are members of the entry the lists already return (`LibraryEntry`), so no operation and no MCP tool is added (NFR-020).
+
+- **Loaded.** `SkillList` takes an optional `session_id` (HTTP query `session_id`, CLI `skill:list --session`); each skill the agent session has read comes back with `loaded: true` (omitted when false). "Read" is what `core/chat` already records: the `skill_loaded` events of the session, reduced by `chat.Reduce` and asked with `Activity.HasLoaded`; the list tells nothing of its own. A `session_id` the caller may not see, or that does not exist, is `E_NOT_FOUND` like `ChatActivityGet`. With no `session_id`, an agent calling with its own session token (`Caller.ChatSessionID`, SDD-017 section 8.1) gets its own session's marks, and a person, the local token or a key marks none; a session that cannot be read then marks nothing instead of failing the list. The text of a list adds `[loaded]` beside such a skill. The skills page names the three states: Loaded (`loaded`), Available (reviewed, not loaded) and Blocked (not reviewed, `warning`).
+- **Who wrote a note, and where.** `LibraryEntry` carries `actor_name`, the name a screen shows for `actor`, made by `core/library.AgentName`: `local:claude-code-k3m9x2` is "Claude Code" (the client name with the 6-character session id of SDD-003 section 4.5 dropped, each word capitalised, `mcp`, `cli`, `api`, `ide` and `ui` in capitals), the hosted chat agent (`local:chat-...`, `key:cht_...`) is "Chat agent", `key:key_ab12...` is "Key ab12". A person (the browser, `local:ui`, a user of network mode) and an unknown actor have none: `actor_name` is omitted and the row says nothing of an agent. A memory note scoped to a project carries `project_name` beside `scope` (the id): the name of that project, or omitted for a note of the workspace and for a project the caller may not see or that is gone. Both are untrusted text for an agent (a client name and a project name are chosen by someone else). They appear in `MemoryList`, `MemoryGet`, `MemoryWrite`, `LibrarySearch` hits and the other library lists (the member is empty where it does not apply), on HTTP, the CLI (`memory:list --json`) and MCP (`library`).

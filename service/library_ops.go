@@ -114,7 +114,8 @@ func toLibraryEntry(c Caller, e *library.Entry) LibraryEntry {
 	out := LibraryEntry{
 		Kind: string(e.Kind), Name: e.Name, Description: libText(c, e.Description, libDescriptionBudget),
 		Scope: e.Scope, Origin: e.Origin, Reviewed: e.Reviewed, Kept: e.Kept, Actor: e.Actor,
-		State: e.State, Error: libText(c, e.Error, libDescriptionBudget), LintErrors: e.LintErrors,
+		ActorName: libText(c, core.AgentName(e.Actor), 64),
+		State:     e.State, Error: libText(c, e.Error, libDescriptionBudget), LintErrors: e.LintErrors,
 		LintWarns: e.LintWarnings, HasScripts: e.HasScripts, UpdatedAt: time.UnixMilli(e.UpdatedMs).UTC(),
 	}
 
@@ -152,6 +153,10 @@ func libraryLine(e *LibraryEntry) string {
 		flags = " [not reviewed]"
 	case e.Kind == string(core.KindMemory) && !e.Kept:
 		flags = " [pending]"
+	}
+
+	if e.Loaded {
+		flags += " [loaded]"
 	}
 
 	return fmt.Sprintf("%s/%s%s", e.Kind, e.Name, flags)
@@ -198,7 +203,7 @@ func (s *svc) libraryAudit(ctx context.Context, c Caller, action, subject string
 }
 
 func (s *svc) listLibrary(
-	ctx context.Context, method string, kind core.Kind, f library.Filter, agent bool,
+	ctx context.Context, method string, kind core.Kind, f library.Filter, agent bool, session string,
 ) (*LibraryListResult, error) {
 	c, m, err := s.libraryPrep(ctx, method)
 	if err != nil {
@@ -216,8 +221,17 @@ func (s *svc) listLibrary(
 	res := &LibraryListResult{Kind: string(kind), Entries: make([]LibraryEntry, 0, len(rows))}
 	res.UntrustedNotice = UntrustedNotice
 
+	names := projectNames{}
+
 	for i := range rows {
 		res.Entries = append(res.Entries, toLibraryEntry(c, &rows[i]))
+		s.nameProject(ctx, c, &res.Entries[i], names)
+	}
+
+	if kind == core.KindSkill {
+		if merr := s.markLoadedSkills(ctx, session, res.Entries); merr != nil {
+			return nil, merr
+		}
 	}
 
 	res.Text = listText(string(kind), rows, res.Entries)
@@ -229,19 +243,19 @@ func (s *svc) listLibrary(
 func (s *svc) MemoryList(ctx context.Context, req MemoryListRequest) (*LibraryListResult, error) {
 	return s.listLibrary(ctx, "MemoryList", core.KindMemory, library.Filter{
 		Scope: req.Scope, Tags: req.Tags, IncludeUnreviewed: req.IncludeUnreviewed,
-	}, req.AgentView)
+	}, req.AgentView, "")
 }
 
 // SkillList lists the skills the caller may see: the reviewed ones unless it asks for the others.
 func (s *svc) SkillList(ctx context.Context, req SkillListRequest) (*LibraryListResult, error) {
 	return s.listLibrary(ctx, "SkillList", core.KindSkill, library.Filter{
 		Origin: req.Origin, IncludeUnreviewed: req.IncludeUnreviewed,
-	}, req.AgentView)
+	}, req.AgentView, req.SessionID)
 }
 
 // PromptList lists the prompts.
 func (s *svc) PromptList(ctx context.Context, req PromptListRequest) (*LibraryListResult, error) {
-	return s.listLibrary(ctx, "PromptList", core.KindPrompt, library.Filter{Tags: req.Tags}, req.AgentView)
+	return s.listLibrary(ctx, "PromptList", core.KindPrompt, library.Filter{Tags: req.Tags}, req.AgentView, "")
 }
 
 // block wraps the text of an entry as untrusted text for the text part of a result.
@@ -276,6 +290,7 @@ func (s *svc) MemoryGet(ctx context.Context, req LibraryRef) (*MemoryGetResult, 
 	}
 
 	res := &MemoryGetResult{Entry: toLibraryEntry(c, &entry), Body: libText(c, mem.Body, libBodyBudget)}
+	s.nameProject(ctx, c, &res.Entry, projectNames{})
 	res.UntrustedNotice = UntrustedNotice
 	res.Text = "memory/" + req.Name + " (" + mem.Scope + ")\n" + block(
 		"memory",
@@ -305,6 +320,7 @@ func (s *svc) MemoryWrite(ctx context.Context, req MemoryWriteRequest) (*MemoryW
 	}
 
 	res := &MemoryWriteResult{Entry: toLibraryEntry(c, &entry)}
+	s.nameProject(ctx, c, &res.Entry, projectNames{})
 	res.UntrustedNotice = UntrustedNotice
 	res.Text = "memory/" + entry.Name + " written"
 
@@ -788,6 +804,8 @@ func (s *svc) LibrarySearch(ctx context.Context, req LibrarySearchRequest) (*Lib
 
 	var b strings.Builder
 
+	names := projectNames{}
+
 	fmt.Fprintf(&b, "%d of %d results", len(found.Hits), found.Total)
 
 	if found.Truncated {
@@ -797,6 +815,7 @@ func (s *svc) LibrarySearch(ctx context.Context, req LibrarySearchRequest) (*Lib
 	for i := range found.Hits {
 		h := &found.Hits[i]
 		entry := toLibraryEntry(c, &h.Entry)
+		s.nameProject(ctx, c, &entry, names)
 		hit := LibraryHit{LibraryEntry: entry, Snippet: libText(c, h.Snippet, core.MaxSnippet+2)}
 		res.Hits = append(res.Hits, hit)
 
@@ -832,4 +851,70 @@ func (s *svc) LibraryReindex(ctx context.Context, _ LibraryReindexRequest) (*Lib
 		st.Memory, st.Skills, st.Prompts, st.Invalid, len(st.Ignored))
 
 	return res, nil
+}
+
+// markLoadedSkills sets `loaded` on the skills the session has read, told by the one rule that tells what a session
+// is doing (core/chat Reduce). The session is the one the request names, a person's choice, which must be one the
+// caller may see (E_NOT_FOUND otherwise); with none named it is the session an agent's own token is bound to, and a
+// session that cannot be read then marks nothing instead of failing the list.
+func (s *svc) markLoadedSkills(ctx context.Context, session string, entries []LibraryEntry) error {
+	c, _ := CallerFrom(ctx)
+	explicit := session != ""
+
+	if !explicit {
+		session = c.ChatSessionID
+	}
+
+	if session == "" {
+		return nil
+	}
+
+	_, row, err := s.chatSession(ctx, "SkillList", session)
+	if err != nil {
+		if explicit {
+			return err
+		}
+
+		return nil
+	}
+
+	events, err := s.activityEvents(ctx, row.ID)
+	if err != nil {
+		if explicit {
+			return err
+		}
+
+		return nil
+	}
+
+	a := chat.Reduce(row.ID, row.State, events, false)
+
+	for i := range entries {
+		entries[i].Loaded = a.HasLoaded(entries[i].Name)
+	}
+
+	return nil
+}
+
+// projectNames remembers the names a list has looked up, by project id; an empty name is a project the caller
+// cannot see or that is gone.
+type projectNames map[string]string
+
+// nameProject sets the project name of a memory note scoped to a project. A note of the workspace has none, and
+// neither has a note whose project the caller may not see: the id in Scope is all it learns.
+func (s *svc) nameProject(ctx context.Context, c Caller, e *LibraryEntry, names projectNames) {
+	if e.Kind != string(core.KindMemory) || e.Scope == "" || e.Scope == "workspace" {
+		return
+	}
+
+	name, ok := names[e.Scope]
+	if !ok {
+		if head, err := s.store.Productions().Get(ctx, e.Scope); err == nil && visible(c, head.OwnerUserID) {
+			name = head.Name
+		}
+
+		names[e.Scope] = name
+	}
+
+	e.ProjectName = libText(c, name, 200)
 }
