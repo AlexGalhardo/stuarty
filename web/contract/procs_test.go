@@ -380,6 +380,13 @@ func (d *cliProc) do(t *testing.T, s step) (json.RawMessage, string, *service.Er
 	code := 0
 
 	if err := cmd.Run(); err != nil {
+		// A command killed at the deadline exits 1 on Windows with nothing written, which would read as a
+		// command that failed without an error document.
+		if ctx.Err() != nil {
+			t.Fatalf("cli %s: no answer within the deadline, killed: %v\nstdout: %q\nstderr: %q",
+				name, ctx.Err(), stdout.String(), stderr.String())
+		}
+
 		ee, ok := errors.AsType[*exec.ExitError](err)
 		if !ok {
 			t.Fatalf("cli %s: %v", name, err)
