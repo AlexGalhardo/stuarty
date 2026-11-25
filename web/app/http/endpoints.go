@@ -1184,6 +1184,11 @@ var Endpoints = []Endpoint{
 		Summary: "Issue a one-time browser launch code",
 	},
 	{
+		ID: "system.capture", Method: http.MethodGet, Path: "/system/capture", Scope: service.ScopeAdmin,
+		Status:  200,
+		Summary: "Whether a capture helper is running, for the recording indicator of the desktop shell",
+	},
+	{
 		ID: "system.scheduler", Method: http.MethodPost, Path: "/system/scheduler", Scope: service.ScopeAdmin,
 		Status:  200,
 		Summary: "Read, pause or resume the publication scheduler (pause and resume only for the desktop shell)",

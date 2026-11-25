@@ -115,7 +115,7 @@ func (o *Owner) buildCapture(
 	helper := locateCaptureHelper(cfg.Getenv("STUARTY_CAPTURE_HELPER"), execDir, runtime.GOOS)
 
 	live := &capturehost.Live{
-		Runner: run, HelperPath: helper, FFmpegPath: in.FFmpeg.Path(),
+		Runner: run, HelperPath: helper, FFmpegPath: in.FFmpeg.Path(), Indicator: &capturehost.Indicator{},
 		Detect: func(ctx context.Context) (*ffmpeg.EncoderDetection, error) {
 			caps, err := run.ReadCapabilities(ctx)
 			if err != nil {

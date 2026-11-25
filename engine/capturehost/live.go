@@ -26,6 +26,8 @@ type Live struct {
 	FFmpegPath string
 	// Silence and the other timeouts are for tests; zero takes the defaults.
 	Config Config
+	// Indicator is the count of helpers asked to capture that the desktop shell shows (SDD-025 section 19.4).
+	Indicator *Indicator
 }
 
 // ErrHelperMissing means the helper binary is not where the server looks for it.
@@ -54,7 +56,7 @@ func (l *Live) start(ctx context.Context, name string, deadline time.Duration) (
 	}
 
 	cfg := l.Config
-	cfg.Path, cfg.Dir, cfg.Deadline = l.HelperPath, dir, deadline
+	cfg.Path, cfg.Dir, cfg.Deadline, cfg.Indicator = l.HelperPath, dir, deadline, l.Indicator
 
 	h, err := Start(ctx, l.Runner, cfg)
 	if err != nil {

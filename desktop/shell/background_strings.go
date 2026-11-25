@@ -10,6 +10,7 @@ const (
 	TextTrayOpen       = "tray_open"
 	TextTrayPause      = "tray_pause"
 	TextTrayTooltip    = "tray_tooltip"
+	TextTrayRecording  = "tray_recording"
 	TextQuitTitle      = "quit_title"
 	TextQuitWaitingOne = "quit_waiting_one"
 	TextQuitWaitingMan = "quit_waiting_many"
@@ -24,6 +25,7 @@ func init() {
 			TextTrayOpen:       "Open Stuarty",
 			TextTrayPause:      "Pause publishing",
 			TextTrayTooltip:    "Stuarty is running in the background",
+			TextTrayRecording:  "Stuarty is recording the screen",
 			TextQuitTitle:      "Quit Stuarty?",
 			TextQuitWaitingOne: "One scheduled post will wait until Stuarty runs again.",
 			TextQuitWaitingMan: "%d scheduled posts will wait until Stuarty runs again.",
@@ -35,6 +37,7 @@ func init() {
 			TextTrayOpen:       "Abrir o Stuarty",
 			TextTrayPause:      "Pausar as publicações",
 			TextTrayTooltip:    "O Stuarty está rodando em segundo plano",
+			TextTrayRecording:  "O Stuarty está gravando a tela",
 			TextQuitTitle:      "Sair do Stuarty?",
 			TextQuitWaitingOne: "Uma publicação agendada vai esperar até o Stuarty rodar de novo.",
 			TextQuitWaitingMan: "%d publicações agendadas vão esperar até o Stuarty rodar de novo.",

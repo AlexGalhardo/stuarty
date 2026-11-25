@@ -738,3 +738,38 @@ func TestSecurity_T166_AnAgentNeverDecidesAProposal(t *testing.T) {
 		t.Fatalf("after the refusals: %+v %v", read, err)
 	}
 }
+
+// T-167: the service gives the shell the count of live helpers the host keeps, whatever the rows say.
+func TestSecurity_T167_TheServiceReportsTheHostIndicatorNotTheRows(t *testing.T) {
+	ind := &capturehost.Indicator{}
+	e := newMediaEnv(t, mediaCfg{with: func(_ *env, o *service.Options) {
+		o.Capture = service.NewLiveCapturer(&capturehost.Live{Indicator: ind})
+	}})
+
+	if a, ok := service.CaptureActivityOf(e.svc); !ok || a.Active {
+		t.Fatalf("idle: %+v %v", a, ok)
+	}
+
+	ind.Enter()
+
+	rows, err := e.store.Recordings().Open(context.Background())
+	if err != nil || len(rows) != 0 {
+		t.Fatalf("the test has no recording row: %v %v", rows, err)
+	}
+
+	if a, ok := service.CaptureActivityOf(e.svc); !ok || !a.Active || a.Helpers != 1 || a.SinceMS == 0 {
+		t.Errorf("a helper is alive and no row says so: %+v %v", a, ok)
+	}
+
+	ind.Leave()
+
+	if a, _ := service.CaptureActivityOf(e.svc); a.Active {
+		t.Errorf("the helper exited: %+v", a)
+	}
+
+	// a server with no capture says nothing is on
+	none := newRecEnv(t)
+	if a, ok := service.CaptureActivityOf(none.svc); !ok || a.Active {
+		t.Errorf("a fake capturer: %+v %v", a, ok)
+	}
+}

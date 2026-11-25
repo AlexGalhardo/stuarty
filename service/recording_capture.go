@@ -93,3 +93,28 @@ func (a liveCapturer) Inspect(ctx context.Context, path string) (CaptureInfo, er
 
 	return CaptureInfo{DurationMS: i.DurationMS, Width: i.Width, Height: i.Height}, err
 }
+
+// CaptureIndicator is what a Capturer that keeps the indicator of SDD-025 section 19.4 offers: whether a helper that
+// was asked to capture is alive. It is driven by the host, never by a recording row, a window or a page.
+type CaptureIndicator interface {
+	CaptureActivity() capturehost.Activity
+}
+
+// CaptureActivity is the indicator of the live capturer.
+func (a liveCapturer) CaptureActivity() capturehost.Activity { return a.l.Indicator.State() }
+
+// CaptureActivityOf is the indicator of a Service made by New, for the desktop shell to draw (SDD-025 section
+// 19.4). A service with no capture, or a test one with no indicator, says no helper is alive. The second result is
+// false for a Service that is not a server.
+func CaptureActivityOf(s Service) (capturehost.Activity, bool) {
+	v, ok := s.(*svc)
+	if !ok {
+		return capturehost.Activity{}, false
+	}
+
+	if ind, has := v.capture.(CaptureIndicator); has {
+		return ind.CaptureActivity(), true
+	}
+
+	return capturehost.Activity{}, true
+}
