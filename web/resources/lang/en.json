@@ -968,7 +968,9 @@
         "zoom_out": "Zoom out",
         "zoom_in": "Zoom in",
         "fit": "Fit to window",
-        "actual": "Actual size (100%)"
+        "actual": "Actual size (100%)",
+        "fit_short": "Fit",
+        "percent_button": "Zoom {percent}%, go to actual size (100%)"
       },
       "kind": {
         "image": "image",

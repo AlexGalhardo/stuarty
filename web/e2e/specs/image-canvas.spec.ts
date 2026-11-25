@@ -72,6 +72,10 @@ test.describe("image canvas", () => {
 		const zoom = async (): Promise<number> =>
 			Number(await stage.getAttribute("data-zoom"));
 
+		// the bar reads minus, the percentage, plus and Fit, and the percentage is the zoom in force
+		await expect(page.getByTestId("image-zoom-percent")).toHaveText(/^\d+%$/);
+		await expect(page.getByTestId("image-zoom-fit")).toHaveText("Fit");
+
 		const fitted = await zoom();
 		expect(fitted).toBeGreaterThan(0);
 		await page.getByTestId("image-zoom-in").click();

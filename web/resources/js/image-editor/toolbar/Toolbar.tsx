@@ -1,4 +1,3 @@
-import { Maximize, Minus, Plus, ScanSearch } from "lucide-react";
 import {
 	createContext,
 	type KeyboardEvent,
@@ -9,10 +8,6 @@ import {
 } from "react";
 
 import { cn } from "@/lib/cn";
-import { useT } from "@/lib/i18n";
-import { effectiveZoom, ZOOM_STEP } from "../canvas/viewport";
-import { useImage, useImageStore } from "../state/context";
-import ToolButton from "./ToolButton";
 
 // The items the arrow keys walk: the enabled buttons that carry data-tool.
 function items(root: HTMLElement): HTMLElement[] {
@@ -151,66 +146,5 @@ export function ToolGroup({
 				)}
 			/>
 		</>
-	);
-}
-
-// The buttons that change the view: zoom out, zoom in, fit and 100%.
-export function ViewTools(): ReactNode {
-	const t = useT();
-	const store = useImageStore();
-	const doc = useImage((s) => s.doc);
-	const view = useImage((s) => s.view);
-	const stage = useImage((s) => s.stage);
-	const off = doc === null;
-	const percent =
-		doc === null
-			? null
-			: Math.round(
-					effectiveZoom(view, stage, { w: doc.width, h: doc.height }) * 100,
-				);
-
-	return (
-		<ToolGroup label={t("ui.image.toolbar.view")}>
-			<ToolButton
-				icon={Minus}
-				label={t("ui.image.view.zoom_out")}
-				shortcut="zoomOut"
-				disabled={off}
-				onClick={() => store.getState().zoomBy(1 / ZOOM_STEP)}
-				testId="image-zoom-out"
-			/>
-			<ToolButton
-				icon={Plus}
-				label={t("ui.image.view.zoom_in")}
-				shortcut="zoomIn"
-				disabled={off}
-				onClick={() => store.getState().zoomBy(ZOOM_STEP)}
-				testId="image-zoom-in"
-			/>
-			<ToolButton
-				icon={Maximize}
-				label={t("ui.image.view.fit")}
-				shortcut="fit"
-				disabled={off}
-				onClick={() => store.getState().fitView()}
-				testId="image-zoom-fit"
-			/>
-			<ToolButton
-				icon={ScanSearch}
-				label={t("ui.image.view.actual")}
-				shortcut="actual"
-				disabled={off}
-				onClick={() => store.getState().actualSize()}
-				testId="image-zoom-100"
-			/>
-			{percent !== null && (
-				<output
-					data-testid="image-zoom-percent"
-					className="min-w-10 text-center text-xs tabular-nums text-muted-foreground"
-				>
-					{percent}%
-				</output>
-			)}
-		</ToolGroup>
 	);
 }
