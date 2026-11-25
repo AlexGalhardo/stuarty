@@ -12,12 +12,14 @@ import (
 )
 
 // BenchmarkImageReference is NFR-061 on the reference document of TestImageReferenceDocument (4,000 by 4,000
-// pixels, 30 layers with their looks): compose_ms is the time to compose the picture after an edit of the top
-// layer, with the CPU path of the renderer and the cache of the pictures below it (SDD-021 section 6.1), the
-// native half of "composed for the preview within 100 ms after an edit"; s_export is the time of a cold export,
-// to compose the whole document with no cache and no instance of the module held (the pool is drained first) and
-// encode the PNG ("exported within 2 s"). The browser half is
-// measured by the Playwright spec of the image editor.
+// pixels, 30 layers with their looks): compose_ms is the time to compose the picture after an edit of the
+// opacity of a layer, with the CPU path of the renderer and the cache of SDD-021 sections 6.1 and 6.3, the native
+// half of "composed for the preview within 100 ms after an edit" for an edit of any layer (author decision
+// D-150). It is the slowest of three edits, reported apart as compose_top_ms (the top layer), compose_mid_ms
+// (layer 15) and compose_bottom_ms (the bottom layer); the three edits follow one another, as a person's do, each
+// starting from the picture the one before drew. s_export is the time of a cold export, to compose the whole
+// document with no cache and no instance of the module held (the pool is drained first) and encode the PNG
+// ("exported within 2 s"). The browser half is measured by the Playwright spec of the image editor.
 func BenchmarkImageReference(b *testing.B) {
 	d := referenceDocument(b)
 	src := referenceSource(b)
@@ -26,14 +28,25 @@ func BenchmarkImageReference(b *testing.B) {
 	cached := ImageConfig{AssetPath: paths, Cache: NewImageCache(0), CacheScope: "benchmark"}
 	ctx := context.Background()
 
-	top := ""
+	var ids []string
 
-	coreimage.Walk(d, func(l, _ *coreimage.Layer, _ int) { top = l.ID })
+	coreimage.Walk(d, func(l, _ *coreimage.Layer, _ int) { ids = append(ids, l.ID) })
+
+	targets := []struct {
+		name string
+		id   string
+	}{
+		{"compose_top_ms", ids[len(ids)-1]},
+		{"compose_mid_ms", ids[len(ids)/2]},
+		{"compose_bottom_ms", ids[0]},
+	}
 
 	// The picture of a first render stays in the cache: the edits that follow start from it.
 	if _, err := RenderImage(ctx, d, cached); err != nil {
 		b.Fatal(err)
 	}
+
+	cur := d
 
 	for i := 0; b.Loop(); i++ {
 		// A cold export starts with no instance of the module: the pool keeps them for 30 s, and an export after
@@ -43,7 +56,7 @@ func BenchmarkImageReference(b *testing.B) {
 
 		start := time.Now()
 
-		img, err := RenderImage(ctx, d, cold)
+		img, err := RenderImage(ctx, cur, cold)
 		if err != nil {
 			b.Fatal(err)
 		}
@@ -54,20 +67,31 @@ func BenchmarkImageReference(b *testing.B) {
 
 		export := time.Since(start)
 
-		args := json.RawMessage(fmt.Sprintf(`{"layer_id": %q, "opacity": %d}`, top, 50+i%40))
+		var worst int64
 
-		res, err := coreimage.ApplyBatch(d, []command.Operation{{Op: "layer.set", Args: args}}, coreimage.Env{})
-		if err != nil {
-			b.Fatal(err)
+		for k, target := range targets {
+			args := json.RawMessage(fmt.Sprintf(`{"layer_id": %q, "opacity": %d}`, target.id, 50+(i*3+k)%40))
+
+			res, err := coreimage.ApplyBatch(cur, []command.Operation{{Op: "layer.set", Args: args}}, coreimage.Env{})
+			if err != nil {
+				b.Fatal(err)
+			}
+
+			cur = res.Doc
+
+			start = time.Now()
+
+			if _, err := RenderImage(ctx, cur, cached); err != nil {
+				b.Fatal(err)
+			}
+
+			ms := time.Since(start).Milliseconds()
+			worst = max(worst, ms)
+
+			b.ReportMetric(float64(ms), target.name)
 		}
 
-		start = time.Now()
-
-		if _, err := RenderImage(ctx, res.Doc, cached); err != nil {
-			b.Fatal(err)
-		}
-
-		b.ReportMetric(float64(time.Since(start).Milliseconds()), "compose_ms")
+		b.ReportMetric(float64(worst), "compose_ms")
 		b.ReportMetric(export.Seconds(), "s_export")
 	}
 }
