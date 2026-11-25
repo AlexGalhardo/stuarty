@@ -94,3 +94,18 @@ func TestPrivilegedHintsNameTheRightPage(t *testing.T) {
 		}
 	}
 }
+
+// VV-446: the hint of a bundle import that finds its id taken names the flag of the command line.
+func TestBundleHintNamesTheFlagOfTheCommandLine(t *testing.T) {
+	t.Parallel()
+
+	e := &Error{Code: "E_ID_EXISTS", Message: "exists.", Hint: "import it with as_new to get a new id"}
+
+	if got := e.ForSurface(SurfaceCLI).Hint; got != "import it with --as-new to get a new id" {
+		t.Errorf("cli hint = %q", got)
+	}
+
+	if got := e.ForSurface(SurfaceHTTP).Hint; got != e.Hint {
+		t.Errorf("http hint = %q", got)
+	}
+}
