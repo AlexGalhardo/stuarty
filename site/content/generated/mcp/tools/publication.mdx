@@ -123,7 +123,7 @@ A call over HTTP without credentials fails with `E_UNAUTHORIZED`, and too many c
     "content": [
       {
         "type": "text",
-        "text": "pub_7k2m9x4q1b  Launch teaser  project prj_7k2m9x4q1b  1 target(s)"
+        "text": "pub_7k2m9x4q1b  <untrusted_media_text source=\"project_text\" inline=\"true\" truncated=\"false\">Launch teaser</untrusted_media_text>  project prj_7k2m9x4q1b  1 target(s)\n  tgt_3c5v8n2w6d  youtube  con_0123456789  draft  2026-12-01 09:00 America/Sao_Paulo (2026-12-01T12:00:00Z)"
       }
     ],
     "structuredContent": {
@@ -137,7 +137,9 @@ A call over HTTP without credentials fails with `E_UNAUTHORIZED`, and too many c
           "connection_id": "con_0123456789",
           "network": "youtube",
           "state": "draft",
-          "zone": "America/Sao_Paulo"
+          "scheduled_at": "2026-12-01T12:00:00Z",
+          "zone": "America/Sao_Paulo",
+          "local_time": "2026-12-01 09:00"
         }
       ]
     }
