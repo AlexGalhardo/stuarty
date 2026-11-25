@@ -40,7 +40,7 @@ export default function CaptionStyleGallery({
 								disabled={!canEdit || busy}
 								aria-label={t("ui.editor.caption_gallery.apply", { name })}
 								data-style-id={style.id}
-								className="flex w-full flex-col gap-1 rounded-lg border border-border p-1 text-left hover:border-border-strong hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-50"
+								className="flex w-full min-w-0 flex-col gap-1 rounded-lg border-2 border-border p-1 text-left aria-pressed:border-accent aria-pressed:bg-accent-soft hover:border-border-strong hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-50"
 								onClick={async () => {
 									setBusy(true);
 									try {
@@ -55,7 +55,7 @@ export default function CaptionStyleGallery({
 								{/* The specimen sits on the dark canvas in both themes, as a caption sits on footage:
 								    a white caption on the light canvas would hide the look it shows. It is a
 								    picture of the style (WCAG 1.4.3, incidental text); the name below is the text. */}
-								<span className="dark flex h-14 items-center justify-center overflow-hidden rounded-md bg-ed-preview-surround px-1">
+								<span className="dark flex aspect-video w-full items-center justify-center overflow-hidden rounded-md bg-ed-preview-surround px-1">
 									<span
 										aria-hidden="true"
 										data-caption-sample=""
@@ -64,9 +64,11 @@ export default function CaptionStyleGallery({
 										{t("ui.editor.caption_gallery.sample")}
 									</span>
 								</span>
-								<span className="text-xs font-medium">{name}</span>
-								<span className="text-xs text-muted-foreground">
-									{style.font_family}
+								<span
+									className="truncate text-xs font-medium"
+									title={`${name}, ${style.font_family}`}
+								>
+									{name}
 								</span>
 							</button>
 						</li>

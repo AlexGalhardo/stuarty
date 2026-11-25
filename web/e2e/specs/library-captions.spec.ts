@@ -42,7 +42,7 @@ test.describe("library captions tab", () => {
 		await expect(
 			page
 				.getByRole("complementary", { name: "Inspector" })
-				.getByRole("button", { name: "Caption style" }),
+				.getByTestId("caption-style-gallery"),
 		).toBeVisible();
 	});
 });

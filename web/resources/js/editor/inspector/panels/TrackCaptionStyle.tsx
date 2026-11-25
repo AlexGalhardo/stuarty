@@ -15,8 +15,11 @@ import StyleRows, { CAPTION_STYLE_ROWS } from "./StyleRows";
 // "Replace" is on. Shown in the track panel and in the Captions tab.
 export default function TrackCaptionStyle({
 	trackId,
+	bare = false,
 }: {
 	trackId: string;
+	// The captions screen opens the tab on the tool and the gallery with no folding title of its own (final design 28).
+	bare?: boolean;
 }): ReactNode {
 	const t = useT();
 	const canEdit = useCanEdit();
@@ -25,8 +28,9 @@ export default function TrackCaptionStyle({
 	const [replace, setReplace] = useState(false);
 	const track = useDocumentState((s) => s.document?.tracks[trackId]);
 	if (track === undefined) return null;
+	const Frame = bare ? Bare : TitledSection;
 	return (
-		<Section title={t("ui.editor.inspector.caption_style_title")}>
+		<Frame title={t("ui.editor.inspector.caption_style_title")}>
 			{track.kind === "audio" ? (
 				<p className="text-xs text-muted-foreground">
 					{t("ui.editor.track.no_caption_style")}
@@ -68,6 +72,20 @@ export default function TrackCaptionStyle({
 					</Button>
 				</>
 			)}
-		</Section>
+		</Frame>
 	);
+}
+
+function TitledSection({
+	title,
+	children,
+}: {
+	title: string;
+	children: ReactNode;
+}): ReactNode {
+	return <Section title={title}>{children}</Section>;
+}
+
+function Bare({ children }: { title: string; children: ReactNode }): ReactNode {
+	return <div className="flex flex-col gap-3">{children}</div>;
 }

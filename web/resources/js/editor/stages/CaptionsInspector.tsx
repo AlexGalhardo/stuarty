@@ -42,7 +42,7 @@ export default function CaptionsInspector(): ReactNode {
 						<>
 							{caption !== undefined && <CaptionStyle itemId={caption} />}
 							{trackId !== null && trackKind === "visual" ? (
-								<TrackCaptionStyle trackId={trackId} />
+								<TrackCaptionStyle trackId={trackId} bare />
 							) : (
 								hint("ui.editor.captions_inspector.no_track")
 							)}
