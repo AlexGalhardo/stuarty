@@ -538,11 +538,16 @@ type ProjectCreateResult struct { // gains
 }
 type ProjectGetResult struct { // and ProjectDescribeResult gain
 	Kind     string           `json:"kind"`     // the effective kind
-	Workflow project.Workflow `json:"workflow"` // every step with its state, actor, tool and cost
+	Workflow project.Workflow `json:"workflow"` // every step with its state, actor, tool, cost, skill and spent
+	// epic 99: the same text_summary and next_post_at as the list
+	TextSummary *TextSummary `json:"text_summary,omitempty"`
+	NextPostAt  *time.Time   `json:"next_post_at"`
 }
 type ProjectSummary struct { // the list gains
 	Kind        string       `json:"kind"`
 	TextSummary *TextSummary `json:"text_summary,omitempty"` // when the project holds a text
+	CurrentStep string       `json:"current_step,omitempty"` // epic 99: the step the project stands at
+	NextPostAt  *time.Time   `json:"next_post_at"`           // epic 99: null when no post goes out
 }
 type TextSummary struct {
 	ItemID         string `json:"item_id"`

@@ -43,8 +43,11 @@ type ProjectDescribeResult struct {
 	Kind        string           `json:"kind"`     // the effective kind (SDD-005 section 5.12.4)
 	Production  ProductionState  `json:"production"`
 	Workflow    project.Workflow `json:"workflow"`
-	Items       []ProjectItem    `json:"items"`
-	Text        string           `json:"text"`
+	// TextSummary and NextPostAt are the same facts a project list gives (SDD-005 section 5.12.4).
+	TextSummary *TextSummary  `json:"text_summary,omitempty"`
+	NextPostAt  *time.Time    `json:"next_post_at"`
+	Items       []ProjectItem `json:"items"`
+	Text        string        `json:"text"`
 }
 
 // TextSummary is what a list of projects says about the text of a project: its kind, its words, how long it takes

@@ -59,8 +59,8 @@ type Cost struct {
 	Currency string `json:"currency"`
 }
 
-// Step is one step of a workflow as a surface shows it. The skill that does the step is not here: it comes from
-// the skills of SDD-018 at read time, and the table of the core suggests none.
+// Step is one step of a workflow as a surface shows it. Its skill is named by a table of the core
+// (SkillOf) and kept only when the library of the person offers it (Facts.Skills).
 type Step struct {
 	ID       StepID    `json:"id"`
 	State    StepState `json:"state"`
@@ -70,6 +70,11 @@ type Step struct {
 	Tool string `json:"tool,omitempty"`
 	// Cost is what the approvals of the step estimate or cost; left out when there is none.
 	Cost []Cost `json:"cost,omitempty"`
+	// Skill is the skill of the library that leads the step, when the person has it reviewed; left out otherwise.
+	Skill string `json:"skill,omitempty"`
+	// Spent is what the finished jobs of the step cost, by currency; left out when nothing was spent. It is the
+	// real cost, where Cost is an estimate.
+	Spent []Cost `json:"spent,omitempty"`
 }
 
 // Workflow is the real path of a project from its briefing to its publication.
@@ -107,6 +112,10 @@ type Facts struct {
 	TimelineAssets, TimelineItems int
 	// Costs is the sum, by currency, of the estimates of the approvals of the project that are pending or approved.
 	Costs []Cost
+	// Skills are the names of the skills the library offers (reviewed): the ones a step may name.
+	Skills []string
+	// Spent is what the settled jobs of the project cost, by job kind and currency.
+	Spent []Spend
 }
 
 type stepDef struct {
@@ -297,6 +306,7 @@ func ComputeWorkflow(stored Intent, f *Facts) Workflow {
 
 	followSkippedPublication(&w)
 	order(&w)
+	applyFlowFacts(&w, f)
 
 	return w
 }

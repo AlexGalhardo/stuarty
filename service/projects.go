@@ -298,8 +298,18 @@ func (s *svc) ProjectList(ctx context.Context, req ProjectListRequest) (*Project
 			return nil, asError(ierr)
 		}
 
-		sum.Kind = effectiveKind(&heads[i], rows)
 		sum.TextSummary = textSummaryOf(rows)
+
+		// The publications give the next post and, with the items, the step the project stands at.
+		pubs, known := s.publicationsOf(ctx, heads[i].ID)
+		if known {
+			sum.NextPostAt = s.nextPostOf(pubs)
+			rows = appendPublications(rows, heads[i].ID, pubs)
+		}
+
+		facts := workflowFacts(&heads[i], rows, known)
+		flow := project.ComputeWorkflow(heads[i].Kind, &facts)
+		sum.Kind, sum.CurrentStep = string(flow.Kind), string(flow.Current)
 		res.Projects = append(res.Projects, sum)
 	}
 
@@ -466,6 +476,8 @@ func (s *svc) ProjectGet(ctx context.Context, req ProjectGetRequest) (*ProjectGe
 		Complete:        contextOf(&head).Complete,
 		Kind:            string(workflow.Kind),
 		Workflow:        workflow,
+		TextSummary:     textSummaryOf(rows),
+		NextPostAt:      s.nextPost(ctx, head.ID),
 		Revision:        row.Revision,
 		State:           stateString(head.State),
 		Width:           doc.Settings.Width,
@@ -563,6 +575,8 @@ func (s *svc) projectOverview(
 		Complete:        contextOf(head).Complete,
 		Kind:            string(w.Kind),
 		Workflow:        *w,
+		TextSummary:     textSummaryOf(rows),
+		NextPostAt:      s.nextPost(ctx, head.ID),
 		State:           stateString(head.State),
 		Width:           t.Summary.Width,
 		Height:          t.Summary.Height,

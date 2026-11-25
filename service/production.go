@@ -6,6 +6,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 	"unicode/utf8"
 
 	"github.com/AlexGalhardo/stuarty/core/command"
@@ -13,6 +14,7 @@ import (
 	corepub "github.com/AlexGalhardo/stuarty/core/publish"
 	"github.com/AlexGalhardo/stuarty/core/timeline"
 	"github.com/AlexGalhardo/stuarty/core/timeval"
+	"github.com/AlexGalhardo/stuarty/service/publish"
 	"github.com/AlexGalhardo/stuarty/service/textview"
 )
 
@@ -197,6 +199,17 @@ func coreItems(rows []ItemRow) []project.Item {
 // publications cannot be read: the overview is still the production, and known is false so that a step that
 // depends on them reads unknown (SDD-005 section 5.12.4).
 func (s *svc) withPublications(ctx context.Context, projectID string, rows []ItemRow) ([]ItemRow, bool) {
+	list, ok := s.publicationsOf(ctx, projectID)
+	if !ok {
+		return rows, false
+	}
+
+	return appendPublications(rows, projectID, list), true
+}
+
+// publicationsOf reads the publications of a project; false when they cannot be read, which a caller treats as
+// unknown, never as none.
+func (s *svc) publicationsOf(ctx context.Context, projectID string) ([]publish.Publication, bool) {
 	list, err := s.store.Publications().OfProject(ctx, projectID)
 	if err != nil {
 		s.log.WarnContext(
@@ -208,9 +221,35 @@ func (s *svc) withPublications(ctx context.Context, projectID string, rows []Ite
 			err.Error(),
 		)
 
-		return rows, false
+		return nil, false
 	}
 
+	return list, true
+}
+
+// nextPostOf is the instant of the next post of a project, from its publications (core/publish NextPost); nil
+// when none goes out.
+func (s *svc) nextPostOf(list []publish.Publication) *time.Time {
+	var planned []corepub.Planned
+
+	for i := range list {
+		for j := range list[i].Targets {
+			planned = append(planned, corepub.Planned{
+				State: list[i].Targets[j].State, ScheduledAt: list[i].Targets[j].ScheduledAt,
+			})
+		}
+	}
+
+	now := time.Now()
+	if s.now != nil {
+		now = s.now()
+	}
+
+	return corepub.NextPost(planned, now)
+}
+
+// appendPublications adds the publications of a project to its items, as items of its overview.
+func appendPublications(rows []ItemRow, projectID string, list []publish.Publication) []ItemRow {
 	for i := range list {
 		p := &list[i]
 		states := make([]corepub.TargetState, 0, len(p.Targets))
@@ -231,7 +270,7 @@ func (s *svc) withPublications(ctx context.Context, projectID string, rows []Ite
 		})
 	}
 
-	return rows, true
+	return rows
 }
 
 func itemView(r *ItemRow, withText bool) ProjectItem {
@@ -461,6 +500,8 @@ func (s *svc) ProjectDescribe(ctx context.Context, req ProjectDescribeRequest) (
 		Kind:            string(workflow.Kind),
 		Production:      productionOf(rows),
 		Workflow:        workflow,
+		TextSummary:     textSummaryOf(rows),
+		NextPostAt:      s.nextPost(ctx, head.ID),
 		Items:           itemViews(rows),
 	}
 	res.Text = s.describeText(ctx, &head, rows, res.Production, &workflow, req.MaxTokens)

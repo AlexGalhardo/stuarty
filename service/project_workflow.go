@@ -5,10 +5,13 @@ import (
 	"errors"
 	"slices"
 	"strings"
+	"time"
 
+	core "github.com/AlexGalhardo/stuarty/core/library"
 	"github.com/AlexGalhardo/stuarty/core/project"
 	"github.com/AlexGalhardo/stuarty/core/writing"
 	"github.com/AlexGalhardo/stuarty/service/approval"
+	"github.com/AlexGalhardo/stuarty/service/library"
 	"github.com/AlexGalhardo/stuarty/service/textview"
 )
 
@@ -23,16 +26,72 @@ func effectiveKind(head *ProductionHead, rows []ItemRow) string {
 // workflowOf is the workflow of a project. rows are its items, its publications among them when known says they
 // could be read; the other facts are read here, and one that cannot be read leaves its step unknown or its cost out.
 func (s *svc) workflowOf(ctx context.Context, head *ProductionHead, rows []ItemRow, known bool) project.Workflow {
-	facts := project.Facts{
+	facts := workflowFacts(head, rows, known)
+	facts.Costs = s.approvalCosts(ctx, head.ID)
+	facts.Skills = s.offeredSkills()
+	facts.Spent = s.settledSpend(ctx, head.ID)
+
+	return project.ComputeWorkflow(head.Kind, &facts)
+}
+
+// workflowFacts are the facts of the workflow that the items and the head of a project give, which is all a list
+// needs to say where each project stands.
+func workflowFacts(head *ProductionHead, rows []ItemRow, known bool) project.Facts {
+	return project.Facts{
 		Items:             coreItems(rows),
 		Skipped:           head.Skipped,
 		PublicationsKnown: known,
 		TimelineAssets:    head.Timeline.Summary.Assets,
 		TimelineItems:     head.Timeline.Summary.Items,
-		Costs:             s.approvalCosts(ctx, head.ID),
+	}
+}
+
+// offeredSkills are the names of the skills the library offers, the ones a step may name: the reviewed ones. A
+// server with no library offers none.
+func (s *svc) offeredSkills() []string {
+	if s.lib == nil {
+		return nil
 	}
 
-	return project.ComputeWorkflow(head.Kind, &facts)
+	rows, err := s.lib.List(context.Background(), core.KindSkill, library.Filter{})
+	if err != nil {
+		return nil
+	}
+
+	names := make([]string, 0, len(rows))
+	for i := range rows {
+		names = append(names, rows[i].Name)
+	}
+
+	return names
+}
+
+// settledSpend is what the settled jobs of a project cost, by kind of job: real cost only. It is empty when the
+// ledger cannot be read: a cost the server does not have is left out, never invented.
+func (s *svc) settledSpend(ctx context.Context, projectID string) []project.Spend {
+	rows, err := s.store.Approvals().SettledByKind(ctx, projectID)
+	if err != nil {
+		s.log.WarnContext(ctx, "the spending of a project was not read", "project", projectID, "error", err.Error())
+
+		return nil
+	}
+
+	out := make([]project.Spend, len(rows))
+	for i := range rows {
+		out[i] = project.Spend{JobKind: rows[i].Kind, Currency: rows[i].Currency, Micros: rows[i].Micros}
+	}
+
+	return out
+}
+
+// nextPost is the instant of the next post of a project, nil when none goes out or the publications cannot be read.
+func (s *svc) nextPost(ctx context.Context, projectID string) *time.Time {
+	list, ok := s.publicationsOf(ctx, projectID)
+	if !ok {
+		return nil
+	}
+
+	return s.nextPostOf(list)
 }
 
 // approvalCosts is the sum, by currency, of the estimates of the approval requests of a project that are pending

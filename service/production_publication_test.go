@@ -49,6 +49,10 @@ func (noApprovals) ListRequests(context.Context, approval.Filter) ([]approval.Ro
 	return nil, 0, nil
 }
 
+func (noApprovals) SettledByKind(context.Context, string) ([]approval.KindSpend, error) {
+	return nil, nil
+}
+
 type publicationsStore struct {
 	fakeStore
 	pubs pub.Store
@@ -226,4 +230,53 @@ type brokenPublications struct{ pub.Store }
 
 func (brokenPublications) OfProject(context.Context, string) ([]pub.Publication, error) {
 	return nil, ErrNotFound
+}
+
+// The next post of a project is the earliest instant of a target that still goes out (core/publish NextPost);
+// a project with no such target has none.
+func TestProjectDescribeNamesTheNextPost(t *testing.T) {
+	t.Parallel()
+
+	soon := time.Now().Add(48 * time.Hour).UTC().Truncate(time.Second)
+	later := soon.Add(72 * time.Hour)
+	past := time.Now().Add(-24 * time.Hour).UTC()
+
+	scheduled := func(state corepub.TargetState, at *time.Time) pub.Publication {
+		tg := targetIn(state, "blog")
+		tg.ScheduledAt = at
+
+		return pub.Publication{ID: "pub_000000000" + string(state[:1]), ProjectID: "prj_0000000001", Targets: []pub.Target{tg}}
+	}
+
+	describe := func(list ...pub.Publication) *ProjectDescribeResult {
+		s := &svc{store: publicationsStore{
+			fakeStore: fakeStore{prod: fakeItems{}}, pubs: fakePublications{list: list},
+		}}
+
+		res, err := s.ProjectDescribe(
+			WithCaller(context.Background(), Caller{Actor: "local:cli", Scopes: AllScopes}),
+			ProjectDescribeRequest{ProjectID: "prj_0000000001"},
+		)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		return res
+	}
+
+	res := describe(
+		scheduled(corepub.TargetScheduled, &later), scheduled(corepub.TargetApproved, &soon),
+		scheduled(corepub.TargetPublished, &past), scheduled(corepub.TargetScheduled, &past),
+	)
+	if res.NextPostAt == nil || !res.NextPostAt.Equal(soon) {
+		t.Errorf("next post = %v, want %v", res.NextPostAt, soon)
+	}
+
+	if res := describe(scheduled(corepub.TargetPublished, &soon), scheduled(corepub.TargetDraft, nil)); res.NextPostAt != nil {
+		t.Errorf("next post = %v, want none", res.NextPostAt)
+	}
+
+	if res := describe(); res.NextPostAt != nil {
+		t.Errorf("a project with no publication has next post %v", res.NextPostAt)
+	}
 }

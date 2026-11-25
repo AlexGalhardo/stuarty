@@ -441,6 +441,30 @@ func (r approvalRepo) Spent(ctx context.Context, q approval.SpentQuery) (int64, 
 	return n, err
 }
 
+func (r approvalRepo) SettledByKind(ctx context.Context, projectID string) ([]approval.KindSpend, error) {
+	rows, err := r.ex.QueryContext(ctx, `SELECT kind, currency, SUM(actual_micros) FROM cost_ledger
+ WHERE state = 'settled' AND actual_micros IS NOT NULL AND `+ledgerOwner+` = ?
+ GROUP BY kind, currency ORDER BY kind, currency`, projectID)
+	if err != nil {
+		return nil, err
+	}
+
+	defer func() { _ = rows.Close() }()
+
+	var out []approval.KindSpend
+
+	for rows.Next() {
+		var k approval.KindSpend
+		if err := rows.Scan(&k.Kind, &k.Currency, &k.Micros); err != nil {
+			return nil, err
+		}
+
+		out = append(out, k)
+	}
+
+	return out, rows.Err()
+}
+
 // ledgerOwner is the project an entry of the ledger counts for, by the rule of service.costProject: an id that names
 // a project is that project, the id of a timeline is the project that holds it, and any other id (the empty one, one
 // of an emptied project) is its own. A ceiling and the summary both read it, so they cannot disagree (VV-367).
