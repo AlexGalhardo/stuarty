@@ -48,6 +48,8 @@ func hintFor(s Surface, hint string) string {
 	switch s {
 	case SurfaceCLI:
 		hint = strings.ReplaceAll(hint, `job_start (kind "transcribe")`, "transcribe")
+		// The bundle import names its flag as the field of the request; the command line writes it with dashes.
+		hint = strings.ReplaceAll(hint, "with as_new", "with --as-new")
 
 		return toolName.ReplaceAllStringFunc(hint, func(n string) string { return cliNames[n] })
 	case SurfaceHTTP:
