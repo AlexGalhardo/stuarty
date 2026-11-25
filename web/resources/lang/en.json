@@ -2097,6 +2097,17 @@
             "title": "Rename project"
           }
         },
+        "recording": {
+          "auto_zoom": {
+            "title": "Zoom a screen recording on its clicks"
+          },
+          "set_cursor": {
+            "title": "Draw a smooth cursor on a screen recording"
+          },
+          "set_click_highlight": {
+            "title": "Highlight the clicks of a screen recording"
+          }
+        },
         "settings": {
           "reframe": {
             "title": "Reframe project"
@@ -2451,6 +2462,27 @@
         "radius": "Blur strength",
         "radius_default": "Strong default",
         "apply": "Blur this region"
+      },
+      "screen_take": {
+        "title": "Screen recording",
+        "hint": "For a recording made with pointer events: zoom in on the clicks, draw a smooth cursor and mark every click. Each button makes items on the timeline that you can change or delete. Run them again after you change the zoom or move the clip.",
+        "default": "Default",
+        "zoom_level": "Zoom",
+        "zoom_apply": "Zoom on the clicks",
+        "cursor_style": "Cursor",
+        "cursor_dot": "Dot",
+        "cursor_ring": "Ring",
+        "cursor_smoothing": "Smoothing",
+        "cursor_apply": "Draw the cursor",
+        "cursor_remove": "Remove the cursor",
+        "highlight_style": "Click highlight",
+        "highlight_ring": "Ring",
+        "highlight_wave": "Wave",
+        "highlight_pulse": "Pulse",
+        "highlight_none": "None",
+        "highlight_duration": "Duration",
+        "highlight_apply": "Highlight the clicks",
+        "highlight_remove": "Remove the highlights"
       },
       "voice_preset": {
         "hint": "One action for a clean, even voice. The export brings the sound to the loudness target of the project.",

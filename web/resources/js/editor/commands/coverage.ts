@@ -127,6 +127,9 @@ export const ACTIONS: Readonly<Record<string, readonly string[]>> = {
 	"inspector.track_caption_style": ["track.set_caption_style"],
 	"inspector.caption_gallery": ["caption.apply_style"],
 	"inspector.blur_region": ["clip.blur_region"],
+	"inspector.screen_zoom": ["recording.auto_zoom"],
+	"inspector.screen_cursor": ["recording.set_cursor"],
+	"inspector.screen_highlight": ["recording.set_click_highlight"],
 	"inspector.voice_preset": ["audio.apply_voice_preset"],
 	// The proposals of the Vertical cuts section carry their own batch, which ends with clip.face_frame.
 	"inspector.vertical_cuts": ["clip.face_frame"],
@@ -253,6 +256,18 @@ export const COVERAGE: Readonly<Record<string, readonly EntryPoint[]>> = {
 	"clip.replace_media": [palette],
 	"clip.blur_region": [
 		{ kind: "inspector", action: "inspector.blur_region" },
+		palette,
+	],
+	"recording.auto_zoom": [
+		{ kind: "inspector", action: "inspector.screen_zoom" },
+		palette,
+	],
+	"recording.set_cursor": [
+		{ kind: "inspector", action: "inspector.screen_cursor" },
+		palette,
+	],
+	"recording.set_click_highlight": [
+		{ kind: "inspector", action: "inspector.screen_highlight" },
 		palette,
 	],
 	"clip.set_blur": [{ kind: "inspector", action: "inspector.blur" }, palette],
