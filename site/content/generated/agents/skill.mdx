@@ -29,28 +29,9 @@ Edit video by commands: CLI `stuarty` or MCP (`stuarty mcp`). `--json` for JSON.
 
 ## Command reference
 
-`command_help [name]` shows arguments. `asset.remove` and `font.*` need media scope.
+`command_help [name]` shows the arguments of one command. `asset.remove` and `font.*` need media scope.
 
-- `animation`: apply_preset, list_presets
-- `asset`: remove
-- `audio`: add, apply_preset, apply_voice_preset, duck, mark_beats, processor_add, processor_move, processor_remove, processor_set
-- `caption`: add, apply_style, edit_word, from_transcript, import_subtitles, list_styles, merge, retime_from_clip, set_breaks, set_style, set_words, split
-- `clip`: add, add_composition, blur_region, face_frame, remove_silences, replace_media, set_blend, set_blur, set_chroma_key, set_color, set_effects, set_filter, set_flip, set_framing, set_mask, set_outline, set_shadow, set_speed
-- `composition`: create_from_selection, expand
-- `font`: add, remove
-- `item`: crossfade, delete, duplicate, extract_audio, freeze_frame, link, move, paste_attributes, rename, repeat, set_audio, set_enabled, set_transform, set_transition, slip, split, trim, unlink
-- `keyframe`: clear, remove, set, set_easing
-- `marker`: add, remove, set
-- `project`: rename
-- `recording`: auto_zoom, set_click_highlight, set_cursor
-- `settings`: reframe, set, set_fps
-- `shape`: add, set
-- `slot`: fill, mark, unmark
-- `template`: set_info
-- `text`: add, apply_preset, set
-- `timeline`: close_gap
-- `track`: add, move, remove, set_caption_style, update
-- `transcript`: delete_range
+Every operation is listed by the guide of its domain: `agent:docs --print guide:<domain>` (the timeline edits, such as `clip.*`, `caption.*` and `item.*`, are in `guide:video`).
 
 ## CLI cheat sheet
 
