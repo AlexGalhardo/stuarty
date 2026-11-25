@@ -28,17 +28,15 @@ export function bucketPeaks(
 	return out;
 }
 
-// The processed sound of an item, as the server renders it (SDD-004 section 7.1): read whole and decoded, then
-// reduced to columns. null when the browser cannot decode it; the stage then draws no picture and says so.
+// The processed sound of an item, as the server renders it (SDD-004 section 7.1), decoded and reduced to columns.
+// null when the browser cannot decode it; the stage then draws no picture.
 export async function processedPeaks(
-	url: string,
+	bytes: ArrayBuffer,
 	columns: number,
 ): Promise<Float32Array | null> {
 	try {
-		const response = await fetch(url, { credentials: "same-origin" });
-		if (!response.ok) return null;
 		const context = new OfflineAudioContext(1, 1, 48000);
-		const decoded = await context.decodeAudioData(await response.arrayBuffer());
+		const decoded = await context.decodeAudioData(bytes);
 		return bucketPeaks(decoded.getChannelData(0), columns);
 	} catch {
 		return null;
