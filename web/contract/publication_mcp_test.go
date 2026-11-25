@@ -3,6 +3,7 @@ package contract
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -11,6 +12,7 @@ import (
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
 
 	"github.com/AlexGalhardo/stuarty/core/command"
+	corepub "github.com/AlexGalhardo/stuarty/core/publish"
 	"github.com/AlexGalhardo/stuarty/service"
 	pub "github.com/AlexGalhardo/stuarty/service/publish"
 	"github.com/AlexGalhardo/stuarty/service/testproject"
@@ -368,6 +370,127 @@ func TestSecurity_T161_PublicationToolCannotCancelOrApproveWhatAPersonScheduled(
 
 	if n := fx.uploads.Load(); n != 0 {
 		t.Errorf("%d requests left the machine", n)
+	}
+
+	// D-145: the action schedule cannot move a post a person approved, on any surface that is not the person's.
+	for name, newDriver := range map[string]func(*testing.T, testenv.Options) driver{
+		"mcp": newMCPWith, "http": newHTTPWith, "cli": newCLIWith,
+	} {
+		t.Run("reschedule over "+name, func(t *testing.T) {
+			fx := newPublishFixture(t, newDriver)
+			approved := approvedByAPerson(t, fx)
+
+			raw, err := json.Marshal(service.PublicationScheduleRequest{
+				ID: approved.ID, TargetID: approved.Targets[0].ID, At: "2027-06-01T09:00", Zone: "UTC",
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			res, _, fail := fx.d.do(t, step{Call: "PublicationSchedule", Args: raw})
+			if fail == nil || fail.Code != service.CodePrivilegedSession {
+				t.Fatalf("%s rescheduled what a person approved: %s %+v", name, res, fail)
+			}
+
+			stillApproved(t, fx, approved)
+		})
+	}
+
+	t.Run("reschedule with an agent key", func(t *testing.T) {
+		fx := newPublishFixture(t, newDirectWith)
+		approved := approvedByAPerson(t, fx)
+		agent := service.WithCaller(
+			callerCtx(), service.Caller{Actor: "key:agent", Scopes: service.AllScopes},
+		)
+
+		_, err := fx.d.service().PublicationSchedule(agent, service.PublicationScheduleRequest{
+			ID: approved.ID, TargetID: approved.Targets[0].ID, At: "2027-06-01T09:00", Zone: "UTC",
+		})
+		if se, ok := errors.AsType[*service.Error](err); !ok || se.Code != service.CodePrivilegedSession ||
+			se.Hint == "" {
+			t.Fatalf("a key rescheduled what a person approved: %v", err)
+		}
+
+		stillApproved(t, fx, approved)
+	})
+}
+
+// approvedByAPerson is a publication of one target that a person planned, scheduled and approved in the app.
+func approvedByAPerson(t *testing.T, fx publishFixture) service.Publication {
+	t.Helper()
+
+	svc := fx.d.service()
+	person := service.WithCaller(
+		callerCtx(), service.Caller{Actor: "local:ui", Scopes: service.AllScopes, Browser: true},
+	)
+	kids := false
+
+	made, err := svc.PublicationCreate(person, service.PublicationCreateRequest{
+		ProjectID: fx.project, Title: "Approved", Export: fx.export, Targets: []pub.TargetInput{{
+			ConnectionID: fx.connection, At: "2026-12-01T09:00", Zone: "UTC", Fields: pub.Fields{MadeForKids: &kids},
+		}},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	scheduled, err := svc.PublicationSchedule(person, service.PublicationScheduleRequest{ID: made.ID})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := svc.ApprovalDecide(person, service.ApprovalDecideRequest{
+		ID: scheduled.Targets[0].ApprovalID, Decision: "approve",
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	got, err := svc.PublicationGet(person, service.PublicationGetRequest{ID: made.ID})
+	if err != nil || !corepub.TargetState(got.Targets[0].State).Approved() {
+		t.Fatalf("the person's approved post = %+v, %v", got, err)
+	}
+
+	return *got
+}
+
+// stillApproved checks that the target is as the person left it: the same state, time and request, nothing sent.
+func stillApproved(t *testing.T, fx publishFixture, want service.Publication) {
+	t.Helper()
+
+	got, err := fx.d.service().PublicationGet(callerCtx(), service.PublicationGetRequest{ID: want.ID})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	g, w := got.Targets[0], want.Targets[0]
+	if g.State != w.State || g.ApprovalID != w.ApprovalID || !g.ScheduledAt.Equal(*w.ScheduledAt) {
+		t.Errorf("the approved post changed: %+v, want %+v", g, w)
+	}
+
+	if n := fx.uploads.Load(); n != 0 {
+		t.Errorf("%d requests left the machine", n)
+	}
+}
+
+// D-145: a person in the app still moves a post they approved; it is asked for again with the new time.
+func TestAPersonReschedulesWhatTheyApproved(t *testing.T) {
+	fx := newPublishFixture(t, newDirectWith)
+	approved := approvedByAPerson(t, fx)
+	person := service.WithCaller(
+		callerCtx(), service.Caller{Actor: "local:ui", Scopes: service.AllScopes, Browser: true},
+	)
+
+	moved, err := fx.d.service().PublicationSchedule(person, service.PublicationScheduleRequest{
+		ID: approved.ID, TargetID: approved.Targets[0].ID, At: "2027-06-01T09:00", Zone: "UTC",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	tg := moved.Targets[0]
+	if tg.State != "waiting_approval" || tg.ApprovalID == approved.Targets[0].ApprovalID ||
+		tg.ScheduledAt.UTC().Format("2006-01-02T15:04") != "2027-06-01T09:00" {
+		t.Errorf("the person's reschedule = %+v", tg)
 	}
 }
 

@@ -44,6 +44,8 @@ const (
 type Actor struct {
 	ID          string
 	OwnerUserID string
+	// Person is a person in the app (a privileged browser session); the local token, a key and an agent are not.
+	Person bool
 }
 
 // Ask is the approval request of one target (SDD-020 section 26).
@@ -160,6 +162,8 @@ type Gateway interface {
 const (
 	KindValidation   = "validation"
 	KindInvalidState = "invalid_state"
+	// KindPersonOnly is what only a person in the app may do; the service shows it as E_PRIVILEGED_SESSION.
+	KindPersonOnly = "person_only"
 )
 
 // Error is a refusal the service shows as E_VALIDATION or E_INVALID_STATE.
@@ -686,8 +690,19 @@ func (m *Manager) Schedule(ctx context.Context, in ScheduleInput) (*Publication,
 			return err
 		}
 
+		person := m.env.Actor(ctx).Person
+
 		for _, id := range ids {
 			t := p.Target(id)
+			if !core.CanReschedule(t.State, person) {
+				return &Error{
+					Kind: KindPersonOnly, Path: "target_id",
+					Message: fmt.Sprintf("the post to %s was approved; only a person in the app moves it.", t.Network),
+					Hint: "a person changes the time of an approved post in the Publish page of the Stuarty app; the local " +
+						"token, API keys and the agent surfaces cannot",
+				}
+			}
+
 			t.SendNow = false
 
 			if note, err := m.applyTime(

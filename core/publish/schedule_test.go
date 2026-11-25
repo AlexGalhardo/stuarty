@@ -17,6 +17,22 @@ func at(t *testing.T, s string) time.Time {
 	return v
 }
 
+// D-145: only a person moves a post that was approved; what waits, failed or was missed anyone asks for again.
+func TestCanReschedule(t *testing.T) {
+	t.Parallel()
+
+	for _, s := range TargetStates {
+		approved := s == TargetApproved || s == TargetScheduled
+		if got := CanReschedule(s, false); got == approved {
+			t.Errorf("CanReschedule(%s, not a person) = %v", s, got)
+		}
+
+		if !CanReschedule(s, true) {
+			t.Errorf("CanReschedule(%s, a person) = false", s)
+		}
+	}
+}
+
 func TestTargetStateMachine(t *testing.T) {
 	t.Parallel()
 

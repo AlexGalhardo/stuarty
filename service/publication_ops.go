@@ -92,8 +92,12 @@ func publicationError(err error) error {
 
 	if pe, ok := errors.AsType[*pub.Error](err); ok {
 		code := command.CodeValidation
-		if pe.Kind == pub.KindInvalidState {
+
+		switch pe.Kind {
+		case pub.KindInvalidState:
 			code = command.CodeInvalidState
+		case pub.KindPersonOnly:
+			code = CodePrivilegedSession
 		}
 
 		e := newError(code, "%s", pe.Message).withPath(pe.Path)
@@ -340,7 +344,7 @@ func (e pubEnv) NewID(prefix string) string { return e.s.newIDs(prefix) }
 func (e pubEnv) Actor(ctx context.Context) pub.Actor {
 	c, _ := CallerFrom(ctx)
 
-	return pub.Actor{ID: c.Actor, OwnerUserID: c.OwnerUserID}
+	return pub.Actor{ID: c.Actor, OwnerUserID: c.OwnerUserID, Person: c.Browser}
 }
 
 func (e pubEnv) Write(ctx context.Context, fn func(ctx context.Context, tx pub.Tx) error) error {
