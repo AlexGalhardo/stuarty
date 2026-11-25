@@ -71,6 +71,8 @@ test.describe("projects grid", () => {
 		await open();
 		await dialog.getByRole("button", { name: "Move to trash" }).click();
 		await expect(card).toHaveCount(0);
+		// The trash is a tab of its own on the projects page.
+		await page.getByRole("tab", { name: "Trash" }).click();
 		await expect(
 			page.locator(`[data-trashed-id='${seeded.id}']`),
 		).toBeVisible();

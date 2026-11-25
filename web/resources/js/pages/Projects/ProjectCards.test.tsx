@@ -25,6 +25,41 @@ const BASE: ProjectSummary = {
 
 const NOOP = { onTrash: () => undefined, onChanged: () => undefined };
 
+describe("what a card says of the plan", () => {
+	test("names the step the project is at and the next post, on both cards", () => {
+		const plan = {
+			current_step: "review" as const,
+			next_post_at: "2026-12-01T09:30:00Z",
+		};
+		const text = draw(
+			<ProjectCardText {...NOOP} locale="en" project={{ ...BASE, ...plan }} />,
+		);
+		expect(text).toContain("Now: Review");
+		expect(text).toContain("Next post");
+		const video = draw(
+			<ProjectCard
+				{...NOOP}
+				locale="en"
+				project={{ ...BASE, kind: "video", ...plan }}
+			/>,
+		);
+		expect(video).toContain("Now: Review");
+		expect(video).toContain("Next post");
+	});
+
+	test("says nothing of a plan the service does not report", () => {
+		const html = draw(
+			<ProjectCardText
+				{...NOOP}
+				locale="en"
+				project={{ ...BASE, next_post_at: null }}
+			/>,
+		);
+		expect(html).not.toContain("Next post");
+		expect(html).not.toContain("Now:");
+	});
+});
+
 describe("ProjectCardText", () => {
 	test("shows the excerpt, the type, the words and the reading time, and no picture", () => {
 		const html = draw(

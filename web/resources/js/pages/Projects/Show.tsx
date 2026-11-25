@@ -30,9 +30,10 @@ import type {
 	ProjectItem,
 } from "../../editor/api/types";
 import { continueTarget } from "../../workflow/continueTarget";
-import type { ProjectKind, Workflow } from "../../workflow/types";
+import type { ProjectKind, TextSummary, Workflow } from "../../workflow/types";
 import AddMedia from "./AddMedia";
 import { Briefing } from "./Briefing";
+import FlowFacts from "./FlowFacts";
 import ProjectContextForm from "./ProjectContextForm";
 import WorkflowSection from "./WorkflowSection";
 
@@ -49,6 +50,9 @@ interface ShowProps {
 		kind: ProjectKind;
 	};
 	workflow: Workflow;
+	// The facts a list of projects gives, from the service (SDD-005 section 5.12.4).
+	text_summary?: TextSummary | null;
+	next_post_at?: string | null;
 	items: ProjectItem[];
 	brief: BriefResult;
 	briefing: BriefingQuestionsResult;
@@ -469,8 +473,15 @@ function AddItem({
 // page draws what the service says and sends commands; the rules of the production are the core's.
 export default function ProjectShow() {
 	const t = useT();
-	const { project, workflow, items, brief, briefing } =
-		usePage<ShowProps>().props;
+	const {
+		project,
+		workflow,
+		text_summary,
+		next_post_at,
+		items,
+		brief,
+		briefing,
+	} = usePage<ShowProps>().props;
 	const [failure, setFailure] = useState<Failure | null>(null);
 	const [draft, setDraft] = useState(brief.text);
 	const [saving, setSaving] = useState(false);
@@ -534,6 +545,7 @@ export default function ProjectShow() {
 										{t(`ui.write.kind.${textItem.text_kind}`)}
 									</StatusBadge>
 								) : null}
+								<FlowFacts text={text_summary} next={next_post_at} />
 							</div>
 							<p className="mt-1 text-base text-text-muted">
 								{t(`ui.workflow.lead.${project.kind}`)}

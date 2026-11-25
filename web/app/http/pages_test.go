@@ -195,6 +195,34 @@ func TestPages(t *testing.T) {
 	}
 }
 
+// The page of a project carries the text facts and the next post of the service (SDD-005 section 5.12.4), so the
+// browser asks the API nothing more to draw the head of the page.
+func TestProjectPageCarriesTheFlowFacts(t *testing.T) {
+	h := pagesHarness(t)
+	ck := cookie(h)
+	id := h.newProject("A post")
+
+	if res := h.post(
+		"/api/v1/projects/"+id+"/texts",
+		`{"title":"Post","text_kind":"post","text":"one two three four five"}`,
+	); res.status != http.StatusCreated {
+		t.Fatalf("text create = %d %s", res.status, res.body)
+	}
+
+	res := h.do(req{path: "/projects/" + id, noAuth: true, headers: map[string]string{"Cookie": ck}})
+	body := string(res.body)
+
+	if res.status != http.StatusOK || !strings.Contains(body, `Projects\/Show`) {
+		t.Fatalf("/projects/%s = %d", id, res.status)
+	}
+
+	for _, want := range []string{`"text_summary":{`, `"words":5`, `"reading_minutes":`, `"next_post_at":null`} {
+		if !strings.Contains(body, want) {
+			t.Errorf("the page props lack %s", want)
+		}
+	}
+}
+
 // The consent screen of a social network sends the browser back by a cross-site navigation, which carries
 // no SameSite=Strict session cookie: the sign-in page is drawn all the same, with nothing of the workspace
 // in it, and the call it makes, POST /api/v1/social/complete, still needs the session. Every other page

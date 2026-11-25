@@ -54,14 +54,31 @@ export function hintWord(t: Translate, step: WorkflowStep): string | undefined {
 		: undefined;
 }
 
-// The cost of a step, one amount for each currency; a step with none reads "Not reported".
+// The cost of a step, one amount for each currency: what was spent, then what the approvals estimate; a step with
+// neither reads "Not reported". The amounts are the service's: this only writes them.
 export function costWord(
 	t: Translate,
 	locale: string,
 	step: WorkflowStep,
 ): string {
-	if (step.cost === undefined || step.cost.length === 0) {
-		return t("ui.workflow.not_reported");
-	}
-	return step.cost.map((cost) => formatMoney(cost, locale)).join(" + ");
+	const amounts = (list: WorkflowStep["cost"]): string =>
+		(list ?? []).map((cost) => formatMoney(cost, locale)).join(" + ");
+	const spent = amounts(step.spent);
+	const estimate = amounts(step.cost);
+	if (spent === "" && estimate === "") return t("ui.workflow.not_reported");
+	if (spent === "") return estimate;
+	if (estimate === "") return t("ui.workflow.spent", { amount: spent });
+	return `${t("ui.workflow.spent", { amount: spent })} · ${t("ui.workflow.estimate", { amount: estimate })}`;
+}
+
+// The skill that leads a step: a name from the library, written as text.
+export function skillWord(t: Translate, step: WorkflowStep): string {
+	return step.skill === undefined || step.skill === ""
+		? t("ui.workflow.no_skill")
+		: step.skill;
+}
+
+// The title of a step by its id, for a place that has the id and no step (a card names the step the project is at).
+export function stepTitle(t: Translate, id: string): string {
+	return isOneOf(STEP_IDS, id) ? t(`ui.workflow.step.${id}.title`) : id;
 }

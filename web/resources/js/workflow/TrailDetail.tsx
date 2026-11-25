@@ -10,6 +10,7 @@ import {
 	actorWord,
 	costWord,
 	hintWord,
+	skillWord,
 	stateWord,
 	titleWord,
 	toolWord,
@@ -67,10 +68,10 @@ function Fact({
 }
 
 // One step as a row, in the order of the final design: the mark of its state with its title and what it is for,
-// then who does it, with which tool and at what cost, then its state and, for an optional step, its button. Every
+// then who does it, with which skill and tool and at what cost, then its state and, for an optional step, its button. Every
 // value is the server's: the row draws them and decides nothing. A step that can be skipped carries the button of
-// its state; the server decides whether the call is allowed. The service keeps no skill for a step, so the row has
-// no skill column.
+// its state; the server decides whether the call is allowed. The skill and the cost are the service's: the cost is
+// what was spent and what is estimated.
 function DetailStep({
 	step,
 	busy,
@@ -95,7 +96,7 @@ function DetailStep({
 			data-state={step.state}
 			aria-current={step.state === "current" ? "step" : undefined}
 			className={cn(
-				"grid items-center gap-x-6 gap-y-3 rounded-lg border bg-surface p-4 md:grid-cols-[minmax(0,2.2fr)_repeat(3,minmax(0,1fr))_10.5rem]",
+				"grid items-center gap-x-6 gap-y-3 rounded-lg border bg-surface p-4 md:grid-cols-[minmax(0,2.2fr)_repeat(4,minmax(0,1fr))_10.5rem]",
 				step.state === "current" || step.state === "waiting"
 					? "border-accent"
 					: "border-border",
@@ -125,6 +126,7 @@ function DetailStep({
 			</div>
 			<dl className="contents">
 				<Fact label={t("ui.workflow.who")}>{actorWord(t, step)}</Fact>
+				<Fact label={t("ui.workflow.skill")}>{skillWord(t, step)}</Fact>
 				<Fact label={t("ui.workflow.tool")}>{toolWord(t, step)}</Fact>
 				<Fact label={t("ui.workflow.cost")}>{costWord(t, locale, step)}</Fact>
 			</dl>

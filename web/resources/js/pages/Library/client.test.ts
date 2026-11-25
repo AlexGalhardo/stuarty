@@ -36,6 +36,14 @@ describe("libraryClient", () => {
 		);
 	});
 
+	it("lists the skills with the session whose reads mark them loaded", async () => {
+		const { transport, sent } = fake(200, { entries: [] });
+		await libraryClient(transport).list("skill", "chs_a b");
+		expect(sent[0].path).toBe(
+			"/library/skills?include_unreviewed=true&session_id=chs_a%20b",
+		);
+	});
+
 	it("writes with the verbs and paths of the API and escapes a name", async () => {
 		const { transport, sent } = fake(200, {});
 		const client = libraryClient(transport);
