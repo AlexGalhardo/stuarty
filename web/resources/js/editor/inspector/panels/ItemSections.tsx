@@ -52,7 +52,14 @@ function ReadOnlyRow({
 // 12.1): `item.rename`, `item.move {start}` and `item.trim {edge: "end", to}`.
 // Duration and In point are read only and come from the units helpers; the
 // panel does no arithmetic on times (rule R5).
-export function ItemBasics({ itemId }: { itemId: string }): ReactNode {
+export function ItemBasics({
+	itemId,
+	part = "both",
+}: {
+	itemId: string;
+	// The video tab of a clip puts the timing first and the name and the switch at the end (final design 05).
+	part?: "both" | "timing" | "name";
+}): ReactNode {
 	const t = useT();
 	const canEdit = useCanEdit();
 	const send = useFieldCommit();
@@ -70,47 +77,51 @@ export function ItemBasics({ itemId }: { itemId: string }): ReactNode {
 
 	return (
 		<>
-			<Section title={t("ui.editor.inspector.name")}>
-				<TextField
-					label={t("ui.editor.inspector.name")}
-					stored={item.name ?? ""}
-					maxLength={120}
-					disabled={!canEdit}
-					commit={(name) => send(renameOperations(itemId, name))}
-				/>
-				{enabledExposed && (
-					<ToggleField
-						label={t("ui.editor.inspector.enabled")}
-						stored={item.disabled !== true}
+			{part !== "name" && (
+				<Section title={t("ui.editor.inspector.timing")}>
+					<TimeCommitField
+						label={t("ui.editor.inspector.start")}
+						stored={displayStart(timed, fps, readTimeDisplay())}
 						disabled={!canEdit}
-						commit={(enabled) => send(enabledOperations(itemId, enabled))}
+						commit={(start) => send(moveOperations(itemId, start))}
 					/>
-				)}
-			</Section>
-			<Section title={t("ui.editor.inspector.timing")}>
-				<TimeCommitField
-					label={t("ui.editor.inspector.start")}
-					stored={displayStart(timed, fps, readTimeDisplay())}
-					disabled={!canEdit}
-					commit={(start) => send(moveOperations(itemId, start))}
-				/>
-				<TimeCommitField
-					label={t("ui.editor.inspector.end")}
-					stored={displayEnd(timed, fps, readTimeDisplay())}
-					disabled={!canEdit}
-					commit={(to) => send(trimEndOperations(itemId, to))}
-				/>
-				<ReadOnlyRow
-					label={t("ui.editor.inspector.duration")}
-					value={displayDuration(timed, fps, readTimeDisplay())}
-				/>
-				{hasSource && (
+					<TimeCommitField
+						label={t("ui.editor.inspector.end")}
+						stored={displayEnd(timed, fps, readTimeDisplay())}
+						disabled={!canEdit}
+						commit={(to) => send(trimEndOperations(itemId, to))}
+					/>
 					<ReadOnlyRow
-						label={t("ui.editor.inspector.in_point")}
-						value={displayInPoint(timed, fps, readTimeDisplay())}
+						label={t("ui.editor.inspector.duration")}
+						value={displayDuration(timed, fps, readTimeDisplay())}
 					/>
-				)}
-			</Section>
+					{hasSource && (
+						<ReadOnlyRow
+							label={t("ui.editor.inspector.in_point")}
+							value={displayInPoint(timed, fps, readTimeDisplay())}
+						/>
+					)}
+				</Section>
+			)}
+			{part !== "timing" && (
+				<Section title={t("ui.editor.inspector.name")}>
+					<TextField
+						label={t("ui.editor.inspector.name")}
+						stored={item.name ?? ""}
+						maxLength={120}
+						disabled={!canEdit}
+						commit={(name) => send(renameOperations(itemId, name))}
+					/>
+					{enabledExposed && (
+						<ToggleField
+							label={t("ui.editor.inspector.enabled")}
+							stored={item.disabled !== true}
+							disabled={!canEdit}
+							commit={(enabled) => send(enabledOperations(itemId, enabled))}
+						/>
+					)}
+				</Section>
+			)}
 		</>
 	);
 }

@@ -1,6 +1,7 @@
 import { MousePointer2, MousePointerClick, ZoomIn } from "lucide-react";
 import { type ReactNode, useState } from "react";
 
+import { Segment } from "@/components/Segment";
 import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n";
 import {
@@ -144,20 +145,19 @@ export function ScreenHighlightSection({
 			icon={MousePointerClick}
 		>
 			<ToolLine name="recording.set_click_highlight" />
-			<SelectField
+			<Segment
 				label={t("ui.editor.screen_take.highlight_style")}
-				stored={highlightStyle}
-				disabled={!canEdit}
+				value={highlightStyle}
+				onChange={(value) => {
+					if (isHighlightStyle(value)) setHighlightStyle(value);
+				}}
 				options={[
 					{ value: "ring", label: t("ui.editor.screen_take.highlight_ring") },
 					{ value: "wave", label: t("ui.editor.screen_take.highlight_wave") },
 					{ value: "pulse", label: t("ui.editor.screen_take.highlight_pulse") },
 					{ value: "none", label: t("ui.editor.screen_take.highlight_none") },
 				]}
-				commit={async (value) => {
-					if (isHighlightStyle(value)) setHighlightStyle(value);
-					return { ok: true };
-				}}
+				className="w-full *:flex-1"
 			/>
 			<NumberField
 				label={t("ui.editor.screen_take.highlight_duration")}
