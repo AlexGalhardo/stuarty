@@ -108,7 +108,7 @@ The order, the critical path and the groups are in `docs/planning/screen-recordi
 | [62](62-windows-recording-audio-webcam-events.md) | Windows recording: audio, webcam, pause, cursor and click events | L | 61 | DONE (2026-11-24, `1deedb84c`..`4385b96bf`; the 10-minute drift fixture ran 100 s and real devices are untested, D-144) |
 | [63](63-basic-web-recording.md) | Basic web recording | M | 61 | TODO |
 | [64](64-agent-operation-of-recording.md) | Agents in the recording flow | L | 61, 62 | TODO |
-| [65](65-auto-zoom-smooth-cursor-click-highlight.md) | Automatic zoom, smooth cursor and click highlight | L | 62 | TODO |
+| [65](65-auto-zoom-smooth-cursor-click-highlight.md) | Automatic zoom, smooth cursor and click highlight | L | 62 | DONE (2026-11-25, `58d315aa9`..`ad5c8c0cf`) |
 | [66](66-recording-layouts-backgrounds-teleprompter.md) | Recording layouts, backgrounds and teleprompter | M | 62 | TODO |
 | [67](67-macos-capture.md) | Recording on macOS | L | 62, 43, the signing decision | TODO |
 | [68](68-linux-capture.md) | Recording on Linux | L | 62, 43 | TODO |
