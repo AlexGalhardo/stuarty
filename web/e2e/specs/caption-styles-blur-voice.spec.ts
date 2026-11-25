@@ -186,10 +186,10 @@ for (const theme of ["dark", "light"] as const) {
 				await strip.getByRole("tab", { name: "Adjust" }).click();
 				const blur = page.locator('[data-section="blur-region"]');
 				await expect(blur).toBeVisible();
-				const top = blur.getByLabel("Top", { exact: true });
+				const top = blur.getByLabel("Y", { exact: true });
 				await top.fill("0");
 				await top.press("Enter");
-				const apply = blur.getByRole("button", { name: "Blur this region" });
+				const apply = blur.getByRole("button", { name: "Add blur" });
 				await tabTo(page, apply);
 				await page.keyboard.press("Enter");
 				// The blur repeats the edge pixels (VV-392), so an edge region is blurred like any other and the

@@ -2147,6 +2147,8 @@ export interface BlurRegionOptions {
 	start?: string;
 	duration?: string;
 	radius?: number;
+	// A named strength of the core (strong, medium); the core turns it into a radius for the project.
+	strength?: string;
 }
 
 export function blurRegionOperations(
@@ -2167,6 +2169,9 @@ export function blurRegionOperations(
 					? {}
 					: { duration: options.duration }),
 				...(options.radius === undefined ? {} : { radius: options.radius }),
+				...(options.strength === undefined
+					? {}
+					: { strength: options.strength }),
 			},
 		},
 	];

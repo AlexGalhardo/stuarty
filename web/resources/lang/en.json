@@ -2651,19 +2651,24 @@
       },
       "blur_region": {
         "title": "Blur sensitive data",
-        "hint": "Hide an e-mail, a key or an address. The region is a share of the picture; leave the time empty to blur the whole clip. The clip itself is not changed: the blur is an item on a Blur track above it.",
-        "x": "Left",
-        "y": "Top",
-        "width": "Width",
-        "height": "Height",
+        "hint": "There is no automatic detection: you mark the rectangle and the time. The clip itself is not changed: the blur is an item on a Blur track above it.",
+        "x": "X",
+        "y": "Y",
+        "width": "W",
+        "height": "H",
         "start": "From",
         "duration": "For",
         "radius": "Blur strength",
         "radius_default": "Strong default",
-        "apply": "Blur this region",
+        "apply": "Add blur",
         "group_region": "Region",
         "group_time": "Time",
-        "group_strength": "Strength"
+        "group_strength": "Strength",
+        "strength_hint": "The default is strong, so the text cannot be read again.",
+        "strengths": {
+          "strong": "Strong",
+          "medium": "Medium"
+        }
       },
       "layout": {
         "title": "Layout and background",
