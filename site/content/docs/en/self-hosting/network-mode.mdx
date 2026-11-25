@@ -42,7 +42,7 @@ A password change ends the sessions and revokes the API keys of that user.
 
 ### Manage users while the server runs
 
-An administrator who is signed in in the browser can manage users through the HTTP API without stopping the server. The routes exist in network mode only and need the `admin` scope on a **browser session**: an API key is refused here, whatever its scopes. There is no editor page for it yet.
+An administrator who is signed in in the browser can manage users through the HTTP API without stopping the server. The routes exist in network mode only and need the `admin` scope on a **browser session**: an API key is refused here, whatever its scopes. There is no editor page for it: the users are managed with these routes or the commands above.
 
 | Route | Does |
 | --- | --- |
@@ -64,9 +64,7 @@ curl -fsS -b jar.txt -X PATCH -H "Content-Type: application/json" -H "Origin: $A
 
 The browser session cookie is `__Host-stuarty_session` (the plain-HTTP container case uses the local cookie name). A session ends after 8 hours idle or 7 days in all. Login is `POST /auth/login` with `email` and `password`; a wrong email and a wrong password give the same `E_UNAUTHORIZED`. Failed logins are throttled per email and per address before the password is checked.
 
-<Callout type="warning" title="No login page in this release">
-The browser login page and the page to manage API keys are not built yet. Until they are, sign in with `POST /auth/login` as shown on [API keys and scopes](/docs/self-hosting/api-keys) and give agents an API key. A server with no users answers every API request with 401 and logs how to create one.
-</Callout>
+In the browser, open the server address and sign in on the **Log in** page with your email and password. The sidebar then has **API keys**, where you create a key for an agent or a script ([API keys and scopes](/docs/self-hosting/api-keys)). A server with no users answers every API request with 401 and logs how to create one.
 
 ## Start-up errors
 

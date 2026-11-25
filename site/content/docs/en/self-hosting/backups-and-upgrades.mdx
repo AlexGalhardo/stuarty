@@ -15,10 +15,14 @@ Everything is in one directory, the [workspace](/docs/workspace) (`/data` in the
 
 | Path | Keep? |
 | --- | --- |
-| `db.sqlite` | yes: projects, history, jobs, users, keys |
+| `db.sqlite` | yes: projects, history, jobs, the calendar, users, keys |
+| `vault.json` | yes: your credentials, encrypted. It opens only with the master key, which you keep apart |
+| `library/` | yes: your memory notes, prompts and skills |
 | `store/` | yes: your imported originals, by content hash |
 | `exports/` | yes: the files you made |
-| `artifacts/`, `frames/` | no: they are rebuilt from the originals |
+| `recordings/` | yes, while a take waits for you to add it |
+| `tools/` | no: install the helpers again |
+| `artifacts/`, `frames/`, `bitmaps/`, `audio-previews/` | no: they are rebuilt from the originals |
 | `backups/` | the database copies the server makes before a migration |
 | `logs/` | optional |
 
@@ -61,7 +65,7 @@ Without arguments the script tests every published release from `v0.3.0` on.
 
 ## Common mistakes
 
-- Backing up only the database. Without `store/` your imported media is gone.
+- Backing up only the database. Without `store/` your imported media is gone, and without `library/` your notes and skills.
 - Using the tag `latest` on a server you keep. Pin `X.Y.Z` and move it on purpose.
 - Running the new and the old container on one volume at the same time: the second fails with `E_WORKSPACE_LOCKED`.
 - Losing `APP_KEY`: keep it with your other secrets.
