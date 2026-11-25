@@ -14,7 +14,9 @@ import {
 	browserViewOf,
 	isKept,
 	isLive,
+	isPrepared,
 	LIVE_POLL_MS,
+	needsDecision,
 	type RecordView,
 	type StartOptions,
 	unavailableReason,
@@ -27,6 +29,8 @@ export interface RecordFlow {
 	busy: boolean;
 	// the recording was placed on the timeline by this dialog
 	placed: boolean;
+	// what the service said about the last decision on a proposal of cuts
+	notice: string | null;
 	start(
 		kind: "display" | "window",
 		id: string,
@@ -35,6 +39,10 @@ export interface RecordFlow {
 		extras: StartOptions,
 	): Promise<void>;
 	stop(): Promise<void>;
+	// a person starts a recording that was prepared: the stored plan is the request (SDD-025 section 19.2)
+	startPrepared(id: string): Promise<void>;
+	// a person decides every range of a proposal of cuts: accept[i] is the yes or no of range i
+	decide(id: string, proposalId: string, accept: boolean[]): Promise<void>;
 	// a recording made in the browser (SDD-025 section 18): the browser captures and uploads, the server decides
 	startBrowser(choice: CaptureChoice): Promise<void>;
 	stopBrowser(): Promise<void>;
@@ -63,6 +71,7 @@ export function useRecordFlow(
 	const [failure, setFailure] = useState<Failure | null>(null);
 	const [busy, setBusy] = useState(false);
 	const [placed, setPlaced] = useState(false);
+	const [notice, setNotice] = useState<string | null>(null);
 	const alive = useRef(true);
 	// the recording this tab is making in the browser, if any: it outlives the dialog being closed
 	const browser = useRef<BrowserRecording | null>(null);
@@ -96,6 +105,8 @@ export function useRecordFlow(
 					step: "pick",
 					sources,
 					kept: list.recordings.filter(isKept),
+					prepared: list.recordings.filter(isPrepared),
+					proposals: list.recordings.filter(needsDecision),
 				});
 		} catch (error) {
 			const reason = unavailableReason(error);
@@ -109,6 +120,8 @@ export function useRecordFlow(
 							step: "browser",
 							capability: currentCapability(),
 							kept: list.recordings.filter(isKept),
+							prepared: list.recordings.filter(isPrepared),
+							proposals: list.recordings.filter(needsDecision),
 						});
 				} catch (inner) {
 					if (alive.current) {
@@ -194,6 +207,26 @@ export function useRecordFlow(
 		failure,
 		busy,
 		placed,
+		notice,
+		startPrepared: (id) =>
+			run(async () => {
+				setNotice(null);
+				return viewOf(await client.startRecording({ recording_id: id }));
+			}),
+		decide: async (id, proposalId, accept) => {
+			let done = false;
+			await run(async () => {
+				const res = await client.decideRecordingProposal(
+					id,
+					proposalId,
+					accept,
+				);
+				if (alive.current) setNotice(res.text);
+				done = true;
+				return null;
+			});
+			if (done) await load();
+		},
 		start: (kind, id, name, fps, extras) =>
 			run(async () =>
 				viewOf(
@@ -274,6 +307,7 @@ export function useRecordFlow(
 		},
 		reset: () => {
 			setPlaced(false);
+			setNotice(null);
 			void load();
 		},
 	};

@@ -12,6 +12,7 @@ import FindBar from "../find/FindBar";
 import UndoRedo from "../history/UndoRedo";
 import Inspector from "../inspector/Inspector";
 import Preview from "../preview/Preview";
+import RecordingBanner from "../record/RecordingBanner";
 import { useDocumentState, useUiState } from "../state/EditorContext";
 import { selectFps } from "../state/selectors";
 import AddCaptionDialog from "../timeline/AddCaptionDialog";
@@ -140,6 +141,7 @@ export default function EditorShell({
 			<div className="col-span-full">
 				<TopBar onLocaleChange={onLocaleChange} />
 				<TrashedBanner />
+				<RecordingBanner />
 				{status === "failed" && (
 					<div
 						role="alert"

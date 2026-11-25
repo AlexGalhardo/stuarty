@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { useT } from "@/lib/i18n";
 import type {
 	Recording,
+	RecordingProposal,
 	RecordingSourceInfo,
 	RecordingSourcesResult,
 } from "../api/types";
@@ -20,9 +21,12 @@ import {
 	DEFAULT_FPS,
 	FPS_CHOICES,
 	formatClock,
+	formatClockTenths,
 	formatMegabytes,
 	meterValue,
 	NO_EXTRAS,
+	needsDecision,
+	pendingProposals,
 	type RecordView,
 	type StartOptions,
 	unavailableKey,
@@ -77,6 +81,9 @@ function Step({
 		case "pick":
 			return (
 				<>
+					<Decided notice={flow.notice} />
+					<ProposalList recordings={view.proposals ?? []} flow={flow} />
+					<PreparedList prepared={view.prepared ?? []} flow={flow} />
 					{view.kept.length > 0 && (
 						<Kept kept={view.kept} busy={flow.busy} flow={flow} />
 					)}
@@ -92,6 +99,8 @@ function Step({
 		case "browser":
 			return (
 				<>
+					<Decided notice={flow.notice} />
+					<ProposalList recordings={view.proposals ?? []} flow={flow} />
 					{view.kept.length > 0 && (
 						<Kept kept={view.kept} busy={flow.busy} flow={flow} />
 					)}
@@ -262,6 +271,10 @@ function Step({
 							? t("ui.editor.record.placed")
 							: t("ui.editor.record.added")}
 					</p>
+					<Decided notice={flow.notice} />
+					{needsDecision(view.recording) && (
+						<ProposalList recordings={[view.recording]} flow={flow} />
+					)}
 					<div className="flex flex-wrap gap-2">
 						{!flow.placed && (
 							<Button
@@ -337,6 +350,209 @@ function Step({
 
 // The recordings a person set aside with "Not now": still out of the project and out of sight of agents, until the
 // person adds or deletes them here (SDD-025 section 4).
+// What the service said about the last decision on a proposal of cuts.
+function Decided({ notice }: { notice: string | null }): ReactNode {
+	if (notice === null) return null;
+	return (
+		<p role="status" className="text-sm" data-record-decided="">
+			{notice}
+		</p>
+	);
+}
+
+// The plans an agent or a person prepared (SDD-025 section 19.1). Nothing records until a person presses Record:
+// the button here is that press, and it is the only way a prepared recording starts.
+function PreparedList({
+	prepared,
+	flow,
+}: {
+	prepared: Recording[];
+	flow: RecordFlow;
+}): ReactNode {
+	const t = useT();
+	if (prepared.length === 0) return null;
+	return (
+		<section className="flex flex-col gap-2" data-record-prepared="">
+			<h3 className="text-xs font-medium text-muted-foreground uppercase">
+				{t("ui.editor.record.prepared_title")}
+			</h3>
+			<p className="text-xs text-muted-foreground">
+				{t("ui.editor.record.prepared_note")}
+			</p>
+			<ul className="flex flex-col gap-2">
+				{prepared.map((r) => (
+					<li
+						key={r.recording_id}
+						className="flex flex-col gap-1 rounded-md border p-2 text-sm"
+						data-record-prepared-item={r.recording_id}
+					>
+						<span className="min-w-0 truncate">
+							<UntrustedText>
+								{r.source.name !== undefined && r.source.name !== ""
+									? r.source.name
+									: r.source.kind}
+							</UntrustedText>
+						</span>
+						<span className="text-xs text-muted-foreground">
+							{t("ui.editor.record.prepared_by", { actor: r.actor })}
+						</span>
+						{r.plan?.notes !== undefined && r.plan.notes !== "" && (
+							<p
+								lang="en"
+								className="text-xs whitespace-pre-line"
+								data-record-prepared-notes=""
+							>
+								<UntrustedText>{r.plan.notes}</UntrustedText>
+							</p>
+						)}
+						<div className="flex flex-wrap gap-2">
+							<Button
+								type="button"
+								size="sm"
+								disabled={flow.busy}
+								data-record-prepared-start={r.recording_id}
+								onClick={() => void flow.startPrepared(r.recording_id)}
+							>
+								{t("ui.editor.record.prepared_start")}
+							</Button>
+							<Button
+								type="button"
+								size="sm"
+								variant="ghost"
+								disabled={flow.busy}
+								data-record-prepared-delete={r.recording_id}
+								onClick={() => void flow.remove(r.recording_id)}
+							>
+								{t("ui.editor.record.delete")}
+							</Button>
+						</div>
+					</li>
+				))}
+			</ul>
+		</section>
+	);
+}
+
+// The cuts that wait for a person (SDD-025 section 19): one card for each pending proposal.
+function ProposalList({
+	recordings,
+	flow,
+}: {
+	recordings: Recording[];
+	flow: RecordFlow;
+}): ReactNode {
+	const t = useT();
+	const cards = recordings.flatMap((r) =>
+		pendingProposals(r).map((p) => ({ r, p })),
+	);
+	if (cards.length === 0) return null;
+	return (
+		<section className="flex flex-col gap-2" data-record-proposals="">
+			<h3 className="text-xs font-medium text-muted-foreground uppercase">
+				{t("ui.editor.record.proposals_title")}
+			</h3>
+			{cards.map(({ r, p }) => (
+				<ProposalCard
+					key={p.proposal_id}
+					recording={r}
+					proposal={p}
+					flow={flow}
+				/>
+			))}
+		</section>
+	);
+}
+
+// One proposal: every range with its reason and a yes or no of its own, and one button that sends them all. The
+// choices are the person's; the service applies the accepted ones as one batch that one undo restores.
+function ProposalCard({
+	recording,
+	proposal,
+	flow,
+}: {
+	recording: Recording;
+	proposal: RecordingProposal;
+	flow: RecordFlow;
+}): ReactNode {
+	const t = useT();
+	const [accept, setAccept] = useState<boolean[]>(() =>
+		proposal.ranges.map(() => true),
+	);
+	const cut = accept.filter(Boolean).length;
+	return (
+		<div
+			className="flex flex-col gap-2 rounded-md border p-2"
+			data-record-proposal={proposal.proposal_id}
+		>
+			<p className="text-xs text-muted-foreground">
+				{t("ui.editor.record.proposals_by", { actor: proposal.actor })}
+			</p>
+			<ul className="flex flex-col gap-1">
+				{proposal.ranges.map((range, i) => (
+					<li
+						key={`${range.from_ms}-${range.to_ms}`}
+						className="flex flex-wrap items-center gap-2 text-sm"
+						data-record-range={i}
+					>
+						<span className="tabular-nums">
+							{t("ui.editor.record.proposals_range", {
+								from: formatClockTenths(range.from_ms),
+								to: formatClockTenths(range.to_ms),
+							})}
+						</span>
+						<span lang="en" className="min-w-0 truncate text-xs">
+							<UntrustedText>{range.reason}</UntrustedText>
+						</span>
+						<Button
+							type="button"
+							size="sm"
+							variant={accept[i] ? "default" : "outline"}
+							aria-pressed={accept[i]}
+							disabled={flow.busy}
+							data-record-range-accept={i}
+							onClick={() =>
+								setAccept((a) => a.map((v, j) => (j === i ? true : v)))
+							}
+						>
+							{t("ui.editor.record.proposals_accept")}
+						</Button>
+						<Button
+							type="button"
+							size="sm"
+							variant={accept[i] ? "outline" : "default"}
+							aria-pressed={!accept[i]}
+							disabled={flow.busy}
+							data-record-range-reject={i}
+							onClick={() =>
+								setAccept((a) => a.map((v, j) => (j === i ? false : v)))
+							}
+						>
+							{t("ui.editor.record.proposals_reject")}
+						</Button>
+					</li>
+				))}
+			</ul>
+			<p className="text-xs" data-record-proposal-count="">
+				{t("ui.editor.record.proposals_count", {
+					cut,
+					total: proposal.ranges.length,
+				})}
+			</p>
+			<Button
+				type="button"
+				size="sm"
+				disabled={flow.busy}
+				data-record-proposal-apply={proposal.proposal_id}
+				onClick={() =>
+					void flow.decide(recording.recording_id, proposal.proposal_id, accept)
+				}
+			>
+				{t("ui.editor.record.proposals_apply")}
+			</Button>
+		</div>
+	);
+}
+
 function Kept({
 	kept,
 	busy,

@@ -99,6 +99,7 @@ import type {
 	PublishValidateResult,
 	Recording,
 	RecordingListResult,
+	RecordingProposalDecideResult,
 	RecordingSourcesResult,
 	RecordingStartRequest,
 	RecordingUploadBeginRequest,
@@ -423,6 +424,12 @@ export interface ApiClient {
 	confirmRecording(id: string): Promise<Recording>;
 	dismissRecording(id: string): Promise<Recording>;
 	placeRecording(id: string): Promise<EditResult>;
+	// One yes or no for every range of a proposal; the accepted ones are one undoable batch (SDD-025 section 19.5).
+	decideRecordingProposal(
+		id: string,
+		proposalId: string,
+		accept: boolean[],
+	): Promise<RecordingProposalDecideResult>;
 	// The approval queue (SDD-015). Deciding, the rules and the ceilings are for a person in a
 	// browser session; any other caller gets E_PRIVILEGED_SESSION.
 	listApprovals(state?: string): Promise<ApprovalListResult>;
@@ -1107,6 +1114,13 @@ export function createClient(
 				`/recordings/${encodeURIComponent(id)}/finish`,
 				EDIT_TIMEOUT_MS,
 				request,
+			),
+		decideRecordingProposal: (id, proposalId, accept) =>
+			call(
+				"POST",
+				`/recordings/${encodeURIComponent(id)}/proposals/${encodeURIComponent(proposalId)}/decide`,
+				EDIT_TIMEOUT_MS,
+				{ accept },
 			),
 		getRecording: (id) =>
 			call("GET", `/recordings/${encodeURIComponent(id)}`, READ_TIMEOUT_MS),

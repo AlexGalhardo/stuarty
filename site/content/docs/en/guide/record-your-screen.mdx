@@ -38,6 +38,14 @@ Agents with access to the project can read a recording only after you add it. An
 - **A limit is reached.** The recording stops by itself and keeps what was received: the size (`STUARTY_MAX_IMPORT_BYTES`), the length (`STUARTY_MAX_RECORDING_SECONDS`) or the free disk (`STUARTY_MIN_FREE_BYTES`).
 - **The file cannot be made.** The recording is marked as failed with the reason. The pieces stay in the folder of the recording until you delete it.
 
+## When an agent helps
+
+An agent can get a recording ready, mark the takes and propose cuts. It cannot record you.
+
+- **Only you start a capture.** An agent can prepare a recording: the source, the sound and camera, a script and a note for you. It appears in the dialog under **Ready to record**, and nothing records until you press **Record**. No setting, key or approval rule lets an agent start or resume a capture, and a request that tries is refused.
+- **You always see a capture.** While a capture is on, the editor shows a **Recording the screen** bar on every page. In the desktop application a red icon also stays in the tray, with the window open, hidden or closed.
+- **Marks and cuts are suggestions.** An agent can mark a take as good, bad or a mistake, and propose ranges to cut, each with its reason. The dialog lists them under **Cuts to decide**. You accept or reject each range, and the accepted ones are cut in one step. One **Undo** brings them back.
+
 ## Common mistakes
 
 - Opening Stuarty on a server by its IP address over `http://` and wondering why Start is off. Use HTTPS.

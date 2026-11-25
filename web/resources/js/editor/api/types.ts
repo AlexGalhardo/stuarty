@@ -1560,13 +1560,67 @@ export interface RecordingListResult {
 }
 
 export interface RecordingStartRequest {
-	project_id: string;
-	source: { kind: "display" | "window"; id: string; name?: string };
+	project_id?: string;
+	source?: { kind: "display" | "window"; id: string; name?: string };
 	fps?: number;
 	microphone?: string;
 	system_audio?: boolean;
 	camera?: string;
 	events?: boolean;
+	// A recording an agent or a person prepared: its stored plan is the request, and nothing else is sent
+	// (SDD-025 section 19.2).
+	recording_id?: string;
+}
+
+// What a person has still to start: the plan of a prepared recording (SDD-025 section 19.1). The notes are the
+// text of whoever prepared it.
+export interface RecordingPlan {
+	fps: number;
+	microphone?: string;
+	system_audio?: boolean;
+	camera?: string;
+	events?: boolean;
+	script_id?: string;
+	notes?: string;
+}
+
+export type RecordingMarkKind = "good" | "bad" | "mistake";
+
+export interface RecordingMark {
+	n: number;
+	kind: RecordingMarkKind;
+	at_ms: number;
+	end_ms?: number;
+	note?: string;
+	actor: string;
+	created_at: string;
+}
+
+export type ProposalState = "pending" | "accepted" | "rejected";
+
+export interface RecordingCutRange {
+	from_ms: number;
+	to_ms: number;
+	reason: string;
+	decision?: "accepted" | "rejected";
+}
+
+// Cuts an agent or a person proposed. Nothing changes on a timeline until a person decides each range.
+export interface RecordingProposal {
+	proposal_id: string;
+	state: ProposalState;
+	actor: string;
+	created_at: string;
+	ranges: RecordingCutRange[];
+	decided_by?: string;
+	decided_at?: string;
+	revision?: number;
+}
+
+export interface RecordingProposalDecideResult {
+	recording: Recording;
+	edit?: EditResult;
+	text: string;
 }
 
 // A recording a browser captures and uploads (SDD-025 section 18). The server decides the order, the checksum and
@@ -1630,6 +1684,9 @@ export interface Recording {
 	events_count?: number;
 	levels?: RecordingLevels;
 	upload?: RecordingUpload;
+	plan?: RecordingPlan;
+	marks?: RecordingMark[];
+	proposals?: RecordingProposal[];
 	actor: string;
 	created_at: string;
 	text: string;

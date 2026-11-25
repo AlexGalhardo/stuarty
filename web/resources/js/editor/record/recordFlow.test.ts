@@ -5,10 +5,15 @@ import type { Recording } from "../api/types";
 import type { RecorderState } from "./browserRecorder";
 import {
 	browserViewOf,
+	capturing,
 	formatClock,
+	formatClockTenths,
 	isKept,
 	isLive,
+	isPrepared,
 	meterValue,
+	needsDecision,
+	pendingProposals,
 	unavailableKey,
 	unavailableReason,
 	viewOf,
@@ -180,5 +185,56 @@ describe("the clock", () => {
 		expect(formatClock(65_400)).toBe("1:05");
 		expect(formatClock(3_600_000)).toBe("60:00");
 		expect(formatClock(-5)).toBe("0:00");
+	});
+});
+
+describe("the plans and the proposals of agents (SDD-025 section 19)", () => {
+	const plan: Recording = { ...recording("prepared"), plan: { fps: 30 } };
+	const proposal = (state: "pending" | "accepted" | "rejected") => ({
+		proposal_id: "prp_0123456789",
+		state,
+		actor: "local:claude-code",
+		created_at: "2026-11-24T00:00:00Z",
+		ranges: [{ from_ms: 0, to_ms: 500, reason: "dead air" }],
+	});
+
+	test("a prepared recording with a plan is not live and is not drawn as a recording that runs", () => {
+		expect(isPrepared(plan)).toBe(true);
+		expect(isLive(plan)).toBe(false);
+		expect(viewOf(plan).step).toBe("gone");
+		// a recording a helper is starting has no plan: it is live as before
+		expect(isPrepared(recording("prepared"))).toBe(false);
+		expect(isLive(recording("prepared"))).toBe(true);
+	});
+
+	test("only a pending proposal of a recording a person added waits for a decision", () => {
+		const added = (state: "pending" | "accepted") => ({
+			...recording("ready", "added"),
+			proposals: [proposal(state)],
+		});
+		expect(pendingProposals(added("pending"))).toHaveLength(1);
+		expect(needsDecision(added("pending"))).toBe(true);
+		expect(needsDecision(added("accepted"))).toBe(false);
+		expect(needsDecision(recording("ready", "added"))).toBe(false);
+		expect(
+			needsDecision({
+				...recording("ready", "pending"),
+				proposals: [proposal("pending")],
+			}),
+		).toBe(false);
+	});
+
+	test("the banner follows the recording that is capturing, running or paused, and nothing else", () => {
+		expect(capturing([plan, recording("ready", "added")])).toBeNull();
+		expect(capturing([recording("finishing")])).toBeNull();
+		expect(capturing([plan, recording("recording")])?.state).toBe("recording");
+		expect(capturing([recording("paused")])?.state).toBe("paused");
+	});
+
+	test("the time of a range has tenths", () => {
+		expect(formatClockTenths(0)).toBe("0:00.0");
+		expect(formatClockTenths(1234)).toBe("0:01.2");
+		expect(formatClockTenths(61_999)).toBe("1:01.9");
+		expect(formatClockTenths(-5)).toBe("0:00.0");
 	});
 });
