@@ -20,8 +20,11 @@
       },
       "summary": {
         "done": "{count} done",
-        "waiting": "{count} waiting for you"
+        "waiting": "{count} waiting for you",
+        "estimated_cost": "Estimated cost: {amount}"
       },
+      "free": "Free",
+      "next_post": "Scheduled for: {date}",
       "not_reported": "Not reported",
       "optional": "Optional",
       "who": "Who",
@@ -311,10 +314,11 @@
         "empty": "Nothing waits for you.",
         "group": {
           "waiting": "Waiting for you",
-          "history": "Answered"
+          "history": "Recent history"
         },
         "open_chat": "Open the conversation",
         "review": "Review in Approvals",
+        "open_publish": "Open Publishing",
         "item": "To what",
         "where": "Where",
         "cost": "Cost",
@@ -324,6 +328,8 @@
         "undo_no": "Cannot be undone",
         "undo_not_verified": "Not verified",
         "asked": "Asked",
+        "answered": "Answered",
+        "updated": "Updated",
         "agent_reported": "What and where are as the agent described the call; Stuarty cannot check them.",
         "state": {
           "waiting": "Waiting for you",
@@ -332,11 +338,13 @@
           "approved": "Approved",
           "rejected": "Rejected",
           "expired": "Expired",
-          "cancelled": "Cancelled"
+          "cancelled": "Cancelled",
+          "failed": "Failed"
         },
         "kind": {
           "permission": "Agent permission",
-          "approval": "Approval"
+          "approval": "Approval",
+          "publication": "Publication"
         }
       },
       "drawer": {
@@ -4261,10 +4269,53 @@
       "draft_note": "Sent as a draft, not published: open the notification in the app of the network, write the caption and publish it there.",
       "draft_warning": "{name} takes only the video as a draft: this title, text and tags are not sent, and you finish and publish it in the {name} app.",
       "price": "A post costs {post}, and {link} when the text has a link (price of {date}). The approval shows the price of this post before you say yes.",
+      "details": "Details",
+      "detail": {
+        "title": "Publication details",
+        "destination": "Destination",
+        "status": "Status",
+        "scheduled": "Scheduled for",
+        "published_at": "Published at",
+        "result": "Result",
+        "edit": "Edit publication",
+        "open_post": "Open the post",
+        "close": "Close details",
+        "no_result": "No result yet",
+        "result_waiting": "Waiting for you",
+        "result_queued": "In queue",
+        "result_needs_time": "Needs a time",
+        "result_published_at": "Published at {time}"
+      },
+      "published_state": {
+        "title": "Your post is published",
+        "body_with_place": "“{title}” went out on {destination} at {time}. To fix anything, edit and send again: the same post is updated.",
+        "body_plain": "“{title}” is published. To fix anything, edit and send again: the same post is updated.",
+        "open_post": "Open the post",
+        "trail_title": "Completed trail",
+        "optional_title": "If you want",
+        "optional_body": "Want to turn this text into a video? Use it as a script in a new video of the same project.",
+        "add_video": "Add a video"
+      },
       "editor": {
         "new": "New publication",
         "edit": "Publication",
+        "where_post_goes": "Where does this post go?",
+        "post_intro": "A text needs no video or image to be published.",
         "intro": "The title and the caption are shared by every account; each account can have its own. Nothing is sent before you approve it in Approvals.",
+        "text_destinations": "Text destinations",
+        "video_destinations": "Video destinations",
+        "available_count": "{count} available",
+        "require_video": "Require video",
+        "for_text": "For text only",
+        "unavailable": "Unavailable",
+        "chosen": "Chosen",
+        "available": "Available",
+        "requires_video": "Requires video",
+        "add_video_unlocks": "If you add a video to this project, these destinations become available.",
+        "when": "When",
+        "cost": "Cost",
+        "free": "Free",
+        "approval_note": "Nothing is sent before your yes in Approvals.",
         "caption": "Caption",
         "targets": "Accounts",
         "no_targets": "No account yet. Add one to plan where this goes.",
