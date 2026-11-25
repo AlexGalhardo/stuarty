@@ -2,7 +2,9 @@ package cli
 
 import (
 	"context"
+	"errors"
 	"io"
+	"io/fs"
 	"os"
 
 	"github.com/AlexGalhardo/stuarty/service"
@@ -71,7 +73,23 @@ func (c *call) readText(flag, src string) (string, error) {
 	}
 
 	if err != nil {
-		return "", validation(flag, "cannot read the text %s: %s.", src, readReason(err))
+		// A person who types the words after the flag, and not the path of a file, gets the whole text echoed back
+		// otherwise (VV-447): the message names at most the first 60 characters and says what the flag takes.
+		shown := []rune(src)
+		if len(shown) > 60 {
+			shown = append(shown[:60], '…')
+		}
+
+		// The error of the system repeats the whole path: keep only its reason.
+		var pathErr *fs.PathError
+		if errors.As(err, &pathErr) {
+			err = pathErr.Err
+		}
+
+		e := validation(flag, "cannot read the text %s: %s.", string(shown), readReason(err))
+		e.Hint = "--" + flag + " takes the path of a Markdown file, or - for standard input"
+
+		return "", e
 	}
 
 	return string(raw), nil
