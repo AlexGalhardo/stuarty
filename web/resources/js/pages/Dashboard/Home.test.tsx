@@ -198,7 +198,9 @@ describe("the home", () => {
 	test("what waits is a list of rows from the inbox, three at most, with the way to the queue", () => {
 		const html = draw({ rows: rows(5) });
 		expect(html.match(/data-testid="home-waiting-row"/g)).toHaveLength(3);
-		expect(html).toContain("Generate a voice-over 0");
+		// the server's English summary is not shown: an approval is worded by its kind
+		expect(html).toContain("Generate with AI");
+		expect(html).not.toContain("Generate a voice-over");
 		expect(html).toContain("Reels: 5 filming mistakes, $0.18");
 		expect(html).toContain("And 2 more requests in the queue.");
 		expect(html).toContain("Nothing leaves without your yes.");

@@ -18,9 +18,9 @@ import {
 import type { ReactNode } from "react";
 
 import { EmptyState } from "@/components/EmptyState";
-import { FailureNote } from "@/components/Failure";
+import { LoadError } from "@/components/LoadError";
 import { LoadingState } from "@/components/LoadingState";
-import { PageHeader } from "@/components/PageHeader";
+import { PageHeader, PageHeaderAction } from "@/components/PageHeader";
 import { SectionTitle } from "@/components/SectionTitle";
 import { StatusBadge } from "@/components/StatusBadge";
 import UntrustedText from "@/components/UntrustedText";
@@ -107,12 +107,25 @@ function WaitingRow({
 	const t = useT();
 	const locale = useLocale();
 	const Icon = requestIcon(row.tool);
+	// An approval has no plain-description key and its summary is the server's English sentence: the home says what
+	// kind of request it is in its own words, and the project and the cost go on the line under it.
+	const tool = row.tool.toLowerCase();
 	const what =
 		row.action_key !== ""
 			? t(row.action_key)
-			: row.summary !== ""
-				? row.summary
-				: row.tool;
+			: row.source === "approval"
+				? t(
+						`ui.dashboard.home.waiting.action.${
+							tool.includes("publish")
+								? "publish"
+								: tool.includes("generate")
+									? "generate"
+									: "approval"
+						}`,
+					)
+				: row.summary !== ""
+					? row.summary
+					: row.tool;
 	const cost =
 		row.cost === null
 			? t("ui.shell.notify.no_cost")
@@ -446,11 +459,13 @@ export function HomeView({
 	rows,
 	name,
 	hour,
+	onRetry,
 }: {
 	home: HomeState;
 	rows: readonly InboxRow[] | null;
 	name: string | null;
 	hour: number;
+	onRetry?: () => void;
 }): ReactNode {
 	const t = useT();
 	const ready = home.state === "ready" ? home : null;
@@ -483,7 +498,7 @@ export function HomeView({
 			{home.state === "loading" ? (
 				<LoadingState message={t("ui.dashboard.home.loading")} />
 			) : home.state === "failed" ? (
-				<FailureNote failure={home.failure} />
+				<LoadError failure={home.failure} onRetry={onRetry} />
 			) : empty ? (
 				<>
 					<EmptyState
@@ -514,7 +529,7 @@ export function HomeView({
 // waits for the person. Every part is what the service says (SDD-012 section 1): the page draws the projects, their
 // workflows and the inbox, and the greeting only words the local hour and the name of the account.
 export default function Home(): ReactNode {
-	const home = useHome();
+	const { retry, ...home } = useHome();
 	const { inbox } = useShell();
 	const t = useT();
 	const account = usePage<SharedProps>().props.account;
@@ -526,6 +541,7 @@ export default function Home(): ReactNode {
 				rows={inbox.rows}
 				name={greetingName(account)}
 				hour={new Date().getHours()}
+				onRetry={retry}
 			/>
 		</>
 	);
