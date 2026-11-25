@@ -7,7 +7,7 @@ import {
 	Settings,
 	User,
 } from "lucide-react";
-import { type ReactNode, useEffect, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 
 import ReleaseMark from "@/components/ReleaseMark";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -272,6 +272,31 @@ function SidebarBody({
 	const { mode } = useSession();
 	const current = activeNavItem(url);
 	const home = pathOf(url) === "/";
+	const nav = useRef<HTMLElement>(null);
+	// On a short window the list scrolls: the item of the page being read comes into view, so the person sees where
+	// they are (VV-438). The room of the list changes while the footer of the sidebar loads, so it is revealed again
+	// until the person scrolls it themselves.
+	// biome-ignore lint/correctness/useExhaustiveDependencies: runs when the current item changes
+	useEffect(() => {
+		const list = nav.current;
+		if (list === null) return;
+		const reveal = (): void =>
+			list
+				.querySelector('[aria-current="page"]')
+				?.scrollIntoView?.({ block: "nearest" });
+		reveal();
+		if (typeof ResizeObserver === "undefined") return;
+		const watch = new ResizeObserver(reveal);
+		watch.observe(list);
+		const stop = (): void => watch.disconnect();
+		list.addEventListener("wheel", stop, { once: true });
+		list.addEventListener("pointerdown", stop, { once: true });
+		return () => {
+			watch.disconnect();
+			list.removeEventListener("wheel", stop);
+			list.removeEventListener("pointerdown", stop);
+		};
+	}, [current]);
 
 	return (
 		// In the drawer the whole block scrolls, so a very short window (400 % zoom) keeps every item in reach
@@ -316,6 +341,7 @@ function SidebarBody({
 				<span className="sr-only">{appName}</span>
 			</Link>
 			<nav
+				ref={nav}
 				aria-label={t("ui.nav.label")}
 				className={cn(
 					onToggle === undefined
@@ -403,7 +429,7 @@ function SidebarBody({
 						collapsed && "flex-col gap-0",
 					)}
 				>
-					<ReleaseMark inline />
+					<ReleaseMark inline compact={collapsed} />
 					<span
 						data-testid="sidebar-mode"
 						className={cn(
