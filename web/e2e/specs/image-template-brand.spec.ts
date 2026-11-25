@@ -8,6 +8,7 @@ import {
 	imageState,
 	layerByName,
 	newImage,
+	openMoreTools,
 	seedPhoto,
 	test,
 } from "./image-support";
@@ -60,6 +61,7 @@ test.describe("image brand kit and templates", () => {
 			.poll(async () => (await layer("Title")).style?.color)
 			.toBe("#101010");
 
+		await openMoreTools(page);
 		await page.getByTestId("image-place-logo").click();
 		await expect.poll(async () => (await layer("Logo")).asset).toBe(logo.hash);
 		// the new layer is the selection
@@ -78,6 +80,7 @@ test.describe("image brand kit and templates", () => {
 		const { id } = await newImage(request, { name: "No logo spec" });
 		await page.goto(`/edit-image/${id}`);
 		await expect(page.getByTestId("image-add-text")).toBeEnabled();
+		await openMoreTools(page);
 		await expect(page.getByTestId("image-place-logo")).toBeDisabled();
 	});
 
