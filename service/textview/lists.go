@@ -104,6 +104,17 @@ func CreatedProject(id, name string) string {
 	)
 }
 
+// CreatedTextProject is the text of a created text-only project: it needs no timeline, and the line that tells a
+// person to add one is for a video (VV-436).
+func CreatedTextProject(id, name string) string {
+	return fmt.Sprintf(
+		"%s\ncreated %s %s; it holds no text yet: add one with project_item action add kind text",
+		Note,
+		id,
+		Quote(name, 60),
+	)
+}
+
 // UpdatedProject is the text of a project whose name, description or goal changed.
 func UpdatedProject(id, name string, complete bool) string {
 	state := "complete"

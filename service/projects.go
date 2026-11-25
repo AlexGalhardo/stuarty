@@ -105,6 +105,10 @@ func (s *svc) ProjectCreate(ctx context.Context, req ProjectCreateRequest) (*Pro
 		Text: textview.CreatedProject(id, req.Name),
 	}
 
+	if kind == project.KindText {
+		res.Text = textview.CreatedTextProject(id, req.Name)
+	}
+
 	if req.DryRun {
 		return res, nil
 	}
