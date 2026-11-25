@@ -501,24 +501,62 @@
     "error": {
       "back": "Back to projects",
       "home": "Go to the home",
+      "trash": "Open the trash",
       "label": "Error {status}",
       "how_to_fix": "How to fix:",
-      "next": {
+      "details": "Technical details",
+      "title": {
+        "not_found": "We could not find this page",
+        "forbidden": "You do not have access to this page",
+        "server": "Stuarty could not finish this",
+        "generic": "Something stopped this page from opening"
+      },
+      "lead": {
+        "not_found": "The address may have changed or the project went to the trash. Your files are still on this computer.",
+        "forbidden": "This session is not allowed to open this. Your files are still on this computer.",
+        "server": "It was a problem on the Stuarty side. Nothing was lost.",
+        "generic": "Your files are still on this computer."
+      },
+      "steps": {
         "not_found": {
-          "title": "What to do next",
-          "body": "The address may have changed, or the project may be in the trash of the projects page, where it can be restored."
+          "one": {
+            "title": "Go back to the projects",
+            "body": "Your production should be in the list."
+          },
+          "two": {
+            "title": "Look in the trash",
+            "body": "A deleted project can be restored."
+          }
         },
         "forbidden": {
-          "title": "What to do next",
-          "body": "This session is not allowed to open it. Sign in with an account that has access, then try again."
+          "one": {
+            "title": "Sign in with another account",
+            "body": "Use an account that has access."
+          },
+          "two": {
+            "title": "Go back to the home",
+            "body": "From there you reach what your account can open."
+          }
         },
         "server": {
-          "title": "What to do next",
-          "body": "Stuarty could not finish this. Try again in a moment, or go back to the projects."
+          "one": {
+            "title": "Try again in a moment",
+            "body": "Reload the page."
+          },
+          "two": {
+            "title": "Go back to the projects",
+            "body": "What you saved is still there."
+          }
         },
-        "other": {
-          "title": "What to do next",
-          "body": "Go back to the projects and try again. If it happens again, the message above says what stopped it."
+        "generic": {
+          "one": {
+            "title": "Go back to the projects",
+            "body": "Start again from the list."
+          },
+          "two": {
+            "title": "Check the technical detail",
+            "body": "It says what stopped, in English."
+          }
         }
       }
     },
@@ -3391,8 +3429,9 @@
       },
       "create": {
         "not_encrypted_title": "What is not encrypted",
-        "title": "Create your account",
-        "intro": "Your texts, briefs, chats, publications and credentials are encrypted with a key that is only in memory while you are signed in. While Stuarty is locked, no page, command or agent reads them.",
+        "title": "Create your local account",
+        "intro": "It lives only on this computer. Nobody else receives this data.",
+        "encrypted": "Your texts, briefs, chats, publications and credentials are encrypted with a key that is only in memory while you are signed in. While Stuarty is locked, no page, command or agent reads them.",
         "not_encrypted": "Not encrypted: your media files, the names, titles and tags of projects, files, notes and templates, and the description of a template. Anyone who can open this folder on the disk can read those. Encrypted: texts, captions and the words inside a timeline or an image, the edit history, the descriptions of projects and files and their rights notes, and your memory notes, prompts and skills. To edit a skill with another tool, export it first.",
         "submit": "Create account"
       },
@@ -3412,6 +3451,13 @@
         "title": "Sign in to Stuarty",
         "intro": "Stuarty is locked until you sign in. No page, command or agent reads your data before that.",
         "intro_open": "Sign in with your password to work in Stuarty as yourself.",
+        "welcome": "Good to see you again",
+        "welcome_intro": "Type your password to open your studio.",
+        "locked_title": "Stuarty is locked",
+        "locked_intro": "Locked for inactivity. Your work is saved.",
+        "locked_unlock": "Unlock",
+        "locked_footer": "While locked, nothing in the workspace is reachable: no agents, CLI or API.",
+        "other_account": "Sign in with another account",
         "submit": "Sign in",
         "forgot": "I forgot my password"
       },
