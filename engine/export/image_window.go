@@ -170,11 +170,13 @@ func (r *imageRun) renderWindow(
 		if err := sess.acquire(r.ctx); err != nil {
 			return nil, false, err
 		}
-
-		defer sess.release()
 	}
 
-	img, err := r.drawWindow(base, last, drawn, win, sess)
+	img, done, err := r.drawWindow(base, last, drawn, win, sess)
+	if sess != nil {
+		sess.releaseAfter(done)
+	}
+
 	if err != nil {
 		return nil, false, err
 	}
@@ -250,9 +252,12 @@ func (r *imageRun) prepareSome(live []plan.Layer, need []bool) ([]drawLayer, err
 
 // drawWindow draws the layers over base inside the window of a copy of last, in bands of rows on instances of
 // their own, and gives the copy. Outside the window the pixels are those of last.
+//
+// The channel is closed when no band is at work any more: a render whose context ended returns at once, and the
+// bands in flight still use the instances of the session until then.
 func (r *imageRun) drawWindow(
 	base, last *image.RGBA, drawn []drawLayer, win layerBounds, sess *windowSession,
-) (*image.RGBA, error) {
+) (*image.RGBA, <-chan struct{}, error) {
 	dst := cloneRGBA(last)
 
 	bands := r.bands
@@ -263,7 +268,10 @@ func (r *imageRun) drawWindow(
 
 	edges := bandEdges(drawn, win.x1-win.x0, win.y0, win.y1, bands)
 
-	err := fanOut(r.ctx, bands, bands, func(b int) error {
+	// The slots are made here, before the bands run: the bands only read the list.
+	sess.reserve(bands)
+
+	done, err := fanOutDone(r.ctx, bands, bands, func(b int) error {
 		y0, y1 := edges[b], edges[b+1]
 		if y0 >= y1 {
 			return nil
@@ -272,10 +280,10 @@ func (r *imageRun) drawWindow(
 		return r.drawWindowBand(base, drawn, dst, win, y0, y1, sess.slot(b))
 	})
 	if err != nil {
-		return nil, err
+		return nil, done, err
 	}
 
-	return dst, nil
+	return dst, done, nil
 }
 
 // drawWindowBand draws the rows [y0, y1) of the window on an instance of its own: the window of base as a

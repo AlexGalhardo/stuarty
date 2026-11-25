@@ -156,6 +156,14 @@ func workerCount(layers []plan.Layer) int {
 // as soon as it ends: the work in flight then finishes on its own (an instance of the module cannot be stopped)
 // and nobody waits for it.
 func fanOut(ctx context.Context, workers, count int, work func(i int) error) error {
+	_, err := fanOutDone(ctx, workers, count, work)
+
+	return err
+}
+
+// fanOutDone is fanOut that also gives a channel closed when the last goroutine has returned, for a caller that
+// must not let anyone else use what the work in flight uses before it is over (the session of a window).
+func fanOutDone(ctx context.Context, workers, count int, work func(i int) error) (<-chan struct{}, error) {
 	var (
 		next   atomic.Int64
 		wg     sync.WaitGroup
@@ -192,14 +200,14 @@ func fanOut(ctx context.Context, workers, count int, work func(i int) error) err
 	select {
 	case <-done:
 	case <-ctx.Done():
-		return ctx.Err()
+		return done, ctx.Err()
 	}
 
 	if first != nil {
-		return first
+		return done, first
 	}
 
-	return ctx.Err()
+	return done, ctx.Err()
 }
 
 // stage draws the layers over base, the picture of the layers below them, or over the background when base is
