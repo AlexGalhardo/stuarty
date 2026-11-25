@@ -56,19 +56,54 @@ func TestANilIndicatorIsInert(t *testing.T) {
 	}
 }
 
-// waitOff waits for the indicator to go off and tells whether it did.
+// waitOff waits for the indicator to go off, woken by its own changes, and tells whether it did.
 func waitOff(ind *Indicator, within time.Duration) bool {
-	end := time.Now().Add(within)
+	limit := time.NewTimer(within)
+	defer limit.Stop()
 
-	for time.Now().Before(end) {
+	for {
+		changed := ind.Changed()
 		if !ind.State().Active {
 			return true
 		}
 
-		time.Sleep(10 * time.Millisecond)
+		select {
+		case <-changed:
+		case <-limit.C:
+			return !ind.State().Active
+		}
 	}
+}
 
-	return !ind.State().Active
+// staysOnWhileAlive checks the indicator on every tick until the process of the helper is gone: it must never be
+// off while the process has not exited. The state is read before the flag, and the flag is set before the
+// indicator goes off, so an off state with the flag unset is a real fault.
+func staysOnWhileAlive(t *testing.T, ind *Indicator, h *Helper) {
+	t.Helper()
+
+	tick := time.NewTicker(20 * time.Millisecond)
+	defer tick.Stop()
+
+	limit := time.NewTimer(15 * time.Second)
+	defer limit.Stop()
+
+	for samples := 0; ; samples++ {
+		if a := ind.State(); !a.Active && !h.exited.Load() {
+			t.Fatalf("the indicator was off while the helper was alive (sample %d)", samples)
+		}
+
+		select {
+		case <-h.done:
+			if samples == 0 {
+				t.Fatal("the helper had already gone before the first sample")
+			}
+
+			return
+		case <-limit.C:
+			t.Fatal("the helper outlived its deadline")
+		case <-tick.C:
+		}
+	}
 }
 
 // T-167: the indicator is raised when the helper is asked to capture and lowered when its process has exited, and
@@ -115,17 +150,7 @@ func TestSecurity_T167_TheIndicatorStaysOnForAHelperKilledByItsDeadline(t *testi
 		t.Fatal(err)
 	}
 
-	time.Sleep(300 * time.Millisecond)
-
-	if !ind.State().Active {
-		t.Fatal("the indicator went off while the helper was alive")
-	}
-
-	select {
-	case <-h.done:
-	case <-time.After(15 * time.Second):
-		t.Fatal("the helper outlived its deadline")
-	}
+	staysOnWhileAlive(t, ind, h)
 
 	if !waitOff(ind, 5*time.Second) {
 		t.Fatalf("the indicator stayed on after the deadline: %+v", ind.State())
