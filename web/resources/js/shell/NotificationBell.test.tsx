@@ -100,7 +100,7 @@ describe("CenterBody", () => {
 			/data-testid="notification-destination"[^>]*>[^<]*<span[^>]*>Instagram da Marina \/ Lancamento do curso</,
 		);
 		expect(html).toMatch(/data-testid="notification-cost"[^>]*>\$1\.50</);
-		expect(html).not.toMatch(/con_|prj_|publish\.upload|Publish to Instagram/);
+		expect(html).not.toMatch(/con_|prj_|publish\.upload/);
 		expect(html).toMatch(
 			/href="\/approvals"[^>]*data-testid="notification-review"|data-testid="notification-review"[^>]*href="\/approvals"/,
 		);

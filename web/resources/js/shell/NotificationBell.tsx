@@ -174,6 +174,16 @@ function Row({
 				>
 					{what}
 				</p>
+				{!chat && item.summary !== "" && (
+					<details className="mt-1 text-xs text-muted-foreground">
+						<summary className="w-fit cursor-pointer">
+							{t("ui.approvals.original")}
+						</summary>
+						<p className="mt-1 break-words" data-testid="notification-summary">
+							<UntrustedText>{item.summary}</UntrustedText>
+						</p>
+					</details>
+				)}
 			</div>
 			<dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">
 				<Fact label={t("ui.shell.notify.item")} testId="notification-item">
