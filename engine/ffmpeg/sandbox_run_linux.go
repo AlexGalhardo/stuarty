@@ -121,7 +121,7 @@ func (w *tailWriter) String() string {
 // builds the environment itself, so the variable that Tool.Env carries elsewhere is added here.
 func (r *Runner) libraryEnv() []string {
 	if r.In.OpenH264.Installed && r.In.Flavour().Name == FlavourOwn {
-		return []string{EnvOpenH264Dir + "=" + r.In.OpenH264.Dir}
+		return []string{EnvOpenH264Dir + "=" + r.In.OpenH264.Dir, EnvOpenH264DirLegacy + "=" + r.In.OpenH264.Dir}
 	}
 	return nil
 }

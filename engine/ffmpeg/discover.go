@@ -267,7 +267,9 @@ func attachOpenH264(
 	if !st.Installed {
 		return st, ff, nil
 	}
-	withLib, _, err := openTool(ctx, cfg, "ffmpeg", path, ffmpegMaxOutput, map[string]string{EnvOpenH264Dir: st.Dir})
+	env := map[string]string{EnvOpenH264Dir: st.Dir, EnvOpenH264DirLegacy: st.Dir}
+
+	withLib, _, err := openTool(ctx, cfg, "ffmpeg", path, ffmpegMaxOutput, env)
 	if err != nil {
 		return OpenH264State{}, nil, err
 	}
