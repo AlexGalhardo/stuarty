@@ -1,4 +1,4 @@
-import { Film } from "lucide-react";
+import { Film, Plus } from "lucide-react";
 import {
 	type ReactNode,
 	useEffect,
@@ -25,7 +25,11 @@ import { useDocumentState, useRuntime } from "../state/EditorContext";
 import EmptyState from "../ui/EmptyState";
 import { errorHeadline } from "../ui/errorHeadline";
 import AssetCard, { type AssetDragStart } from "./AssetCard";
-import { createImportQueue, parsePastedPaths } from "./importPaths";
+import {
+	createImportQueue,
+	OPEN_IMPORT_EVENT,
+	parsePastedPaths,
+} from "./importPaths";
 import { PanelTitle } from "./PanelFrame";
 import TrashGroup from "./TrashGroup";
 
@@ -51,6 +55,13 @@ export default function Library({
 	const [busy, setBusy] = useState(false);
 	const [dropped, setDropped] = useState(false);
 	const [recordOpen, setRecordOpen] = useState(false);
+	// The panel shows only the media; the import controls open from the button of the header (final design 05).
+	const [importOpen, setImportOpen] = useState(false);
+	useEffect(() => {
+		const open = (): void => setImportOpen(true);
+		window.addEventListener(OPEN_IMPORT_EVENT, open);
+		return () => window.removeEventListener(OPEN_IMPORT_EVENT, open);
+	}, []);
 	const bridge = useSyncExternalStore(
 		subscribeDesktopBridge,
 		getDesktopBridge,
@@ -107,70 +118,91 @@ export default function Library({
 				if (!drops) setDropped(true);
 			}}
 		>
-			<PanelTitle>{t("ui.editor.panels.library")}</PanelTitle>
-			<form
-				className="flex gap-1"
-				onSubmit={(event) => {
-					event.preventDefault();
-					submit();
-				}}
-			>
-				<Textarea
-					value={text}
-					rows={1}
-					className="min-h-8 resize-y"
-					data-import-path=""
-					onChange={(event) => setText(event.target.value)}
-					onKeyDown={(event) => {
-						if (event.key === "Enter" && !event.shiftKey) {
-							event.preventDefault();
-							submit();
-						}
-					}}
-					placeholder={t("ui.editor.library.path")}
-					aria-label={t("ui.editor.library.path")}
-					aria-describedby={pick || drops ? undefined : "library-path-why"}
-				/>
+			<PanelTitle>
+				{t("ui.editor.panels.library")}
 				<Button
-					type="submit"
+					type="button"
 					size="sm"
-					disabled={!canEdit || text.trim() === ""}
+					variant="ghost"
+					className="ms-auto h-7 px-2"
+					aria-expanded={importOpen}
+					aria-controls="library-import"
+					data-import-open=""
+					onClick={() => setImportOpen((open) => !open)}
 				>
-					{t("ui.editor.library.import")}
+					<Plus aria-hidden="true" />
+					{t("ui.editor.library.import_open")}
 				</Button>
-			</form>
-			{!(pick || drops) && (
-				<p
-					id="library-path-why"
-					// Read as the description of the field; the text is not repeated in the tree.
-					aria-hidden="true"
-					className="text-xs text-muted-foreground"
+			</PanelTitle>
+			<div
+				id="library-import"
+				hidden={!importOpen}
+				className="flex flex-col gap-2"
+			>
+				<form
+					className="flex gap-1"
+					onSubmit={(event) => {
+						event.preventDefault();
+						submit();
+					}}
 				>
-					{t("ui.editor.library.path_why")}
-				</p>
-			)}
-			{pick && (
+					<Textarea
+						value={text}
+						rows={1}
+						className="min-h-8 resize-y"
+						data-import-path=""
+						onChange={(event) => setText(event.target.value)}
+						onKeyDown={(event) => {
+							if (event.key === "Enter" && !event.shiftKey) {
+								event.preventDefault();
+								submit();
+							}
+						}}
+						placeholder={t("ui.editor.library.path")}
+						aria-label={t("ui.editor.library.path")}
+						aria-describedby={pick || drops ? undefined : "library-path-why"}
+					/>
+					<Button
+						type="submit"
+						size="sm"
+						disabled={!canEdit || text.trim() === ""}
+					>
+						{t("ui.editor.library.import")}
+					</Button>
+				</form>
+				{!(pick || drops) && (
+					<p
+						id="library-path-why"
+						// Read as the description of the field; the text is not repeated in the tree.
+						aria-hidden="true"
+						className="text-xs text-muted-foreground"
+					>
+						{t("ui.editor.library.path_why")}
+					</p>
+				)}
+				{pick && (
+					<Button
+						type="button"
+						size="sm"
+						variant="outline"
+						disabled={busy || !canEdit}
+						data-import-choose=""
+						onClick={() => void choose()}
+					>
+						{t("ui.editor.library.choose")}
+					</Button>
+				)}
 				<Button
 					type="button"
 					size="sm"
 					variant="outline"
-					disabled={busy || !canEdit}
-					data-import-choose=""
-					onClick={() => void choose()}
+					disabled={!canEdit}
+					data-record-open=""
+					onClick={() => setRecordOpen(true)}
 				>
-					{t("ui.editor.library.choose")}
+					{t("ui.editor.record.open")}
 				</Button>
-			)}
-			<Button
-				type="button"
-				size="sm"
-				variant="outline"
-				disabled={!canEdit}
-				data-record-open=""
-				onClick={() => setRecordOpen(true)}
-			>
-				{t("ui.editor.record.open")}
-			</Button>
+			</div>
 			<RecordDialog
 				client={runtime.client}
 				projectId={runtime.projectId}
