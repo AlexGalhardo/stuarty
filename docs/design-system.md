@@ -616,14 +616,14 @@ The frame of every page except the editor and the login (SDD-012 §23). It uses 
 
 | Part | Element | Surface | Contents | Size |
 | --- | --- | --- | --- | --- |
-| Sidebar | `header` (the banner) holding a `nav` with `aria-label` for the sections | `--background`, right `--border` | the product mark, the eleven sections, then the profile and the controls | 16 rem expanded, 3.5 rem collapsed; collapsible; below 768 px a strip above the page, always collapsed, in the same order, with no collapse button |
+| Sidebar | `header` (the banner) holding a `nav` with `aria-label` for the sections | `--background`, right `--border` | the product mark, the eleven sections, then Settings and Sign out at the bottom, the account name and the controls | 15 rem expanded, 3.5 rem collapsed; collapsible; below 768 px a strip above the page, always collapsed, in the same order, with no collapse button |
 | Item | `a` | transparent | an icon (`size-4`, `aria-hidden`) and the label | 36 px high, `px-3`, `gap-2` |
 | Main | `main` | `--background` | the page | the remaining width, scrolls on its own |
 | Right dock | `div`, no landmark | `--background`, left `--border` once it has content | empty; reserved for the agent chat | 0 px until epic 14 |
 
 States of an item: rest `--muted-foreground` text; hover `--muted` fill and `--foreground` text; current `--muted` fill, `--foreground` text, weight 500 and `aria-current="page"` (never colour alone); focus the 2 px `--ring` outline of section 2.10, inside the item so the sidebar edge does not clip it; disabled is not used, a section that is not built opens an empty state. Collapsed: the label is visually hidden, the icon stays in an item at least 36 px wide (a target above the 24 px of WCAG 2.5.8, also in the narrow strip, where the items wrap instead of scrolling), a `Tooltip` shows the label on hover and focus.
 
-The bottom block holds, in this order: the profile (the email in network mode, "Local" in local mode, a link to Settings, Sign out in network mode), the language select, the theme toggle and the collapse button. Their contrast pairs are `muted-foreground` on `background` and on `muted`, and `foreground` on `background`, all in section 2.6 and `check:contrast`.
+The bottom block, under a rule, holds in this order: a link to Settings, Sign out, the account name (the email in network mode, "Local" in local mode), the language select, the theme toggle and the collapse button. Their contrast pairs are `muted-foreground` on `background` and on `muted`, and `foreground` on `background`, all in section 2.6 and `check:contrast`.
 
 **Decision of this document.** The dashboard has its own small sidebar instead of the shadcn `Sidebar` of section 4.2: the kept component stores its state in a cookie and carries a mobile sheet the dashboard does not need. The row of section 4.2 is amended: the shadcn `Sidebar` stays unused until a page needs it.
 
@@ -859,17 +859,28 @@ Data-free components under `web/resources/js/components/`, built on the tokens o
 
 | Component | Anatomy | Accessible name and states |
 | --- | --- | --- |
-| `PageHeader` | the one `h1` (30/38), a sentence, the page actions on the right | named by its `h1`; wraps below 768 px |
+| `PageHeader` | the one `h1` (30/38), a sentence, the page actions on the right. The one primary action of the page is `PageHeaderAction`: a `Button` of size `lg`, 40 px high (44 px on a phone), with an icon when it has one | named by its `h1`; wraps below 768 px |
 | `SectionTitle` | `h2` (24/32) or `h3` (18/26) by `level`, a sentence, actions | the level keeps the outline of the page right |
-| `EmptyState` | an icon in an accent-soft disc, a title, one sentence, the actions as children | a region named by its title (`aria-labelledby`); the icon is `aria-hidden`; a dashed strong border |
+| `EmptyState` | an icon in an accent-soft disc, a title, one sentence, optional `steps` (up to three numbered first steps, `{ title, description? }`), the actions as children | a region named by its title (`aria-labelledby`); the icon is `aria-hidden`; a dashed strong border |
 | `GuideStrip` | a title and the steps (`NumberedStep`) as an ordered list, three columns from `sm` | a region named by its title (`aria-label`) |
 | `NumberedStep` | a numbered disc, a title, a sentence; `state` is `todo`, `current` or `done` | `current` has `aria-current="step"` and a bold title; `done` shows a check and the word given in `stateLabel`; never colour alone |
 | `DataList`, `DataRow` | a description list; a row is a name (with an optional hint) and a value | a `dl` with `dt` and `dd`, so a screen reader reads each value with its name |
 | `ListRow` | an optional leading icon or thumbnail, a title, a sentence, a meta line, trailing actions; an `li` | the selected row has `aria-current="true"`, `bg-surface-selected` and a 2 px bar on its left edge |
 | `StatusBadge` | an icon and a word, in the tone of the status: `neutral`, `info`, `agent`, `waiting`, `success` or `danger` | the word is the name; the icon is `aria-hidden`; always icon and word |
 | `LoadingState` | a static skeleton of three lines and one sentence, no spinner | `role="status"`; the skeleton is `aria-hidden` |
+| `ErrorState` | `{ title, description?, steps?, onRetry?, retryLabel?, level? }`: what failed in a person's words, a "Try again" button (`ui.state.retry`) and "How to fix" (`ui.state.how_to_fix`) as numbered steps | `role="alert"` named by its title; never a raw server or network message |
+| `LoadError` | `{ failure, onRetry? }`: an `ErrorState` whose words are chosen by the code of a `Failure` (`E_NETWORK`, `E_LOCKED` or `E_UNAUTHORIZED`, any other), from `ui.state.error.<kind>` | the raw message of the server is not drawn; use it for the read that fills a page |
+| `OptionSelect` | `{ value, onChange, options: {value,label}[], label, size?, className?, disabled?, name? }`: the styled `Select` (Base UI) for a short list; replaces a native `<select>` | the trigger is named by `label`; the chosen option is shown by its label |
+| `Segment` | `{ value, onChange, options, label, className? }`: a segmented single choice (outline toggle group, no gap) | a group named by `label`; the chosen one has `aria-pressed`; choosing it again keeps it |
+| `TabBar` | `{ value, onChange, tabs: {value,label,count?}[], label, className? }`: the `line` tabs for one list in several views; it draws no panel, the page shows the view the value names | a `tablist` named by `label`; arrow keys select (`activateOnFocus`) |
+| `FilterBar` | `{ label, children }`: the row of a search `Input`, `OptionSelect`s and toggles above a list or grid, no apply button, wraps | a `search` region named by `label` |
+| `DetailPanel` | `{ title?, actions?, empty?, children }`: the detail side of a master-detail screen, beside a list of `ListRow`; with `empty` it says what to do when no row is chosen | an `aside` named by its title |
 | `Notice` | an icon, a title, a sentence and optional actions, in a `-soft` surface of its tone: `info`, `success`, `warning` or `danger` (added by epic 84) | `role` is the caller's (`note` when it is always there, `status` or `alert` when it appears); the icon is `aria-hidden` and the title carries the tone |
-| `AuthCard` | the frame of the pages before the studio opens: an optional line of three `NumberedStep`, the one `h1`, a card and a closing line (added by epic 84) | the steps are a labelled ordered list, the current one `aria-current="step"` |
+| `AuthCard` | the frame of the pages before the studio opens: the centred `Wordmark`, an optional row of three `NumberedStep`, a card with the one `h1` (an `icon` tile beside it, `iconTone` `accent` or `warning`), and a closing line (added by epic 84; the wordmark, the row and the tile by the final redesign). The pages of this frame and the error page have no sidebar and no top bar; the language and the theme sit in the top corner | the steps are a labelled ordered list, the current one `aria-current="step"` |
+
+**The scene bar** (`shell/SceneBar.tsx`, in every page and in the editors through `EditorSceneBar`) has, in order: the agent and its state, "Skill", "Tool", "Next" (the step after this one, in words, when the page passes `next`; otherwise "No next step reported", never a guess) and, for a request that waits, "Recusar" and "Permitir" (a person's session only). The label is "Skill", not a translation of it. `SceneBar` keeps the `none`, `idle`, `working`, `waiting`, `denied`, `done` and `failed` variants.
+
+**The trail** (`workflow/`) draws the steps the service reports and decides nothing. The rule that no step is done after the current one is in `core/project` (SDD-005 section 5.12.4).
 
 ## 5. Iconography, illustration and the product mark
 
