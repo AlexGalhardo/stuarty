@@ -734,6 +734,10 @@ export interface ClipBlurRegionArgs {
    */
   start?: string;
   /**
+   * A named blur strength instead of a radius; strong is the default.
+   */
+  strength?: "strong" | "medium";
+  /**
    * A visual track above the clip. Default a Blur track above it, made if there is none.
    */
   track_id?: string;

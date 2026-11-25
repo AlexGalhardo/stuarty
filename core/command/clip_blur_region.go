@@ -5,6 +5,7 @@ import (
 	"math"
 	"slices"
 	"strconv"
+	"strings"
 
 	"github.com/AlexGalhardo/stuarty/core/timeline"
 )
@@ -54,10 +55,67 @@ type clipBlurRegionArgs struct {
 	Start      Time     `json:"start,omitempty"        desc:"Absolute start of the blur, inside the clip. Default the start of the clip."`
 	Duration   Time     `json:"duration,omitempty"     desc:"A length. Default up to the end of the clip."`
 	Radius     *float64 `json:"radius,omitempty"       desc:"Blur radius in pixels at project resolution, 1.5% of the shorter side to 100. Default 4%."                                                                    max:"100"`
+	Strength   string   `json:"strength,omitempty"     desc:"A named blur strength instead of a radius; strong is the default."                                                                                                         schema:"blur_strength_id"`
 	Feather    *int     `json:"feather,omitempty"      desc:"Soft edge of the region in pixels, 0 to 200. Default 0."                                                                                          min:"0"     max:"200"`
 	TrackID    string   `json:"track_id,omitempty"     desc:"A visual track above the clip. Default a Blur track above it, made if there is none."      pattern:"^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
 	NewID      string   `json:"new_id,omitempty"       desc:"The id of the blur item."                                                                  pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
 	NewTrackID string   `json:"new_track_id,omitempty" desc:"The id of the track when one is made."                                                     pattern:"^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
+}
+
+// BlurStrength is a named strength of blur: its radius is a share of the shorter side of the project, so the same
+// name blurs the same share of the picture at any size (SDD-002 C.90).
+type BlurStrength struct {
+	ID    string
+	Name  string
+	Share float64
+}
+
+// blurStrengths are the named strengths in the order the editor lists them. The strong one is the default radius;
+// the medium one is lighter but above the least radius that keeps text unreadable.
+var blurStrengths = []BlurStrength{
+	{ID: "strong", Name: "Strong", Share: defaultBlurShare},
+	{ID: "medium", Name: "Medium", Share: 0.025},
+}
+
+// BlurStrengths returns the named strengths of clip.blur_region.
+func BlurStrengths() []BlurStrength { return slices.Clone(blurStrengths) }
+
+// BlurStrengthIDs returns the ids of the named strengths, in order.
+func BlurStrengthIDs() []string {
+	ids := make([]string, 0, len(blurStrengths))
+	for _, b := range blurStrengths {
+		ids = append(ids, b.ID)
+	}
+
+	return ids
+}
+
+// BlurStrengthRadius is the radius in pixels the named strength gives a project, and whether the id is known.
+func BlurStrengthRadius(id string, s timeline.Settings) (float64, bool) {
+	for _, b := range blurStrengths {
+		if b.ID == id {
+			least, _ := BlurRadii(s)
+
+			return max(least, min(maxBlurRadius, math.Ceil(b.Share*float64(min(s.Width, s.Height))))), true
+		}
+	}
+
+	return 0, false
+}
+
+// blurStrengthIDSchema is the schema of args.strength of clip.blur_region: the ids, with the table in
+// x-vv-blur-strengths, so that the editor draws its strength control from the registry and holds no radius.
+func blurStrengthIDSchema() map[string]any {
+	table := make([]map[string]any, 0, len(blurStrengths))
+	for _, b := range blurStrengths {
+		table = append(table, map[string]any{"id": b.ID, "name": b.Name, "share": b.Share})
+	}
+
+	return map[string]any{
+		"type":                "string",
+		"enum":                BlurStrengthIDs(),
+		"x-vv-blur-strengths": table,
+	}
 }
 
 // BlurRadii are the least and the default blur radius for a project (SDD-002 C.90).
@@ -96,6 +154,18 @@ func applyClipBlurRegion(c *Context, a *clipBlurRegionArgs) error {
 
 	least, def := BlurRadii(c.Doc.Settings)
 	radius := def
+	if a.Strength != "" {
+		if a.Radius != nil {
+			return invalidArg("args.strength", "args.strength and args.radius both set the blur; send one.").
+				WithHint("Send a strength (%s) or a radius, not both.", strings.Join(BlurStrengthIDs(), ", "))
+		}
+		named, ok := BlurStrengthRadius(a.Strength, c.Doc.Settings)
+		if !ok {
+			return invalidArg("args.strength", "args.strength %q is not a blur strength.", a.Strength).
+				WithHint("Use %s.", strings.Join(BlurStrengthIDs(), ", "))
+		}
+		radius = named
+	}
 	if a.Radius != nil {
 		radius = round3(*a.Radius)
 		if radius < least {

@@ -29,3 +29,30 @@ func TestBlurRegionRadiusRules(t *testing.T) {
 		t.Errorf("a huge frame has radii %v and %v, want both held to 100", least, def)
 	}
 }
+
+// The named strengths are shares of the shorter side: strong is the default radius, medium is lighter and never
+// below the least radius that keeps text unreadable.
+func TestBlurStrengthRadius(t *testing.T) {
+	t.Parallel()
+
+	s := base().d.Settings
+
+	strong, ok := BlurStrengthRadius("strong", s)
+	if !ok || strong != 44 {
+		t.Errorf("strong at 1080 is %v (known %v), want 44", strong, ok)
+	}
+
+	medium, ok := BlurStrengthRadius("medium", s)
+	if !ok || medium != 27 {
+		t.Errorf("medium at 1080 is %v (known %v), want 27", medium, ok)
+	}
+
+	if _, ok = BlurStrengthRadius("gentle", s); ok {
+		t.Error("an unknown strength has no radius")
+	}
+
+	s.Width, s.Height = 16, 16
+	if got, _ := BlurStrengthRadius("medium", s); got != 1 {
+		t.Errorf("medium on a tiny frame is %v, want the least radius 1", got)
+	}
+}

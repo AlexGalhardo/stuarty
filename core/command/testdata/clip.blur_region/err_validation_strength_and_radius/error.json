@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.strength and args.radius both set the blur; send one.",
+  "hint": "Send a strength (strong, medium) or a radius, not both.",
+  "retryable": false,
+  "path": "args.strength"
+}
