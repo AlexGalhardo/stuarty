@@ -7,11 +7,11 @@ import {
 } from "../support/firstFlow";
 import {
 	caller,
+	chooseOption,
 	createThroughTheForm,
 	expect,
 	test,
-	testClip,,
-	chooseOption,
+	testClip,
 } from "./helpers";
 
 // ADR-0031, PRD-004 section 3, epic 38: a creator goes from an idea to a published short vertical video with

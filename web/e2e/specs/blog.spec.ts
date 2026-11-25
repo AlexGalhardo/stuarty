@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { Page } from "@playwright/test";
 import { ensureAccount, signInWithPassword } from "../support/account";
-import { caller, expect, home, test } from "./helpers";
+import { caller, chooseOption, expect, home, test } from "./helpers";
 
 // Epic 23 (SDD-019 section 13, SDD-020 part 5, RF-353, RF-420 to RF-423): a creator writes a blog post, sees the
 // check of the core and a preview drawn from text, makes a destination (a folder of files for a static site), plans
@@ -70,9 +70,13 @@ test.describe("blog @chromium-only", () => {
 		await page.goto("/write");
 		await page.getByRole("button", { name: "New text" }).click();
 		const form = page.getByRole("form", { name: "New text" });
-		await form.getByLabel("Project").selectOption(projectId);
+		await chooseOption(
+			page,
+			form.getByLabel("Project"),
+			new RegExp(`Blog ${tag.replace("-", " ")}`),
+		);
 		await form.getByLabel("Title").fill(`Post ${tag}`);
-		await form.getByLabel("Kind").selectOption("post");
+		await chooseOption(page, form.getByLabel("Kind"), "Blog post");
 		await form.getByRole("button", { name: "Create" }).click();
 
 		const editor = page.getByTestId("text-editor");
