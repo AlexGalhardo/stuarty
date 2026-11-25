@@ -26,13 +26,17 @@ func TestProcessCommandsFailInTheStandardFormat(t *testing.T) {
 		code, out, errText := tc.run(t, home, tc.name, tc.args...)
 
 		if code != 1 || out != "" || !strings.HasPrefix(errText, "error E_VALIDATION: ") ||
-			!strings.Contains(errText, "\nhint: usage: stuarty "+tc.name) || !strings.Contains(errText, "retryable: false") {
+			!strings.Contains(errText, "\nhint: usage: stuarty "+tc.name) ||
+			!strings.Contains(errText, "retryable: false") {
 			t.Errorf("%s %v: exit %d, stdout %q, stderr %q", tc.name, tc.args, code, out, errText)
 		}
 
 		code, out, errText = tc.run(t, home, tc.name, append([]string{"--json"}, tc.args...)...)
 
-		var doc struct{ Code, Hint string }
+		var doc struct {
+			Code string `json:"code"`
+			Hint string `json:"hint"`
+		}
 
 		if err := json.Unmarshal([]byte(out), &doc); err != nil || code != 1 || errText != "" ||
 			doc.Code != "E_VALIDATION" || !strings.HasPrefix(doc.Hint, "usage: stuarty "+tc.name) {
@@ -58,6 +62,18 @@ func TestWorkspaceBackupAcceptsJSON(t *testing.T) {
 
 	if err := json.Unmarshal(r.out.Bytes(), &doc); err != nil || doc.Files == 0 || r.err.Len() != 0 {
 		t.Errorf("stdout %q, stderr %q, err %v", r.out.String(), r.err.String(), err)
+	}
+}
+
+func TestUserCreateEmptyPasswordIsValidation(t *testing.T) {
+	t.Parallel()
+
+	home := filepath.Join(t.TempDir(), "ws")
+	code, out, errText := runUserCase(t, home, "user:create", "ana@example.com")
+
+	if code != 1 || out != "" || !strings.HasPrefix(errText, "error E_VALIDATION: ") ||
+		!strings.Contains(errText, "no password was given") {
+		t.Errorf("empty password: exit %d, stdout %q, stderr %q", code, out, errText)
 	}
 }
 

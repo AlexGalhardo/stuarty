@@ -145,8 +145,11 @@ func runBackup(ctx context.Context, folder string, asJSON bool, w workspaceIO) i
 
 // errReplaceAccount refuses --replace over a workspace that has a local account: the command runs with no password,
 // so it would let anyone who can run it swap a locked studio for another (ADR-0052).
-var errReplaceAccount = errors.New("this workspace has a local account and --replace would change it without the " +
-	"password: restore into an empty workspace, or move this folder away yourself first")
+var errReplaceAccount = &service.Error{
+	Code: command.CodeValidation,
+	Message: "this workspace has a local account and --replace would change it without the " +
+		"password: restore into an empty workspace, or move this folder away yourself first.",
+}
 
 func runRestore(ctx context.Context, folder string, replace, withoutVault, asJSON bool, w workspaceIO) int {
 	sess, err := workspace.Open(ctx, workspace.Options{Force: workspace.InProcess, Getenv: w.Getenv})

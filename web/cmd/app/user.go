@@ -9,6 +9,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/AlexGalhardo/stuarty/core/command"
 	"github.com/AlexGalhardo/stuarty/core/timeline"
 	"github.com/AlexGalhardo/stuarty/service"
 	"github.com/AlexGalhardo/stuarty/service/workspace"
@@ -90,7 +91,7 @@ func runUser(ctx context.Context, name string, args []string, u userIO) int {
 		}
 
 		if asJSON {
-			_ = cli.WriteJSON(u.Out, map[string]string{"email": usr.Email, "role": string(usr.Role)})
+			_ = cli.WriteJSON(u.Out, map[string]string{"email": usr.Email, "role": usr.Role})
 
 			return 0
 		}
@@ -178,7 +179,7 @@ func readPassword(u userIO) (string, error) {
 	}
 
 	if first != second {
-		return "", errors.New("the two passwords differ")
+		return "", &service.Error{Code: command.CodeValidation, Message: "the two passwords differ."}
 	}
 
 	return first, nil
@@ -188,7 +189,10 @@ func readPassword(u userIO) (string, error) {
 func readLine(r io.Reader) (string, error) {
 	line, err := bufio.NewReaderSize(&oneByte{r}, 1).ReadString('\n')
 	if err != nil && (!errors.Is(err, io.EOF) || line == "") {
-		return "", errors.New("no password was given: type it at the prompt or send it on standard input")
+		return "", &service.Error{
+			Code:    command.CodeValidation,
+			Message: "no password was given: type it at the prompt or send it on standard input.",
+		}
 	}
 
 	return strings.TrimRight(line, "\r\n"), nil
