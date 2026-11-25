@@ -5,7 +5,6 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 
 	"github.com/AlexGalhardo/stuarty/service/account"
@@ -17,7 +16,8 @@ import (
 // A backup of an account workspace is made with no password (`workspace:backup` is a process of its own, and the
 // server it may run beside is locked): it copies the sealed fields and the sealed vault as they are, so the copy
 // holds no clear word of the person and opens only with the password or the recovery key (SDD-007 section 3.9
-// item 6). The files of the library stay in clear by design (D-127) and are left out of the scan.
+// item 6). The files of the library are sealed too (ADR-0053), so the scan covers them: a backup copies them as they
+// are.
 func TestSecurity_T108_ABackupOfALockedWorkspaceHoldsNoClearText(t *testing.T) {
 	getenv := accountEnv(t)
 	home := getenv(workspace.EnvHome)
@@ -53,10 +53,6 @@ func TestSecurity_T108_ABackupOfALockedWorkspaceHoldsNoClearText(t *testing.T) {
 	err = filepath.WalkDir(out, func(p string, d fs.DirEntry, err error) error {
 		if err != nil || d.IsDir() {
 			return err
-		}
-
-		if rel, _ := filepath.Rel(out, p); strings.HasPrefix(filepath.ToSlash(rel), "library/") {
-			return nil
 		}
 
 		raw, err := os.ReadFile(p)
