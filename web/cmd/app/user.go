@@ -13,6 +13,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/service"
 	"github.com/AlexGalhardo/stuarty/service/workspace"
 	"github.com/AlexGalhardo/stuarty/web/app/auth"
+	"github.com/AlexGalhardo/stuarty/web/app/cli"
 	"github.com/AlexGalhardo/stuarty/web/app/store"
 )
 
@@ -39,37 +40,41 @@ func processUserIO() userIO {
 // the password comes from a terminal prompt or from standard input, never from
 // the arguments, where the process list would show it (SDD-007 section 4.1).
 func runUser(ctx context.Context, name string, args []string, u userIO) int {
+	args, asJSON := splitJSON(args)
+
+	fail := func(err error) int { return report(u.Out, u.Err, asJSON, err) }
+
 	email, admin, err := parseUserArgs(name, args)
 	if err != nil {
-		return userFail(u, err.Error())
+		return fail(err)
 	}
 
 	sess, err := workspace.Open(ctx, workspace.Options{Force: workspace.InProcess, Getenv: u.Getenv})
 	if err != nil {
-		return userFailWith(u, err)
+		return fail(err)
 	}
 
 	defer func() { _ = sess.Close() }()
 
 	if err := sess.Dir.EnsureLayout(); err != nil {
-		return userFailWith(u, err)
+		return fail(err)
 	}
 
 	password, err := readPassword(u)
 	if err != nil {
-		return userFail(u, err.Error())
+		return fail(err)
 	}
 
 	st, err := store.Open(ctx, sess.Dir, store.Options{SchemaVersion: timeline.CurrentSchemaVersion})
 	if err != nil {
-		return userFailWith(u, err)
+		return fail(err)
 	}
 
 	defer func() { _ = st.Close() }()
 
 	net, err := auth.NewNetwork(st.DB(), auth.NetworkOptions{})
 	if err != nil {
-		return userFailWith(u, err)
+		return fail(err)
 	}
 
 	switch name {
@@ -81,14 +86,26 @@ func runUser(ctx context.Context, name string, args []string, u userIO) int {
 
 		usr, err := net.Users.Create(ctx, email, password, role)
 		if err != nil {
-			return userFailWith(u, err)
+			return fail(err)
+		}
+
+		if asJSON {
+			_ = cli.WriteJSON(u.Out, map[string]string{"email": usr.Email, "role": string(usr.Role)})
+
+			return 0
 		}
 
 		_, _ = fmt.Fprintf(u.Out, "created the %s %s\n", usr.Role, usr.Email)
 	default:
 		usr, err := net.ChangePassword(ctx, email, password)
 		if err != nil {
-			return userFailWith(u, err)
+			return fail(err)
+		}
+
+		if asJSON {
+			_ = cli.WriteJSON(u.Out, map[string]string{"email": usr.Email})
+
+			return 0
 		}
 
 		_, _ = fmt.Fprintf(u.Out, "changed the password of %s; its sessions and keys are revoked\n", usr.Email)
@@ -114,17 +131,17 @@ func parseUserArgs(name string, args []string) (email string, admin bool, err er
 			admin = true
 		case strings.HasPrefix(a, "-"):
 			// The argument is not echoed: it may be a password typed in the wrong place.
-			return "", false, fmt.Errorf("an argument starting with - is not an option of this command; the "+
-				"password is never an argument: it is read from the terminal or from standard input. %s", usage)
+			return "", false, invalid("an argument starting with - is not an option of this command; the "+
+				"password is never an argument: it is read from the terminal or from standard input.", usage)
 		case email == "":
 			email = a
 		default:
-			return "", false, errors.New(usage)
+			return "", false, invalid("one email only, got a second argument.", usage)
 		}
 	}
 
 	if email == "" {
-		return "", false, errors.New(usage)
+		return "", false, invalid("the command needs an email.", usage)
 	}
 
 	return email, admin, nil
@@ -186,24 +203,4 @@ func (o *oneByte) Read(p []byte) (int, error) {
 	}
 
 	return o.r.Read(p[:1])
-}
-
-func userFailWith(u userIO, err error) int {
-	if we, ok := errors.AsType[*workspace.Error](err); ok {
-		_, _ = fmt.Fprintf(u.Err, "stuarty: %s: %s\n", we.Code, we.Message)
-
-		if we.Retryable {
-			return 2
-		}
-
-		return 1
-	}
-
-	return userFail(u, err.Error())
-}
-
-func userFail(u userIO, msg string) int {
-	_, _ = fmt.Fprintln(u.Err, "stuarty:", msg)
-
-	return 1
 }

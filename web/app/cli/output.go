@@ -129,3 +129,12 @@ func writeOutput(rt *Runtime, asJSON bool, out *output) int {
 
 	return out.exit
 }
+
+// ReportError is writeError for the commands the binary runs itself (user:*, workspace:*): the same text on
+// standard error, or with asJSON the same error document on standard output. It returns the exit code.
+func ReportError(stdout, stderr io.Writer, asJSON bool, err error) int {
+	return writeError(&Runtime{Stdout: stdout, Stderr: stderr}, asJSON, err)
+}
+
+// WriteJSON prints one JSON document and a newline, as every command does with --json.
+func WriteJSON(w io.Writer, v any) error { return writeJSON(w, v) }
