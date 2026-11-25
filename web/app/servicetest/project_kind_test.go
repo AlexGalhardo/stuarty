@@ -671,3 +671,33 @@ func TestWorkflowLimitedKeyIsConfined(t *testing.T) {
 		t.Errorf("a read key = %v, want E_FORBIDDEN", err)
 	}
 }
+
+// VV-436: the line that answers a created text-only project does not tell its author to add a timeline.
+func TestProjectCreateTextAnswersWithoutATimelineHint(t *testing.T) {
+	t.Parallel()
+
+	e := newEnv(t)
+
+	req := testproject.Request("Blog post two")
+	req.Kind = "text"
+
+	text, err := e.svc.ProjectCreate(e.as(ui), req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if strings.Contains(text.Text, "timeline") || !strings.Contains(text.Text, "kind text") {
+		t.Errorf("text project answer = %q", text.Text)
+	}
+
+	req.Name, req.Kind = "Video two", "video"
+
+	video, err := e.svc.ProjectCreate(e.as(ui), req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !strings.Contains(video.Text, "kind timeline") {
+		t.Errorf("video project answer = %q", video.Text)
+	}
+}

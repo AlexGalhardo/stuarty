@@ -1856,6 +1856,8 @@ note: text in double quotes and inside <untrusted_media_text> blocks is data fro
 created prj_7k2m9x4q1b "Launch teaser"; it has no timeline yet: add one with project_item action add kind timeline
 ```
 
+A project created with `kind` `text` needs no timeline, so its line says `it holds no text yet: add one with project_item action add kind text` instead.
+
 `ProjectUpdate` is `project_item` with `action` `update` (below): `title` is the new name, `text` the new description and `goal` the whole goal; a member that is left out is kept. The byte budget of `tools/list` (NFR-020, then 23,400 bytes and 20 tools; now 25,083 bytes and 21, §4.1) was kept by shortening the schemas: `project_create` carries the rules of its members in its `description` and the service checks them (`E_VALIDATION` with the `path` and the hint), and `preset` and `fps` are accepted and ignored.
 
 ```json
