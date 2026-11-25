@@ -898,8 +898,18 @@ export interface MediaInspectResult {
 		count: number;
 		interval_ms: number;
 	};
+	// The `zooms` section: the zooms in the scale keyframes of the clips that play the asset (SDD-025 section 17.8).
+	zooms?: ClipZoom[];
 	next_cursor: string | null;
 	text: string;
+}
+
+// One zoom of a clip, in the time of the timeline; `n` counts the zooms of the clip from 1.
+export interface ClipZoom {
+	item_id: string;
+	n: number;
+	start: TimeValue;
+	end: TimeValue;
 }
 
 export interface MediaInspectQuery {

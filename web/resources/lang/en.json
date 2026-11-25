@@ -3532,6 +3532,21 @@
       "toggle": {
         "on": "On",
         "off": "Off"
+      },
+      "zoom_panel": {
+        "title": "Zoom on click",
+        "auto": "Automatic zoom",
+        "use_clicks": "Use the clicks",
+        "on": "On",
+        "off": "Off",
+        "hint": "Each zoom is a keyframe. You can edit or delete it.",
+        "list": "{count} zooms on lane Z1",
+        "none": "This clip has no zoom yet. Turn on Use the clicks to make them from the clicks of the take.",
+        "zoom": "Zoom {n}"
+      },
+      "zoom_lane": {
+        "name": "Z1 Zoom",
+        "label": "Zoom lane Z1, {count} zooms"
       }
     },
     "account": {

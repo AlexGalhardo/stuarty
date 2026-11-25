@@ -2195,6 +2195,15 @@ export function autoZoomOperations(
 	];
 }
 
+// The zoom of a screen take, off: the keyframes `recording.auto_zoom` wrote are the position and the scale, so the
+// three are cleared and the clip is back at rest. Other keyframes of the clip stay.
+export function zoomClearOperations(itemId: string): Operations {
+	return ["x", "y", "scale"].map((property) => ({
+		op: "keyframe.clear",
+		args: { item_id: itemId, property },
+	}));
+}
+
 export function cursorOperations(
 	itemId: string,
 	options: {
