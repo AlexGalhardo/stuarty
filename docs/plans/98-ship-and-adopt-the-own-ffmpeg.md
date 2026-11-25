@@ -32,10 +32,10 @@ Bundling or fetching OpenH264; macOS and Linux packages that cannot be built and
 
 ## Tasks
 
-- [ ] 1. The Windows installer carries the own FFmpeg and its licences, from a local archive or the published one by digest. Verify: the installer build script runs here, and the installed folder holds `ffmpeg.exe`, `ffprobe.exe` and the licences, each with the pinned digest.
-- [ ] 2. Discovery prefers the bundled build after the person's setting. Verify: `go test ./engine/ffmpeg/...` with a test that puts a bundled build next to a fake executable and another FFmpeg on the PATH.
-- [ ] 3. A fresh Windows install exports the reference project with no FFmpeg supplied. Verify: install into a temporary folder with an isolated home and run the reference export through the installed `stuarty.exe`.
-- [ ] 4. Notices and SDD-011, SDD-009 updated. Verify: `task notices:check` and `task lint:md` exit 0.
+- [x] 1. The Windows installer carries the own FFmpeg and its licences, from a local archive or the published one by digest. Verify: the installer build script runs here, and the installed folder holds `ffmpeg.exe`, `ffprobe.exe` and the licences, each with the pinned digest.
+- [x] 2. Discovery prefers the bundled build after the person's setting. Verify: `go test ./engine/ffmpeg/...` with a test that puts a bundled build next to a fake executable and another FFmpeg on the PATH.
+- [x] 3. A fresh Windows install exports the reference project with no FFmpeg supplied. Verify: install into a temporary folder with an isolated home and run the reference export through the installed `stuarty.exe`.
+- [x] 4. Notices and SDD-011, SDD-009 updated. Verify: `task notices:check` and `task lint:md` exit 0.
 - [ ] 5. Publication (the author, through CI): run `ffmpeg-build.yml` with `publish=true`, which builds every platform, signs and attests the archives. Verify: `bash scripts/release-verify.sh` for that release.
 - [ ] 6. Adoption (the author commits): `.config/ffmpeg.env` switched to the own build with the published digests. Verify: `go test ./internal/tools/ffmpegpins/...` and the image smoke test.
 
