@@ -4588,7 +4588,7 @@
         "import_choose": "Choose a project",
         "import_path": "Path of the file on this computer",
         "import_submit": "Import",
-        "import_started": "The file is being prepared. It appears in the list when it is ready; press Apply to read the list again.",
+        "import_started": "The file is being prepared. It appears in the list when it is ready; reload the page to see it.",
         "import_no_project": "Create a project first: a sound is imported into one.",
         "import_open": "Import audio"
       }
