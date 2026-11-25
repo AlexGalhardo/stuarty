@@ -6,7 +6,7 @@
 #   bash scripts/ffmpeg-verify.sh signatures <dir>               cosign verify-blob and gh attestation verify for every asset
 # `binary` fails when: the configure line is not LGPL safe (internal/tools/ffmpegconf), -buildconf
 # or -version names --enable-gpl, --enable-nonfree, libx264, libx265, libfdk_aac, the linker
-# listing shows an OpenH264 library, the libopenh264, libmp3lame, libvorbis, libwebp or libwebp_anim encoder is missing, the h264_qsv, hevc_qsv, h264_amf, hevc_amf, h264_nvenc or hevc_nvenc encoders (D-034) are missing on linux and windows x86_64, or a filter the engine references is missing (FILTERS_FILE,
+# listing shows an OpenH264 library, the libopenh264, libmp3lame, libvorbis, libwebp or libwebp_anim encoder is missing, the h264, hevc and av1 encoders (qsv, amf, nvenc; D-034, RF-089) of a hardware flag on the line, or h264_mf and hevc_mf (Media Foundation), h264_videotoolbox and hevc_videotoolbox (macOS) are missing on linux and windows x86_64, or a filter the engine references is missing (FILTERS_FILE,
 # default scripts/ffmpeg-filters.txt; eq and boxblur must be absent).
 # `signatures` needs cosign and gh, and REPO (owner/name) or GITHUB_REPOSITORY.
 set -euo pipefail
@@ -27,7 +27,7 @@ check_binary() {
 	buildconf="$("$ffmpeg" -hide_banner -buildconf)"
 	printf '%s\n' "$version" | head -n 1
 	# engine/ffmpeg/flavour.go knows the own build by this flag (SDD-011 8.2).
-	case "$version" in *--extra-version=vukem*) ;; *) die "the configure line has no --extra-version=vukem<N>" ;; esac
+	case "$version" in *--extra-version=stuarty*) ;; *) die "the configure line has no --extra-version=stuarty<N>" ;; esac
 
 	for m in --enable-gpl --enable-nonfree --enable-libx264 --enable-libx265 --enable-libfdk-aac --enable-libopenh264; do
 		case "$version$buildconf" in *"$m"*) die "the build carries $m" ;; esac
@@ -57,6 +57,8 @@ check_binary() {
 	case "$version" in *--enable-libvpl*) hw_flags="$hw_flags qsv" ;; esac
 	case "$version" in *--enable-amf*) hw_flags="$hw_flags amf" ;; esac
 	case "$version" in *--enable-ffnvcodec*) hw_flags="$hw_flags nvenc" ;; esac
+	case "$version" in *--enable-mediafoundation*) hw_flags="$hw_flags mf" ;; esac
+	case "$version" in *--enable-videotoolbox*) hw_flags="$hw_flags vt" ;; esac
 	if [ -n "$want_hw" ]; then
 		for need in qsv amf nvenc; do
 			case "$hw_flags" in *" $need"*) ;; *) die "the configure line has no $need flag (--enable-libvpl, --enable-amf, --enable-ffnvcodec) on this platform (D-034)" ;; esac
@@ -64,15 +66,19 @@ check_binary() {
 	fi
 	for need in $hw_flags; do
 		case "$need" in
-		qsv) enc="h264_qsv hevc_qsv" ;;
-		amf) enc="h264_amf hevc_amf" ;;
-		nvenc) enc="h264_nvenc hevc_nvenc" ;;
+		qsv) enc="h264_qsv hevc_qsv av1_qsv" ;;
+		amf) enc="h264_amf hevc_amf av1_amf" ;;
+		mf) enc="h264_mf hevc_mf" ;;
+		vt) enc="h264_videotoolbox hevc_videotoolbox" ;;
+		nvenc) enc="h264_nvenc hevc_nvenc av1_nvenc" ;;
 		esac
 		for e in $enc; do
 			printf '%s\n' "$encoders" | awk '{print $2}' | grep -x "$e" >/dev/null || die "the $e encoder is missing although its flag is on (D-034)"
 		done
 	done
-	grep -aq VUKEM_VIDEO_OPENH264_DIR "$ffmpeg" || die "the binary does not read VUKEM_VIDEO_OPENH264_DIR"
+	grep -aq STUARTY_OPENH264_DIR "$ffmpeg" || die "the binary does not read STUARTY_OPENH264_DIR"
+	# The former name is gone with the patch of ffmpeg-9.0.2-3 (VV-231); the engine still sets it for the builds installed before.
+	if grep -aq VUKEM_VIDEO_OPENH264_DIR "$ffmpeg"; then die "the binary still reads VUKEM_VIDEO_OPENH264_DIR"; fi
 
 	if [ -f "$filters_file" ]; then
 		local have missing=""
