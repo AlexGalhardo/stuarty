@@ -89,6 +89,18 @@ func TestStartAndStop(t *testing.T) {
 	s.Stop() // a second Stop is harmless
 }
 
+// TestAShellThatIsNotAReleasePassesNoAllowance: only a released shell lets its server open the default
+// workspace; a development shell (and every test) leaves the server to the barrier of its own (VV-421).
+func TestAShellThatIsNotAReleasePassesNoAllowance(t *testing.T) {
+	t.Setenv(workspace.EnvAllowDefaultHome, "")
+
+	s, err := Start(context.Background(), newConfig(t, "no-allowance"))
+	if err != nil {
+		t.Fatalf("the server refused the environment of a shell that is not a release: %v", err)
+	}
+	s.Stop()
+}
+
 func TestStopKillsAChildThatIgnoresTheSignal(t *testing.T) {
 	cfg := newConfig(t, "ignore-term")
 	cfg.StopGrace = 300 * time.Millisecond

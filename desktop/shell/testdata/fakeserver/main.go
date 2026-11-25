@@ -2,7 +2,8 @@
 // variable FAKE_MODE picks the behaviour: ok (default), never-ready (the
 // runtime file is written but /up answers 503), exit (fails with a message),
 // ignore-term (does not stop on SIGTERM), impostor (answers the handshake with
-// a proof of another token).
+// a proof of another token), no-allowance (fails when the shell passed the allowance to open the default
+// workspace, which a shell that is not a release must not do).
 package main
 
 import (
@@ -26,6 +27,10 @@ func main() {
 	if mode == "exit" {
 		fmt.Fprintln(os.Stderr, "fake: cannot open the workspace")
 		os.Exit(3)
+	}
+	if mode == "no-allowance" && os.Getenv(workspace.EnvAllowDefaultHome) != "" {
+		fmt.Fprintln(os.Stderr, "fake: the shell passed", workspace.EnvAllowDefaultHome)
+		os.Exit(4)
 	}
 	addr := os.Getenv("STUARTY_ADDR")
 	ln, err := net.Listen("tcp", addr)

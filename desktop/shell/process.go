@@ -162,9 +162,7 @@ func Start(ctx context.Context, cfg Config) (*Server, error) {
 	// The path comes from the caller of the shell, never from a page.
 	cmd := exec.Command(cfg.Binary, "serve") //nolint:gosec,noctx // a child that lives as long as the window
 	cmd.Env = append(os.Environ(), envAddr+"="+addr, envHome+"="+string(cfg.Workspace))
-	// The shell already passed the barrier of workspace.Resolve for this folder (a release, or the person
-	// allowed it), and the server binary beside it may carry no release stamp of its own (VV-421).
-	cmd.Env = append(cmd.Env, workspace.EnvAllowDefaultHome+"=1")
+	cmd.Env = append(cmd.Env, releaseAllowance()...)
 	cmd.Env = append(cmd.Env, cfg.Env...)
 	cmd.Env = append(cmd.Env, envLauncher+"="+launcher) // last, so nothing before it can override it
 	cmd.Stderr = &errBuf
@@ -342,4 +340,15 @@ func (t *tailBuffer) String() string {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 	return string(bytes.TrimSpace(t.buf))
+}
+
+// releaseAllowance is what a released shell adds to the environment of its server: the allowance to open
+// the default workspace, which the shell itself opened as a release (VV-421). A shell that is not a release
+// adds nothing, so its server opens the default workspace only when the person allowed it in the
+// environment the shell inherited.
+func releaseAllowance() []string {
+	if !workspace.ReleasedBuild() {
+		return nil
+	}
+	return []string{workspace.EnvAllowDefaultHome + "=1"}
 }
