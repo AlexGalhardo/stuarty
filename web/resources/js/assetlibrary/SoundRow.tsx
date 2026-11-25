@@ -117,7 +117,7 @@ export function SoundRow({
 	const locale = useLocale();
 	const poster = asset.poster;
 	const header = (
-		<div className="flex flex-wrap items-center justify-between gap-2">
+		<div className="flex min-w-0 flex-col gap-1">
 			<button
 				type="button"
 				onClick={onOpen}
@@ -126,7 +126,7 @@ export function SoundRow({
 			>
 				<UntrustedText>{asset.name}</UntrustedText>
 			</button>
-			<span className="flex flex-wrap items-center gap-1.5 text-sm text-text-muted">
+			<span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-text-muted">
 				{asset.duration_ms !== undefined && (
 					<span data-testid="sound-duration" className="font-mono tabular-nums">
 						{formatSeconds(asset.duration_ms / 1000, "timecode")}
@@ -150,7 +150,7 @@ export function SoundRow({
 	);
 	return (
 		<li
-			className="flex flex-col gap-2 rounded-lg border border-border bg-surface p-3 text-text aria-[current=true]:border-accent aria-[current=true]:bg-accent-soft"
+			className="grid gap-3 rounded-lg border border-border bg-surface p-3 text-text md:grid-cols-[minmax(0,20rem)_minmax(0,1fr)] aria-[current=true]:border-accent aria-[current=true]:bg-accent-soft"
 			aria-current={selected}
 			data-asset-hash={asset.hash}
 			data-testid="sound-row"
@@ -180,7 +180,7 @@ export function SoundRow({
 				</RenameMenu>
 			)}
 			{poster !== undefined && (
-				<>
+				<div className="flex min-w-0 flex-col gap-2">
 					<Waveform
 						timelineId={poster.timeline_id}
 						assetId={poster.asset_id}
@@ -194,7 +194,7 @@ export function SoundRow({
 						aria-label={t("ui.assets.sound.player", { name: asset.name })}
 						className="w-full"
 					/>
-				</>
+				</div>
 			)}
 		</li>
 	);

@@ -4304,8 +4304,12 @@
       "font_weight": "Peso",
       "font_import": "Importar fonte",
       "font_remove": "Remover a família de fontes {name}",
-      "save": "Salvar kit de marca",
-      "saved": "Kit de marca salvo."
+      "save": "Salvar kit",
+      "saved": "Kit de marca salvo.",
+      "preview": "Como fica em um vídeo",
+      "preview_title": "5 erros ao gravar",
+      "preview_byline": "com o seu nome",
+      "preview_note": "A prévia usa as duas primeiras cores e a primeira fonte do kit."
     },
     "assets": {
       "intro": {
@@ -4319,8 +4323,8 @@
         "origin": "Origem",
         "any_origin": "Qualquer origem",
         "reusable": "Só reutilizáveis",
-        "apply": "Aplicar",
-        "clear": "Limpar"
+        "bar": "Filtrar os arquivos",
+        "text_hint": "Nome, etiqueta ou projeto"
       },
       "origin": {
         "imported": "Importado",
@@ -4456,7 +4460,8 @@
         "import_path": "Caminho do arquivo neste computador",
         "import_submit": "Importar",
         "import_started": "O arquivo está sendo preparado. Ele aparece na lista quando estiver pronto; use Aplicar para ler a lista de novo.",
-        "import_no_project": "Crie um projeto antes: um som é importado em um projeto."
+        "import_no_project": "Crie um projeto antes: um som é importado em um projeto.",
+        "import_open": "Importar áudio"
       }
     },
     "write": {

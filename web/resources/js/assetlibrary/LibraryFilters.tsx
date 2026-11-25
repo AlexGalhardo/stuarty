@@ -1,5 +1,8 @@
-import { type FormEvent, type ReactNode, useState } from "react";
+import { Check } from "lucide-react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 
+import { FilterBar } from "@/components/FilterBar";
+import { OptionSelect } from "@/components/OptionSelect";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,8 +16,12 @@ const ORIGINS: readonly OriginKind[] = [
 	"rendered_externally",
 ];
 
-// The search and the filters of a library. They only collect what the person typed and send it as a query:
-// which files match is the service's answer. Every library has the same four filters, so it is learned once.
+// A typed word is sent after this pause, so the service is asked once per word and not once per key.
+const TYPING_PAUSE_MS = 300;
+
+// The search and the filters of a library. They only collect what the person typed or chose and send it as a
+// query, as they change: which files match is the service's answer. Every library has the same filters, so
+// they are learned once (the tag is a word because the service has no list of tags to offer).
 export function LibraryFilters({
 	section,
 	onApply,
@@ -27,91 +34,84 @@ export function LibraryFilters({
 	const [tag, setTag] = useState("");
 	const [origin, setOrigin] = useState<OriginKind | "">("");
 	const [reusable, setReusable] = useState(false);
+	const first = useRef(true);
+	const apply = useRef(onApply);
+	apply.current = onApply;
 
-	function search(event: FormEvent<HTMLFormElement>): void {
-		event.preventDefault();
-		onApply({
-			...(text.trim() === "" ? {} : { text: text.trim() }),
-			...(tag.trim() === "" ? {} : { tag: tag.trim() }),
-			...(origin === "" ? {} : { origin }),
-			...(reusable ? { reusable: true } : {}),
-		});
-	}
-
-	function clear(): void {
-		setText("");
-		setTag("");
-		setOrigin("");
-		setReusable(false);
-		onApply({});
-	}
+	useEffect(() => {
+		if (first.current) {
+			first.current = false;
+			return;
+		}
+		const timer = window.setTimeout(
+			() =>
+				apply.current({
+					...(text.trim() === "" ? {} : { text: text.trim() }),
+					...(tag.trim() === "" ? {} : { tag: tag.trim() }),
+					...(origin === "" ? {} : { origin }),
+					...(reusable ? { reusable: true } : {}),
+				}),
+			TYPING_PAUSE_MS,
+		);
+		return () => window.clearTimeout(timer);
+	}, [text, tag, origin, reusable]);
 
 	return (
-		<search>
-			<form
-				onSubmit={search}
-				className="flex flex-wrap items-end gap-3 rounded-lg border border-border bg-surface p-4"
+		<FilterBar label={t("ui.assets.filter.bar")} className="items-end gap-3">
+			<div className="flex min-w-48 flex-[2] flex-col gap-1">
+				<Label htmlFor={`filter-text-${section}`}>
+					{t("ui.assets.filter.text")}
+				</Label>
+				<Input
+					id={`filter-text-${section}`}
+					type="search"
+					autoComplete="off"
+					placeholder={t("ui.assets.filter.text_hint")}
+					value={text}
+					onChange={(event) => setText(event.target.value)}
+				/>
+			</div>
+			<div className="flex min-w-36 flex-1 flex-col gap-1">
+				<Label htmlFor={`filter-tag-${section}`}>
+					{t("ui.assets.filter.tag")}
+				</Label>
+				<Input
+					id={`filter-tag-${section}`}
+					autoComplete="off"
+					value={tag}
+					onChange={(event) => setTag(event.target.value)}
+				/>
+			</div>
+			<div className="flex min-w-44 flex-1 flex-col gap-1">
+				<span className="text-sm font-medium text-text">
+					{t("ui.assets.filter.origin")}
+				</span>
+				<OptionSelect
+					label={t("ui.assets.filter.origin")}
+					value={origin === "" ? "any" : origin}
+					onChange={(next) =>
+						setOrigin(next === "any" ? "" : (next as OriginKind))
+					}
+					className="w-full"
+					options={[
+						{ value: "any", label: t("ui.assets.filter.any_origin") },
+						...ORIGINS.map((kind) => ({
+							value: kind,
+							label: t(`ui.assets.origin.${kind}`),
+						})),
+					]}
+				/>
+			</div>
+			<Button
+				type="button"
+				variant="outline"
+				aria-pressed={reusable}
+				onClick={() => setReusable((was) => !was)}
+				className="aria-pressed:border-accent aria-pressed:bg-accent-soft"
 			>
-				<div className="flex min-w-48 flex-1 flex-col gap-1">
-					<Label htmlFor={`filter-text-${section}`}>
-						{t("ui.assets.filter.text")}
-					</Label>
-					<Input
-						id={`filter-text-${section}`}
-						autoComplete="off"
-						value={text}
-						onChange={(event) => setText(event.target.value)}
-					/>
-				</div>
-				<div className="flex min-w-40 flex-col gap-1">
-					<Label htmlFor={`filter-tag-${section}`}>
-						{t("ui.assets.filter.tag")}
-					</Label>
-					<Input
-						id={`filter-tag-${section}`}
-						autoComplete="off"
-						value={tag}
-						onChange={(event) => setTag(event.target.value)}
-					/>
-				</div>
-				<fieldset className="flex flex-wrap gap-x-4 gap-y-1">
-					<legend className="mb-1 text-sm font-medium text-text">
-						{t("ui.assets.filter.origin")}
-					</legend>
-					{["", ...ORIGINS].map((kind) => (
-						<label
-							key={kind}
-							className="flex min-h-8 items-center gap-1.5 text-sm text-text"
-						>
-							<input
-								type="radio"
-								name={`filter-origin-${section}`}
-								className="accent-accent"
-								checked={origin === kind}
-								onChange={() => setOrigin(kind as OriginKind | "")}
-							/>
-							{kind === ""
-								? t("ui.assets.filter.any_origin")
-								: t(`ui.assets.origin.${kind}`)}
-						</label>
-					))}
-				</fieldset>
-				<label className="flex min-h-9 items-center gap-2 text-sm text-text">
-					<input
-						type="checkbox"
-						className="accent-accent"
-						checked={reusable}
-						onChange={(event) => setReusable(event.target.checked)}
-					/>
-					{t("ui.assets.filter.reusable")}
-				</label>
-				<div className="flex gap-2">
-					<Button type="submit">{t("ui.assets.filter.apply")}</Button>
-					<Button type="button" variant="outline" onClick={clear}>
-						{t("ui.assets.filter.clear")}
-					</Button>
-				</div>
-			</form>
-		</search>
+				{reusable && <Check aria-hidden="true" />}
+				{t("ui.assets.filter.reusable")}
+			</Button>
+		</FilterBar>
 	);
 }

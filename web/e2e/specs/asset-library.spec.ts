@@ -48,7 +48,6 @@ test.describe("asset-library", () => {
 		).toBeVisible();
 
 		await page.getByLabel("Tag").fill(tag);
-		await page.getByRole("button", { name: "Apply" }).click();
 		const card = page.locator(`[data-asset-hash="${hash}"]`);
 		await expect(card).toBeVisible();
 		await expect(page.getByTestId("asset-grid").locator("li")).toHaveCount(1);
@@ -80,8 +79,7 @@ test.describe("asset-library", () => {
 		await expect(detail.getByRole("status")).toHaveText("Saved.");
 
 		// Found again by the reusable filter, from the page and from the API.
-		await page.getByLabel("Reusable only").check();
-		await page.getByRole("button", { name: "Apply" }).click();
+		await page.getByRole("button", { name: "Reusable only" }).click();
 		await expect(card).toBeVisible();
 
 		const listed = (await call(
