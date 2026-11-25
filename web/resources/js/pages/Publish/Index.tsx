@@ -457,6 +457,7 @@ export default function Publish(): ReactNode {
 								zone={zone}
 								publications={publications}
 								marks={marks}
+								accountNames={accountNames}
 								onOpen={(id, target) => setEditing({ id, target })}
 								onOpenDay={openDay}
 								onMove={move}

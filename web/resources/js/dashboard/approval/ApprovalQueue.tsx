@@ -131,7 +131,12 @@ export function ApprovalItem({
 						: "grid gap-4 lg:grid-cols-[minmax(0,1fr)_20rem]"
 				}
 			>
-				<dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm md:grid-cols-3">
+				<dl
+					className={cn(
+						"grid grid-cols-2 gap-x-6 gap-y-3 text-sm",
+						post === undefined && "md:grid-cols-3",
+					)}
+				>
 					<Fact label={t("ui.approvals.actor")} testId="approval-actor">
 						<UntrustedText>{request.actor}</UntrustedText>
 					</Fact>
