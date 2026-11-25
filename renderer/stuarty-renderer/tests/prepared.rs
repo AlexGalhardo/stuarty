@@ -215,3 +215,68 @@ fn a_prepared_layer_moved_is_the_layer_moved() {
 		}
 	}
 }
+
+/// The layer with `degrees` added to its rotation; a layer with no `rotation` member gets one.
+fn turned(layer: &Value, degrees: f64) -> Value {
+	let Value::Obj(m) = layer else {
+		panic!("layer")
+	};
+	let mut seen = false;
+	let mut members: Vec<(String, Value)> = m
+		.iter()
+		.map(|(k, v)| match (k.as_str(), v) {
+			("rotation", Value::Num(n)) => {
+				seen = true;
+				(k.clone(), Value::Num(n + degrees))
+			}
+			_ => (k.clone(), v.clone()),
+		})
+		.collect();
+	if !seen {
+		members.push(("rotation".to_string(), Value::Num(degrees)));
+	}
+	Value::Obj(members)
+}
+
+/// No look reads the angle of a layer (SDD-013 section 4.2.2): a picture prepared at one angle and drawn at
+/// another is the layer drawn whole at the other, and the block itself is the same bytes. The export relies on
+/// it to keep a prepared layer while a person turns the layer (SDD-021 section 6.2, epic 91).
+#[test]
+fn a_prepared_layer_turned_is_the_layer_turned() {
+	let mut turned_layers = 0;
+	for case in support::cases() {
+		let (whole, input, w, h) = support::load(&case);
+		let (mut prep, _, _, _) = support::load(&case);
+		let root = parse(&input).unwrap();
+		let layers = layers_of(&root);
+
+		for l in layers.iter().filter(|l| is_media(l)) {
+			let one = with_layers(&root, vec![l.clone()]);
+			let block = prep.prepare(one.as_bytes()).unwrap();
+			for degrees in [13.0, -41.0, 90.0] {
+				let other = with_layers(&root, vec![turned(l, degrees)]);
+				assert!(
+					prep.prepare(other.as_bytes()).unwrap() == block,
+					"{}: the prepared block depends on the rotation ({degrees})",
+					case.display()
+				);
+			}
+			if !block.is_empty() {
+				prep.put_prepared(&item(l), &block).unwrap();
+			}
+		}
+
+		for degrees in [13.0, -41.0, 90.0] {
+			// every layer turned, the clip sources too: the same plan on both sides
+			let moved: Vec<Value> = layers.iter().map(|l| turned(l, degrees)).collect();
+			let text = with_layers(&root, moved);
+			let mut a = vec![0_u8; w * h * 4];
+			let mut b = vec![0_u8; w * h * 4];
+			whole.render(text.as_bytes(), &mut a).unwrap();
+			prep.render(text.as_bytes(), &mut b).unwrap();
+			assert!(a == b, "{}: turned by {degrees} differs", case.display());
+			turned_layers += 1;
+		}
+	}
+	assert!(turned_layers >= 20, "{turned_layers} cases turned");
+}
