@@ -89,3 +89,36 @@ func ApplyTags(have, add, remove []string) ([]string, *RuleError) {
 
 	return out, nil
 }
+
+// TagCount is a tag in use in the library and how many files carry it.
+type TagCount struct {
+	Tag   string `json:"tag"`
+	Count int    `json:"count"`
+}
+
+// CountTags counts the tags of the files, each file once per tag (a file's tags are a set), most used first and
+// by name among equals. It feeds the tag picker of the library pages (SDD-011 section 14.11).
+func CountTags(files [][]string) []TagCount {
+	counts := map[string]int{}
+
+	for _, tags := range files {
+		for _, t := range slices.Compact(slices.Sorted(slices.Values(tags))) {
+			counts[t]++
+		}
+	}
+
+	out := make([]TagCount, 0, len(counts))
+	for t, n := range counts {
+		out = append(out, TagCount{Tag: t, Count: n})
+	}
+
+	slices.SortFunc(out, func(a, b TagCount) int {
+		if a.Count != b.Count {
+			return b.Count - a.Count
+		}
+
+		return strings.Compare(a.Tag, b.Tag)
+	})
+
+	return out
+}

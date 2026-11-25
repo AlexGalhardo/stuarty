@@ -594,3 +594,39 @@ func TestAssetLibraryAnEntryWithNoStateIsReadyAndAUnknownSizeHasNoText(t *testin
 		)
 	}
 }
+
+func TestListCountsTheTagsInUseByTheOtherFilters(t *testing.T) {
+	t.Parallel()
+
+	lib, _, files := fixture(t)
+	ctx := context.Background()
+
+	all, err := lib.List(ctx, files, &assets.Query{})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	want := []asset.TagCount{{Tag: "logo", Count: 2}, {Tag: "brand", Count: 1}, {Tag: "funny", Count: 1}, {Tag: "sound", Count: 1}}
+	if !slices.Equal(all.TagsInUse, want) {
+		t.Fatalf("tags in use = %v, want %v", all.TagsInUse, want)
+	}
+
+	// The tag filter narrows the files, not the picker; a section does narrow it.
+	byTag, err := lib.List(ctx, files, &assets.Query{Filter: asset.Filter{Tag: "brand"}})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if byTag.Total != 1 || !slices.Equal(byTag.TagsInUse, want) {
+		t.Fatalf("tag filter: total %d, tags %v", byTag.Total, byTag.TagsInUse)
+	}
+
+	audio, err := lib.List(ctx, files, &assets.Query{Filter: asset.Filter{Section: asset.SectionAudio}})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !slices.Equal(audio.TagsInUse, []asset.TagCount{{Tag: "sound", Count: 1}}) {
+		t.Fatalf("audio tags = %v", audio.TagsInUse)
+	}
+}

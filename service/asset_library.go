@@ -49,12 +49,15 @@ type AssetListResult struct {
 	// FileCount, TotalBytes and TotalSizeText are about every file that matches the filters, not the page: the
 	// distinct files, what they weigh with each hash once, and that weight in words (SDD-011 section 14.9).
 	// Unsized counts the files among them whose size is unknown; they add nothing to the total.
-	FileCount     int     `json:"file_count"`
-	TotalBytes    int64   `json:"total_bytes"`
-	TotalSizeText string  `json:"total_size_text"`
-	Unsized       int     `json:"unsized"`
-	NextCursor    *string `json:"next_cursor"`
-	Text          string  `json:"text"`
+	FileCount     int    `json:"file_count"`
+	TotalBytes    int64  `json:"total_bytes"`
+	TotalSizeText string `json:"total_size_text"`
+	Unsized       int    `json:"unsized"`
+	// TagsInUse is the tags the files that match the other filters carry, with how many files carry each, most used
+	// first (SDD-011 section 14.11); the tag picker draws it.
+	TagsInUse  []asset.TagCount `json:"tags_in_use"`
+	NextCursor *string          `json:"next_cursor"`
+	Text       string           `json:"text"`
 }
 
 // maxLibraryAssets bounds the answer; the scan of projects is bounded by maxFontOwnerScan.
@@ -304,13 +307,13 @@ func (s *svc) AssetList(ctx context.Context, req AssetListRequest) (*AssetListRe
 	res := &AssetListResult{
 		UntrustedNotice: UntrustedNotice, Assets: page.Assets, Total: page.Total,
 		FileCount: page.Size.Files, TotalBytes: page.Size.Bytes, Unsized: page.Size.Unsized,
-		TotalSizeText: page.Size.SizeText(),
+		TotalSizeText: page.Size.SizeText(), TagsInUse: page.TagsInUse,
 	}
 	if res.Assets == nil {
 		res.Assets = []LibraryAsset{}
 	}
 
-	res.Text = assetListText(res.Assets, page.Total, res.TotalSizeText, res.Unsized)
+	res.Text = assetListText(res.Assets, page.Total, res.TotalSizeText, res.Unsized, res.TagsInUse)
 
 	if page.Next >= 0 {
 		cur := offsetCursor("assets", "", page.Next)
@@ -322,9 +325,12 @@ func (s *svc) AssetList(ctx context.Context, req AssetListRequest) (*AssetListRe
 }
 
 // assetListTextCap is the budget of the text of a list, in characters (SDD-003 section 3.10).
+// maxTagsInText bounds the tags in use that the text of a list names; the structured result holds them all.
+const maxTagsInText = 30
+
 const assetListTextCap = textview.CapMediaList
 
-func assetListText(list []LibraryAsset, total int, sizeText string, unsized int) string {
+func assetListText(list []LibraryAsset, total int, sizeText string, unsized int, inUse []asset.TagCount) string {
 	var b strings.Builder
 
 	b.WriteString(textview.Note + "\n")
@@ -338,6 +344,20 @@ func assetListText(list []LibraryAsset, total int, sizeText string, unsized int)
 
 	if unsized > 0 {
 		fmt.Fprintf(&b, " (%d with no known size)", unsized)
+	}
+
+	if len(inUse) > 0 {
+		b.WriteString("\ntags in use:")
+
+		for i, tc := range inUse {
+			if i == maxTagsInText {
+				fmt.Fprintf(&b, " ... %d more", len(inUse)-i)
+
+				break
+			}
+
+			fmt.Fprintf(&b, " %s(%d)", tc.Tag, tc.Count)
+		}
 	}
 
 	for i := range list {

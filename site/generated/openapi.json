@@ -254,6 +254,12 @@
               "null"
             ]
           },
+          "tags_in_use": {
+            "items": {
+              "$ref": "#/components/schemas/TagCount"
+            },
+            "type": "array"
+          },
           "text": {
             "type": "string"
           },
@@ -9434,6 +9440,17 @@
           },
           "store_files": {
             "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "TagCount": {
+        "properties": {
+          "count": {
+            "type": "integer"
+          },
+          "tag": {
+            "type": "string"
           }
         },
         "type": "object"

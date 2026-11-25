@@ -247,3 +247,16 @@ func TestUses(t *testing.T) {
 		t.Error("no holdings, no uses")
 	}
 }
+
+func TestCountTags(t *testing.T) {
+	got := CountTags([][]string{{"b", "a", "a"}, {"a"}, nil, {"c", "b"}})
+	want := []TagCount{{"a", 2}, {"b", 2}, {"c", 1}}
+
+	if !slices.Equal(got, want) {
+		t.Fatalf("CountTags = %v, want %v", got, want)
+	}
+
+	if got := CountTags(nil); got == nil || len(got) != 0 {
+		t.Fatalf("CountTags(nil) = %#v, want an empty non-nil list", got)
+	}
+}

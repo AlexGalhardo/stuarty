@@ -117,6 +117,8 @@ type Page struct {
 	Next   int
 	// Size is what every file that matched weighs, each hash once, not only the page (SDD-011 section 14.9).
 	Size asset.Total
+	// TagsInUse counts the tags of the files that match every filter but the tag (SDD-011 section 14.11).
+	TagsInUse []asset.TagCount
 }
 
 func stamp(ms int64) string {
@@ -238,8 +240,21 @@ func (l *Library) List(ctx context.Context, held []Held, q *Query) (Page, error)
 
 	kept := candidates[:0]
 
+	// The tags in use are those of the files every filter but the tag keeps, so a picker offers what a click on
+	// it can still show.
+	untagged := f
+	untagged.Tag = ""
+
+	var tagSets [][]string
+
 	for _, h := range candidates {
-		if e := entryOf(h, rowOf(h)); f.Match(&e) {
+		e := entryOf(h, rowOf(h))
+
+		if untagged.Match(&e) {
+			tagSets = append(tagSets, e.Tags)
+		}
+
+		if f.Match(&e) {
 			kept = append(kept, h)
 		}
 	}
@@ -253,7 +268,7 @@ func (l *Library) List(ctx context.Context, held []Held, q *Query) (Page, error)
 		sizes[i] = asset.SizeItem{Hash: h.Hash, Bytes: h.Bytes}
 	}
 
-	page := Page{Total: len(kept), Next: -1, Size: asset.TotalOf(sizes)}
+	page := Page{Total: len(kept), Next: -1, Size: asset.TotalOf(sizes), TagsInUse: asset.CountTags(tagSets)}
 	start := min(max(q.Offset, 0), len(kept))
 	end := len(kept)
 

@@ -1558,6 +1558,12 @@ A path on the disk is personal data. `AssetReveal` (request `hash`, scope `read`
 
 Decisions: DS-27, the path is an answer for a person and is checked where it is made and again where it is used; DS-28, the list shows files it cannot size instead of hiding them, so a loss is visible.
 
+### 14.11 Data for the library screens (epic 99, group A)
+
+The three library pages draw what the service says; nothing is counted in the page.
+
+- **Tags in use.** `AssetList` also returns `tags_in_use`: `[{tag, count}]`, the tags that the files matching every filter *but the tag* carry, with how many of those files carry each, most used first and by name among equals (`core/asset.CountTags`; a file counts once for a tag). It is the choice list of the tag picker: choosing a tag sends `tag` and the list keeps offering the others, so the person can change the tag; a section or a kind narrows it. It is complete (it is not cut by `limit`); the text of the list names the first 30. No new operation and no new tool: it is a member of the list on HTTP (`GET /assets`), the CLI (`asset:list`) and MCP (`media_inspect` without a project).
+
 ## 15. The hand-off from an external motion engine
 
 PRD-001 RF-084, PRD-004 RF-389, ADR-0042, ADR-0027, ADR-0020 item 6. When a video needs an animation the editor cannot make, the agent (or the person) builds it in a motion engine, on their own side, and brings it back as a clip that fits. **The product never runs, bundles or downloads the engine**: it gives the engine what it must fit (the brief), takes the rendered file like any other import (with its origin), says what does not fit (the check) and swaps a clip's media when the animation is rendered again (the replacement). The first engine the skill covers is HyperFrames (Apache-2.0, built-in skill `motion-with-an-external-engine`, SDD-018 section 16); nothing in the product is specific to it.
