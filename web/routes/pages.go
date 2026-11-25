@@ -372,7 +372,7 @@ func editorPage(c *web.Ctx, d *httpapi.Deps, app *vukem.App) error {
 	return c.Render("editor", map[string]any{"Bootstrap": editorBootstrap{
 		ProjectID: id, Mode: "local", APIBase: httpapi.BasePath, Locale: locale, Locales: app.I18n.Locales(),
 		Messages: app.I18n.Messages(locale, "ui.editor.", "ui.common.", "ui.theme.", "ui.nav.",
-			"ui.shell.scene.", "ui.chat.", "ui.agent_activity.", "ui.session."),
+			"ui.shell.", "ui.chat.", "ui.agent_activity.", "ui.session."),
 		Version: d.Version,
 		Session: editorSession{Privileged: person.Browser},
 	}})
