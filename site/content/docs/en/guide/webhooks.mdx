@@ -26,13 +26,13 @@ Each delivery is a JSON body with `event`, `id`, `occurred_at`, `workspace` and 
 
 ## Register one
 
-In the app, open **Webhooks** in the sidebar, press **Add**, give it a name, the address and the events you want. The address is `https`, or `http` for `localhost` when your receiver runs on this machine. An address on a private network, a link-local address or a cloud metadata address is refused, and so is a name that turns into one when Stuarty connects.
+In the app, open **Webhooks** in the **Connect** group of the sidebar. The page is a list of your webhooks on the left and the one you choose on the right. Press **Add webhook**, give it a name, the address and the events you want. The address is `https`, or `http` for `localhost` when your receiver runs on this machine. An address on a private network, a link-local address or a cloud metadata address is refused, and so is a name that turns into one when Stuarty connects.
 
 ```text
 stuarty webhook:add --name n8n --endpoint https://stuarty.example.com/hooks --events export.ready,job.failed
 ```
 
-The **signing secret** is shown once, with a copy button. Keep it in your receiver: Stuarty keeps it in the vault and cannot show it again. **Rotate secret** makes a new one and the old one stops verifying.
+The **signing secret** is shown once, with a copy button. Keep it in your receiver: Stuarty keeps it in the vault and cannot show it again. **Rotate secret** makes a new one and the old one stops verifying, so your receiver refuses every call until it holds the new one. **Turn off** pauses a webhook and **Remove** deletes it with its secret and its deliveries.
 
 ## Check a delivery
 
@@ -40,7 +40,7 @@ Every call is a `POST` with `Content-Type: application/json` and a header `Stuar
 
 ## Deliveries, tests and retries
 
-A call that fails on the network, times out after 10 seconds, or answers `408`, `429` or `5xx` is tried again up to five times, waiting 10 s, 30 s, 90 s, 270 s and 810 s. An answer such as `403` is final, and a redirect is never followed, so give the final address. Open a webhook to see each delivery with its status, its attempts and how long each took; Stuarty keeps the size of the answer and never its text. **Send test** delivers a `webhook.test` event once, and **Send again** repeats a delivery with a fresh signature. If the vault is locked, deliveries wait and are sent after you unlock it.
+A call that fails on the network, times out after 10 seconds, or answers `408`, `429` or `5xx` is tried again up to five times, waiting 10 s, 30 s, 90 s, 270 s and 810 s. An answer such as `403` is final, and a redirect is never followed, so give the final address. Choose a webhook in the list to see its events and each delivery with its state (waiting, delivered or failed), its attempts and how long each took; Stuarty keeps the size of the answer and never its text. **Send test** delivers a `webhook.test` event once, and **Send again** repeats a delivery with a fresh signature. If the vault is locked, deliveries wait and are sent after you unlock it.
 
 ## Common mistakes
 

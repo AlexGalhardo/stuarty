@@ -21,8 +21,10 @@ Three rules hold everywhere:
 
 ## Quick start
 
-1. Open **Approvals**. Each request shows what it is, the project, the destination, the estimated cost and, for a publication, the post that will be sent. Choose **Approve** or reject it with a reason.
-2. Or from a terminal, to see what waits (the decision itself is for the browser):
+1. Open **Approvals** (in the **Publish** group of the sidebar). The page has the queue **Waiting for you** on the left, and on the right the **Cost limit** and the **Rules that approve for you**. The button **Rules** at the top jumps to the rules. A request is also shown in the bell at the top of every page.
+2. Each request says what happens, in a sentence such as "Publish this item to your connection", and shows the item, the tool, where it goes, the estimated cost, whether it can be undone, who asked and when. For a publication it shows the post that will be sent, with **Open in Publish**. Choose **Approve**, or **Reject** with an optional reason. Nothing is published or paid before that.
+3. The queue is live: new requests appear by themselves, and the page says so when it is not live and you must reload.
+4. Or from a terminal, to see what waits (the decision itself is for the browser):
 
    ```bash
    stuarty approval:list
@@ -33,11 +35,11 @@ Three rules hold everywhere:
 
 ### Rules that approve for you
 
-A rule lets a kind of action through without asking. It can be narrow (one destination, one project) and it can carry a limit per action and per day. Open **Approvals**, then **Rules that approve for you**, then **Add rule**: pick the kind (for example the publications of one project to one account, or the generations under a small cost), the limits, and save. A rule can be switched off without deleting it. A rule is created only from the browser; an agent that tries gets `E_PRIVILEGED_SESSION`.
+A rule lets a kind of action through without asking. It can be narrow (one destination, one project) and it can carry a limit per action and per day. On **Approvals**, in **Rules that approve for you**, choose **New rule**, then **Add rule**: pick the kind (for example the publications of one project to one account, or the generations under a small cost), the limits, and save. A rule can be switched off without deleting it. A rule is created only from the browser; an agent that tries gets `E_PRIVILEGED_SESSION`.
 
 ### Cost ceilings
 
-A ceiling is the most one action may cost and the most that may be spent in a day, for the whole workspace or for one project. Set it under **Approvals**, **Cost**. Before a call to a provider there is an estimate, and after it the real cost is recorded; when either would pass a ceiling the call stops. The numbers are in millionths of the currency, the way providers price them.
+A ceiling is the most one action may cost and the most that may be spent in a day, for the whole workspace or for one project. Set it in **Cost limit** on the **Approvals** page, with **Set a ceiling**. A bar shows what was **Spent today** against the ceiling of the day; a day is a UTC day, and leaving both limits empty removes the ceiling of that currency. Before a call to a provider there is an estimate, and after it the real cost is recorded; when either would pass a ceiling the call stops. The numbers are in millionths of the currency, the way providers price them.
 
 ## Common mistakes
 

@@ -1,32 +1,54 @@
 ---
 title: "The dashboard and the sidebar"
-description: "Where everything is: the home page and the sidebar that leads to each part of the work."
+description: "Where everything is: the home page, the sidebar, the agent bar at the top and the bell that lists what waits for you."
 ---
 
 ## You will learn
 
-- what each section of the sidebar holds;
+- what each group of the sidebar holds;
+- what the agent bar at the top says and what its buttons do;
 - that the browser and the desktop application show the same pages.
 
 ## The idea
 
 When you open Stuarty you land on the **dashboard**: one home with a sidebar that leads to each part of the work. The desktop application is a window over the same pages, so what you learn in one is true in the other. The sidebar collapses to icons, and on a phone it opens as a drawer.
 
-The home greets you by the part of the day and the name of your account, says how many productions are in progress and how many requests wait for your yes, shows the project in progress with its path and one button for its current step, and lists **Your studio** (the areas of the work) and **Waiting for you** (the requests that wait, with the way to the queue).
+The home greets you by the part of the day and the name of your account. It says how many productions are in progress and how many requests wait for your yes. It shows the project in progress with its path and one button for its current step, and it lists **Your studio** (the areas of the work) and **Waiting for you** (the requests that wait, with the way to the queue). With no project yet, it shows three steps: say what you want to create, fill in the briefing, follow the path to publication.
 
-| Section | What it holds | Guide |
-| --- | --- | --- |
-| **Projects** | every production, with its brief, texts, timelines and publications | [Projects](/docs/projects) |
-| **Video editor** | the video editor: timeline, captions, effects and export | [Basic timeline editing](/docs/guide/timeline) |
-| **Image editor** | the image editor: layers, text and thumbnails | [The image editor](/docs/guide/image-editor) |
-| **Writing** | scripts, copy and captions, with their revisions | [Writing](/docs/guide/writing) |
-| **Images**, **Videos**, **Sounds** | the library of every image, clip, sound and colour table you have | [The asset library](/docs/guide/asset-library) |
-| **Publishing** | the calendar, and the publications of your networks | [The publishing calendar](/docs/guide/publishing-calendar) |
-| **Skills**, **Prompts**, **Memory** | the way you work, as files you own | [Memory, skills and prompts](/docs/guide/memory-skills-prompts) |
-| **Connections** | the destinations you connected: AI providers, networks, sign-ins | [AI providers](/docs/guide/ai-providers) |
-| **Settings** | language, theme, shortcuts, the desktop options | [Settings](/docs/guide/settings) |
+## The sidebar
 
-Approvals live where the work does: a request appears on the page of the thing that made it, and the queue is on its own page ([Approvals](/docs/guide/approvals)).
+The sidebar has five groups. **Settings** sits at the bottom, with your profile and, on a server, the end of the session.
+
+| Group | Section | What it holds | Guide |
+| --- | --- | --- | --- |
+| **Create** | **Projects** | every production, with its briefing, texts, timelines and publications | [Projects](/docs/projects) |
+| | **Writing** | scripts, copy and blog posts, with their revisions | [Writing](/docs/guide/writing) |
+| | **Video editor** | timeline, captions, effects and export | [Basic timeline editing](/docs/guide/timeline) |
+| | **Image editor** | layers, text and thumbnails | [The image editor](/docs/guide/image-editor) |
+| **Assets** | **Videos**, **Images**, **Sounds** | the libraries of every clip, image and sound you have | [The asset library](/docs/guide/asset-library) |
+| | **Brand kit** | your colours, fonts and logo | [Fonts and the brand kit](/docs/guide/brand-kit) |
+| **Agent** | **Skills**, **Prompts**, **Memory** | the way you work, as files you own | [Memory, skills and prompts](/docs/guide/memory-skills-prompts) |
+| **Publish** | **Approvals** | what waits for your yes, with a counter | [Approvals](/docs/guide/approvals) |
+| | **Publishing** | the calendar and the publications of your networks | [The publishing calendar](/docs/guide/publishing-calendar) |
+| **Connect** | **Connections** | the destinations you connected: AI providers, networks, sign-ins | [AI providers](/docs/guide/ai-providers) |
+| | **Webhooks** | the addresses that Stuarty calls when something happens | [Webhooks](/docs/guide/webhooks) |
+| | **API keys** | the keys of the HTTP API, in network mode only | [API keys](/docs/self-hosting/api-keys) |
+
+The **Video editor** opens from a project. Open or create one in **Projects** first.
+
+## The agent bar
+
+A bar under the top of every page tells you what the agent is doing, so that nothing happens out of sight. From left to right it shows:
+
+- **Agent**: the state, one of waiting for you, working, asks your permission, you denied it, finished, or failed, and the project it works on;
+- **Skill**: whether a skill is loaded in this session, available or none;
+- **Tool**: the last tool the agent called and its status, or "No tool called yet";
+- **Next**: the next step the agent reported, or "No next step reported";
+- **Open chat**, or **Connect an agent** when none is connected.
+
+When the agent asks your permission, the bar shows the request with **Allow once** and **Deny**. What and where are as the agent described the call; Stuarty cannot check them. Only a person can answer, in the desktop app or signed in with a password. See [The agent chat](/docs/guide/agent-chat).
+
+The **bell** at the top lists everything that waits for you, from the chat and from the Approvals queue: what will happen, to what, where, at what cost and whether it can be undone. **Review in Approvals** opens the queue.
 
 ## Quick start
 

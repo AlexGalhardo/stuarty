@@ -31,7 +31,18 @@ Every project has a **name**, a **description** and a **goal**, and they are req
 | Time-bound | the schedule and the milestones | 16 to 280 characters |
 | Due date | the day the goal is due, today or later | `YYYY-MM-DD` |
 
-In the app, **Projects** shows one form with a tip and a worked example next to every field; the button is enabled when every field is valid, and an error shows under its field. A project made before this existed opens with a **Complete the project** notice that leads to the same form; change the name, the description or the goal at any time with **Edit the project**.
+### In the app
+
+**Projects** has three tabs: **Your projects** (a card for each project, with its kind, the words of its text and the actions Rename, Duplicate and Delete), **Templates** and **Trash**. Delete moves a project to the trash, where **Restore** brings it back.
+
+**New project** works in two steps:
+
+1. A short dialog asks for the **name** and **what to create**: **Text**, **Video**, **Image** or **Decide later**. A video also asks for the format. Choose **Continue to the briefing**.
+2. The **briefing** opens as a page of its own, with the questions of the kind you chose, a tip and a worked example next to every field. **Create project** is enabled when every field is valid, and an error shows under its field. **Back** returns to the first step. The project is created only when you send the briefing.
+
+A project made before this existed opens with a **Complete the project** notice that leads to the same form; change the name, the description or the goal at any time with **Edit the project**.
+
+The page of a project shows, from top to bottom, its **path to publication** (with **Add media** and one button for the current step), the **context** you wrote, the **guided briefing** (a few questions whose answers become the brief that an agent reads), the free **brief**, and the **items** with Rename, Move and Trash.
 
 A new project has **no timeline**: the size (`9:16`, `1:1`, `16:9` or `4:5`) and the <Term id="frame-rate">frame rate</Term> are asked when you add a video to it, and the first timeline has the id of the project. The `--preset` and `--fps` arguments of `project:create` and `project_create` are deprecated: they are accepted, they create nothing, and they are removed in release 1.0.0.
 
