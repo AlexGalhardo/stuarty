@@ -27,7 +27,7 @@ func init() {
 
 	Register(Define(Spec{
 		Name:    "caption.retime_from_clip",
-		Summary: "Retimes the captions linked to a clip after the clip was moved, trimmed or sped up.",
+		Summary: "Retimes captions linked to a clip after it is moved, trimmed or sped up.",
 		Description: "Maps the transcript words of the visible range to the timeline again and gives them to the " +
 			"linked captions in order, each taking as many words as it has. Edited texts are kept when the word " +
 			"count is unchanged. The transcript is supplied by the service in resolved.",

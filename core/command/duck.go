@@ -12,7 +12,7 @@ import (
 func init() {
 	Register(Define(Spec{
 		Name:    "audio.duck",
-		Summary: "Lowers a music item while speech sounds, with a ramp down before and a ramp up after.",
+		Summary: "Lowers a music item while speech sounds, with ramps before and after.",
 		Description: "Writes volume keyframes on the music item: its volume drops by gain_db over attack before each " +
 			"stretch of speech and returns over release after it. Speech stretches closer than the ramps are held " +
 			"low across the gap. The speech comes from the analysis of the speech items and is supplied by the " +

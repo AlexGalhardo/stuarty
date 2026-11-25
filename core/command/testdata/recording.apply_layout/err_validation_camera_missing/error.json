@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.camera_item_id: the layout split needs the webcam clip.",
+  "hint": "Send camera_item_id, or use the layout screen_only.",
+  "retryable": false,
+  "path": "args.camera_item_id"
+}

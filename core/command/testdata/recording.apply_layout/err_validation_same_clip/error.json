@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.camera_item_id is the screen clip itm_m1n2p3q4r5.",
+  "hint": "Send two different clips.",
+  "retryable": false,
+  "path": "args.camera_item_id"
+}

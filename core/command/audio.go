@@ -7,7 +7,7 @@ import (
 func init() {
 	Register(Define(Spec{
 		Name:    "audio.add",
-		Summary: "Places an audio asset, or the audio of a video asset, on an audio track.",
+		Summary: "Places an audio asset, or the audio of a video, on an audio track.",
 		Description: "Adds an audio item. The default duration is the rest of the asset from source_in. The reserved " +
 			"asset ast_placeholder creates a template slot holder and needs an explicit duration.",
 		Example: `{"track_id": "trk_m1n2p3q4r5", "asset_id": "ast_4h6j8k2m3n", "start": "1s", "id": "itm_s6t7v8w9x0"}`,

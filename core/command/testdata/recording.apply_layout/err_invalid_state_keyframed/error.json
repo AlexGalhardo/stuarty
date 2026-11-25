@@ -1,0 +1,12 @@
+{
+  "code": "E_INVALID_STATE",
+  "message": "Property scale of itm_m1n2p3q4r5 has 2 keyframes, which define its value.",
+  "hint": "Apply the layout before recording.auto_zoom, or remove the keyframes with keyframe.clear.",
+  "retryable": false,
+  "path": "args.screen_item_id",
+  "details": {
+    "properties": [
+      "scale"
+    ]
+  }
+}

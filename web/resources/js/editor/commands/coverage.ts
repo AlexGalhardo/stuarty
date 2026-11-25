@@ -258,6 +258,7 @@ export const COVERAGE: Readonly<Record<string, readonly EntryPoint[]>> = {
 		{ kind: "inspector", action: "inspector.blur_region" },
 		palette,
 	],
+	"recording.apply_layout": [palette],
 	"recording.auto_zoom": [
 		{ kind: "inspector", action: "inspector.screen_zoom" },
 		palette,

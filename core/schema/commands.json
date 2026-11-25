@@ -307,7 +307,7 @@
     "internal": false,
     "name": "audio.add",
     "scope": "edit",
-    "summary": "Places an audio asset, or the audio of a video asset, on an audio track."
+    "summary": "Places an audio asset, or the audio of a video, on an audio track."
   },
   {
     "args_schema": {
@@ -463,7 +463,7 @@
     "internal": false,
     "name": "audio.duck",
     "scope": "edit",
-    "summary": "Lowers a music item while speech sounds, with a ramp down before and a ramp up after."
+    "summary": "Lowers a music item while speech sounds, with ramps before and after."
   },
   {
     "args_schema": {
@@ -2084,7 +2084,7 @@
     "internal": false,
     "name": "caption.retime_from_clip",
     "scope": "edit",
-    "summary": "Retimes the captions linked to a clip after the clip was moved, trimmed or sped up."
+    "summary": "Retimes captions linked to a clip after it is moved, trimmed or sped up."
   },
   {
     "args_schema": {
@@ -2626,7 +2626,7 @@
     "internal": false,
     "name": "clip.add_composition",
     "scope": "edit",
-    "summary": "Places another timeline of the project on a visual track as one clip."
+    "summary": "Places another timeline of the project on a track as one clip."
   },
   {
     "args_schema": {
@@ -2862,7 +2862,7 @@
     "internal": false,
     "name": "clip.remove_silences",
     "scope": "edit",
-    "summary": "Cuts the silences out of a clip or audio item, one item per stretch of speech."
+    "summary": "Cuts the silences out of a clip or audio item, one item per speech stretch."
   },
   {
     "args_schema": {
@@ -2902,7 +2902,7 @@
     "internal": false,
     "name": "clip.replace_media",
     "scope": "edit",
-    "summary": "Swaps the asset of a clip for another of the same kind and keeps everything else."
+    "summary": "Swaps the asset of a clip for another of the same kind, keeping the rest."
   },
   {
     "args_schema": {
@@ -3485,7 +3485,7 @@
     "internal": false,
     "name": "clip.set_effects",
     "scope": "edit",
-    "summary": "Sets the effects of a clip: motion blur, glow, vignette, grain, RGB split and shake."
+    "summary": "Sets a clip's effects: motion blur, glow, vignette, grain, RGB split, shake."
   },
   {
     "args_schema": {
@@ -3536,7 +3536,7 @@
     "internal": false,
     "name": "clip.set_filter",
     "scope": "edit",
-    "summary": "Sets the colour filter of a visual item and how much of it is mixed in."
+    "summary": "Sets the colour filter of a visual item and its strength."
   },
   {
     "args_schema": {
@@ -4024,7 +4024,7 @@
     "internal": false,
     "name": "clip.set_speed",
     "scope": "edit",
-    "summary": "Changes the speed of a clip or audio item, constant or on a curve, or reverses it."
+    "summary": "Changes a clip or audio item's speed: constant, curved or reversed."
   },
   {
     "args_schema": {
@@ -4085,7 +4085,7 @@
     "internal": false,
     "name": "composition.create_from_selection",
     "scope": "edit",
-    "summary": "Moves the selected items into a new timeline, leaving one composition clip."
+    "summary": "Moves the selected items into a new timeline, as one composition clip."
   },
   {
     "args_schema": {
@@ -4187,7 +4187,7 @@
     "internal": false,
     "name": "font.add",
     "scope": "media",
-    "summary": "Adds a user font family to the project, or more weights to one it already has."
+    "summary": "Adds a font family to the project, or more weights to an existing one."
   },
   {
     "args_schema": {
@@ -4271,7 +4271,7 @@
     "internal": false,
     "name": "item.crossfade",
     "scope": "edit",
-    "summary": "Sets a matching fade-out and fade-in on two overlapping visual items."
+    "summary": "Sets a fade-out and a fade-in on two overlapping visual items."
   },
   {
     "args_schema": {
@@ -4418,7 +4418,7 @@
     "internal": false,
     "name": "item.extract_audio",
     "scope": "edit",
-    "summary": "Makes a linked audio item from a video clip's audio and mutes the clip."
+    "summary": "Makes a linked audio item from a clip's audio and mutes the clip."
   },
   {
     "args_schema": {
@@ -4805,7 +4805,7 @@
     "internal": false,
     "name": "item.set_audio",
     "scope": "edit",
-    "summary": "Sets the volume, fades, mute, noise reduction or voice of a clip or audio item."
+    "summary": "Sets volume, fades, mute, noise reduction or voice of a clip or audio item."
   },
   {
     "args_schema": {
@@ -5025,7 +5025,7 @@
     "internal": false,
     "name": "item.slip",
     "scope": "edit",
-    "summary": "Shows another part of the source in a clip or audio item without moving or resizing it."
+    "summary": "Shows another part of a clip's source without moving or resizing it."
   },
   {
     "args_schema": {
@@ -5655,6 +5655,81 @@
     "name": "project.rename",
     "scope": "edit",
     "summary": "Sets the project name."
+  },
+  {
+    "args_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "camera_item_id": {
+          "description": "The clip of the webcam take; required by every layout but screen_only, which refuses it.",
+          "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+          "type": "string"
+        },
+        "camera_shape": {
+          "description": "For pip. circle (default) or rect.",
+          "enum": [
+            "circle",
+            "rect"
+          ],
+          "type": "string"
+        },
+        "corner": {
+          "description": "For pip and camera_focus. Default bottom_right.",
+          "enum": [
+            "top_left",
+            "top_right",
+            "bottom_left",
+            "bottom_right"
+          ],
+          "type": "string"
+        },
+        "layout": {
+          "description": "screen_only, pip, split or camera_focus.",
+          "enum": [
+            "screen_only",
+            "pip",
+            "split",
+            "camera_focus"
+          ],
+          "type": "string"
+        },
+        "padding": {
+          "description": "Fraction of the shorter side of the frame left empty around everything, 0 to 0.25. Default 0.",
+          "maximum": 0.25,
+          "minimum": 0,
+          "type": "number"
+        },
+        "screen_item_id": {
+          "description": "The clip of the screen take.",
+          "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "layout",
+        "screen_item_id"
+      ],
+      "type": "object"
+    },
+    "description": "Places a screen clip and, for every layout but screen_only, a webcam clip by a named layout made for the project format (16:9, 1:1, 4:5 or 9:16): screen_only, pip (the camera over a corner of the screen, a circle by default), split (side by side in 16:9, one above the other in the others) or camera_focus (the camera fills the frame, the screen is a small inset). padding is a fraction of the shorter side of the frame, 0 to 0.25, left empty around everything. The result is ordinary fit, position, scale, crop and mask values, so every one stays editable, and no clip leaves the frame. The clip in front is put on the upper track. A clip whose x, y, scale or crop has keyframes cannot be laid out: apply the layout before recording.auto_zoom.",
+    "domain": "video",
+    "errors": [
+      "E_VALIDATION",
+      "E_NOT_FOUND",
+      "E_TYPE_MISMATCH",
+      "E_INVALID_STATE"
+    ],
+    "example": {
+      "camera_item_id": "itm_s6t7v8w9x0",
+      "corner": "bottom_left",
+      "layout": "pip",
+      "screen_item_id": "itm_m1n2p3q4r5"
+    },
+    "internal": false,
+    "name": "recording.apply_layout",
+    "scope": "edit",
+    "summary": "Frames a screen and a webcam clip in a layout."
   },
   {
     "args_schema": {
@@ -7254,7 +7329,7 @@
     "internal": false,
     "name": "track.update",
     "scope": "edit",
-    "summary": "Sets the name, hidden, muted, locked, solo or magnet flag or the volume of a track."
+    "summary": "Sets a track's name, flags (hidden, muted, locked, solo, magnet) or volume."
   },
   {
     "args_schema": {

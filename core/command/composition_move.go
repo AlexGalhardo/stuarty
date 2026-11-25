@@ -15,7 +15,7 @@ import (
 func init() {
 	Register(Define(Spec{
 		Name:    "composition.create_from_selection",
-		Summary: "Moves the selected items into a new timeline, leaving one composition clip.",
+		Summary: "Moves the selected items into a new timeline, as one composition clip.",
 		Description: "Makes a new timeline of the project from the selected items (same tracks, same frame size and rate, " +
 			"starting at frame 0) and replaces them with one composition of it, on the top-most visual track of the selection, " +
 			"for the same frames. The inverse puts the items back; the new timeline stays in the project.",

@@ -3,7 +3,7 @@ package command
 func init() {
 	Register(Define(Spec{
 		Name:    "clip.set_filter",
-		Summary: "Sets the colour filter of a visual item and how much of it is mixed in.",
+		Summary: "Sets the colour filter of a visual item and its strength.",
 		Description: "Sets one filter of the fixed list (none, grayscale, sepia, invert, warm, cool) and its amount, " +
 			"0 (the original) to 1 (the full filter), rounded to 3 decimals; a value equal to the default (none, 1) " +
 			"clears the stored one.",

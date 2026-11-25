@@ -1,0 +1,7 @@
+{
+  "op": "recording.apply_layout",
+  "args": {
+    "layout": "split",
+    "screen_item_id": "itm_m1n2p3q4r5"
+  }
+}

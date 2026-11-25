@@ -5,7 +5,7 @@ import "github.com/AlexGalhardo/stuarty/core/timeline"
 func init() {
 	Register(Define(Spec{
 		Name:    "item.slip",
-		Summary: "Shows another part of the source in a clip or audio item without moving or resizing it.",
+		Summary: "Shows another part of a clip's source without moving or resizing it.",
 		Description: "Sets source_in, the offset into the asset where the item starts reading (a slip edit). The start, " +
 			"the duration, the keyframes and the neighbours do not change. The source range must stay inside the asset.",
 		Example: `{"item_id": "itm_m1n2p3q4r5", "source_in": "2s"}`,

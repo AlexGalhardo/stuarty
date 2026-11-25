@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "The value of args.padding is 0.4, outside the accepted range.",
+  "hint": "Use a value between 0 and 0.25.",
+  "retryable": false,
+  "path": "args.padding"
+}

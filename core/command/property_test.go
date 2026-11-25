@@ -309,6 +309,19 @@ var lateOps = map[string]func(p *docPick) string{
 	"recording.auto_zoom": func(p *docPick) string {
 		return fmt.Sprintf(`{"item_id":%q,%s}`, p.clip(), randomClicks(p))
 	},
+	"recording.apply_layout": func(p *docPick) string {
+		layout := p.oneOf("screen_only", "pip", "split", "camera_focus")
+		if layout == "screen_only" {
+			return fmt.Sprintf(`{"layout":%q,"screen_item_id":%q,"padding":0.0%d}`, layout, p.clip(), p.n(10))
+		}
+		return fmt.Sprintf(
+			`{"layout":%q,"screen_item_id":%q,"camera_item_id":%q,"corner":%q}`,
+			layout,
+			p.clip(),
+			p.clip(),
+			p.oneOf("top_left", "top_right", "bottom_left", "bottom_right"),
+		)
+	},
 	"recording.set_click_highlight": func(p *docPick) string {
 		return fmt.Sprintf(`{"item_id":%q,"style":%q,%s}`, p.clip(), p.oneOf("ring", "wave", "pulse"), randomClicks(p))
 	},

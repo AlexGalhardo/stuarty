@@ -2276,6 +2276,9 @@
           }
         },
         "recording": {
+          "apply_layout": {
+            "title": "Lay out a screen and a webcam recording"
+          },
           "auto_zoom": {
             "title": "Zoom a screen recording on its clicks"
           },

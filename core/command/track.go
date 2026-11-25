@@ -25,7 +25,7 @@ func init() {
 
 	Register(Define(Spec{
 		Name:    "track.update",
-		Summary: "Sets the name, hidden, muted, locked, solo or magnet flag or the volume of a track.",
+		Summary: "Sets a track's name, flags (hidden, muted, locked, solo, magnet) or volume.",
 		Description: "Sets the given fields. hidden applies to visual tracks, the others to both kinds. locked refuses " +
 			"every edit of the items of the track (E_INVALID_STATE) until it is unlocked. solo plays only the soloed " +
 			"tracks: the picture of visual tracks when one is solo, and the sound of every track. volume is a factor " +
