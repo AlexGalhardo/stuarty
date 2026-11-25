@@ -10,7 +10,10 @@
 // the two systems build the same module byte for byte.
 //
 // Only the version query is rewritten; every other call passes through with its arguments, streams and
-// exit status. The proc macros and build scripts still run on the real host.
+// exit status. The proc macros and build scripts are still compiled for and run on the real host, but
+// cargo gives a build script the reported triple in HOST, and a `[target.<triple>]` table of a cargo
+// config is looked up by it: today only proc-macro2 and quote have a build script in the tree of the
+// module and neither reads HOST, so a new build-dependency that does (cc, for example) is checked here.
 //
 //	rustchost rustc -vV
 //	rustchost rustc --crate-name x ...
