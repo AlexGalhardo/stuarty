@@ -3,6 +3,7 @@
 import { describe, expect, test } from "bun:test";
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { shots } from "../../lib/landing-pages";
 import { agents, areas, hero, path, privacy, roadmap, roadmapOnlyTerms, screens, textProject, transparency } from "./content";
 import * as content from "./content";
 
@@ -45,9 +46,11 @@ function strings(value: unknown, where: string, out: { where: string; text: stri
 const pageCopy = Object.entries(content)
 	.filter(([k]) => k !== "roadmap" && k !== "roadmapOnlyTerms")
 	.flatMap(([k, v]) => strings(v, k, []));
-const copyOutsideRoadmap = pageCopy;
+// The alt texts of the captures that the alternative pages of the landing show (lib/landing-pages.ts) are copy too.
+const shotAlts = Object.entries(shots).map(([k, s]) => ({ where: `shots.${k}.alt`, text: s.alt }));
+const copyOutsideRoadmap = [...pageCopy, ...shotAlts];
 const contentCopy = [...pageCopy, ...strings(roadmap, "roadmap", [])];
-const allCopy = contentCopy;
+const allCopy = [...contentCopy, ...shotAlts];
 
 describe("the roadmap file", () => {
 	test("is parsed", () => {
