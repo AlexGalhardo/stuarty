@@ -282,10 +282,13 @@
         "recordings.confirm",
         "recordings.dismiss",
         "recordings.events",
+        "recordings.upload.finish",
         "recordings.pause",
         "recordings.place",
         "recordings.resume",
-        "recordings.stop"
+        "recordings.stop",
+        "recordings.upload.chunk",
+        "recordings.upload.begin"
       ]
     },
     {

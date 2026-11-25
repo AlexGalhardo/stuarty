@@ -1,8 +1,13 @@
 package httpapi
 
 import (
+	"errors"
+	"io"
+
 	"github.com/AlexGalhardo/stuarty/service"
 
+	"github.com/AlexGalhardo/vukem/api"
+	"github.com/AlexGalhardo/vukem/errs"
 	"github.com/AlexGalhardo/vukem/web"
 )
 
@@ -124,6 +129,82 @@ func (h *apiHandler) recordingPlace(c *web.Ctx, in recordingPlaceIn) (service.Ed
 		c.Context(),
 		service.RecordingPlaceRequest{ID: in.ID, TimelineID: in.TimelineID},
 	)
+
+	return deref(res), err
+}
+
+// The upload of a recording a browser captured (SDD-025 section 17). The routes carry no rule: the Service decides
+// who may upload, in what order, how much and what the bytes become; the chunk route only raises the body limit
+// for itself and hands the body on.
+
+type recordingUploadBeginIn struct {
+	ProjectID string `json:"project_id"       validate:"required"                doc:"The project the recording will join once a person adds it."`
+	Container string `json:"container"        validate:"required,oneof=webm mp4" doc:"What the browser records: webm or mp4."`
+	Camera    bool   `json:"camera,omitempty"                                    doc:"A second track, the camera, will be uploaded."`
+	Label     string `json:"label,omitempty"                                     doc:"Optional plain text about what was shared."`
+}
+
+type recordingUploadChunkIn struct {
+	ID        string      `json:"id"                   validate:"required" doc:"A recording id, rec_ and 10 characters."`
+	Track     string      `json:"track"                validate:"required" doc:"screen or camera."`
+	Index     int         `json:"index"                                    doc:"The chunk number on the track, from 0, in order."`
+	SHA256    string      `json:"sha256"               validate:"required" doc:"The SHA-256 of the body, lowercase hexadecimal."`
+	ElapsedMS int64       `json:"elapsed_ms,omitempty"                     doc:"The clock of the recorder, in milliseconds; informational."`
+	Body      api.RawBody `json:"-"`
+}
+
+type recordingUploadCountIn struct {
+	Kind   string `json:"kind"   validate:"required" doc:"screen or camera."`
+	Chunks int    `json:"chunks"                     doc:"How many chunks the browser sent on the track."`
+}
+
+type recordingUploadFinishIn struct {
+	ID        string                   `json:"id"                   validate:"required" doc:"A recording id, rec_ and 10 characters."`
+	Tracks    []recordingUploadCountIn `json:"tracks,omitempty"                         doc:"The chunks sent on each track; the server checks them against what it stored."`
+	ElapsedMS int64                    `json:"elapsed_ms,omitempty"                     doc:"The clock of the recorder, in milliseconds."`
+}
+
+func (h *apiHandler) recordingUploadBegin(c *web.Ctx, in recordingUploadBeginIn) (service.Recording, error) {
+	res, err := h.Service.RecordingUploadBegin(c.Context(), service.RecordingUploadBeginRequest{
+		ProjectID: in.ProjectID, Container: in.Container, Camera: in.Camera, Label: in.Label,
+	})
+
+	return deref(res), err
+}
+
+func (h *apiHandler) recordingUploadChunk(
+	c *web.Ctx, in recordingUploadChunkIn,
+) (service.RecordingUploadChunkResult, error) {
+	res, err := h.Service.RecordingUploadChunk(c.Context(), service.RecordingUploadChunkRequest{
+		ID: in.ID, Track: in.Track, Index: in.Index, SHA256: in.SHA256, ElapsedMS: in.ElapsedMS,
+		Body: sizedBody{in.Body}, Size: c.Request().ContentLength,
+	})
+
+	return deref(res), err
+}
+
+// sizedBody reports the over-limit error of the framework as the one of the Service, so the answer is the
+// E_PAYLOAD_TOO_LARGE of the product whichever side noticed the size.
+type sizedBody struct{ r io.Reader }
+
+func (b sizedBody) Read(p []byte) (int, error) {
+	n, err := b.r.Read(p)
+	if errors.Is(err, errs.ErrRequestTooLarge) {
+		return n, service.ErrUploadBodyTooLarge
+	}
+
+	return n, err
+}
+
+func (h *apiHandler) recordingUploadFinish(c *web.Ctx, in recordingUploadFinishIn) (service.Recording, error) {
+	counts := make([]service.RecordingUploadCount, len(in.Tracks))
+	for i, t := range in.Tracks {
+		counts[i] = service.RecordingUploadCount{Kind: t.Kind, Chunks: t.Chunks}
+	}
+
+	res, err := h.Service.RecordingUploadFinish(c.Context(), service.RecordingUploadFinishRequest{
+		ID: in.ID, Tracks: counts, ElapsedMS: in.ElapsedMS,
+	})
 
 	return deref(res), err
 }

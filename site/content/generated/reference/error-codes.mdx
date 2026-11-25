@@ -45,7 +45,7 @@ Raised around the commands: sign-in, imports, exports, jobs and limits. They app
 | `E_APPROVAL_NOT_FOUND` | 404 | no | the approval request or the approval rule does not exist (SDD-015 §8) |
 | `E_ASSET_NOT_READY` | 409 | yes | the asset is still ingesting; `details` has `asset_id`, `state` and `progress` (0 to 1) when an edit names it; the read of the peaks of a long sound waiting for its job has `details.reason` `peaks_pending`, `progress` and, once its job is queued, `job_id` (SDD-011 §6.3.1) |
 | `E_CANCELLED` | 500 | no | the job was cancelled |
-| `E_CAPTURE_FAILED` | 502 | no | a capture ended badly: `details.reason` `source_gone`, `unsupported`, `encoder_failed`, `io`, `helper_lost`, `no_frames` or `protocol` (SDD-025 §6, §10) |
+| `E_CAPTURE_FAILED` | 502 | no | a capture ended badly: `details.reason` `source_gone`, `unsupported`, `encoder_failed`, `io`, `helper_lost`, `no_frames`, `protocol`, or, for a recording made in a browser, `assemble` (the uploaded chunks could not be made into a readable file) or `ffmpeg_missing`; the reason of a recording that failed at its end is the start of its message, as in `no_frames: ...` (SDD-025 §6, §10, §17.5) |
 | `E_CAPTURE_UNAVAILABLE` | 503 | no | screen capture cannot run here: `details.reason` `platform` (not Windows), `web`, `network_mode`, `ffmpeg_missing`, `helper_missing` or `protocol_version` (SDD-025 §1) |
 | `E_CHAT_NOT_FOUND` | 404 | no | the chat session does not exist, or the caller may not see its project (SDD-017 §11) |
 | `E_CLIENT_CLOSED` | 499 | no | the caller closed the request (or its deadline passed) before the answer; status 499, logged below error level, never a server fault |

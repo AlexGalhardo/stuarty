@@ -2751,6 +2751,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | `stop_reason` | `string` | no |  |
 | `text` | `string` | no |  |
 | `tracks` | array of [`RecordingTrack`](/docs/api/schemas#recordingtrack) | no |  |
+| `upload` | [`RecordingUpload`](/docs/api/schemas#recordingupload) or `any` or `null` or `null` | no |  |
 | `width` | `integer` | no |  |
 
 ### RecordingDevice
@@ -2848,6 +2849,41 @@ The types named in the tables of the operations. The arguments of each editing c
 | `kind` | `string` | no |  |
 | `lost` | `boolean` | no |  |
 | `start_ms` | `integer (int64)` | no |  |
+
+### RecordingUpload
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `container` | `string` | no |  |
+| `max_chunk_bytes` | `integer (int64)` | no |  |
+| `tracks` | array of [`RecordingUploadTrack`](/docs/api/schemas#recordinguploadtrack) | no |  |
+
+### RecordingUploadChunkResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `bytes` | `integer (int64)` | no |  |
+| `duplicate` | `boolean` | no |  |
+| `index` | `integer` | no |  |
+| `next_index` | `integer` | no |  |
+| `recording_id` | `string` | no |  |
+| `text` | `string` | no |  |
+| `track` | `string` | no |  |
+
+### recordingUploadCountIn
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `chunks` | `integer` | no | How many chunks the browser sent on the track. |
+| `kind` | `string` | yes | screen or camera.. min length 1 |
+
+### RecordingUploadTrack
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `bytes` | `integer (int64)` | no |  |
+| `kind` | `string` | no |  |
+| `next_index` | `integer` | no |  |
 
 ### Rect
 

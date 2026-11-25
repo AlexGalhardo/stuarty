@@ -63,6 +63,7 @@ Content type `application/json`. Schema: [`Recording`](/docs/api/schemas#recordi
 | `stop_reason` | `string` | no |  |
 | `text` | `string` | no |  |
 | `tracks` | array of [`RecordingTrack`](/docs/api/schemas#recordingtrack) | no |  |
+| `upload` | [`RecordingUpload`](/docs/api/schemas#recordingupload) or `any` or `null` or `null` | no |  |
 | `width` | `integer` | no |  |
 
 ### 400
@@ -379,6 +380,13 @@ puts "#{response.code} #{response.body}"
       "start_ms": 0
     }
   ],
+  "upload": {
+    "container": "string",
+    "max_chunk_bytes": 0,
+    "tracks": [
+      {}
+    ]
+  },
   "width": 0
 }
 ```

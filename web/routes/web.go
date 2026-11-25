@@ -10,6 +10,10 @@ import (
 	"github.com/AlexGalhardo/vukem/router"
 )
 
+// PermissionsPolicy is the Permissions-Policy header of every response (SDD-007 section 3.6): the screen, the camera and
+// the microphone are for the page of Stuarty and for nothing it embeds, and the location is off.
+const PermissionsPolicy = "camera=(self), microphone=(self), display-capture=(self), geolocation=()"
+
 // maxBody is the largest request body: 1 MiB (SDD-003 section 6.1). A batch is
 // further limited to 200 operations and 512 KiB by the service.
 const maxBody = 1 << 20
@@ -72,6 +76,11 @@ func Web(r *router.Router, app *vukem.App) error {
 		SecureHeaders: func(cfg *middleware.SecureHeadersConfig) {
 			cfg.CSP = ContentSecurityPolicy
 			cfg.ReferrerPolicy = "no-referrer" // SDD-007 section 3.6
+			// The record dialog asks the browser for the screen, the microphone and the camera (SDD-025 section 17):
+			// the page itself may, no other origin may, and the location stays off. The default of the framework
+			// turns the camera and the microphone off for every page, which would make a recording in the browser
+			// impossible.
+			cfg.PermissionsPolicy = PermissionsPolicy
 		},
 	})
 }

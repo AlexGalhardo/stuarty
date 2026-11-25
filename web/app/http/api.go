@@ -151,7 +151,7 @@ const handshakePath = BasePath + "/handshake"
 func (h *apiHandler) op(id string) api.Op {
 	ep := endpointOf(id)
 
-	op := api.Op{Name: ep.ID, Summary: ep.Summary, Status: ep.Status, Security: []string{"bearer"}}
+	op := api.Op{Name: ep.ID, Summary: ep.Summary, Status: ep.Status, Security: []string{"bearer"}, MaxBody: ep.MaxBody}
 	if ep.Pending != "" {
 		op.Description = "Not available in this build yet (" + ep.Pending + "): the route answers E_INTERNAL."
 	}

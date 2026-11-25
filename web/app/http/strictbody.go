@@ -17,6 +17,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/core/command"
 	"github.com/AlexGalhardo/stuarty/service"
 
+	"github.com/AlexGalhardo/vukem/api"
 	"github.com/AlexGalhardo/vukem/web"
 )
 
@@ -31,7 +32,7 @@ func strictBody[In any](skip func() bool) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if t.Kind() != reflect.Struct || t.NumField() == 0 || skip() || r.Body == nil || r.Body == http.NoBody ||
-				!isJSONBody(r) {
+				!isJSONBody(r) || hasRawBody(t) {
 				next.ServeHTTP(w, r)
 				return
 			}
@@ -61,6 +62,18 @@ func strictBody[In any](skip func() bool) func(http.Handler) http.Handler {
 			next.ServeHTTP(w, r)
 		})
 	}
+}
+
+// hasRawBody reports an input type whose body is a file or a chunk of one (api.RawBody): it has no members to
+// misspell, and the body must reach the handler unread.
+func hasRawBody(t reflect.Type) bool {
+	for f := range t.Fields() {
+		if f.Type == reflect.TypeFor[api.RawBody]() {
+			return true
+		}
+	}
+
+	return false
 }
 
 type joinedBody struct {

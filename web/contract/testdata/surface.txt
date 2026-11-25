@@ -368,9 +368,11 @@ route POST /publications/{}/send-now
 route POST /publish
 route POST /publish/validate
 route POST /recordings
+route POST /recordings/upload
 route POST /recordings/{}/cancel
 route POST /recordings/{}/confirm
 route POST /recordings/{}/dismiss
+route POST /recordings/{}/finish
 route POST /recordings/{}/pause
 route POST /recordings/{}/place
 route POST /recordings/{}/resume
@@ -407,6 +409,7 @@ route PUT /projects/{}/briefing
 route PUT /projects/{}/texts/{}
 route PUT /providers/prices
 route PUT /publications/{}
+route PUT /recordings/{}/upload/{}/{}
 tool command_help
 tool connection
 tool edit

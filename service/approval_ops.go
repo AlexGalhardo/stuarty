@@ -145,7 +145,11 @@ var privilegedHints = map[string]string{
 		"restarts the capture of the screen, so the local token, API keys and the agent surfaces cannot do it (ADR-0051)",
 	"RecordingConfirm": "a person adds a recording to the project in the record dialog of the Stuarty app",
 	"RecordingDismiss": "a person decides about a recording in the record dialog of the Stuarty app",
-	"RecordingCancel":  "a person deletes a finished recording in the record dialog of the Stuarty app",
+	"RecordingUploadBegin": "a person records in the browser from the record dialog of the Stuarty app; the local " +
+		"token, API keys and the agent surfaces cannot upload a recording",
+	"RecordingUploadChunk":  "a person records in the browser from the record dialog of the Stuarty app",
+	"RecordingUploadFinish": "a person records in the browser from the record dialog of the Stuarty app",
+	"RecordingCancel":       "a person deletes a finished recording in the record dialog of the Stuarty app",
 	"AssetReveal": "a person opens the folder of a file in the Stuarty app (Show in folder in the desktop app, " +
 		"Copy path in the browser, on the owner's machine); the local token, API keys and the agent surfaces " +
 		"cannot read a path",

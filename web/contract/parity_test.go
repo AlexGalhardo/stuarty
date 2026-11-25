@@ -257,6 +257,10 @@ var parity = []row{
 	{method: "RecordingConfirm", command: "recording:confirm", route: "POST /recordings/{}/confirm"},
 	{method: "RecordingDismiss", command: "recording:dismiss", route: "POST /recordings/{}/dismiss"},
 	{method: "RecordingPlace", command: "recording:place", route: "POST /recordings/{}/place"},
+	// A capture of a browser cannot be driven from outside (SDD-025 section 17.3).
+	{method: "RecordingUploadBegin", route: "POST /recordings/upload", httpOnly: true},
+	{method: "RecordingUploadChunk", route: "PUT /recordings/{}/upload/{}/{}", httpOnly: true},
+	{method: "RecordingUploadFinish", route: "POST /recordings/{}/finish", httpOnly: true},
 	{method: "CostSummary", command: "cost:show", route: "GET /cost"},
 	{method: "CostCeilingSet", command: "cost:ceiling", route: "PUT /cost/ceilings"},
 	// Social networks and publishing (SDD-020 section 13): no MCP tool routes to them yet; an agent reaches them

@@ -7857,6 +7857,16 @@
             },
             "type": "array"
           },
+          "upload": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RecordingUpload"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "width": {
             "type": "integer"
           }
@@ -8049,6 +8059,66 @@
           },
           "start_ms": {
             "format": "int64",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "RecordingUpload": {
+        "properties": {
+          "container": {
+            "type": "string"
+          },
+          "max_chunk_bytes": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "tracks": {
+            "items": {
+              "$ref": "#/components/schemas/RecordingUploadTrack"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "RecordingUploadChunkResult": {
+        "properties": {
+          "bytes": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "duplicate": {
+            "type": "boolean"
+          },
+          "index": {
+            "type": "integer"
+          },
+          "next_index": {
+            "type": "integer"
+          },
+          "recording_id": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "track": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "RecordingUploadTrack": {
+        "properties": {
+          "bytes": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "next_index": {
             "type": "integer"
           }
         },
@@ -16371,6 +16441,23 @@
         "required": [
           "kind",
           "id"
+        ],
+        "type": "object"
+      },
+      "recordingUploadCountIn": {
+        "properties": {
+          "chunks": {
+            "description": "How many chunks the browser sent on the track.",
+            "type": "integer"
+          },
+          "kind": {
+            "description": "screen or camera.",
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind"
         ],
         "type": "object"
       },
@@ -29842,6 +29929,88 @@
         "summary": "Start recording a display or a window (a person in the browser only; the local token and keys get 403)"
       }
     },
+    "/api/v1/recordings/upload": {
+      "post": {
+        "operationId": "recordings.upload.begin",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "camera": {
+                    "description": "A second track, the camera, will be uploaded.",
+                    "type": "boolean"
+                  },
+                  "container": {
+                    "description": "What the browser records: webm or mp4.",
+                    "enum": [
+                      "webm",
+                      "mp4"
+                    ],
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "label": {
+                    "description": "Optional plain text about what was shared.",
+                    "type": "string"
+                  },
+                  "project_id": {
+                    "description": "The project the recording will join once a person adds it.",
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "project_id",
+                  "container"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Recording"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Begin a recording that the browser captures and uploads (a person in the browser only)"
+      }
+    },
     "/api/v1/recordings/{id}": {
       "get": {
         "operationId": "recordings.get",
@@ -30183,6 +30352,89 @@
         "summary": "Read the pointer and click events of a finished recording, in pixels of the captured source"
       }
     },
+    "/api/v1/recordings/{id}/finish": {
+      "post": {
+        "operationId": "recordings.upload.finish",
+        "parameters": [
+          {
+            "description": "A recording id, rec_ and 10 characters.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "elapsed_ms": {
+                    "description": "The clock of the recorder, in milliseconds.",
+                    "format": "int64",
+                    "type": "integer"
+                  },
+                  "tracks": {
+                    "description": "The chunks sent on each track; the server checks them against what it stored.",
+                    "items": {
+                      "$ref": "#/components/schemas/recordingUploadCountIn"
+                    },
+                    "type": "array"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Recording"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Finish a browser recording: the server assembles the chunks into a file (a person in the browser only)"
+      }
+    },
     "/api/v1/recordings/{id}/pause": {
       "post": {
         "operationId": "recordings.pause",
@@ -30466,6 +30718,109 @@
           }
         ],
         "summary": "Stop a recording and keep what was written (anyone with media)"
+      }
+    },
+    "/api/v1/recordings/{id}/upload/{track}/{index}": {
+      "put": {
+        "operationId": "recordings.upload.chunk",
+        "parameters": [
+          {
+            "description": "The SHA-256 of the body, lowercase hexadecimal.",
+            "in": "query",
+            "name": "sha256",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          {
+            "description": "The clock of the recorder, in milliseconds; informational.",
+            "in": "query",
+            "name": "elapsed_ms",
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "A recording id, rec_ and 10 characters.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          {
+            "description": "screen or camera.",
+            "in": "path",
+            "name": "track",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          {
+            "description": "The chunk number on the track, from 0, in order.",
+            "in": "path",
+            "name": "index",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/octet-stream": {
+              "schema": {
+                "format": "binary",
+                "type": "string"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecordingUploadChunkResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Upload one chunk of a track of a browser recording, in order, with its SHA-256 (a person in the browser only)",
+        "x-max-body-bytes": 16777216
       }
     },
     "/api/v1/scripts/estimate": {

@@ -252,6 +252,11 @@ type Service interface {
 	RecordingConfirm(ctx context.Context, req RecordingRef) (*Recording, error)
 	RecordingDismiss(ctx context.Context, req RecordingRef) (*Recording, error)
 	RecordingPlace(ctx context.Context, req RecordingPlaceRequest) (*EditResult, error)
+	// A recording a browser captures and uploads (SDD-025 section 17): all three are for a person in a privileged
+	// browser session, and HTTP only.
+	RecordingUploadBegin(ctx context.Context, req RecordingUploadBeginRequest) (*Recording, error)
+	RecordingUploadChunk(ctx context.Context, req RecordingUploadChunkRequest) (*RecordingUploadChunkResult, error)
+	RecordingUploadFinish(ctx context.Context, req RecordingUploadFinishRequest) (*Recording, error)
 
 	// The approval queue, its rules and the cost ceilings (SDD-015). Reading is for every caller that
 	// may read; ApprovalDecide, ApprovalRuleSet, ApprovalRuleRemove and CostCeilingSet are for a
@@ -485,6 +490,8 @@ type svc struct {
 	recMaxSeconds int
 	recMu         sync.Mutex
 	recSessions   map[string]*recSession
+	recUploads    map[string]*upload
+	recAssembling map[string]*assembly
 
 	// pubs is the calendar of publications and sched the loop that sends the approved ones at their time
 	// (SDD-020 sections 23 to 29).

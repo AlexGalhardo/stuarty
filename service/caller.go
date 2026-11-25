@@ -123,6 +123,10 @@ var Scopes = map[string]string{
 	"RecordingDismiss": ScopeMedia,
 	"RecordingPlace":   ScopeEdit,
 
+	"RecordingUploadBegin":  ScopeMedia,
+	"RecordingUploadChunk":  ScopeMedia,
+	"RecordingUploadFinish": ScopeMedia,
+
 	"TemplateList":            ScopeRead,
 	"TemplateSave":            ScopeEdit,
 	"TemplateInstantiate":     ScopeEdit,
