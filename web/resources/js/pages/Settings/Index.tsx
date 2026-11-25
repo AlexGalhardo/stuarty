@@ -32,11 +32,12 @@ type Loaded =
 	| { state: "failed" }
 	| { state: "ready"; version: string; workspace: string | undefined };
 
-// The settings page (SDD-012 section 2.1): a list of its sections, then the
-// preferences (language, theme and the unit a bare number typed in a time
-// field gets), the brand kit, the account, the helpers of this computer, and
-// the version and the workspace folder as the service reports them
-// (`GET /system`). The list links to the sections that are on the page.
+// The settings page (SDD-012 section 2.1): a list of its sections, then, in
+// one column, the version and the workspace folder as the service reports
+// them (`GET /system`, the about card, first), the preferences (language,
+// theme and the unit a bare number typed in a time field gets), the brand kit,
+// the account and the helpers of this computer. The list follows the same
+// order and links to the sections that are on the page.
 export default function SettingsIndex() {
 	const t = useT();
 	const account = usePage<SharedProps>().props.account;
@@ -70,6 +71,7 @@ export default function SettingsIndex() {
 	}, []);
 
 	const sections = [
+		{ id: "settings-about", label: t("ui.settings.about") },
 		{ id: "settings-preferences", label: t("ui.settings.preferences") },
 		{ id: "settings-brand", label: t("ui.brand.title") },
 		...(account?.state === "unlocked"
@@ -87,7 +89,6 @@ export default function SettingsIndex() {
 			id: "settings-transcription",
 			label: t("ui.settings.transcription.title"),
 		},
-		{ id: "settings-about", label: t("ui.settings.about") },
 	];
 
 	return (
@@ -98,7 +99,7 @@ export default function SettingsIndex() {
 					title={t("ui.settings.title")}
 					description={t("ui.settings.intro")}
 				/>
-				<div className="grid gap-6 lg:grid-cols-[12rem_minmax(0,1fr)] xl:grid-cols-[12rem_minmax(0,1fr)_18rem]">
+				<div className="grid gap-6 lg:grid-cols-[12rem_minmax(0,1fr)]">
 					<nav
 						aria-label={t("ui.settings.sections")}
 						className="flex flex-wrap gap-1 lg:flex-col lg:flex-nowrap lg:self-start"
@@ -114,6 +115,36 @@ export default function SettingsIndex() {
 						))}
 					</nav>
 					<div className="flex min-w-0 flex-col gap-4">
+						<SettingsSection id="settings-about" title={t("ui.settings.about")}>
+							{system.state === "loading" && (
+								<p className="text-sm text-text-muted">
+									{t("ui.settings.loading")}
+								</p>
+							)}
+							{system.state === "failed" && (
+								<p role="alert" className="text-sm text-danger-text">
+									{t("ui.settings.unavailable")}
+								</p>
+							)}
+							{system.state === "ready" && (
+								<DataList>
+									<DataRow label={t("ui.settings.version")}>
+										<span data-testid="settings-version">{system.version}</span>
+									</DataRow>
+									<DataRow
+										label={t("ui.settings.workspace")}
+										className="grid-cols-1 [&>dd]:col-start-1 [&>dd]:row-span-1 [&>dd]:row-start-2 [&>dd]:justify-self-start [&>dd]:text-left"
+									>
+										<span
+											data-testid="settings-workspace"
+											className="[overflow-wrap:anywhere]"
+										>
+											{system.workspace ?? t("ui.settings.workspace_none")}
+										</span>
+									</DataRow>
+								</DataList>
+							)}
+						</SettingsSection>
 						<SettingsSection
 							id="settings-preferences"
 							title={t("ui.settings.preferences")}
@@ -176,34 +207,6 @@ export default function SettingsIndex() {
 						<Background />
 						<Transcription />
 					</div>
-					<SettingsSection
-						id="settings-about"
-						title={t("ui.settings.about")}
-						className="min-w-0 xl:self-start"
-					>
-						{system.state === "loading" && (
-							<p className="text-sm text-text-muted">
-								{t("ui.settings.loading")}
-							</p>
-						)}
-						{system.state === "failed" && (
-							<p role="alert" className="text-sm text-danger-text">
-								{t("ui.settings.unavailable")}
-							</p>
-						)}
-						{system.state === "ready" && (
-							<DataList>
-								<DataRow label={t("ui.settings.version")}>
-									<span data-testid="settings-version">{system.version}</span>
-								</DataRow>
-								<DataRow label={t("ui.settings.workspace")}>
-									<span data-testid="settings-workspace" className="break-all">
-										{system.workspace ?? t("ui.settings.workspace_none")}
-									</span>
-								</DataRow>
-							</DataList>
-						)}
-					</SettingsSection>
 				</div>
 			</div>
 		</>

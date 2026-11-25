@@ -180,4 +180,30 @@ test.describe("project-settings", () => {
 		await expect(page.getByTestId("settings-version")).not.toBeEmpty();
 		await expect(page.getByTestId("settings-workspace")).not.toBeEmpty();
 	});
+
+	test("/settings puts the about card first in the column of cards, with the path on one wide line", async ({
+		page,
+	}) => {
+		await page.setViewportSize({ width: 1440, height: 900 });
+		await page.goto("/settings");
+		const about = page.locator("#settings-about");
+		const preferences = page.locator("#settings-preferences");
+		const aboutBox = await about.boundingBox();
+		const preferencesBox = await preferences.boundingBox();
+		expect(aboutBox).not.toBeNull();
+		expect(preferencesBox).not.toBeNull();
+		if (!aboutBox || !preferencesBox) return;
+		expect(aboutBox.x).toBe(preferencesBox.x);
+		expect(aboutBox.width).toBe(preferencesBox.width);
+		expect(aboutBox.y).toBeLessThan(preferencesBox.y);
+		const links = await page
+			.getByRole("navigation", { name: /./ })
+			.filter({ has: page.locator('a[href="#settings-about"]') })
+			.locator("a")
+			.first()
+			.getAttribute("href");
+		expect(links).toBe("#settings-about");
+		const path = await page.getByTestId("settings-workspace").boundingBox();
+		expect(path?.width ?? 0).toBeGreaterThan(150);
+	});
 });
