@@ -38,7 +38,7 @@ Each step has the path in the editor and the command that does the same. An agen
    stuarty brief:show --project prj_5k2m9x4q1b
    ```
 
-3. **Connect an AI provider and draft the script.** In the editor, open **Connections**, choose **Connect**, pick your provider and paste your key: it goes into the vault and is never shown again. Then open the script of the project in **Write**, find **Draft with a model** and choose **Ask for the draft**. A draft costs money, so it first becomes a request in **Approvals**, with the estimate, and waits for you to choose **Approve**. With the command line (the key is read from the standard input, never from an argument):
+3. **Connect an AI provider and draft the script.** In the editor, open **Connections**, choose **Connect**, pick your provider and paste your key: it goes into the vault and is never shown again. Then open the script of the project in **Writing**, find **Draft with a model** and choose **Ask for the draft**. A draft costs money, so it first becomes a request in **Approvals**, with the estimate, and waits for you to choose **Approve**. With the command line (the key is read from the standard input, never from an argument):
 
    ```console
    printf '%s' "$OPENAI_API_KEY" | stuarty connection:add --kind openai --label "My AI" --accepts text
@@ -48,9 +48,9 @@ Each step has the path in the editor and the command that does the same. An agen
    stuarty approval:list
    ```
 
-   An agent can ask for the draft and cannot approve it: the command `approval:decide` with an agent's key is refused, and a person decides in **Approvals**. Edit the draft in **Write**; every save is a revision you can go back to. No provider? Write the script in **Write** yourself and go on.
+   An agent can ask for the draft and cannot approve it: the command `approval:decide` with an agent's key is refused, and a person decides in **Approvals**. Edit the draft in **Writing**; every save is a revision you can go back to. No provider? Write the script in **Writing** yourself and go on.
 
-4. **Import the footage and cut it.** In **Edit Video**, open the project and drop `talk.mp4` in the library, then drag it to the timeline. With the command line:
+4. **Import the footage and cut it.** In **Video editor**, open the project and drop `talk.mp4` in the library, then drag it to the timeline. With the command line:
 
    ```bash
    stuarty media:import talk.mp4 --project prj_5k2m9x4q1b --asset-id ast_3c5v8n2w6d --wait
@@ -73,7 +73,7 @@ Each step has the path in the editor and the command that does the same. An agen
 
    The lint must end with no error. It checks the captions against the safe area of the platform.
 
-6. **Make the thumbnail from a template.** In **Edit Image**, create an image from the **Vertical cover** preset, add a fill and a title text on a slot, and choose **Make it a template**; then choose **New from template**, pick it, give your title and choose **Create from template**. With the command line:
+6. **Make the thumbnail from a template.** In **Image editor**, create an image from the **Vertical cover** preset, add a fill and a title text on a slot, and choose **Make it a template**; then choose **New from template**, pick it, give your title and choose **Create from template**. With the command line:
 
    ```bash
    stuarty image:create --preset vertical_cover --name "Cover template" --template --id img_7k2m9x4q1b
@@ -85,7 +85,7 @@ Each step has the path in the editor and the command that does the same. An agen
    stuarty image:export img_3c5v8n2w6d --format png
    ```
 
-   The export is a job: its id (`job_id`, also shown in the export dialog of **Edit Image**) is what the publication takes as its thumbnail in step 9.
+   The export is a job: its id (`job_id`, also shown in the export dialog of **Image editor**) is what the publication takes as its thumbnail in step 9.
 
 7. **Export with the platform preset.** In the editor, choose **Export**, pick **YouTube Shorts** and start it. The export is checked against the limits of the preset when it ends. With the command line:
 
@@ -104,7 +104,7 @@ Each step has the path in the editor and the command that does the same. An agen
 
    The command prints an address. Open it, accept the permissions, and the network sends you back to Stuarty, which finishes the connection. Stuarty asked for the permissions of the page [of that network](/docs/reference/network-limits) and no others.
 
-9. **Create the publication and schedule it.** In **Publish**, choose **New publication**: pick the video export, paste the export job of the cover of step 6 in **Or the export of an image** (or pick a still), the account and the time, then choose **Schedule and ask for approval**. The check against the limits of the network runs before anything is asked of you, and names the limit when a post breaks one. With the command line:
+9. **Create the publication and schedule it.** In **Publishing**, choose **New post**: pick the video export, paste the export job of the cover of step 6 in **Or the export of an image** (or pick a still), the account and the time, then choose **Schedule and ask for approval**. The check against the limits of the network runs before anything is asked of you, and names the limit when a post breaks one. With the command line:
 
    ```console
    stuarty publish:validate --connection <connection id> --export <export job id> --thumbnail <image export job id> \
@@ -123,7 +123,7 @@ Each step has the path in the editor and the command that does the same. An agen
     stuarty publication:list --from 2026-11-30T00:00:00Z --until 2026-12-02T00:00:00Z
     ```
 
-    The post is also on the **Publish** calendar, as published.
+    The post is also on the **Publishing** calendar, as published.
 
 ## What the scripted run proves
 
