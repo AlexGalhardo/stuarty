@@ -5,7 +5,7 @@ description: "Which FFmpeg the product ships, how it is found and checked, and w
 
 ## You will learn
 
-- which <Term id="ffmpeg">FFmpeg</Term> build the image carries (the release archives and installers carry none), and where its source is;
+- which <Term id="ffmpeg">FFmpeg</Term> build the image carries today, which build the Windows installer is made to carry, and where the source is;
 - how the product finds an FFmpeg and refuses a risky one;
 - which obligations come with the LGPL build.
 
@@ -24,17 +24,27 @@ The pin of this release:
 
 The licence text, the configure line and these source links are inside the image, in `/usr/share/doc/stuarty/ffmpeg/` (`LICENSE.txt`, `configure.txt` and `SOURCE.txt`). The packages of the Debian base are listed with their licences in `/usr/share/doc/stuarty/base-image-packages.txt`.
 
+## The own build, and what ships today
+
+Stuarty also has its own FFmpeg build, made from the same FFmpeg source with the LGPL only. Its marker is `--extra-version=stuarty<N>` in the configure line, and `doctor` reports it as the flavour `stuarty`. It has no `--enable-gpl`, no `--enable-nonfree` and no OpenH264 compiled in, and it lacks some demuxers and filters that the BtbN build has (no Vulkan, CUDA, OpenCL, VAAPI, network or libass ones).
+
+Be clear about the state of it:
+
+- **Published today:** the pinned build above, from BtbN. The container image carries it. The release archives and the installers published so far carry no FFmpeg.
+- **Built, not published yet:** the own build. The Windows installer of the desktop application is made to place `ffmpeg.exe` and `ffprobe.exe` next to `stuarty.exe` and the licence texts of the build in `licensesfmpeg-build` of the install folder, after it checks their digests. It does that only for a release whose pin (`.config/ffmpeg.env`) names the own build, and the signed assets come from the release workflow. The pin still names the BtbN build, so no installer carries FFmpeg yet. When one does, this page and the install page change with it.
+- **OpenH264 is never carried.** Software H.264 encoding with the own build needs Cisco's OpenH264 library, which you install yourself with `stuarty tools:install openh264` (Stuarty tells you the size and the host first). Stuarty checks the file against its manifest and starts the own FFmpeg with `STUARTY_OPENH264_DIR` pointing at it; you do not set that variable. Without it the own build has no software encoder, and a hardware or operating-system encoder is used when the machine has one.
+
 ## How an FFmpeg is found
 
 The order is fixed:
 
 1. `STUARTY_FFMPEG` and `STUARTY_FFPROBE`. When `STUARTY_FFMPEG` is set and unusable the server reports `E_FFMPEG_MISSING`; it never falls back to another one, because you asked for that binary. Both must be absolute paths to files.
-2. The FFmpeg next to the program (bundled).
+2. The FFmpeg that comes with the program, in the folder of `stuarty` (`ffmpeg`, or `ffmpeg/ffmpeg`, or `../libexec/stuarty/ffmpeg`). The Windows installer, once it carries the own build, puts it here. It wins over an FFmpeg on the `PATH`, and your `STUARTY_FFMPEG` wins over it.
 3. The `PATH`.
 
 `ffprobe` comes from the same directory as `ffmpeg`. The product is tested on FFmpeg 9.0.2; another version is accepted with a warning and a version below 7 is reported as old. A missing required encoder, filter or muxer is `E_FFMPEG_MISSING`.
 
-The licence of the chosen build is classified from its configure line as `lgpl`, `gpl` or `nonfree`. A bundled build must be `lgpl`. Your own build may be GPL, which is fine for your own use but not for anything you distribute, and `libx264` is used only if you set `STUARTY_ALLOW_USER_X264=true`.
+The licence of the chosen build is classified from its configure line as `lgpl`, `gpl` or `nonfree`. A bundled build must be `lgpl`, and `doctor` lists the flags that a distributed build must not carry. Your own build may be GPL, which is fine for your own use but not for anything you distribute, and `libx264` is used only if you set `STUARTY_ALLOW_USER_X264=true`.
 
 ## Quick start
 

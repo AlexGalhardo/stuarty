@@ -4,7 +4,7 @@ description: "Record a display or a window with your voice, the camera and the p
 ---
 
 <Callout type="warning" title="New">
-Native capture is for the desktop application on Windows. It was tested with a fake capture helper and by hand on one machine, not on every Windows setup. On macOS and Linux it is not available yet; use [the browser recording](/docs/guide/record-your-screen).
+Native capture is for the desktop application on Windows. It was tested with a fake capture helper and by hand on one machine, not on every Windows setup, and the installers published so far do not carry the capture helper (see the common mistakes below). On macOS and Linux it is not available yet; use [the browser recording](/docs/guide/record-your-screen).
 </Callout>
 
 ## You will learn
@@ -69,7 +69,8 @@ A recording made in a browser has no pointer data, so these commands answer `E_I
 - Starting a capture from an agent or with the local token: it is refused with `E_PRIVILEGED_SESSION`. Press **Start recording** yourself.
 - Turning off **Save the cursor and the clicks** and then looking for the zoom buttons. A take with no pointer data has nothing to follow.
 - Expecting the cursor to move with a clip you moved after drawing it. Draw it again.
-- Recording fails with "The capture helper is not installed with this copy of Stuarty". That copy has no helper: install a build that carries it.
+- Recording fails with "The capture helper is not installed with this copy of Stuarty". The release workflow does not add the helper to the installers yet, so the installers published so far have none. Build it from the repository with `scripts/build-capture.sh`; the Windows installer takes it when it is built with it. The server finds it next to `stuarty.exe`, or at `STUARTY_CAPTURE_HELPER`.
+- Recording fails with "Recording needs FFmpeg, and none was found". The capture helper writes the file through FFmpeg: see [FFmpeg is not found](/docs/troubleshooting/ffmpeg-missing).
 
 ## Next steps
 
