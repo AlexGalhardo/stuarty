@@ -107,7 +107,7 @@
 | `PublicationGet`, `PublicationList` | `publication` (`action` `show` and `list`) | `publication:show`, `publication:list` | `GET /publications/{id}`, `GET /publications` | read |
 | `PublicationUpdate` | none | `publication:update` | `PUT /publications/{id}` | edit |
 | `PublicationSchedule` | `publication` (`action` `schedule`; the target waits for approval) | `publication:schedule` | `POST /publications/{id}/schedule` | render; the target waits for approval |
-| `PublicationSendNow`, `PublicationRetry` | none | `publication:send-now`, `publication:retry` | `POST /publications/{id}/schedule`, `POST /publications/{id}/send-now`, `POST /publications/{id}/retry` | render; the target waits for approval |
+| `PublicationSendNow`, `PublicationRetry` | none | `publication:send-now`, `publication:retry` | `POST /publications/{id}/send-now`, `POST /publications/{id}/retry` | render; the target waits for approval |
 | `PublicationCancel` | none | `publication:cancel` | `POST /publications/{id}/cancel` | edit |
 | publication stream | none | none | `GET /publications/events` (SDD-020 §29) | read |
 | `ProviderList` | none | `provider:list` | `GET /providers` | read (SDD-016) |
