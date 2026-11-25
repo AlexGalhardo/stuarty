@@ -2,10 +2,13 @@ package cli
 
 import (
 	"encoding/json"
+	"errors"
 	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/AlexGalhardo/stuarty/service"
 )
 
 func TestParseArgs(t *testing.T) {
@@ -145,5 +148,26 @@ func TestLimitFlagBelowOneIsRefused(t *testing.T) {
 
 	if _, err := parseArgs(defs, []string{"--limit", "1"}); err != nil {
 		t.Errorf("--limit 1: %v", err)
+	}
+}
+
+// VV-447: --text names a file; the words typed in its place are not echoed whole and the error says what it takes.
+func TestReadTextErrorShortensWhatWasTypedAndSaysWhatTheFlagTakes(t *testing.T) {
+	t.Parallel()
+
+	typed := strings.Repeat("word ", 100)
+
+	_, err := (&call{}).readText("text", typed)
+	if err == nil {
+		t.Fatal("a missing file must fail")
+	}
+
+	var se *service.Error
+	if !errors.As(err, &se) {
+		t.Fatalf("error = %T", err)
+	}
+
+	if len(se.Message) > 200 || !strings.Contains(se.Hint, "--text takes the path") {
+		t.Errorf("message %d bytes, hint %q", len(se.Message), se.Hint)
 	}
 }
