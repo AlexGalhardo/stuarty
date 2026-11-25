@@ -29,6 +29,7 @@ function body(
 	over: {
 		privileged?: boolean;
 		projectName?: (id: string) => string | null;
+		connectionName?: (id: string) => string | null;
 	} = {},
 ): string {
 	const privileged = over.privileged ?? true;
@@ -37,6 +38,7 @@ function body(
 			<CenterBody
 				items={items}
 				projectName={over.projectName}
+				connectionName={over.connectionName}
 				failure={null}
 				busyId={null}
 				personOnlyId="why"
@@ -88,12 +90,17 @@ describe("CenterBody", () => {
 	});
 
 	test("a pending approval is listed with its cost and where, and its action leads to Approvals", () => {
-		const html = body([approval]);
+		const html = body([approval], {
+			connectionName: () => "Instagram da Marina",
+			projectName: () => "Lancamento do curso",
+		});
 		expect(html).toContain('data-kind="approval"');
-		expect(html).toContain("Publish to Instagram");
-		expect(html).toContain("publish.upload");
+		expect(html).toContain("Publish this item to Instagram da Marina");
+		expect(html).toMatch(
+			/data-testid="notification-destination"[^>]*>[^<]*<span[^>]*>Instagram da Marina \/ Lancamento do curso</,
+		);
 		expect(html).toMatch(/data-testid="notification-cost"[^>]*>\$1\.50</);
-		expect(html).toContain("con_aaaaaaaaaa / prj_aaaaaaaaaa");
+		expect(html).not.toMatch(/con_|prj_|publish\.upload|Publish to Instagram/);
 		expect(html).toMatch(
 			/href="\/approvals"[^>]*data-testid="notification-review"|data-testid="notification-review"[^>]*href="\/approvals"/,
 		);

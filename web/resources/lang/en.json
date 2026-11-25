@@ -4127,6 +4127,14 @@
       "result_approve": "Approved: {summary}",
       "result_reject": "Rejected: {summary}",
       "what": "What happens",
+      "original": "Original text of the request",
+      "headline": {
+        "publish": "Publish {item} to {destination}",
+        "generate": "Generate {item} with {destination}",
+        "other": "Action: {kind}",
+        "this_item": "this item",
+        "your_destination": "your connection"
+      },
       "item": "Item",
       "kind": "Tool",
       "destination": "Goes to",

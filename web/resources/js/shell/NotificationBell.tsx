@@ -8,7 +8,7 @@ import {
 	Hourglass,
 	type LucideIcon,
 } from "lucide-react";
-import { type ReactNode, useId, useState } from "react";
+import { type ReactNode, useEffect, useId, useState } from "react";
 
 import { type Failure, FailureNote } from "@/components/Failure";
 import UntrustedText from "@/components/UntrustedText";
@@ -24,7 +24,10 @@ import { cn } from "@/lib/cn";
 import { formatDateTime } from "@/lib/format";
 import { useLocale, useT } from "@/lib/i18n";
 import { PersonOnlyNote, useSession } from "@/lib/session";
+import { headline, placeOf } from "../dashboard/approval/humanize";
 import { formatMoney } from "../dashboard/approval/money";
+import { createClient } from "../editor/api/client";
+import { HttpTransport } from "../editor/api/http";
 import type { InboxUndo } from "../editor/api/types";
 import { type Notification, waitingCount } from "./notifications";
 import { useShell } from "./ShellContext";
@@ -93,6 +96,7 @@ function Fact({
 function Row({
 	item,
 	project,
+	place,
 	busy,
 	disabledBy,
 	onAnswer,
@@ -100,6 +104,8 @@ function Row({
 	onNavigate,
 }: {
 	item: Notification;
+	// where an approval goes, as the names the person gave; "" when the list does not hold them
+	place: string;
 	// the name of the project of the request (untrusted text), when the project list holds it
 	project: string | null;
 	busy: boolean;
@@ -119,17 +125,20 @@ function Row({
 		s === "" ? notReported : <UntrustedText>{s}</UntrustedText>;
 	// what will happen, in plain words when the service knows the tool; the title the agent wrote stays beside
 	// it, because the recognition reads only that title
-	const what =
-		item.action_key !== "" ? (
-			<>
-				{t(item.action_key)}{" "}
-				<span className="font-normal text-muted-foreground">
-					(<UntrustedText>{item.tool}</UntrustedText>)
-				</span>
-			</>
-		) : (
-			text(item.tool)
-		);
+	const what = !chat ? (
+		<UntrustedText>
+			{headline(t, item.tool, undefined, place === "" ? null : place)}
+		</UntrustedText>
+	) : item.action_key !== "" ? (
+		<>
+			{t(item.action_key)}{" "}
+			<span className="font-normal text-muted-foreground">
+				(<UntrustedText>{item.tool}</UntrustedText>)
+			</span>
+		</>
+	) : (
+		text(item.tool)
+	);
 	return (
 		<li
 			data-testid="notification"
@@ -168,13 +177,13 @@ function Row({
 			</div>
 			<dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">
 				<Fact label={t("ui.shell.notify.item")} testId="notification-item">
-					{text(chat ? item.item : item.summary)}
+					{chat ? text(item.item) : text(project ?? "")}
 				</Fact>
 				<Fact
 					label={t("ui.shell.notify.where")}
 					testId="notification-destination"
 				>
-					{text(item.destination)}
+					{text(chat ? item.destination : place)}
 				</Fact>
 				<Fact label={t("ui.shell.notify.cost")} testId="notification-cost">
 					{item.cost === null
@@ -260,6 +269,7 @@ function Row({
 export function CenterBody({
 	items,
 	projectName = () => null,
+	connectionName = () => null,
 	failure,
 	busyId,
 	personOnlyId,
@@ -271,6 +281,8 @@ export function CenterBody({
 	items: readonly Notification[];
 	// the name of a project by its id (untrusted text); null when the list does not hold it
 	projectName?(id: string): string | null;
+	// the label of a connection by its id; null when the list does not hold it
+	connectionName?(id: string): string | null;
 	failure: Failure | null;
 	busyId: string | null;
 	personOnlyId: string;
@@ -297,6 +309,7 @@ export function CenterBody({
 							key={item.id}
 							item={item}
 							project={projectName(item.project_id)}
+							place={placeOf(item.destination, connectionName, projectName)}
 							busy={busyId !== null}
 							disabledBy={privileged ? undefined : personOnlyId}
 							onAnswer={onAnswer}
@@ -311,6 +324,29 @@ export function CenterBody({
 	);
 }
 
+// The labels of the connections by id, read when the center opens, so an approval says "Blog da Marina" and
+// not "con_...". A read that fails leaves the map empty: the row then says "Not reported", never the id.
+function useConnectionLabels(enabled: boolean): Record<string, string> {
+	const [labels, setLabels] = useState<Record<string, string>>({});
+	useEffect(() => {
+		if (!enabled) return;
+		let alive = true;
+		createClient(new HttpTransport("/api/v1"))
+			.listConnections()
+			.then((res) => {
+				if (alive)
+					setLabels(
+						Object.fromEntries(res.connections.map((c) => [c.id, c.label])),
+					);
+			})
+			.catch(() => undefined);
+		return () => {
+			alive = false;
+		};
+	}, [enabled]);
+	return labels;
+}
+
 // The bell of the top bar and the center it opens (SDD-012 section 23.4). The count is what waits for a
 // person: the rows of the one list the service builds from the chat permissions and the approvals.
 export default function NotificationBell(): ReactNode {
@@ -321,6 +357,7 @@ export default function NotificationBell(): ReactNode {
 	const [open, setOpen] = useState(false);
 	const items = inbox.rows ?? [];
 	const waiting = waitingCount(items);
+	const connections = useConnectionLabels(open && items.length > 0);
 
 	return (
 		<>
@@ -378,6 +415,7 @@ export default function NotificationBell(): ReactNode {
 						projectName={(id) =>
 							chat.projects.find((p) => p.id === id)?.name ?? null
 						}
+						connectionName={(id) => connections[id] ?? null}
 						failure={inbox.failure}
 						busyId={inbox.busyId}
 						personOnlyId={`${ids}-person-only`}

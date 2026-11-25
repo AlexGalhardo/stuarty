@@ -4127,6 +4127,14 @@
       "result_approve": "Aprovado: {summary}",
       "result_reject": "Rejeitado: {summary}",
       "what": "O que acontece",
+      "original": "Texto original do pedido",
+      "headline": {
+        "publish": "Publicar {item} em {destination}",
+        "generate": "Gerar {item} com {destination}",
+        "other": "Ação: {kind}",
+        "this_item": "este item",
+        "your_destination": "sua conexão"
+      },
       "item": "Conteúdo",
       "kind": "Ferramenta",
       "destination": "Vai para",
