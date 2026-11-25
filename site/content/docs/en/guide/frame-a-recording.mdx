@@ -1,0 +1,65 @@
+---
+title: "Frame a recording: layouts, backgrounds and the teleprompter"
+description: "Place a screen take and a camera take in a ready layout, put them on a background, and read your script while you record."
+---
+
+## You will learn
+
+- how to lay out a screen take and a camera take with one command;
+- how to put a colour or an image behind the screen, with a shadow;
+- how to read your own script while you record, and when the teleprompter is captured.
+
+## The idea
+
+A take from the screen and a take from the camera are two clips on the timeline. Two commands of the `edit` tool frame them. Each writes ordinary values (position, scale, fit, crop and mask), so you can change every clip by hand afterwards, and one **Undo** takes the whole step back. Nothing remembers the layout: it is not a setting of the project.
+
+The teleprompter is a different thing. It is a page that shows the script of the project and scrolls it while you record. It changes nothing in the project.
+
+## Lay out the takes
+
+`recording.apply_layout` places the screen clip and the camera clip for the format of the project. The format is the nearest of 16:9, 1:1, 4:5 and 9:16; 16:9 is laid out side by side, the other three one above the other.
+
+| Layout | What you get |
+| --- | --- |
+| `screen_only` | the screen, whole, in the frame; no camera |
+| `pip` | the screen, and the camera as a small circle (or rectangle) in a corner, in front |
+| `split` | the screen and the camera side by side (or one above the other), not overlapping |
+| `camera_focus` | the camera fills the frame, and the screen sits in a box in a corner, in front |
+
+The options are `corner` (`top_left`, `top_right`, `bottom_left` or `bottom_right`, default `bottom_right`; for `pip` and `camera_focus`), `camera_shape` (`circle` or `rect`, for `pip`) and `padding`, a margin around the frame from 0 to 0.25 of the shorter side.
+
+```bash
+stuarty edit --project prj_7k2m9x4q1b recording.apply_layout layout=pip \
+  screen_item_id=itm_m1n2p3q4r5 camera_item_id=itm_s6t7v8w9x0 corner=bottom_right
+```
+
+A clip that has keyframes on its position, scale, rotation or crop is refused with `E_INVALID_STATE`, because a keyframe decides its value. Apply the layout first, then [the automatic zoom](/docs/guide/record-on-windows), or clear the keyframes.
+
+## Put the screen on a background
+
+`recording.set_background` puts a `color` or an `image` behind the screen clip, for as long as that clip plays, and adds a soft shadow to the screen. `kind` is `color`, `image` or `none`; `none` removes both. A second run replaces the first.
+
+```bash
+stuarty edit --project prj_7k2m9x4q1b recording.set_background \
+  item_id=itm_m1n2p3q4r5 kind=color color='#101820'
+```
+
+For the margin around the screen, use `padding` of the layout: the layout is what places the screen. There is no gradient and there are no rounded corners. For a gradient, make the image in [the image editor](/docs/guide/image-editor) and use `kind=image` with its `asset_id`.
+
+## Read your script while you record
+
+Open **Record screen**, and open the teleprompter from the dialog. It shows the newest script of the project, as text, and nothing else. A project with no script says so and points you to **Writing**. In the teleprompter, **Start**, **Pause** and **From the top** control the scroll; **Speed** (10 to 400 pixels a second), **Size** (24 to 120 pixels) and **Mirror the text** (for a glass in front of the lens) are yours and are kept in the browser or the window.
+
+- **On the desktop (Windows),** the teleprompter opens in its own window, always on top, with **Open the teleprompter window**. The window stays out of the screen capture on Windows 10 (version 2004) and later, and on macOS. On another system it may be recorded, and the dialog says so.
+- **On the web,** the teleprompter is a panel of the record dialog, with **Show the teleprompter here**. It is part of the page, so a capture of that tab or screen records it, and the dialog warns you. To keep it out, share another tab or window.
+
+## Common mistakes
+
+- Applying a layout after the zoom: `E_INVALID_STATE`. Apply the layout first.
+- Asking for a gradient or rounded corners. Make an image and use it as the background.
+- Recording the whole screen on the web with the teleprompter panel open. The panel is in the video.
+
+## Next steps
+
+- [Record on Windows and finish the take](/docs/guide/record-on-windows)
+- [Record your screen in a browser](/docs/guide/record-your-screen)
