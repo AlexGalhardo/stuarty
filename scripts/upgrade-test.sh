@@ -135,8 +135,12 @@ for version in "${versions[@]}"; do
 	chmod +x "$binaries/$version/$exe"
 
 	log "$version: building the workspace"
-	bash "$root/service/testdata/upgrade/build-workspace.sh" "$binaries/$version/$exe" "$workspaces/$version" "$media" ||
-		die "$version: the scenario did not run (see $workspaces/$version/scenario.out)"
+	if ! bash "$root/service/testdata/upgrade/build-workspace.sh" "$binaries/$version/$exe" "$workspaces/$version" "$media"; then
+		# The work folder is removed on exit, so the output goes to the log where CI keeps it.
+		log "$version: scenario.out follows"
+		cat "$workspaces/$version/scenario.out" >&2 || true
+		die "$version: the scenario did not run"
+	fi
 	rm -rf "$dl"
 done
 
