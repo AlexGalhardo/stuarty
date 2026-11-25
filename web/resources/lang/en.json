@@ -2654,7 +2654,7 @@
       },
       "blur_region": {
         "title": "Blur sensitive data",
-        "hint": "There is no automatic detection: you mark the rectangle and the time. The clip itself is not changed: the blur is an item on a Blur track above it.",
+        "hint": "There is no automatic detection: you mark the rectangle and the time.",
         "x": "X",
         "y": "Y",
         "width": "W",
@@ -2666,6 +2666,7 @@
         "group_time": "Time",
         "group_strength": "Strength",
         "strength_hint": "The default is strong, so the text cannot be read again.",
+        "overlay": "Blur 1",
         "strengths": {
           "strong": "Strong",
           "medium": "Medium"

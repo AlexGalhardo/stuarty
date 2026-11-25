@@ -1,4 +1,5 @@
 import {
+	EyeOff,
 	Frame,
 	Maximize,
 	Minimize,
@@ -103,6 +104,7 @@ export default function Preview({
 	const fps = useDocumentState(selectFps) ?? DEFAULT_FPS;
 	const endFrame = useDocumentState(selectEndFrame);
 	const playhead = useUiState((s) => s.playheadFrame);
+	const blurRegion = useUiState((s) => s.blurRegion);
 	const width = settings?.width ?? 1080;
 	const height = settings?.height ?? 1920;
 	const ready = status === "ready" || status === "offline";
@@ -431,6 +433,24 @@ export default function Preview({
 							className="absolute inset-0 size-full"
 						/>
 					</div>
+					{blurRegion !== null && (
+						<div
+							aria-hidden="true"
+							data-testid="blur-region-outline"
+							className="pointer-events-none absolute border-2 border-accent"
+							style={{
+								left: `${blurRegion.x * 100}%`,
+								top: `${blurRegion.y * 100}%`,
+								width: `${blurRegion.width * 100}%`,
+								height: `${blurRegion.height * 100}%`,
+							}}
+						>
+							<span className="absolute bottom-full left-0 mb-0.5 flex items-center gap-1 rounded bg-accent px-1.5 py-0.5 text-xs whitespace-nowrap text-text-on-accent">
+								<EyeOff aria-hidden="true" className="size-3" />
+								{t("ui.editor.blur_region.overlay")}
+							</span>
+						</div>
+					)}
 					{/* biome-ignore lint/a11y/noStaticElementInteractions lint/a11y/useKeyWithClickEvents: picking on the canvas is a pointer affordance; the keyboard selects in the timeline. */}
 					<div
 						data-testid="canvas-overlay"

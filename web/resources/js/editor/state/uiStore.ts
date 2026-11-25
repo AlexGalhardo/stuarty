@@ -73,6 +73,15 @@ export interface UiState {
 	// A tool that takes a stage of the editor for the item it works on (final design 26, 27 and 30): the transcript
 	// beside the preview, the proposed cuts, or the before and after of the studio voice. Null is the ordinary editor.
 	stage: { kind: StageKind; item: string } | null;
+	// The region the blur screen is setting, as shares of the picture (final design 29): the preview draws its outline.
+	blurRegion: BlurRegionShares | null;
+}
+
+export interface BlurRegionShares {
+	x: number;
+	y: number;
+	width: number;
+	height: number;
 }
 
 // The tools with a stage of their own.
@@ -137,6 +146,8 @@ export interface UiWriter {
 	showLeftTab(tab: LeftTab): void;
 	// Opens the stage of a tool for an item, or closes it with null.
 	showStage(stage: UiState["stage"]): void;
+	// The region the blur screen is setting, or null when it is not on screen.
+	showBlurRegion(region: BlurRegionShares | null): void;
 	// Alt+1: show or hide the whole left region (the rail stays); the last tab comes back.
 	toggleLeftRegion(): void;
 }
@@ -169,6 +180,7 @@ export function createUiStore(initialZoom = 1): {
 		panels: { left: true, inspector: true, history: readLayout().historyOpen },
 		inspectorTab: "video",
 		stage: null,
+		blurRegion: null,
 	});
 	return {
 		store: readOnly(store),
@@ -304,6 +316,8 @@ export function createUiStore(initialZoom = 1): {
 					panels: { ...s.panels, left: true },
 				})),
 			showStage: (stage) => store.setState((s) => ({ ...s, stage })),
+			showBlurRegion: (blurRegion) =>
+				store.setState((s) => ({ ...s, blurRegion })),
 			showInspectorTab: (tab) =>
 				store.setState((s) =>
 					s.inspectorTab === tab ? s : { ...s, inspectorTab: tab },

@@ -1,5 +1,5 @@
 import { EyeOff, Info, Plus, ShieldAlert } from "lucide-react";
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 
 import { Segment } from "@/components/Segment";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { BLUR_STRENGTHS } from "../../commands/blurStrengths";
 import { blurRegionOperations } from "../../commands/builders";
 import { useActions, useCanEdit } from "../../commands/useActions";
 import { useCommandsExposed } from "../../commands/useExposedCommands";
+import { useRuntime } from "../../state/EditorContext";
 import NumberField from "../fields/NumberField";
 import TimeCommitField from "../fields/TimeCommitField";
 import Section, { ToolLine } from "../Section";
@@ -33,6 +34,12 @@ export default function BlurRegionSection({
 	const [duration, setDuration] = useState<string | undefined>(undefined);
 	const [strength, setStrength] = useState<string | undefined>(undefined);
 	const [busy, setBusy] = useState(false);
+	const runtime = useRuntime();
+	// The preview outlines the region while this screen is open; the numbers are the ones typed here, drawn as they are.
+	useEffect(() => {
+		runtime.uiWriter.showBlurRegion(region);
+		return () => runtime.uiWriter.showBlurRegion(null);
+	}, [region, runtime]);
 	if (!exposed) return null;
 	const chosen = strength ?? BLUR_STRENGTHS[0]?.id;
 	const share = (label: string, key: keyof typeof START_REGION): ReactNode => (
@@ -44,7 +51,6 @@ export default function BlurRegionSection({
 			min={0}
 			max={1}
 			percentInput
-			suffix={t("ui.editor.clip.mask_unit")}
 			commit={async (value) => {
 				setRegion((was) => ({ ...was, [key]: value }));
 				return { ok: true };
@@ -66,7 +72,10 @@ export default function BlurRegionSection({
 			</h3>
 			<Section title={t("ui.editor.blur_region.group_region")}>
 				<ToolLine name="clip.blur_region" />
-				<div className="grid grid-cols-2 gap-x-3 gap-y-2" data-grid="region">
+				<div
+					className="grid grid-cols-2 gap-x-3 gap-y-2 *:min-w-0 *:grid-cols-[16px_minmax(0,1fr)]"
+					data-grid="region"
+				>
 					{share("ui.editor.blur_region.x", "x")}
 					{share("ui.editor.blur_region.y", "y")}
 					{share("ui.editor.blur_region.width", "width")}
@@ -117,7 +126,7 @@ export default function BlurRegionSection({
 			<Button
 				type="button"
 				disabled={!canEdit || busy}
-				className="w-full"
+				className="min-h-10 w-full"
 				onClick={async () => {
 					setBusy(true);
 					try {
