@@ -29,3 +29,15 @@ export const fetchProbe: Probe = async (url) => {
 		return { kind: "failed" };
 	}
 };
+
+// The processed sound whole, as bytes, for the waveform of the studio voice screen; null when it cannot be read.
+export async function fetchAudioBytes(
+	url: string,
+): Promise<ArrayBuffer | null> {
+	try {
+		const response = await fetch(url, { credentials: "same-origin" });
+		return response.ok ? await response.arrayBuffer() : null;
+	} catch {
+		return null;
+	}
+}

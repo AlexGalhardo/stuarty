@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { fetchProbe } from "../api/audioPreview";
+import { fetchAudioBytes, fetchProbe } from "../api/audioPreview";
 import { audioPreviewUrl } from "../api/urls";
 import { fpsOf } from "../commands/units";
 import { useDocumentState, useRuntime } from "../state/EditorContext";
@@ -69,7 +69,9 @@ export function useVoiceWaves(itemId: string): VoiceWaves {
 				const probe = await fetchProbe(url);
 				if (probe.kind === "failed") return;
 				if (probe.kind === "ready") {
-					const after = await processedPeaks(url, WAVE_COLUMNS);
+					const bytes = await fetchAudioBytes(url);
+					const after =
+						bytes === null ? null : await processedPeaks(bytes, WAVE_COLUMNS);
 					if (current && after !== null) {
 						setWaves({ before, after, processedKey: processed.key });
 					}
