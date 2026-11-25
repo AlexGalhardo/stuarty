@@ -538,7 +538,7 @@ The grid, sizes and breakpoints are those of sections 3.1 and 3.2; this layout k
 
 #### 3.4.3 Top bar
 
-Left to right: **Menu** (`Button` `ghost` `sm` with a `Menu` icon and the label, web only; in the desktop shell the same items are the native menu bar, section 8.3), back to projects, project name, **save indicator** ("Saved automatically: 14:32", `text-xs tabular-nums text-muted-foreground`, a `Check` icon before it, hidden while the editor is not live), revision and connection state (section 4.3.3), Undo and Redo, activity indicator, flexible space, palette, jobs chip, **Export** (`Button` `default`, the one primary action of the editor). The theme and language controls of SDD-012 §6.2 stay in the bar and are also reachable from the View menu and the Shortcuts and settings dialog.
+Left to right: **Menu** (`Button` `ghost` `icon-sm`, a `Menu` icon named by `aria-label`, web only; in the desktop shell the same items are the native menu bar, section 8.3), back to projects, project name, the **revision** in a `Badge` (`History` icon, "Rev 42") and the **connection** in a `Badge` of its tone (section 4.3.3), the **save indicator** ("Saved automatically: 14:32", `text-xs tabular-nums text-muted-foreground`, a `Check` icon before it, hidden while the editor is not live), flexible space, activity indicator, palette, the **bell**, **Chat** (`Button` `outline` `sm`, the same panel as the scene bar, section 4.4) and **Export** (`Button` `default`, the one primary action of the editor), then the shortcuts, language and theme controls of SDD-012 §6.2, which stay in the bar. The bell and Chat are drawn when the page has a session of the agent (`EditorShellFrame` provides the chat and the inbox to the bar, the scene bar and the panel). Undo and Redo are in the timeline toolbar.
 
 The menu (`DropdownMenu`, level 1 elevation) has the groups and actions of SDD-012 §6.4 Menu: File, Edit, Clip, Timeline, View, Help. Each item shows its key at the right from `SHORTCUTS`, in `text-xs text-muted-foreground`; submenus open with `Right`, close with `Left` or `Esc`. A group with no drawable item is not drawn. Context menus of a clip and of an empty part of the timeline (`ContextMenu`) repeat the Clip group plus Copy, Cut, Paste, Duplicate, Delete and Ripple delete, and stay short: no item is shown disabled only to advertise a feature.
 
@@ -572,7 +572,7 @@ The canvas box is unchanged (section 4.3.7). The transport row (40 px) is laid o
 
 #### 3.4.7 Timeline toolbar and tracks
 
-The toolbar (40 px, `ui/Toolbar`) has two labelled groups (`role="group"`, SDD-012 §6.5 row 5): **Edit tools** at the left (Select and Blade as a `ToggleGroup`, Undo, Redo, Split, Trim start, Trim end, Delete, Add caption, Freeze frame when it exists) and **Modes and zoom** at the right (Snap, Magnet and Link as `Toggle`s, then zoom out, the slider, zoom in, Fit). Text buttons keep a visible label and collapse to icons only when the toolbar is narrow (section 4.3.1); every tooltip names the current key ("Split (S)"). A pressed toggle shows `bg-accent`, a border of at least 3:1 against `--ed-panel` and `aria-pressed="true"` (see open point 13 of section 10).
+The toolbar (40 px, `ui/Toolbar`) has two labelled groups (`role="group"`, SDD-012 §6.5 row 5): **Edit tools** at the left (Select and Blade as a `ToggleGroup`, Undo, Redo, Split, Trim start, Trim end, Delete, Add caption, Freeze frame when it exists) and **Modes and zoom** at the right (Snap, Magnet and Link as `Toggle`s, then zoom out, the slider, zoom in, Fit). Text buttons keep a visible label and collapse to icons only when the toolbar is narrow (section 4.3.1): Trim start, Trim end, Freeze frame, Add caption and the modes keep it from 1440 px (the width the final design is drawn at), the others from 1536 px; every tooltip names the current key ("Split (S)"). A pressed toggle shows `bg-accent`, a border of at least 3:1 against `--ed-panel` and `aria-pressed="true"` (see open point 13 of section 10).
 
 Track headers (176 px) and items follow section 4.3.6. Empty timeline: the empty state of section 4.3.15 inside the rows area, with the toolbar still visible.
 
@@ -697,7 +697,7 @@ Names are the files of SDD-012 §3.2. Each entry gives anatomy, variants, states
 #### 4.3.3 `layout/TopBar`
 
 - Anatomy, left to right: back link (`ArrowLeft` icon button to `/projects`), project name (`UntrustedText`, `text-sm font-medium`, truncates with a tooltip; inline edit), revision and connection state, Undo and Redo, activity indicator, flexible space, palette button, theme, language, jobs chip, Export (`Button` `default`).
-- Connection state (text and icon, never colour alone): `live` (no icon, `text-muted-foreground` "rev 42"), `reconnecting` (`RefreshCw` icon, `--warning`, "Reconnecting"), `offline` (`--destructive`, "Offline", the edit controls become `aria-disabled`), `resyncing` (`--info`, "Syncing").
+- Connection state (text and icon, never colour alone): `live` (`Wifi` icon in a `success-soft` badge, "Live"; the revision is its own badge, "Rev 42"), `reconnecting` (`RefreshCw` icon, `--warning`, "Reconnecting"), `offline` (`--destructive`, "Offline", the edit controls become `aria-disabled`), `resyncing` (`--info`, "Syncing").
 - Undo and Redo: `IconButton`; disabled after `E_NOTHING_TO_UNDO` or `E_NOTHING_TO_REDO` until the next batch of this actor (SDD-012 §15).
 
 #### 4.3.4 `layout/ActivityIndicator` (agent activity badge)
@@ -964,7 +964,7 @@ The core's envelope (SDD-002 A.8, carried on every surface as SDD-003 §1.4 says
 | Percentages | `42%` | `Intl.NumberFormat` `style: "percent"`, no decimals |
 | Relative time | "12 s ago", "há 12 s" | `Intl.RelativeTimeFormat`, `numeric: "auto"`, style `short` |
 | Dates | locale medium date | `Intl.DateTimeFormat` |
-| Revision | "rev 42" | |
+| Revision | "Rev 42" | |
 | Counts | "3 items", "1 item" | plural objects (SDD-012 §16.2) |
 
 All of these use `tabular-nums` when they are in a column or change while visible.

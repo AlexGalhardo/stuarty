@@ -136,13 +136,15 @@ export function SavedIndicator({ live }: { live: boolean }): ReactNode {
 		hour: "2-digit",
 		minute: "2-digit",
 	}).format(savedAt);
+	const text = t("ui.editor.saved_auto", { time });
 	return (
 		<span
-			className="flex items-center gap-1 text-xs text-muted-foreground"
+			className="flex min-w-0 items-center gap-1 text-xs text-muted-foreground"
 			data-saved-at=""
+			title={text}
 		>
-			<Check aria-hidden="true" className="size-3.5 text-success" />
-			{t("ui.editor.saved_auto", { time })}
+			<Check aria-hidden="true" className="size-3.5 shrink-0 text-success" />
+			<span className="truncate">{text}</span>
 		</span>
 	);
 }
@@ -240,7 +242,7 @@ export default function TopBar({
 				{t(`ui.editor.connection.${shown}`)}
 			</Badge>
 			<SavedIndicator live={shown === "live"} />
-			<div className="ml-auto flex items-center gap-2">
+			<div className="ml-auto flex shrink-0 items-center gap-2">
 				<ActivityIndicator />
 				<PaletteButton />
 				{agent && <AgentActions />}
