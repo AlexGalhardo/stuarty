@@ -3576,6 +3576,21 @@
         "wave_after": "Waveform after the chain",
         "no_chain": "No chain yet. Apply the studio voice preset at the right to hear the difference.",
         "note": "The effect is editable and can be undone from the history."
+      },
+      "transcript_stage": {
+        "title": "Transcript",
+        "select_hint": "Select words to remove the passage",
+        "launch": "Edit by text",
+        "launch_hint": "Open the transcript beside the preview: select words to cut the video there, or review the filler words before removing them."
+      },
+      "transcript_review": {
+        "title": "Review before removing",
+        "notice": "Suggestions do not change the timeline. Only you remove.",
+        "repetition_at": "Repetition, {time}",
+        "selected": "Selected",
+        "of": "{count} of {total}",
+        "keep_all": "Keep everything",
+        "undo_note": "You can undo from the history."
       }
     },
     "account": {

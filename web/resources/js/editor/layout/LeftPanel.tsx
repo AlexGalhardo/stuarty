@@ -9,6 +9,7 @@ import {
 import { useT } from "@/lib/i18n";
 import { useCommandNames } from "../commands/useExposedCommands";
 import { TabIcon } from "../library/PanelFrame";
+import TranscriptStage from "../stages/TranscriptStage";
 import { useRuntime, useUiState } from "../state/EditorContext";
 import type { LeftTab } from "../state/uiStore";
 import { useAssetDrag } from "../timeline/gestures/dragAsset";
@@ -29,6 +30,8 @@ export default function LeftPanel(): ReactNode {
 		def.commands.every((name) => names.has(name)),
 	);
 	const active = LIBRARY_TABS.find((def) => def.id === tab);
+	// The edit by text screen puts the transcript where the panel of the tab is.
+	const transcript = useUiState((s) => s.stage?.kind === "transcript");
 	return (
 		<aside
 			aria-label={t(active?.labelKey ?? "ui.editor.panels.library")}
@@ -63,17 +66,19 @@ export default function LeftPanel(): ReactNode {
 						</Tooltip>
 					))}
 				</TabsList>
-				{LIBRARY_TABS.map((def) => (
-					<TabsContent
-						key={def.id}
-						value={def.id}
-						className={`flex min-h-0 min-w-0 flex-1 flex-col ${def.bodyClass ?? ""}`}
-					>
-						<TabIcon.Provider value={def.icon}>
-							{def.render({ onAssetDragStart: startAssetDrag })}
-						</TabIcon.Provider>
-					</TabsContent>
-				))}
+				{transcript && <TranscriptStage />}
+				{!transcript &&
+					LIBRARY_TABS.map((def) => (
+						<TabsContent
+							key={def.id}
+							value={def.id}
+							className={`flex min-h-0 min-w-0 flex-1 flex-col ${def.bodyClass ?? ""}`}
+						>
+							<TabIcon.Provider value={def.icon}>
+								{def.render({ onAssetDragStart: startAssetDrag })}
+							</TabIcon.Provider>
+						</TabsContent>
+					))}
 			</Tabs>
 		</aside>
 	);

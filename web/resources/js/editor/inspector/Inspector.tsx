@@ -4,6 +4,7 @@ import {
 	Captions,
 	Film,
 	Layers,
+	ListChecks,
 	type LucideIcon,
 	Shapes,
 	SlidersHorizontal,
@@ -16,6 +17,7 @@ import UntrustedText from "@/components/UntrustedText";
 import { useT } from "@/lib/i18n";
 import { useCommandsExposed } from "../commands/useExposedCommands";
 import CaptionsInspector from "../stages/CaptionsInspector";
+import TranscriptReview from "../stages/TranscriptReview";
 import VoiceInspector from "../stages/VoiceInspector";
 import ZoomPanel from "../stages/ZoomPanel";
 import { useDocumentState, useUiState } from "../state/EditorContext";
@@ -115,7 +117,11 @@ export default function Inspector(): ReactNode {
 	let title: ReactNode;
 	let Icon: LucideIcon = SlidersHorizontal;
 	let body: ReactNode;
-	if (stage?.kind === "voice") {
+	if (stage?.kind === "transcript") {
+		Icon = ListChecks;
+		title = t("ui.editor.transcript_review.title");
+		body = <TranscriptReview />;
+	} else if (stage?.kind === "voice") {
 		Icon = AudioWaveform;
 		title = t("ui.editor.voice_stage.title");
 		body = <VoiceInspector itemId={stage.item} />;

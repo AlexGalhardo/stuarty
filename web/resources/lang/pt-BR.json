@@ -3576,6 +3576,21 @@
         "wave_after": "Forma de onda depois da cadeia",
         "no_chain": "Ainda sem cadeia. Aplique a voz de estúdio à direita para ouvir a diferença.",
         "note": "O efeito é editável e dá para desfazer pelo histórico."
+      },
+      "transcript_stage": {
+        "title": "Transcrição",
+        "select_hint": "Selecione palavras para remover o trecho",
+        "launch": "Editar pelo texto",
+        "launch_hint": "Abre a transcrição ao lado da prévia: selecione palavras para cortar o vídeo ali, ou revise os vícios de fala antes de remover."
+      },
+      "transcript_review": {
+        "title": "Revisar antes de remover",
+        "notice": "Sugestões não mudam a linha do tempo. Só você remove.",
+        "repetition_at": "Repetição, {time}",
+        "selected": "Selecionados",
+        "of": "{count} de {total}",
+        "keep_all": "Manter tudo",
+        "undo_note": "Dá para desfazer pelo histórico."
       }
     },
     "account": {

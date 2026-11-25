@@ -13,6 +13,7 @@ import UndoRedo from "../history/UndoRedo";
 import Inspector from "../inspector/Inspector";
 import Preview from "../preview/Preview";
 import RecordingBanner from "../record/RecordingBanner";
+import { TranscriptScope } from "../stages/useTranscript";
 import VoiceStage from "../stages/VoiceStage";
 import {
 	useDocumentState,
@@ -64,6 +65,7 @@ const SIDEBAR_MIN_PX = 192;
 export function panelSizes(
 	viewportWidth: number,
 	historyOpen = false,
+	wideLeft = false,
 ): PanelSizes {
 	const wide = viewportWidth >= 1600;
 	const inspector = wide ? 360 : 280;
@@ -71,7 +73,9 @@ export function panelSizes(
 	const history = historyOpen
 		? Math.min(HISTORY_OPEN_PX, Math.max(SIDEBAR_MIN_PX, room - SIDEBAR_MIN_PX))
 		: RAIL_PX;
-	const library = Math.min(wide ? 640 : 480, Math.max(RAIL_PX, room - history));
+	// The edit by text screen gives the transcript every pixel the preview and the inspector can spare.
+	const libraryMax = wideLeft ? room : wide ? 640 : 480;
+	const library = Math.min(libraryMax, Math.max(RAIL_PX, room - history));
 	return { library, history, inspector, timeline: wide ? 300 : 240 };
 }
 
@@ -119,7 +123,11 @@ export default function EditorShell({
 	useEffect(() => {
 		if (stageItemGone && status !== "loading") runtime.uiWriter.showStage(null);
 	}, [stageItemGone, status, runtime]);
-	const full = panelSizes(viewport, panels.history);
+	const full = panelSizes(
+		viewport,
+		panels.history,
+		stage?.kind === "transcript",
+	);
 	const sizes = {
 		...full,
 		library: panels.left ? full.library : RAIL_PX,
@@ -145,84 +153,86 @@ export default function EditorShell({
 	}
 
 	return (
-		<div
-			className="grid h-dvh min-h-0 bg-ed-bg text-foreground"
-			style={{
-				gridTemplateRows: `auto minmax(0, 1fr) ${sizes.timeline}px${sceneBar === null ? "" : " auto"}`,
-				gridTemplateColumns: `${sizes.library}px ${sizes.history}px minmax(0, 1fr) ${sizes.inspector}px`,
-			}}
-		>
-			<div className="col-span-full">
-				<TopBar onLocaleChange={onLocaleChange} agent={sceneBar !== null} />
-				<TrashedBanner />
-				<RecordingBanner />
-				{status === "failed" && (
-					<div
-						role="alert"
-						className="col-span-full flex items-center gap-3 border-b border-destructive bg-ed-panel px-3 py-2 text-sm text-destructive"
-					>
-						{loadError === null ? (
-							t("ui.editor.banner.failed")
-						) : (
-							<div className="flex flex-col">
-								<span>{t("ui.editor.banner.load_failed")}</span>
-								<FailureView failure={loadError} />
-							</div>
-						)}
-						<Button
-							type="button"
-							size="sm"
-							variant="outline"
-							onClick={() => location.reload()}
-						>
-							{t("ui.editor.banner.reload")}
-						</Button>
-					</div>
-				)}
-			</div>
-			<LeftPanel />
-			<HistorySidebar />
-			<main
-				aria-label={t("ui.editor.panels.preview")}
-				data-landmark="3"
-				className="flex min-h-0 min-w-0 flex-col bg-ed-preview-surround p-3 text-foreground"
+		<TranscriptScope item={stage?.kind === "transcript" ? stage.item : null}>
+			<div
+				className="grid h-dvh min-h-0 bg-ed-bg text-foreground"
+				style={{
+					gridTemplateRows: `auto minmax(0, 1fr) ${sizes.timeline}px${sceneBar === null ? "" : " auto"}`,
+					gridTemplateColumns: `${sizes.library}px ${sizes.history}px minmax(0, 1fr) ${sizes.inspector}px`,
+				}}
 			>
-				{status === "loading" ? (
-					<p role="status" className="text-sm text-muted-foreground">
-						{t("ui.editor.loading")}
-					</p>
-				) : stage?.kind === "voice" ? (
-					<VoiceStage
-						itemId={stage.item}
-						onClose={() => runtime.uiWriter.showStage(null)}
+				<div className="col-span-full">
+					<TopBar onLocaleChange={onLocaleChange} agent={sceneBar !== null} />
+					<TrashedBanner />
+					<RecordingBanner />
+					{status === "failed" && (
+						<div
+							role="alert"
+							className="col-span-full flex items-center gap-3 border-b border-destructive bg-ed-panel px-3 py-2 text-sm text-destructive"
+						>
+							{loadError === null ? (
+								t("ui.editor.banner.failed")
+							) : (
+								<div className="flex flex-col">
+									<span>{t("ui.editor.banner.load_failed")}</span>
+									<FailureView failure={loadError} />
+								</div>
+							)}
+							<Button
+								type="button"
+								size="sm"
+								variant="outline"
+								onClick={() => location.reload()}
+							>
+								{t("ui.editor.banner.reload")}
+							</Button>
+						</div>
+					)}
+				</div>
+				<LeftPanel />
+				<HistorySidebar />
+				<main
+					aria-label={t("ui.editor.panels.preview")}
+					data-landmark="3"
+					className="flex min-h-0 min-w-0 flex-col bg-ed-preview-surround p-3 text-foreground"
+				>
+					{status === "loading" ? (
+						<p role="status" className="text-sm text-muted-foreground">
+							{t("ui.editor.loading")}
+						</p>
+					) : stage?.kind === "voice" ? (
+						<VoiceStage
+							itemId={stage.item}
+							onClose={() => runtime.uiWriter.showStage(null)}
+						/>
+					) : (
+						<Preview
+							port={canvasPort}
+							parseTime={(text) =>
+								timeToFrame(localizeDecimalInput(text, locale), fpsOf(fps))
+							}
+							trailing={<PlayerRatioSelect />}
+							shortcutRow={previewShortcutRow}
+						/>
+					)}
+				</main>
+				{panels.inspector ? <Inspector /> : <div />}
+				<div className="col-span-full min-h-0 border-t border-ed-track-line">
+					<Timeline
+						onAddCaption={() => setCaptionOpen(true)}
+						undoRedo={<UndoRedo />}
 					/>
-				) : (
-					<Preview
-						port={canvasPort}
-						parseTime={(text) =>
-							timeToFrame(localizeDecimalInput(text, locale), fpsOf(fps))
-						}
-						trailing={<PlayerRatioSelect />}
-						shortcutRow={previewShortcutRow}
-					/>
-				)}
-			</main>
-			{panels.inspector ? <Inspector /> : <div />}
-			<div className="col-span-full min-h-0 border-t border-ed-track-line">
-				<Timeline
-					onAddCaption={() => setCaptionOpen(true)}
-					undoRedo={<UndoRedo />}
-				/>
+				</div>
+				{sceneBar !== null && <div className="col-span-full">{sceneBar}</div>}
+				<AddCaptionDialog open={captionOpen} onOpenChange={setCaptionOpen} />
+				<ReleaseMark />
+				<Notices />
+				<FindBar />
+				<LiveRegion />
+				<InUseHost />
+				<RepeatDialog />
+				<Tour />
 			</div>
-			{sceneBar !== null && <div className="col-span-full">{sceneBar}</div>}
-			<AddCaptionDialog open={captionOpen} onOpenChange={setCaptionOpen} />
-			<ReleaseMark />
-			<Notices />
-			<FindBar />
-			<LiveRegion />
-			<InUseHost />
-			<RepeatDialog />
-			<Tour />
-		</div>
+		</TranscriptScope>
 	);
 }
