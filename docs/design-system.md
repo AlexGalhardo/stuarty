@@ -121,6 +121,8 @@ Teal is the agent's. Amber is "waits for you". The solid `danger` is a button fi
 
 **Decision of this document.** `--agent` attributes every label and chip of another actor and the 2 px remote-edit outline on timeline items (D-030, SDD-012 §5.8 item 4 and §17), so a remote edit is not mistaken for a selection, which keeps `--ed-selection`.
 
+**Calendar themes (epic 97, SDD-020 section 30A.1).** A day of the publishing calendar may carry a theme, one of six names the service keeps: `blue`, `green`, `amber`, `red`, `teal` and `gray`. A theme adds no token: it is a family of this section drawn as its `-text` on its `-soft` surface, the pairs that section 2.6 and `check:contrast` already measure (`blue` is `accent`, `green` is `success`, `amber` is `warning`, `red` is `danger`, `teal` is `agent`, and `gray` is `--color-text` on `--color-surface-sunken`). The colour never stands alone: the theme is named in words where it is chosen and in the header of the day view, and the quiet mark is an icon with the words "No posts". `scripts/calendar-themes.test.ts` fails if a theme is drawn in a pair that the check does not measure.
+
 ### 2.5 Colour: editor (`--ed-*`)
 
 Names are those of SDD-012 §17. The chrome of the editor follows the semantic tokens; the colours of the item types stay their own, because a clip, a sound, a text, a caption and a shape must differ from each other and from the state colours.

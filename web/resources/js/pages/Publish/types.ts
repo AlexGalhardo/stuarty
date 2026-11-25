@@ -106,6 +106,8 @@ export interface PublicationUpdateInput {
 	thumbnail?: string;
 	post?: string;
 	targets?: TargetInput[];
+	// A person's yes to a post on a day marked as quiet (SDD-020 section 30A.1).
+	confirm_quiet_day?: boolean;
 }
 
 export interface ScheduleInput {
@@ -113,6 +115,7 @@ export interface ScheduleInput {
 	at?: string;
 	zone?: string;
 	late_window_minutes?: number;
+	confirm_quiet_day?: boolean;
 }
 
 export interface ListFilter {

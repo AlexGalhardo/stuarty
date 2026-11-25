@@ -1,4 +1,5 @@
-import { type KeyboardEvent, type ReactNode, useState } from "react";
+import { Moon } from "lucide-react";
+import type { ReactNode } from "react";
 
 import UntrustedText from "@/components/UntrustedText";
 import { cn } from "@/lib/cn";
@@ -7,49 +8,51 @@ import {
 	daysOf,
 	onDay,
 	placeByDay,
-	shiftLocal,
 	today,
 	type CalendarView as View,
-	type Wall,
 } from "./calendar";
+import type { CalendarDay } from "./dayTypes";
 import { actionsOf } from "./publicationState";
 import { TargetStateBadge } from "./TargetStateBadge";
-import type { Publication, Target } from "./types";
-
-interface Moving {
-	targetId: string;
-	local: string;
-}
+import { themeSurface } from "./theme";
+import type { Publication } from "./types";
+import { useTargetMove } from "./useTargetMove";
 
 interface Entry {
 	publication: Publication;
-	target: Target;
+	target: Publication["targets"][number];
 }
 
 // The month and the week of the calendar (SDD-020 section 30). A target is a button on the day of its time in the
 // zone of the person. A person drags it to another day, or does the same with the keyboard: Space takes it, the
 // arrow keys move it by a day (left and right) or an hour (up and down), Enter drops it and Escape lets it go. The
-// page sends the new time and the zone; the service decides what it means.
+// page sends the new time and the zone; the service decides what it means. The number of a day opens that day
+// (epic 97), and a day that holds a theme, a note or the mark "no posts" shows it, as the service answered it.
 export function CalendarView({
 	view,
 	anchor,
 	weekStart,
 	zone,
 	publications,
+	marks,
 	onOpen,
+	onOpenDay,
 	onMove,
 }: {
-	view: View;
+	view: Exclude<View, "day">;
 	anchor: string;
 	weekStart: 0 | 1;
 	zone: string;
 	publications: readonly Publication[];
+	// the days of the range that hold a note, a theme or a mark, by date
+	marks?: ReadonlyMap<string, CalendarDay>;
 	onOpen(publicationId: string, targetId: string): void;
+	onOpenDay?(date: string): void;
 	onMove(publicationId: string, targetId: string, local: string): void;
 }): ReactNode {
 	const t = useT();
 	const locale = useLocale();
-	const [moving, setMoving] = useState<Moving | null>(null);
+	const { moving, cancel, onKey } = useTargetMove(onMove);
 	const entries: Entry[] = publications.flatMap((publication) =>
 		publication.targets.map((target) => ({ publication, target })),
 	);
@@ -66,45 +69,6 @@ export function CalendarView({
 		weekday: "short",
 		timeZone: "UTC",
 	});
-
-	function onKey(
-		event: KeyboardEvent<HTMLButtonElement>,
-		entry: Entry,
-		wall: Wall,
-	): void {
-		const { target } = entry;
-		if (!actionsOf(target.state).edit) return;
-		if (moving === null || moving.targetId !== target.id) {
-			if (event.key === " ") {
-				event.preventDefault();
-				setMoving({ targetId: target.id, local: wall.local });
-			}
-			return;
-		}
-		const step: Record<string, [number, number]> = {
-			ArrowLeft: [-1, 0],
-			ArrowRight: [1, 0],
-			ArrowUp: [0, -1],
-			ArrowDown: [0, 1],
-		};
-		const delta = step[event.key];
-		if (delta !== undefined) {
-			event.preventDefault();
-			setMoving({
-				...moving,
-				local: shiftLocal(moving.local, delta[0], delta[1]),
-			});
-		} else if (event.key === "Enter" || event.key === " ") {
-			event.preventDefault();
-			setMoving(null);
-			if (moving.local !== wall.local) {
-				onMove(entry.publication.id, target.id, moving.local);
-			}
-		} else if (event.key === "Escape") {
-			event.preventDefault();
-			setMoving(null);
-		}
-	}
 
 	function onDrop(day: string, data: string): void {
 		const [publicationId, targetId] = data.split("|");
@@ -147,13 +111,26 @@ export function CalendarView({
 				{days.map((day) => {
 					const list = placed.get(day.key) ?? [];
 					const date = new Date(`${day.key}T00:00:00Z`);
+					const mark = marks?.get(day.key);
+					const label = (
+						<>
+							<span className="sm:hidden">{dayName.format(date)}</span>
+							<span className="hidden sm:inline">
+								{view === "week" ? `${short.format(date)} ` : ""}
+								{date.getUTCDate()}
+							</span>
+						</>
+					);
 					return (
 						<li
 							key={day.key}
 							data-testid="calendar-day"
 							data-day={day.key}
+							data-theme={mark?.theme ?? undefined}
+							data-quiet={mark?.quiet === true ? "" : undefined}
 							className={cn(
-								"min-h-24 bg-background p-2",
+								"min-h-24 p-2",
+								themeSurface(mark?.theme) || "bg-background",
 								!day.inMonth && "bg-muted/40 text-muted-foreground",
 								day.key === now && "bg-accent-soft",
 								view === "week" && "min-h-64",
@@ -166,17 +143,45 @@ export function CalendarView({
 						>
 							<h3
 								className={cn(
-									"mb-1 text-xs font-medium",
+									"mb-1 flex items-center gap-1 text-xs font-medium",
 									day.key === now && "text-accent-text",
 								)}
 								aria-label={dayName.format(date)}
 							>
-								<span className="sm:hidden">{dayName.format(date)}</span>
-								<span className="hidden sm:inline">
-									{view === "week" ? `${short.format(date)} ` : ""}
-									{date.getUTCDate()}
-								</span>
+								{onOpenDay === undefined ? (
+									label
+								) : (
+									<button
+										type="button"
+										className="rounded-sm underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-ring"
+										data-testid="calendar-day-open"
+										aria-label={t("ui.publish.day.open", {
+											day: dayName.format(date),
+										})}
+										onClick={() => onOpenDay(day.key)}
+									>
+										{label}
+									</button>
+								)}
+								{mark?.quiet === true && (
+									<span
+										role="img"
+										aria-label={t("ui.publish.quiet.badge")}
+										title={t("ui.publish.quiet.badge")}
+										data-testid="calendar-day-quiet"
+									>
+										<Moon aria-hidden="true" className="size-3" />
+									</span>
+								)}
 							</h3>
+							{view === "week" && mark?.note ? (
+								<p
+									className="mb-1 line-clamp-2 text-xs"
+									data-testid="calendar-day-note"
+								>
+									<UntrustedText>{mark.note}</UntrustedText>
+								</p>
+							) : null}
 							<ul className="flex flex-col gap-1">
 								{list.map(({ item, wall }) => {
 									const { publication, target } = item;
@@ -201,8 +206,10 @@ export function CalendarView({
 													picked && "ring-2 ring-ring",
 												)}
 												onClick={() => onOpen(publication.id, target.id)}
-												onKeyDown={(event) => onKey(event, item, wall)}
-												onBlur={() => picked && setMoving(null)}
+												onKeyDown={(event) =>
+													onKey(event, publication.id, target, wall)
+												}
+												onBlur={() => picked && cancel()}
 												onDragStart={(event) =>
 													event.dataTransfer.setData(
 														"text/plain",

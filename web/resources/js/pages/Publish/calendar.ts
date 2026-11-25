@@ -1,7 +1,7 @@
 // The layout of the calendar: which day a time falls on and which days a month or a week shows. It draws
 // times; it decides nothing about them: the service owns every rule of a time, a zone and a missed slot.
 
-export type CalendarView = "month" | "week";
+export type CalendarView = "month" | "week" | "day";
 
 // A day of the grid, named by its date in the zone of the person: YYYY-MM-DD.
 export interface Day {
@@ -122,9 +122,18 @@ export function daysOf(
 	anchor: string,
 	weekStart: 0 | 1,
 ): Day[] {
+	if (view === "day") return [{ key: anchor, inMonth: true }];
 	return view === "month"
 		? monthDays(anchor, weekStart)
 		: weekDays(anchor, weekStart);
+}
+
+// The end of a range of days, exclusive, as a date: the day after the last one. With the first day it is what the plan
+// and the .ics export are asked for, read in the zone of the person.
+export function dateRange(days: readonly Day[]): { from: string; to: string } {
+	const first = days[0]?.key ?? "1970-01-01";
+	const last = days[days.length - 1]?.key ?? first;
+	return { from: first, to: addDays(last, 1) };
 }
 
 // The range to ask the service for: the days of the grid in the zone of the person, widened by a day on each
