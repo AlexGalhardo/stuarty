@@ -1,5 +1,10 @@
-import { CircleAlert, Image as ImageIcon, Loader2, Type } from "lucide-react";
-import { type ReactNode, useEffect, useMemo } from "react";
+import {
+	CircleAlert,
+	Image as ImageIcon,
+	ImagePlus,
+	Loader2,
+} from "lucide-react";
+import { type ReactNode, useEffect, useMemo, useState } from "react";
 
 import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
@@ -24,6 +29,7 @@ import { createImageStore } from "./state/store";
 import TopBar from "./TopBar";
 import { AddTools } from "./toolbar/AddTools";
 import { ArrangeTools, HistoryTools } from "./toolbar/ArrangeTools";
+import { AddImageProvider, useAddImage } from "./toolbar/addImage";
 import { Toolbar, ViewTools } from "./toolbar/Toolbar";
 
 // The editor takes the room the frame of the page leaves (FullLayout): the window less the top bar of the
@@ -44,6 +50,8 @@ export default function ImageEditor({
 	const transport = useMemo(() => new HttpTransport(API_BASE), []);
 	const api = useMemo(() => createImageApi(transport), [transport]);
 	const store = useMemo(() => createImageStore(api, imageId), [api, imageId]);
+	// Whether the event stream is open: the top bar says "Live" only then (polling is not live).
+	const [live, setLive] = useState(false);
 
 	// The stream of the image (SDD-006 section 12) tells this window what another actor or window committed. It is
 	// open while the window is visible; while it is not open the revision is polled (SDD-012 section 24.3).
@@ -59,6 +67,10 @@ export default function ImageEditor({
 		});
 		let live = false;
 		let disposed = false;
+		const setStreamLive = (now: boolean): void => {
+			live = now;
+			setLive(now);
+		};
 
 		// Opens the stream once the document is on screen, with the revision it holds.
 		const start = (): void => {
@@ -70,7 +82,7 @@ export default function ImageEditor({
 		};
 
 		const offState = stream.onState((state) => {
-			live = state === "live";
+			setStreamLive(state === "live");
 		});
 		const offEvent = stream.onEvent((event) => {
 			if (event.name === "resync.required") {
@@ -92,7 +104,7 @@ export default function ImageEditor({
 				poll();
 			} else {
 				stream.close();
-				live = false;
+				setStreamLive(false);
 			}
 		};
 		const onOnline = (): void => stream.checkStale();
@@ -116,13 +128,15 @@ export default function ImageEditor({
 	return (
 		<ImageEditorProvider store={store} api={api}>
 			<LibraryProvider>
-				<Shell />
+				<AddImageProvider>
+					<Shell live={live} />
+				</AddImageProvider>
 			</LibraryProvider>
 		</ImageEditorProvider>
 	);
 }
 
-function Shell(): ReactNode {
+function Shell({ live }: { live: boolean }): ReactNode {
 	const t = useT();
 	const doc = useImage((s) => s.doc);
 	const load = useImage((s) => s.load);
@@ -138,7 +152,7 @@ function Shell(): ReactNode {
 			onKeyDown={onKeys}
 			className={EDITOR_FRAME}
 		>
-			<TopBar doc={doc} failed={failed} />
+			<TopBar doc={doc} failed={failed} live={live} />
 			<AgentNotice />
 			<ModelJobStrip />
 			{!failed && <ErrorBar />}
@@ -238,8 +252,8 @@ function StateCard({ children }: { children: ReactNode }): ReactNode {
 // text layer here or a request to the agent.
 function EmptyDocument(): ReactNode {
 	const t = useT();
-	const send = useImage((s) => s.send);
 	const busy = useImage((s) => s.busy);
+	const { setPicking } = useAddImage();
 	const { openChat } = useShell();
 	const steps = ["photo", "title", "background"] as const;
 	return (
@@ -286,21 +300,11 @@ function EmptyDocument(): ReactNode {
 						type="button"
 						className="pointer-events-auto"
 						disabled={busy}
-						data-testid="image-empty-add-text"
-						onClick={() =>
-							void send(
-								[
-									{
-										op: "layer.add_text",
-										args: { text: t("ui.image.add.text_default") },
-									},
-								],
-								(r) => r.created.slice(0, 1),
-							)
-						}
+						data-testid="image-empty-add-photo"
+						onClick={() => setPicking(true)}
 					>
-						<Type aria-hidden="true" />
-						{t("ui.image.add.text")}
+						<ImagePlus aria-hidden="true" />
+						{t("ui.image.empty.add_photo")}
 					</Button>
 					<Button
 						type="button"

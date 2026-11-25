@@ -27,6 +27,8 @@ test.describe("image history and other actors", () => {
 		]);
 		await page.goto(`/edit-image/${id}`);
 		await expect(row(page, "Back")).toBeVisible();
+		// The history starts closed in the final design.
+		await page.getByTestId("image-history-toggle").click();
 		const frame = page.getByTestId("image-frame");
 		await expect(frame).toBeVisible();
 		const before = Number(await frame.getAttribute("data-revision"));
@@ -61,6 +63,7 @@ test.describe("image history and other actors", () => {
 		const { id, call } = await newImage(request, { name: "Own undo spec" });
 		await page.goto(`/edit-image/${id}`);
 		await expect(page.getByTestId("image-add-text")).toBeEnabled();
+		await page.getByTestId("image-history-toggle").click();
 
 		// the person adds a text; the agent adds a shape afterwards
 		await page.getByTestId("image-add-text").click();
@@ -101,6 +104,8 @@ test.describe("image history and other actors", () => {
 		const { id, call } = await newImage(request, { name: "Skipped spec" });
 		await page.goto(`/edit-image/${id}`);
 		await expect(page.getByTestId("image-add-rect")).toBeEnabled();
+		// the log is in the history, which starts closed
+		await page.getByTestId("image-history-toggle").click();
 		await page.getByTestId("image-add-rect").click();
 		await expect(row(page, "Shape")).toBeVisible();
 		const made = layerByName((await imageState(call, id)).layers, "Shape");

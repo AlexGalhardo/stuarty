@@ -1,5 +1,5 @@
 import { Link } from "@inertiajs/react";
-import { ArrowLeft, Check, History, MessagesSquare } from "lucide-react";
+import { ArrowLeft, Check, History, MessagesSquare, Wifi } from "lucide-react";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 
 import UntrustedText from "@/components/UntrustedText";
@@ -72,9 +72,11 @@ function ChatButton(): ReactNode {
 export default function TopBar({
 	doc,
 	failed = false,
+	live = false,
 }: {
 	doc: ImageDocument | null;
 	failed?: boolean;
+	live?: boolean;
 }): ReactNode {
 	const t = useT();
 	return (
@@ -97,6 +99,16 @@ export default function TopBar({
 						<History aria-hidden="true" />
 						{t("ui.image.editor.rev_short", { revision: doc.revision })}
 					</Badge>
+					{live && (
+						<Badge
+							variant="secondary"
+							className="bg-success-soft text-success-text"
+							data-testid="image-live"
+						>
+							<Wifi aria-hidden="true" />
+							{t("ui.editor.connection.live")}
+						</Badge>
+					)}
 					<span className="text-xs text-muted-foreground tabular-nums">
 						{t("ui.image.editor.size", { w: doc.width, h: doc.height })}
 					</span>

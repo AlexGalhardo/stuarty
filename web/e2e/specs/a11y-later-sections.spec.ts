@@ -126,6 +126,7 @@ for (const theme of ["dark", "light"] as const) {
 			]);
 			await page.goto(`/edit-image/${id}`);
 			await expect(page.getByRole("treeitem")).toHaveCount(1);
+			await page.getByTestId("image-history-toggle").click();
 			await page.getByTestId("image-checkpoint-name").fill("Kept");
 			await page.getByTestId("image-checkpoint-add").click();
 			const named = page.locator('[data-checkpoint="Kept"]');
