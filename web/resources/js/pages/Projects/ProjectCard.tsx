@@ -12,6 +12,7 @@ import { createSlotQueue, type Release, whileNear } from "@/lib/slotQueue";
 import type { ProjectSummary } from "@/types";
 import { frameUrl } from "../../editor/api/urls";
 import { BundleExport } from "./Bundles";
+import ProjectFacts from "./ProjectFacts";
 import ProjectMenu from "./ProjectMenu";
 
 const THUMBNAIL_WIDTH = 270;
@@ -153,6 +154,7 @@ export default function ProjectCard({
 								date: formatDateTime(project.updated_at, locale),
 							})}
 						</p>
+						<ProjectFacts project={project} locale={locale} />
 					</div>
 					<ProjectMenu
 						project={project}

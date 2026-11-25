@@ -80,6 +80,59 @@ describe("TrailDetail", () => {
 		expect(html).toContain("$1.50");
 	});
 
+	test("shows the skill of a step and what it cost, as the server gave them", () => {
+		const html = draw(
+			<TrailDetail
+				workflow={{
+					kind: "video",
+					steps: [
+						{
+							id: "editing",
+							state: "current",
+							optional: false,
+							actor: "agent",
+							tool: "Edit",
+							skill: "short-vertical-captions",
+							cost: [{ micros: 2_000_000, currency: "USD" }],
+							spent: [{ micros: 750_000, currency: "USD" }],
+						},
+						{
+							id: "review",
+							state: "upcoming",
+							optional: false,
+							actor: "person",
+						},
+					],
+				}}
+			/>,
+		);
+		expect(html.match(/Skill<\/dt>/g)).toHaveLength(2);
+		expect(html).toContain("short-vertical-captions");
+		expect(html).toContain("$0.75 spent");
+		expect(html).toContain("$2.00 estimated");
+		expect(html).toContain("None");
+	});
+
+	test("a skill name is text, never markup", () => {
+		const html = draw(
+			<TrailDetail
+				workflow={{
+					kind: "video",
+					steps: [
+						{
+							id: "editing",
+							state: "current",
+							optional: false,
+							actor: "agent",
+							skill: "<img src=x onerror=1>",
+						},
+					],
+				}}
+			/>,
+		);
+		expect(html).not.toContain("<img src=x");
+	});
+
 	test("reads Not reported for a value the server did not give", () => {
 		const html = draw(
 			<TrailDetail

@@ -33,11 +33,14 @@ test.describe("network-mode-pages", () => {
 			.getByRole("button", { name: "Move to trash" })
 			.click();
 		await expect(openLink).toHaveCount(0);
+		// The trash and the projects are tabs of their own on the projects page.
+		await page.getByRole("tab", { name: "Trash" }).click();
 		const trashed = page.locator(`[data-trashed-id='${seeded.id}']`);
 		await expect(trashed).toBeVisible();
 
 		await trashed.getByRole("button", { name: /^Restore/ }).click();
 		await expect(trashed).toHaveCount(0);
+		await page.getByRole("tab", { name: /^Your projects/ }).click();
 		await expect(openLink).toBeVisible();
 	});
 

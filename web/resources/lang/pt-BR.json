@@ -4561,7 +4561,7 @@
         "reusable": "Só reutilizáveis",
         "bar": "Filtrar os arquivos",
         "text_hint": "Nome, etiqueta ou projeto",
-        "any_tag": "Qualquer tag",
+        "any_tag": "Qualquer etiqueta",
         "tag_option": {
           "one": "{tag} ({count} arquivo)",
           "other": "{tag} ({count} arquivos)"

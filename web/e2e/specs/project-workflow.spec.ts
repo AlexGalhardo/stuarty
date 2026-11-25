@@ -55,6 +55,22 @@ test.describe("project workflow", () => {
 			new RegExp(`^/write\\?project=${id}&text=pit_`),
 		);
 		await expect(page.getByTestId("workflow")).not.toContainText("Footage");
+
+		// Epic 99 task 4: the head says how long the text is and how long it takes to read, as the service
+		// counted them, and every step has a skill column.
+		await expect(page.getByTestId("flow-words")).toContainText(/\d+ words?/);
+		await expect(page.getByTestId("flow-reading")).toContainText(
+			/\d+ min read/,
+		);
+		await expect(
+			page.locator("[data-slot=trail-detail] dt", { hasText: /^Skill$/ }),
+		).toHaveCount(5);
+
+		// The card of the project names the step it stands at.
+		await page.goto("/projects");
+		await expect(
+			page.locator(`[data-project-card='${id}']`).getByTestId("card-step"),
+		).toContainText(/^Now: /);
 	});
 
 	test("adding a video to a text adds its steps and leaves the finished ones where they are", async ({

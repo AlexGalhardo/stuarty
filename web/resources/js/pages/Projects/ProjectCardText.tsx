@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { formatDateTime } from "@/lib/format";
 import { useT } from "@/lib/i18n";
 import type { ProjectSummary } from "@/types";
+import ProjectFacts from "./ProjectFacts";
 import ProjectMenu from "./ProjectMenu";
 
 const TEXT_KINDS = ["script", "copy", "caption", "post"] as const;
@@ -101,6 +102,7 @@ export default function ProjectCardText({
 					})}
 				</span>
 			</p>
+			<ProjectFacts project={project} locale={locale} />
 			<div className="mt-auto flex flex-wrap gap-2">
 				<Button asChild variant="ghost" size="sm">
 					{summary === undefined ? (

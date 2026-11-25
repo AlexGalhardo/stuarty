@@ -42,7 +42,12 @@ export interface WorkflowStep {
 	optional: boolean;
 	actor: StepActor;
 	tool?: string;
+	// What the approvals of the step estimate.
 	cost?: StepCost[];
+	// The skill of the library that leads the step; the service leaves it out when the person has none reviewed.
+	skill?: string;
+	// What the finished jobs of the step cost, by currency; left out when nothing was spent.
+	spent?: StepCost[];
 }
 
 export interface Workflow {

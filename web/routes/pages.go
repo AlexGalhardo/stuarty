@@ -296,7 +296,9 @@ func projectPageShow(c *web.Ctx, d *httpapi.Deps) error {
 			"description": desc.Description, "goal": desc.Goal, "complete": desc.Complete,
 			"kind": desc.Kind,
 		},
-		"workflow":   desc.Workflow,
+		"workflow": desc.Workflow,
+		// The head of the page draws these as the service gave them (SDD-005 section 5.12.4).
+		"text_summary": desc.TextSummary, "next_post_at": desc.NextPostAt,
 		"production": desc.Production, "items": nonNil(desc.Items), "brief": brief, "briefing": briefing,
 	})
 }
