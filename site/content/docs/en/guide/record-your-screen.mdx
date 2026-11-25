@@ -1,0 +1,51 @@
+---
+title: "Record your screen"
+description: "Record the screen and your voice in the browser, on Docker or a server, and put the take in your project."
+---
+
+## You will learn
+
+- when the browser can record, and what it cannot;
+- how a take gets from the browser to your project;
+- what happens if the tab closes or the connection drops.
+
+## The idea
+
+Where the desktop application has no native capture (a browser on Docker or on a server, macOS, Linux), the **Record screen** button of the library records in the browser. Your browser captures the screen, the microphone and, if you ask, the camera, and sends what it records to your Stuarty a second at a time. Your Stuarty stores the pieces, checks each one, joins them with FFmpeg and gives you the file to add to the project. Nothing is sent to any other address.
+
+It is a basic recording: the picture, your voice and, if the browser offers it, the sound of the screen. It does not save the position of the pointer or the clicks, so a take made in the browser has no zoom from clicks. For that, use the desktop application on Windows.
+
+## Quick start
+
+1. Open a project and press **Record screen** in the library. The dialog says what this browser records and that your browser itself asks permission for the screen, the microphone and the camera.
+2. Choose what to share: the microphone, the sound of the screen, the camera as a second track. Press **Start recording** and answer the questions of the browser.
+3. The dialog shows the time, what the browser is sharing and how many megabytes your server has saved. Press **Stop recording** when you are done.
+4. Wait while the file is made. Then choose **Add to the project**, **Not now** or **Delete**, as for any recording. **Place on the timeline** puts the take at the end of a video track in one step, so one undo removes it.
+
+Agents with access to the project can read a recording only after you add it. An agent cannot start, upload or add a recording: it needs you, in the app.
+
+## What a browser can do
+
+- **A secure page.** A browser lets a page record the screen only on `https://` or on `localhost`. On plain `http://` at any other address the dialog turns recording off and says why. Put Caddy in front of Stuarty (see [Caddy](/docs/self-hosting/caddy)) or open it on `localhost`.
+- **Formats.** Chrome and Edge record WebM with VP9 and Opus, Firefox WebM with VP8 or VP9 and Opus, Safari MP4 with H.264. The dialog names the one your browser uses.
+- **Sound of the screen.** The browser decides, in its own picker: usually for a tab, on some systems for the whole screen. If it does not offer it, the dialog does not list it as shared.
+- **Chrome on Android** is not supported.
+
+## If something goes wrong
+
+- **The connection drops.** The browser keeps each piece until your server says it has it, sends it again after a wait, and the server stores a piece only once. The dialog says that it is trying again. Nothing is lost.
+- **The tab closes or the browser crashes.** The server keeps the pieces it received, at most a second less than you recorded. Open the dialog again: it offers **Finish it**, which makes the file from what the server has, or **Delete**. A take that nobody finishes is finished by the next recording, after five minutes, or when the server starts.
+- **A limit is reached.** The recording stops by itself and keeps what was received: the size (`STUARTY_MAX_IMPORT_BYTES`), the length (`STUARTY_MAX_RECORDING_SECONDS`) or the free disk (`STUARTY_MIN_FREE_BYTES`).
+- **The file cannot be made.** The recording is marked as failed with the reason. The pieces stay in the folder of the recording until you delete it.
+
+## Common mistakes
+
+- Opening Stuarty on a server by its IP address over `http://` and wondering why Start is off. Use HTTPS.
+- Expecting the sound of the computer on every browser. Share a tab with its sound in the picker, or use the desktop application on Windows.
+- Closing the tab during the last seconds. The recording is kept up to the last piece that arrived; press **Stop recording** first.
+
+## Next steps
+
+- [The media library](/docs/guide/media-library): what the project does with the file
+- [The desktop application](/docs/guide/desktop): native capture on Windows
+- [Privacy](/docs/self-hosting/privacy): what leaves your machine, which is nothing here
