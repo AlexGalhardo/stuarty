@@ -47,6 +47,16 @@ export function viewOf(recording: Recording): RecordView {
 	}
 }
 
+// The screen of a recording this tab makes in the browser. Once it has ended, whoever ended it (the Stop of the
+// person, Stop sharing in the browser, a limit of the server, an upload that failed), the screen is the one of the
+// server's answer, which the dialog then follows like any recording.
+export function browserViewOf(state: RecorderState): RecordView {
+	if (state.phase !== "ended") return { step: "browser_live", state };
+	return state.recording === null
+		? { step: "loading" }
+		: viewOf(state.recording);
+}
+
 // The recording is still changing: the dialog asks again.
 export function isLive(recording: Recording): boolean {
 	return (

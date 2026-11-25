@@ -2,7 +2,9 @@ import { describe, expect, test } from "vitest";
 
 import { ApiError } from "../api/errors";
 import type { Recording } from "../api/types";
+import type { RecorderState } from "./browserRecorder";
 import {
+	browserViewOf,
 	formatClock,
 	isKept,
 	isLive,
@@ -70,6 +72,64 @@ describe("the screen the dialog draws for what the service said", () => {
 	test("a failed one and a discarded one have their own screens", () => {
 		expect(viewOf(recording("failed")).step).toBe("failed");
 		expect(viewOf(recording("cancelled")).step).toBe("gone");
+	});
+});
+
+describe("a recording this tab makes in the browser", () => {
+	function live(
+		phase: RecorderState["phase"],
+		rec: Recording | null,
+		stoppedBy: RecorderState["stoppedBy"] = null,
+	): RecorderState {
+		return {
+			phase,
+			recordingId: "rec_0123456789",
+			elapsedMs: 4000,
+			shared: {
+				screen: true,
+				microphone: false,
+				displayAudio: false,
+				camera: false,
+			},
+			upload: {
+				phase: "idle",
+				pending: 0,
+				chunks: { screen: 4, camera: 0 },
+				bytes: 4000,
+				end: null,
+			},
+			stoppedBy,
+			recording: rec,
+			error: null,
+		};
+	}
+
+	test("is drawn from the recorder until it has ended", () => {
+		for (const phase of [
+			"starting",
+			"recording",
+			"sending",
+			"finishing",
+		] as const) {
+			expect(browserViewOf(live(phase, null)).step).toBe("browser_live");
+		}
+	});
+
+	test("once it ended on its own, the screen follows the server's answer instead of waiting forever", () => {
+		for (const by of ["browser", "limit", "failure", "person"] as const) {
+			const finishing = {
+				...recording("finishing"),
+				source: { kind: "browser" },
+			};
+			expect(browserViewOf(live("ended", finishing, by)).step).toBe(
+				"recording",
+			);
+		}
+		expect(
+			browserViewOf(live("ended", recording("ready", "pending"), "browser"))
+				.step,
+		).toBe("review");
+		expect(browserViewOf(live("ended", null, "failure")).step).toBe("loading");
 	});
 });
 

@@ -11,6 +11,7 @@ import {
 } from "./browserRecorder";
 import {
 	browserOffered,
+	browserViewOf,
 	isKept,
 	isLive,
 	LIVE_POLL_MS,
@@ -172,6 +173,22 @@ export function useRecordFlow(
 
 	const current = (): string => recordingId ?? "";
 
+	// What the recorder of this tab reports. A recorder that ended, by the Stop of the person or on its own (Stop
+	// sharing in the browser, a limit, a failed upload), is no longer this tab's: the dialog follows the server's
+	// answer, and a dialog opened again finds the take like any other.
+	const showBrowser = (state: RecorderState): void => {
+		if (state.phase === "ended") browser.current = null;
+		if (!alive.current) return;
+		setView(browserViewOf(state));
+		if (
+			state.phase === "ended" &&
+			state.recording === null &&
+			state.error !== null
+		) {
+			setFailure(failureOf(state.error));
+		}
+	};
+
 	return {
 		view,
 		failure,
@@ -209,9 +226,7 @@ export function useRecordFlow(
 						container: capability.container,
 						choice,
 						onChange: (state: RecorderState) => {
-							if (alive.current && browser.current !== null) {
-								setView({ step: "browser_live", state });
-							}
+							if (browser.current !== null) showBrowser(state);
 						},
 					});
 				} catch (error) {
@@ -231,14 +246,7 @@ export function useRecordFlow(
 			if (own === null) return;
 			setBusy(true);
 			try {
-				const end = await own.stop();
-				browser.current = null;
-				if (!alive.current) return;
-				if (end.recording !== null) setView(viewOf(end.recording));
-				else {
-					setView({ step: "loading" });
-					if (end.error !== null) setFailure(failureOf(end.error));
-				}
+				showBrowser(await own.stop());
 			} finally {
 				if (alive.current) setBusy(false);
 			}
