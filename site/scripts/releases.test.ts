@@ -1,8 +1,5 @@
 import assert from "node:assert/strict";
 import { afterEach, test } from "node:test";
-import { createElement } from "react";
-import { renderToStaticMarkup } from "react-dom/server";
-import { ReleaseBadge } from "../components/release-badge.tsx";
 import { FALLBACK_TAG, pickDownloads, type LatestRelease } from "../lib/releases.ts";
 
 const REPO = "https://github.com/AlexGalhardo/stuarty";
@@ -89,15 +86,6 @@ test("only a release read from GitHub is confirmed as the current version", asyn
 	assert.equal((await (await fresh())()).confirmed, false);
 	globalThis.fetch = async () => Response.json({ message: "Not Found" });
 	assert.equal((await (await fresh())()).confirmed, false);
-});
-
-test("the badge shows the version it is given and none when the lookup failed", () => {
-	const known = renderToStaticMarkup(createElement(ReleaseBadge, { version: "9.8.7" }));
-	assert.match(known, /Alpha/);
-	assert.match(known, /v9\.8\.7/);
-	const unknown = renderToStaticMarkup(createElement(ReleaseBadge));
-	assert.match(unknown, /Alpha/);
-	assert.doesNotMatch(unknown, /v\d+\.\d+/);
 });
 
 test("an error status or a body without a tag falls back too", async () => {

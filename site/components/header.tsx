@@ -1,6 +1,5 @@
 import { Link } from "@/components/link";
 import { Logo } from "@/components/logo";
-import { ReleaseBadge } from "@/components/release-badge";
 import { MobileNav } from "@/components/mobile-nav";
 import { useEffect, useState, lazy, Suspense } from "react";
 import { Search } from "lucide-react";
@@ -75,7 +74,8 @@ const HEADER_CLASS: Record<HeaderVariant, string> = {
 		"fixed inset-x-0 top-0 z-40 h-14 border-b border-fg/10 bg-bg/70 backdrop-blur-xl supports-[backdrop-filter]:bg-bg/55",
 };
 
-export function Header({ groups, version, variant = "docs" }: { groups: NavGroup[]; version?: string; variant?: HeaderVariant }) {
+// The release badge left the header on every page (author decision, 2026-11-25); version stays in the props for the callers.
+export function Header({ groups, variant = "docs" }: { groups: NavGroup[]; version?: string; variant?: HeaderVariant }) {
 	return (
 		<Providers>
 			<header className={HEADER_CLASS[variant]} data-variant={variant} data-site-chrome>
@@ -85,7 +85,6 @@ export function Header({ groups, version, variant = "docs" }: { groups: NavGroup
 						<MobileNav groups={groups} />
 						<div className="flex min-w-0 flex-col items-start gap-1 sm:flex-row sm:items-center sm:gap-2.5">
 							<Logo />
-							<ReleaseBadge version={version} />
 						</div>
 					</div>
 					<div className="flex min-w-0 flex-1 justify-end sm:justify-center">
