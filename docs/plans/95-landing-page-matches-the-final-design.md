@@ -58,7 +58,7 @@ None.
 - [x] 1. Compare the current page with the four frames and list each difference (section, copy, size, spacing, image). Verify: the list is in the hand-off.
 - [ ] 2. Structure and copy of every section as in the frames, with the claims and their epics kept in `content.ts`. Verify: `cd site && bun run lint && bun run check:command-mentions && bun test src/landing/content.test.ts`.
 - [ ] 3. Layout, type, spacing and colours at 1440 and 390 px in both themes. Verify: screenshots of the page beside the frames at 1440 and 390 in both themes, attached to the hand-off.
-- [ ] 4. Staged captures of the real UI in both themes, with "Good morning, Alex.", and the credits updated. Verify: every image exists at both sizes and in both themes, and `task site:build` passes.
+- [x] 4. Staged captures of the real UI in both themes, with "Good morning, Alex.", and the credits updated. Verify: every image exists at both sizes and in both themes, and `task site:build` passes.
 - [ ] 5. Every product image follows the site theme. Verify: a browser test switches the theme and checks that each visible product image is the capture of that theme.
 - [ ] 6. Magnifier on hover and zoom with a blurred background. Verify: a browser test opens and closes the zoom with the mouse and with the keyboard, checks the dialog, the blur and the return of focus, and an axe check of the open dialog passes.
 
