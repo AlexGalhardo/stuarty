@@ -10,6 +10,10 @@ import {
 import { type ReactNode, useEffect, useMemo, useState } from "react";
 
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
+import { FilterBar } from "@/components/FilterBar";
+import { GuideStrip } from "@/components/GuideStrip";
+import { NumberedStep } from "@/components/NumberedStep";
+import { OptionSelect } from "@/components/OptionSelect";
 import { PageHeader } from "@/components/PageHeader";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
@@ -52,6 +56,9 @@ const MODES: readonly Mode[] = ["day", "week", "month", "list"];
 
 // The week starts on Monday, as in the final design, in both languages.
 const weekStart = 1;
+
+// The value of "All" in a filter: the select has no empty option.
+const ALL = "all";
 
 function api() {
 	return createClient(new HttpTransport("/api/v1"));
@@ -364,109 +371,138 @@ export default function Publish(): ReactNode {
 					</div>
 				</div>
 
-				<div className="flex flex-wrap items-start justify-between gap-4">
-					<div className="flex flex-wrap items-center gap-2 text-sm">
-						<label className="flex items-center gap-2">
-							{t("ui.publish.filter.state")}
-							<select
-								className="h-8 rounded-lg border border-input bg-transparent px-2 text-sm"
-								value={state}
-								onChange={(event) => setState(event.target.value)}
-								data-testid="publish-filter-state"
+				<FilterBar label={t("ui.publish.filters")}>
+					<span className="text-sm text-text-muted">
+						{t("ui.publish.filter.state")}
+					</span>
+					<OptionSelect
+						size="sm"
+						label={t("ui.publish.filter.state")}
+						value={state === "" ? ALL : state}
+						onChange={(v) => setState(v === ALL ? "" : v)}
+						options={[
+							{ value: ALL, label: t("ui.publish.filter.all") },
+							...TARGET_STATES.map((s) => ({
+								value: s,
+								label: t(`ui.publish.state.${s}`),
+							})),
+						]}
+					/>
+					<span className="text-sm text-text-muted">
+						{t("ui.publish.filter.network")}
+					</span>
+					<OptionSelect
+						size="sm"
+						label={t("ui.publish.filter.network")}
+						value={network === "" ? ALL : network}
+						onChange={(v) => setNetwork(v === ALL ? "" : v)}
+						options={[
+							{ value: ALL, label: t("ui.publish.filter.all") },
+							...networks.map((n) => ({ value: n.network, label: n.name })),
+						]}
+					/>
+					<span className="text-xs text-muted-foreground" aria-live="polite">
+						{feed.live ? t("ui.publish.live") : ""}
+					</span>
+				</FilterBar>
+
+				<div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_17rem]">
+					<div className="flex min-w-0 flex-col gap-4">
+						<FailureNote failure={failure ?? feed.failure ?? view.failure} />
+						{feed.publications === null && feed.failure === null && (
+							<p
+								role="status"
+								className="text-sm text-muted-foreground"
+								data-testid="publish-loading"
 							>
-								<option value="">{t("ui.publish.filter.all")}</option>
-								{TARGET_STATES.map((s) => (
-									<option key={s} value={s}>
-										{t(`ui.publish.state.${s}`)}
-									</option>
-								))}
-							</select>
-						</label>
-						<label className="flex items-center gap-2">
-							{t("ui.publish.filter.network")}
-							<select
-								className="h-8 rounded-lg border border-input bg-transparent px-2 text-sm"
-								value={network}
-								onChange={(event) => setNetwork(event.target.value)}
-								data-testid="publish-filter-network"
-							>
-								<option value="">{t("ui.publish.filter.all")}</option>
-								{networks.map((n) => (
-									<option key={n.network} value={n.network}>
-										{n.name}
-									</option>
-								))}
-							</select>
-						</label>
-						<span className="text-xs text-muted-foreground" aria-live="polite">
-							{feed.live ? t("ui.publish.live") : ""}
-						</span>
+								{t("ui.publish.loading")}
+							</p>
+						)}
+
+						{mode === "list" ? (
+							<ListView
+								publications={feed.publications}
+								accounts={accountNames}
+								onOpen={(id, target) => setEditing({ id, target })}
+							/>
+						) : mode === "day" ? (
+							<DayView
+								date={anchor}
+								zone={zone}
+								plan={view.plan}
+								publications={publications}
+								accounts={accounts}
+								calendarApi={view.api}
+								onOpen={(id, target) => setEditing({ id, target })}
+								onCreate={(local, net, connection) =>
+									setEditing({
+										id: null,
+										initial: {
+											at: local,
+											...(net === undefined ? {} : { network: net }),
+											...(connection === undefined ? {} : { connection }),
+										},
+									})
+								}
+								onMove={move}
+								onAdjust={adjust}
+								onChanged={reloadAll}
+								onFail={view.fail}
+							/>
+						) : (
+							<CalendarView
+								view={gridView}
+								anchor={anchor}
+								weekStart={weekStart}
+								zone={zone}
+								publications={publications}
+								marks={marks}
+								onOpen={(id, target) => setEditing({ id, target })}
+								onOpenDay={openDay}
+								onMove={move}
+							/>
+						)}
 					</div>
-					<MiniMonth
-						month={mini}
-						selected={anchor}
-						weekStart={weekStart}
-						zone={zone}
-						days={miniPlan.plan?.days ?? []}
-						onMonth={(direction) => setMini((was) => addMonths(was, direction))}
-						onPick={openDay}
-					/>
+					<aside className="flex flex-col gap-4">
+						<MiniMonth
+							month={mini}
+							selected={anchor}
+							weekStart={weekStart}
+							zone={zone}
+							days={miniPlan.plan?.days ?? []}
+							onMonth={(direction) =>
+								setMini((was) => addMonths(was, direction))
+							}
+							onPick={openDay}
+						/>
+						<GuideStrip
+							className="[&_ol]:sm:grid-cols-1"
+							title={t("ui.publish.guide.title")}
+						>
+							<NumberedStep
+								number={1}
+								state={waiting > 0 ? "done" : "current"}
+								stateLabel={t("ui.publish.guide.done")}
+								title={t("ui.publish.guide.plan")}
+								description={t("ui.publish.guide.plan_body")}
+							/>
+							<NumberedStep
+								number={2}
+								state={waiting > 0 ? "current" : "todo"}
+								stateLabel={t("ui.publish.guide.done")}
+								title={t("ui.publish.guide.approve")}
+								description={t("ui.publish.guide.approve_body")}
+							/>
+							<NumberedStep
+								number={3}
+								state="todo"
+								stateLabel={t("ui.publish.guide.done")}
+								title={t("ui.publish.guide.out")}
+								description={t("ui.publish.guide.out_body")}
+							/>
+						</GuideStrip>
+					</aside>
 				</div>
-
-				<FailureNote failure={failure ?? feed.failure ?? view.failure} />
-				{feed.publications === null && feed.failure === null && (
-					<p
-						role="status"
-						className="text-sm text-muted-foreground"
-						data-testid="publish-loading"
-					>
-						{t("ui.publish.loading")}
-					</p>
-				)}
-
-				{mode === "list" ? (
-					<ListView
-						publications={feed.publications}
-						accounts={accountNames}
-						onOpen={(id, target) => setEditing({ id, target })}
-					/>
-				) : mode === "day" ? (
-					<DayView
-						date={anchor}
-						zone={zone}
-						plan={view.plan}
-						publications={publications}
-						accounts={accounts}
-						calendarApi={view.api}
-						onOpen={(id, target) => setEditing({ id, target })}
-						onCreate={(local, net, connection) =>
-							setEditing({
-								id: null,
-								initial: {
-									at: local,
-									...(net === undefined ? {} : { network: net }),
-									...(connection === undefined ? {} : { connection }),
-								},
-							})
-						}
-						onMove={move}
-						onAdjust={adjust}
-						onChanged={reloadAll}
-						onFail={view.fail}
-					/>
-				) : (
-					<CalendarView
-						view={gridView}
-						anchor={anchor}
-						weekStart={weekStart}
-						zone={zone}
-						publications={publications}
-						marks={marks}
-						onOpen={(id, target) => setEditing({ id, target })}
-						onOpenDay={openDay}
-						onMove={move}
-					/>
-				)}
 			</div>
 			{editing !== null && (editing.id === null || opened !== null) && (
 				<PublicationEditor

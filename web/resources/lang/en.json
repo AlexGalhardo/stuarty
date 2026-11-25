@@ -3962,6 +3962,17 @@
       "intro": "Plan what goes live. Every post waits for your yes in Approvals.",
       "new": "New post",
       "count_waiting": "{count} waiting for you",
+      "filters": "Filter the calendar",
+      "guide": {
+        "title": "How a post goes out",
+        "done": "Done",
+        "plan": "Plan it",
+        "plan_body": "Pick a day and an account for the post.",
+        "approve": "You approve it",
+        "approve_body": "Nothing goes out before your yes in Approvals.",
+        "out": "It goes out",
+        "out_body": "At the time you chose, on your own account."
+      },
       "count_failed": {
         "one": "{count} failed",
         "other": "{count} failed"
