@@ -72,7 +72,7 @@ The pull-request pipeline (`ci.yml`) still exists and will be required again. It
 - `Browser tests (firefox, <i>/6)`, `Browser tests (webkit, <i>/6)`: the same specs on the other two engines, except those tagged `CHROMIUM_ONLY`; run one by hand with `bunx playwright test -c e2e/playwright.config.ts --project=firefox` in `web/`
 - `Bundle export (<os>)`, `Bundle matrix (<os>)`: a bundle of the reference project made on each system is imported on all three, and the document and media hashes must be equal; `bash scripts/bundle-matrix.sh` runs it by hand
 - `Sandbox (bwrap)`: `TestSecurity_T16_` must pass, not skip
-- `Renderer (ubuntu-24.04)`: the Rust gate of `renderer/` and the WebAssembly module built twice from clean with equal digests and equal to the embedded one (see [The Rust renderer](#the-rust-renderer))
+- `Renderer (ubuntu-24.04)`: the Rust gate of `renderer/` and the WebAssembly module built twice from clean with equal digests and equal to the embedded one (see [The Rust renderer](#the-rust-renderer)); `Renderer (windows-latest)`: the same module built on Windows, which must be byte for byte the embedded one
 - `Notices`, `Vulnerabilities`, `Workflow pins`
 
 `Golden cases (PATH FFmpeg)` is reported and does not block. `nightly.yml` runs once a day the long benchmarks, the 60 s export and the soak tests.
@@ -84,7 +84,7 @@ Rust lives only in `renderer/` (ADR-0029, rule `.agents/rules/rust.md`); you nee
 1. Install [rustup](https://rustup.rs). The first `cargo` call in the repository installs the toolchain pinned in `rust-toolchain.toml` (an exact stable version with `rustfmt`, `clippy` and the `wasm32-unknown-unknown` target).
 2. Install the tool at the version of CI: `cargo install --locked cargo-deny --version 0.20.2`. The module has no wasm-bindgen glue, so no wasm-bindgen CLI is needed.
 3. Before every commit that touches `renderer/`, in `renderer/`: `cargo fmt --check`, `cargo clippy --locked --all-targets -- -D warnings`, `cargo test --locked`, `cargo deny check`.
-4. `bash scripts/build-renderer.sh` builds the native crate and the module into `renderer/dist/`; `bash scripts/build-renderer.sh verify` builds the module twice from clean and fails unless the digests match; `bash scripts/build-renderer.sh check` also fails unless the module embedded in `engine/renderhost/` is the one this source builds.
+4. `bash scripts/build-renderer.sh` builds the native crate and the module into `renderer/dist/`; `bash scripts/build-renderer.sh verify` builds the module twice from clean and fails unless the digests match; `bash scripts/build-renderer.sh check` also fails unless the module embedded in `engine/renderhost/` is the one this source builds. Off x86-64 Linux the module is built through `internal/tools/rustchost`, so these modes also need Go: the module is then the one the Linux runner builds, byte for byte.
 5. Crates are at exact versions (`=x.y.z`) and `Cargo.lock` is committed. The approved crates are listed in `.agents/rules/rust.md`; any other crate needs the maintainer's approval. The licence allowlist of `renderer/deny.toml` must stay within the one of `internal/tools/notices`, which also lists the shipped crates in `THIRD_PARTY_NOTICES.md` (`task notices`).
 
 `bash scripts/gate.sh` runs all of this as its `rust` step when `cargo` is installed.
