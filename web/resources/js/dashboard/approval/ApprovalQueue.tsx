@@ -13,6 +13,7 @@ import { useLocale, useT } from "@/lib/i18n";
 import { PersonOnlyNote, useSession } from "@/lib/session";
 import type { ApprovalRequest, InboxUndo } from "../../editor/api/types";
 import { TargetStateBadge } from "../../pages/Publish/TargetStateBadge";
+import { headline } from "./humanize";
 import { kindIcon } from "./kindIcon";
 import { formatMoney } from "./money";
 import type { ApprovalContext } from "./useApprovalContext";
@@ -87,6 +88,8 @@ export function ApprovalItem({
 			<UntrustedText>{s}</UntrustedText>
 		);
 	const Icon = kindIcon(request.kind);
+	// the title is worded here from the kind, the item and the place: the service's English summary is not shown
+	const title = headline(t, request.kind, publication?.title, destination);
 	return (
 		<li
 			className="flex flex-col gap-4 rounded-lg border border-warning bg-surface p-4"
@@ -104,10 +107,18 @@ export function ApprovalItem({
 					<p className="sr-only">{t("ui.approvals.what")}</p>
 					<p
 						className="break-words text-base font-semibold text-text"
-						data-testid="approval-summary"
+						data-testid="approval-title"
 					>
-						{text(request.summary)}
+						<UntrustedText>{title}</UntrustedText>
 					</p>
+					<details className="mt-1 text-sm text-text-subtle">
+						<summary className="w-fit cursor-pointer">
+							{t("ui.approvals.original")}
+						</summary>
+						<p className="mt-1 break-words" data-testid="approval-summary">
+							{text(request.summary)}
+						</p>
+					</details>
 				</div>
 				<StatusBadge status="waiting">{t("ui.approvals.queue")}</StatusBadge>
 			</div>
@@ -208,7 +219,7 @@ export function ApprovalItem({
 					{t("ui.approvals.reject")}
 					<span className="sr-only">
 						{" "}
-						<UntrustedText>{request.summary}</UntrustedText>
+						<UntrustedText>{title}</UntrustedText>
 					</span>
 				</Button>
 				<Button
@@ -223,7 +234,7 @@ export function ApprovalItem({
 					{t("ui.approvals.approve")}
 					<span className="sr-only">
 						{" "}
-						<UntrustedText>{request.summary}</UntrustedText>
+						<UntrustedText>{title}</UntrustedText>
 					</span>
 				</Button>
 			</div>
@@ -354,7 +365,14 @@ export default function ApprovalQueue({
 									id: request.id,
 									index: requests.indexOf(request),
 									decision,
-									summary: request.summary,
+									summary: headline(
+										t,
+										request.kind,
+										context[request.id]?.publication?.title,
+										request.connection_id === null
+											? null
+											: (destinations[request.connection_id] ?? null),
+									),
 								};
 								onDecide(request.id, decision, reason);
 							}}
