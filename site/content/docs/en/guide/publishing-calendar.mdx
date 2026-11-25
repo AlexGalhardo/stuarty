@@ -69,7 +69,7 @@ stuarty publication:show pub_0123456789
 
 A date in `--from` and `--until` is the start of that day in `--zone` (UTC when you leave it out), so the second list is the week from Monday 16 to Sunday 22 in São Paulo.
 
-`publication:schedule` only asks for approval. An agent that runs it gets a post that waits for you. Over MCP the same plan is the `publication` tool, with `action` `create`, `schedule`, `show` or `list`; it has no action that sends, cancels or approves.
+`publication:schedule` only asks for approval. An agent that runs it gets a post that waits for you. Over MCP the same plan is the `publication` tool, with `action` `create`, `schedule`, `show` or `list`; it has no action that sends, cancels or approves. Once you approved a post, only you can move it: an agent, the local token or an API key that schedules it again gets `E_PRIVILEGED_SESSION`, and the post keeps its time and your approval.
 
 </Tab>
 </Tabs>
