@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.asset_id: kind image needs an image asset.",
+  "hint": "Send asset_id, or use kind color.",
+  "retryable": false,
+  "path": "args.asset_id"
+}

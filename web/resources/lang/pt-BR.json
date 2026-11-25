@@ -2279,6 +2279,9 @@
           "apply_layout": {
             "title": "Organizar uma gravação de tela e de webcam"
           },
+          "set_background": {
+            "title": "Pôr um fundo atrás de uma gravação de tela"
+          },
           "auto_zoom": {
             "title": "Dar zoom nos cliques de uma gravação de tela"
           },

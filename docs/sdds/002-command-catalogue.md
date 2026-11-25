@@ -1,10 +1,10 @@
 # SDD-002: Command catalogue of the core
 
 - Amended (2026-11-18) for Stuarty: this is the catalogue of the video domain. Other domains get their own catalogue (ADR-0031, ADR-0038).
-- Amended (2026-11-25, epic 66): one command, `recording.apply_layout` (C.96); names in SDD-000 section 19, the design in SDD-025 section 20.
+- Amended (2026-11-25, epic 66): two commands, `recording.apply_layout` and `recording.set_background` (C.96, C.97); names in SDD-000 section 19, the design in SDD-025 section 20.
 - Amended (2026-11-24, epic 65): three commands, `recording.auto_zoom`, `recording.set_cursor` and `recording.set_click_highlight` (C.93 to C.95); names in SDD-000 section 18, the design in SDD-025 section 17.
 - Amended (2026-11-24, epic 71): four commands, `caption.apply_style` and `caption.list_styles` (C.88, C.89), `clip.blur_region` (C.90) and `audio.apply_voice_preset` (C.91); names in SDD-000 section 17.
-- Status: Draft for freeze (2026-11-14). Parts A and B are the contract; Part C details each command. Part C is frozen: all 96 commands have golden cases and pass the registry-wide gates. The binary exposes all 96 commands, 95 of them public (epic 32 added three, C.84 to C.86, epic 69 one, C.87, epic 71 four, C.88 to C.91, epic 70 one, C.92, epic 65 three, C.93 to C.95, and epic 66 one, C.96); `font.add` and `font.remove` have scope `media` like `asset.add` and `asset.remove`.
+- Status: Draft for freeze (2026-11-14). Parts A and B are the contract; Part C details each command. Part C is frozen: all 97 commands have golden cases and pass the registry-wide gates. The binary exposes all 97 commands, 96 of them public (epic 32 added three, C.84 to C.86, epic 69 one, C.87, epic 71 four, C.88 to C.91, epic 70 one, C.92, epic 65 three, C.93 to C.95, and epic 66 two, C.96 and C.97); `font.add` and `font.remove` have scope `media` like `asset.add` and `asset.remove`.
 - Depends on: SDD-001 (document), ADR-0002 (command core), ADR-0004 (time), ADR-0006 (log, concurrency, undo), ADR-0014 (JSON Schema)
 - Implements: RF-010 to RF-016, RF-020 to RF-026, RF-030 to RF-036, RF-040, RF-041, RF-050, RF-051, RF-100, RF-105, RF-107, RF-112 to RF-115, RF-119, NFR-001, NFR-025
 - Owner area: senior-a (command core and schema)
@@ -314,6 +314,7 @@ Scope is `edit` unless stated. "Time" marks arguments parsed by A.4. Optional ar
 | `recording.set_cursor` | `item_id`, `visible?`, `style?` (`dot`, `ring`), `size?`, `color?`, `smoothing_ms?` (150), `keyframe_ms?` (100) | Draws the smoothed pointer of a screen take as shape items on a `Cursor` track, or removes them (SDD-025 §17.5). See C.94 |
 | `recording.set_click_highlight` | `item_id`, `style?` (`ring`, `wave`, `pulse`, `none`), `color?`, `size?`, `duration_ms?` (600) | Marks every click of a screen take with a shape item on a `Click highlight` track, or removes them (SDD-025 §17.6). See C.95 |
 | `recording.apply_layout` | `layout`, `screen_item_id`, `camera_item_id?`, `corner?`, `camera_shape?`, `padding?` | Places a screen clip and a webcam clip by a named layout for the project format (SDD-025 §20.1). See C.96 |
+| `recording.set_background` | `item_id`, `kind`, `color?`, `asset_id?`, `shadow?` | Puts a colour or an image behind a screen clip and a shadow on it, or removes them (SDD-025 §20.2). See C.97 |
 | `clip.set_speed` | `item_id`, `speed` (`"1.5x"`, `"0.5x"` or a rational object) or `curve` (2 to 8 `{t, speed}` points), `ripple?` (`"none"` default, `"track"`) | Changes speed keeping the same source range: the new duration is `ceil(duration × old / new)`, reduced by the rounding excess if that would read past the end of the asset. Keyframe times and transition and fade lengths are scaled by the same ratio and rounded. With `ripple: "track"`, later items on the track shift by the change in length; otherwise a resulting overlap is `E_OVERLAP`. Captions linked to the clip are not changed; the lint reports them as out of sync until `caption.retime_from_clip` runs. A `composition` item takes a constant `speed` by the same rule (epic 53, C.25); a `curve` or a `reverse` on it is `E_VALIDATION` |
 | `clip.set_color` | `item_id`, `brightness?`, `contrast?`, `saturation?`, `temperature?`, `tint?`, `hue?` | Sets colour adjustment; also white balance and hue rotation (TASK-0233). See C.26 |
 | `clip.set_filter` | `item_id`, `filter?`, `amount?` | Sets the colour filter of a clip and how much of it is mixed in |
@@ -7330,3 +7331,45 @@ Places a screen clip, and a webcam clip when the layout has one, by a named layo
 - `err_type_mismatch_not_a_clip`
 - `err_invalid_state_keyframed`
 - `err_invalid_state_asset_without_size`
+
+### C.97 `recording.set_background`
+
+Puts a colour or an image behind a screen clip and a shadow on the clip, or removes them (epic 66, SDD-025 section 20.2).
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `item_id` | item id | yes | none | the screen `clip`; the background plays for the time it plays |
+| `kind` | `"color"`, `"image"`, `"none"` | yes | none | `none` removes the background and the shadow |
+| `color` | colour | no | `#0F172A` | hex or `"$name"`; `color` only |
+| `asset_id` | asset id | `image` | none | an asset of kind image; `image` only |
+| `shadow` | boolean | no | true | false leaves the clip without the shadow of this command |
+
+**Preconditions.** The arguments agree with `kind` (`E_VALIDATION`); the item exists (`E_NOT_FOUND`) and is a clip (`E_TYPE_MISMATCH`); the asset exists and is an image (`E_NOT_FOUND`, `E_TYPE_MISMATCH`); the items fit: fewer than 500 in all and 50 tracks (`E_LIMIT`).
+
+**Postconditions.** The items named `Background <item id>` are removed. For `color`, one full-frame rectangle shape of that colour; for `image`, one clip of the asset with fit `cover`; both on the visual track `Background` at the bottom of the stack (found or made), for the start and duration of the clip. The clip gets the shadow of SDD-025 section 20.2 when `shadow` is not false, and `kind` `none` or `shadow` false clears its shadow. `effective` has `kind`, `items` and `track_id`.
+
+**Errors.** `E_VALIDATION`, `E_NOT_FOUND`, `E_TYPE_MISMATCH`, `E_LIMIT`.
+
+**Inverse.** `patch` of the items, the track and the clip. **Idempotency.** The same arguments give the same result.
+
+**Example.**
+
+```json
+{"op": "recording.set_background", "args": {"item_id": "itm_m1n2p3q4r5", "kind": "color", "color": "#1E293B"}}
+```
+
+**Golden cases.**
+
+- `ok_color`
+- `ok_image`
+- `ok_color_without_shadow`
+- `ok_replaces_the_previous_background`
+- `ok_none_removes_background_and_shadow`
+- `err_validation_color_with_asset`
+- `err_validation_image_without_asset`
+- `err_not_found`
+- `err_type_mismatch_not_a_clip`
+- `err_type_mismatch_asset_not_an_image`
+- `err_limit_items`

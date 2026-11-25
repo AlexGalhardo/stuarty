@@ -1,0 +1,7 @@
+{
+  "op": "recording.set_background",
+  "args": {
+    "item_id": "itm_zzzzzzzzzz",
+    "kind": "color"
+  }
+}

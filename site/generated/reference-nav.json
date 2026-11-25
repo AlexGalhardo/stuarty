@@ -454,6 +454,7 @@
       "project.rename",
       "recording.apply_layout",
       "recording.auto_zoom",
+      "recording.set_background",
       "recording.set_click_highlight",
       "recording.set_cursor",
       "settings.reframe",

@@ -119,3 +119,57 @@ func init() {
 		d.Assets[camAsset] = a
 	}), "pip", withCamera()...)
 }
+
+const (
+	bgNewTrack = "trk_n3w7r4ck0e"
+	bgNewItem  = "itm_b9g1t3m5k7"
+	bgOldItem  = "itm_p1d3b5g7m9"
+)
+
+// withBackground is a take that already has a background: the Background track and one shape on it, and a shadow.
+func withBackground() *B {
+	return layoutDoc(1920, 1080, false)().with(func(d *timeline.Document) {
+		d.Tracks[bgTr] = timeline.Track{ID: bgTr, Kind: timeline.TrackVisual, Name: BackgroundTrackName, Order: "a3"}
+		it := timeline.NewItem(bgOldItem, timeline.ItemShape, bgTr, 0, 300)
+		it.Name, it.Shape, it.Width, it.Height, it.Fill = backgroundItemName+itemA, "rect", 1920, 1080, "#FF0000"
+		d.Items[bgOldItem] = it
+		clip := d.Items[itemA]
+		clip.Shadow = &timeline.Shadow{Color: "#000000", Opacity: 0.5, DY: 13, Blur: 32}
+		d.Items[itemA] = clip
+	})
+}
+
+func backgroundArgs(rest ...string) string {
+	return cmdArgs(itemA, rest...)
+}
+
+func init() {
+	b := func(name string, build func() *B, rest ...string) {
+		gc("recording.set_background", name, build, op("recording.set_background", backgroundArgs(rest...)))
+	}
+	bIDs := func(name string, build func() *B, rest ...string) {
+		gcIDs("recording.set_background", name, build, op("recording.set_background", backgroundArgs(rest...)),
+			bgNewTrack, bgNewItem)
+	}
+
+	plain := layoutDoc(1920, 1080, false)
+
+	bIDs("ok_color", plain, `"kind": "color"`, `"color": "#1E293B"`)
+	bIDs("ok_image", plain, `"kind": "image"`, fmt.Sprintf(`"asset_id": %q`, imgAsset))
+	bIDs("ok_color_without_shadow", plain, `"kind": "color"`, `"shadow": false`)
+	gcIDs("recording.set_background", "ok_replaces_the_previous_background", withBackground,
+		op("recording.set_background", backgroundArgs(`"kind": "color"`, `"color": "#00FF88"`)), bgNewItem)
+	b("ok_none_removes_background_and_shadow", withBackground, `"kind": "none"`)
+	b("err_validation_color_with_asset", plain, `"kind": "color"`, fmt.Sprintf(`"asset_id": %q`, imgAsset))
+	b("err_validation_image_without_asset", plain, `"kind": "image"`)
+	gc("recording.set_background", "err_not_found", plain,
+		op("recording.set_background", cmdArgs("itm_zzzzzzzzzz", `"kind": "color"`)))
+	gc("recording.set_background", "err_type_mismatch_not_a_clip", func() *B { return base().audio(itemA, 0, 90, 0) },
+		op("recording.set_background", backgroundArgs(`"kind": "color"`)))
+	b("err_type_mismatch_asset_not_an_image", plain, `"kind": "image"`, fmt.Sprintf(`"asset_id": %q`, scrAsset))
+	gcIDs("recording.set_background", "err_limit_items", func() *B {
+		return plain().with(func(d *timeline.Document) {
+			d.Tracks["trk_fe00000001"] = timeline.Track{ID: "trk_fe00000001", Kind: timeline.TrackVisual, Order: "a9"}
+		}).manyItems("trk_fe00000001", timeline.MaxItems-2)
+	}, op("recording.set_background", backgroundArgs(`"kind": "color"`)), bgNewTrack, bgNewItem)
+}

@@ -111,6 +111,10 @@ var requiredCases = []string{
 	"transparent",
 	"opaque-control",
 	"screen-take-effects",
+	"recording-layout-pip-16-9",
+	"recording-layout-split-1-1",
+	"recording-layout-camera-focus-4-5",
+	"recording-layout-split-9-16",
 }
 
 const (
