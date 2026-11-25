@@ -301,7 +301,7 @@ export const areas = {
 		{ id: "image", icon: "image", title: "Image editor", text: "Layers, text, masks, presets and templates for thumbnails and posts.", epics: [28, 29] },
 		{ id: "agents", icon: "bot", title: "Agents", text: "Claude Code, Codex, OpenCode and Gemini CLI. You approve each tool request.", epics: [14, 83] },
 		{ id: "library", icon: "brain", title: "Skills, prompts, memory", text: "Reviewed procedures, reusable prompts and notes you approve before they stay.", epics: [15, 16, 83] },
-		{ id: "recording", icon: "video", title: "Screen recording", text: "On Windows and in the browser, with sound, webcam, pause, zoom on clicks, a smooth cursor and click highlights.", epics: [62, 63, 65] },
+		{ id: "recording", icon: "video", title: "Screen recording", text: "On Windows and in the browser, with sound, webcam, zoom on clicks and click highlights. Your agent prepares it and proposes cuts; only you start it.", epics: [62, 63, 64, 65] },
 		{ id: "edit-by-text", icon: "wand-sparkles", title: "Edit by text", text: "Cut a video by editing its transcript, drop filler words, style captions, blur private details and clean the voice.", epics: [69, 71] },
 		{ id: "connections", icon: "plug", title: "Connections", text: "Your own AI keys and social accounts, in an encrypted local vault.", epics: [4, 9, 12, 84] },
 		{ id: "publishing", icon: "shield-check", title: "Approvals and publishing", text: "A queue, cost ceilings and a calendar. Nothing is sent without your yes.", epics: [5, 20, 82] },
@@ -370,14 +370,6 @@ export const roadmap = {
 			epics: [67, 68],
 		},
 		{
-			id: "agents-recording",
-			icon: "bot",
-			title: "Agents in the recording flow",
-			text: "Your agent prepares, marks takes, pauses and stops. Only a person starts a capture.",
-			state: "planned",
-			epics: [64],
-		},
-		{
 			id: "layouts",
 			icon: "layout-template",
 			title: "Layouts and teleprompter",
@@ -406,7 +398,7 @@ export const roadmap = {
 
 /** Words that name a roadmap-only feature: they must not appear in the copy outside `roadmap`. */
 export const roadmapOnlyTerms = [
-	// Recording ships on Windows (epic 62); on the web, macOS and Linux, its finish and its agent tools it does not.
+	// Recording ships on Windows and in the browser, with its finish and its agent tools (epics 62 to 65); on macOS and Linux it does not.
 	"recording on macos", "recording on linux", "record your", "screen capture",
 	"mark takes", "teleprompter", "local model", "face-aware",
 	"auto zoom", "automatic zoom", "metrics",
