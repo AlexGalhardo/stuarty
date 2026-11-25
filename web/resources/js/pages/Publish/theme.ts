@@ -43,3 +43,26 @@ export const THEME_CLASSES: Record<
 export function themeSurface(theme: string | undefined): string {
 	return isTheme(theme) ? THEME_CLASSES[theme].surface : "";
 }
+
+// The colour of the left edge of a post, by its state: waiting is amber, on its way is blue, published is green,
+// failed is red, a draft and a cancelled post are neutral. The word is always beside it (TargetStateBadge), so the
+// colour is never the only sign.
+export function stateEdge(state: string): string {
+	switch (state) {
+		case "waiting_approval":
+			return "border-s-warning";
+		case "approved":
+		case "scheduled":
+			return "border-s-accent";
+		case "publishing":
+			return "border-s-agent";
+		case "published":
+		case "sent_as_draft":
+			return "border-s-success";
+		case "failed":
+		case "missed":
+			return "border-s-danger";
+		default:
+			return "border-s-border-strong";
+	}
+}

@@ -3961,6 +3961,17 @@
       "title": "Publicação",
       "intro": "Planeje o que vai ao ar. Cada post espera o seu sim em Aprovações.",
       "count_waiting": "{count} esperando você",
+      "filters": "Filtrar o calendário",
+      "guide": {
+        "title": "Como uma publicação sai",
+        "done": "Concluída",
+        "plan": "Planeje",
+        "plan_body": "Escolha um dia e uma conta para a publicação.",
+        "approve": "Você aprova",
+        "approve_body": "Nada sai antes do seu sim em Aprovações.",
+        "out": "Ela sai",
+        "out_body": "No horário que você escolheu, na sua própria conta."
+      },
       "count_failed": {
         "one": "{count} falhou",
         "other": "{count} falharam"
