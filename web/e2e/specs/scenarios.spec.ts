@@ -159,6 +159,10 @@ test.describe("event-gap-resync", () => {
 	}) => {
 		const seeded = await seedProject(request, { tracks: 1, perTrack: 1 });
 		let streams = 0;
+		let closeGap = (): void => {};
+		const gap = new Promise<void>((resolve) => {
+			closeGap = resolve;
+		});
 		// Only the stream of this project: a bare `**/events**` also matched the
 		// `events-<hash>.js` chunk, the inbox and approval streams, and WebKit
 		// requested one of those first, so the editor never loaded (VV-393).
@@ -167,8 +171,14 @@ test.describe("event-gap-resync", () => {
 			async (route) => {
 				streams++;
 				// The first stream is killed; the client reconnects with `since`.
-				if (streams === 1) await route.abort();
-				else await route.continue();
+				if (streams === 1) {
+					await route.abort();
+					return;
+				}
+				// The reconnection is held until both edits are made, so the client
+				// misses their events and must catch up when it is back (VV-393 review).
+				await gap;
+				await route.continue();
 			},
 		);
 		await page.goto(`/editor/${seeded.id}`);
@@ -195,6 +205,7 @@ test.describe("event-gap-resync", () => {
 				],
 			});
 		}
+		closeGap();
 		await expect(page.locator("[data-item-id]")).toHaveCount(3, {
 			timeout: 20_000,
 		});
