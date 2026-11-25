@@ -2009,11 +2009,11 @@ ADR-0020 items 2 and 3; RF-005, RF-131.
 - **Transaction** (inside `Write`, with the store lock of 13.4 held):
   1. Select the trashed projects that match; for each, cancel its jobs that are still `queued` or `running` first and wait for them to finish (up to 15 s), then `Projects.Delete` (cascades `operations`, `idempotency_keys`, `project_assets`, `jobs` of that project); delete its `document_backups` rows explicitly (no foreign key).
   2. Delete `trashed` rows of `project_assets` that match.
-  3. `Assets.Unreferenced`; for each, `Assets.Delete` (cascades `artifacts`), remembering its store path and artifact paths.
+  3. `Assets.Unreferenced`; for each, `Assets.Delete` (cascades `artifacts`), remembering its store path and artifact paths. When the asset is the screen of an added recording, the recording keeps its row and tracks, its `events_count` becomes 0 and its pointer file `recordings/<id>/events.jsonl` is remembered too (SDD-025 section 16.8).
   4. Remember `exports/<project id>/` and `frames/<project id>/` of every deleted project.
   A project that still has a queued or running job after that wait, and an asset whose ingest is queued or running, are left out of the emptying and logged; the next emptying removes them.
 - **After commit**, delete the remembered files and directories through `engine/store` (SDD-011).
-- **Crash.** Before commit: nothing changed. After commit and before the files are removed: orphan files remain, removed by the sweep of 13.4.
+- **Crash.** Before commit: nothing changed. After commit and before the files are removed: orphan files remain, removed by the sweep of 13.4; the sweep does not read `recordings/`, so a pointer file left so stays until its folder is removed by hand.
 
 ### 13.4 Store lock and orphan sweep
 
