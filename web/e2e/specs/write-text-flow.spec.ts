@@ -70,10 +70,12 @@ test.describe("write text flow", () => {
 		// Save, then Review, then the end of the copy: one primary action at a time.
 		const end = page.getByTestId("end-panel");
 		await expect(
-			editor.getByRole("button", { name: "Review", exact: true }),
+			page.getByRole("button", { name: "Send for review", exact: true }),
 		).toHaveAttribute("data-primary", "true");
 		await expect(end.locator('[data-primary="true"]')).toHaveCount(0);
-		await editor.getByRole("button", { name: "Review", exact: true }).click();
+		await page
+			.getByRole("button", { name: "Send for review", exact: true })
+			.click();
 		await expect(end.getByRole("button", { name: "Copy" })).toHaveAttribute(
 			"data-primary",
 			"true",
@@ -188,8 +190,7 @@ test.describe("write text flow", () => {
 		await page.goto("/write");
 		await page.locator(`[data-text-id="${created.item.id}"]`).click();
 		await page
-			.getByTestId("text-editor")
-			.getByRole("button", { name: "Review", exact: true })
+			.getByRole("button", { name: "Send for review", exact: true })
 			.click();
 		const next = page
 			.getByTestId("end-panel")

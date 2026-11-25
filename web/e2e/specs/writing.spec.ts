@@ -4,7 +4,7 @@ import type { AddressInfo } from "node:net";
 import AxeBuilder from "@axe-core/playwright";
 import type { Page } from "@playwright/test";
 import { ensureAccount, signInWithPassword } from "../support/account";
-import { caller, expect, home, test } from "./helpers";
+import { caller, chooseOption, expect, home, test } from "./helpers";
 
 // Epic 17 (SDD-019, RF-350 to RF-354): a creator writes the script of a video, sees how long it takes, writes the
 // caption of each network and sees its counters, asks a model for a draft that waits for approval and lands as a
@@ -96,9 +96,13 @@ test.describe("writing", () => {
 
 		await page.getByRole("button", { name: "New text" }).click();
 		const form = page.getByRole("form", { name: "New text" });
-		await form.getByLabel("Project").selectOption(projectId);
+		await chooseOption(
+			page,
+			form.getByLabel("Project"),
+			new RegExp(`Bread ${tag.replace("-", " ")}`),
+		);
 		await form.getByLabel("Title").fill(`Hook ${tag}`);
-		await form.getByLabel("Kind").selectOption("script");
+		await chooseOption(page, form.getByLabel("Kind"), "Script");
 		await form.getByRole("button", { name: "Create" }).click();
 
 		const editor = page.getByTestId("text-editor");
@@ -347,17 +351,14 @@ test.describe("writing", () => {
 			await page.locator(`[data-text-id="${created.item.id}"]`).click();
 			const draft = page.getByTestId("draft-panel");
 			// The list is loaded once the AI connection is in it; only then does a missing option prove anything.
-			await expect(
-				draft.getByLabel("Connection").locator("option", { hasText: label }),
-			).toHaveCount(1);
-			await expect(
-				draft
-					.getByLabel("Connection")
-					.locator("option", { hasText: siteLabel }),
-			).toHaveCount(0);
-			await draft.getByLabel("Connection").selectOption({ label });
-			await expect(draft.getByLabel("Model")).toHaveValue(modelId);
-			await draft.getByLabel("Network").selectOption("instagram");
+			await draft.getByLabel("Connection").click();
+			await expect(page.getByRole("option", { name: label })).toHaveCount(1);
+			await expect(page.getByRole("option", { name: siteLabel })).toHaveCount(
+				0,
+			);
+			await page.getByRole("option", { name: label, exact: true }).click();
+			await expect(draft.getByLabel("Model")).toHaveText(modelId);
+			await chooseOption(page, draft.getByLabel("Network"), "instagram");
 			await draft.getByLabel("What to write").fill("Make it punchy");
 
 			await draft.getByRole("button", { name: "Estimate the cost" }).click();

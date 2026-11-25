@@ -115,8 +115,8 @@ for (const theme of ["dark", "light"] as const) {
 					.getByRole("button", { name: "Compare", exact: true })
 					.click();
 				await expect(page.getByTestId("revision-diff")).toBeVisible();
-				await editor
-					.getByRole("button", { name: "Review", exact: true })
+				await page
+					.getByRole("button", { name: "Send for review", exact: true })
 					.click();
 				await expect(page.getByTestId("end-panel")).toBeVisible();
 
