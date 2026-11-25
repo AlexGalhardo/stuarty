@@ -62,9 +62,9 @@ type options struct {
 	scenarioList         []scenario
 	apiKey, systemPrompt string
 	// The first-flow scenario runs against services the operator started on loopback.
-	skillsDir                                  string
+	skillsDir                                    string
 	flowBase, flowHome, flowPassword, flowSocial string
-	flowEnv                                    *flowEnv
+	flowEnv                                      *flowEnv
 }
 
 func parseOptions(argv []string, getenv func(string) string, stderr io.Writer) (options, int) {
