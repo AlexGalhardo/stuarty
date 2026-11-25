@@ -11,8 +11,8 @@ import (
 	"github.com/AlexGalhardo/stuarty/core/plan"
 	"github.com/AlexGalhardo/stuarty/engine/compositor"
 	"github.com/AlexGalhardo/stuarty/engine/lut"
-	"github.com/AlexGalhardo/stuarty/engine/renderhost"
 	"github.com/AlexGalhardo/stuarty/engine/rasterize"
+	"github.com/AlexGalhardo/stuarty/engine/renderhost"
 )
 
 // ImageConfig is what the render of an image document needs from the machine (SDD-021 section 6).
