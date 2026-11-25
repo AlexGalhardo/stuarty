@@ -1,207 +1,237 @@
 ---
-// The landing page (epic 88): a calm page that tells a creator, in a few seconds, what Stuarty is and what it is not
-// yet. Sections: hero, one path, agent transparency, a text is a project, areas, agents, privacy, downloads and "On
-// the roadmap". The copy and its claims are in src/landing/content.ts and checked against the roadmap by its test.
-// The screens of epic 79 (home, projects, briefing) are drawn by ScreenSlot from their captures.
+// The landing page (epic 95): the final design of the landing, section by section: the hero with the home in its scene,
+// the numbered path whose steps alternate image and text, "Nothing hidden", "Not only video", "One studio", "Agent-first",
+// "On the roadmap", the privacy statement and the downloads. The copy and its claims are in src/landing/content.ts and
+// checked against the roadmap by its test; the demo of the agent tab is in lib/landing-pages.ts. Every image is a real
+// capture of the product in both themes (HomeShot), and opens enlarged on a click (ZoomDialog).
 import "@/src/landing/landing.css";
 import "@/src/landing/home.css";
 import Base from "../layouts/Base.astro";
 import { landing } from "@/lib/landing";
-import { shots } from "@/lib/landing-pages";
-import { agents, areas, capturedNote, credits, downloads, hero, path, privacy, roadmap, screenSlots, textProject, transparency } from "@/src/landing/content";
-import DriveTabs from "../components/landing/DriveTabs.astro";
-import LandingActions from "../components/landing/LandingActions.astro";
-import ScreenSlot from "../components/landing/ScreenSlot.astro";
-import ThemedShot from "../components/landing/ThemedShot.astro";
+import { latestRelease } from "@/lib/releases";
 import { withBase } from "@/lib/site";
+import { agents, areas, downloads, hero, path, privacy, roadmap, screens, textProject, transparency } from "@/src/landing/content";
+import HomeFooter from "../components/landing/HomeFooter.astro";
+import HomeDrive from "../components/landing/HomeDrive.astro";
+import HomeShot from "../components/landing/HomeShot.astro";
+import Icon from "../components/landing/Icon.astro";
+import ZoomDialog from "../components/landing/ZoomDialog.astro";
 
-const stepShots = { writing: shots.writing, videoEditor: shots.videoEditor, imageEditor: shots.imageEditor, approvals: shots.approvals, calendar: shots.calendar };
+const release = await latestRelease();
+const alpha = release.confirmed ? `Alpha v${release.version}` : "Alpha";
+const start = withBase("/docs/getting-started/quick-start/");
+const docs = withBase("/docs/introduction/");
+const cards = [
+	{ id: "windows", title: "Windows", sub: alpha, icon: "monitor", href: release.downloads.find((d) => d.os === "windows")?.href ?? release.url, external: true },
+	{ id: "macos", title: "macOS", sub: alpha, icon: "laptop", href: release.downloads.find((d) => d.os === "macos")?.href ?? release.url, external: true },
+	{ id: "linux", title: "Linux", sub: alpha, icon: "terminal", href: release.downloads.find((d) => d.os === "linux")?.href ?? release.url, external: true },
+	{ id: "docker-local", title: "Docker Local", sub: "Setup guide", icon: "container", href: withBase("/docs/self-hosting/docker/"), external: false },
+	{ id: "docker-vps", title: "Docker VPS", sub: "Setup guide", icon: "server", href: withBase("/docs/self-hosting/vps/"), external: false },
+] as const;
+const stepSizes = "(min-width: 64rem) 45rem, 100vw";
 ---
 
 <Base title={landing.title} description={landing.description} canonical="/" headerVariant="landing">
-	<main id="content" data-expressive data-page="home" class="home relative isolate overflow-x-clip">
+	<main id="content" data-expressive data-page="home" class="home">
 		<!-- 1. Hero -->
-		<section aria-labelledby="hero-title" class="home-section home-hero">
-			<div class="site-container grid items-center gap-12 lg:grid-cols-12">
-				<div class="lg:col-span-5">
-					<p class="eyebrow">{hero.eyebrow}</p>
-					<h1 id="hero-title" class="display-home mt-5 text-fg">{hero.title}</h1>
-					<p class="lead mt-6 max-w-xl">{hero.lead}</p>
-					<ul class="home-facts mt-6" aria-label="What Stuarty is">
-						{hero.facts.map((f) => <li>{f}</li>)}
-					</ul>
-					<div class="mt-8 flex flex-wrap gap-3">
-						<a class="btn btn-brand" href={withBase("/docs/guide/first-short-video/")}>Make your first short</a>
-						<a class="btn btn-outline" href="#download">Download</a>
+		<section aria-labelledby="hero-title" class="l-section l-hero">
+			<div class="l-container l-stack">
+				<div class="l-stack l-stack-tight">
+					<p class="l-eyebrow">{hero.eyebrow}</p>
+					<h1 id="hero-title" class="l-hero-title">{hero.title}</h1>
+					<p class="l-lead"><span class="l-desktop-only">{hero.lead}</span><span class="l-mobile-only">{hero.leadMobile}</span></p>
+					<div class="l-actions">
+						<a class="l-btn l-btn-primary l-btn-lg" href={start}><Icon name="arrow-right" size={16} />{hero.primary}</a>
+						<a class="l-btn l-btn-secondary l-btn-lg" href={docs}><Icon name="book-open" size={16} />{hero.secondary}</a>
 					</div>
+					<p class="l-note">
+						<Icon name="circle-check" size={16} class="l-ok" />
+						<span class="l-desktop-only">{hero.note}</span><span class="l-mobile-only">{hero.noteMobile}</span>
+					</p>
 				</div>
-				<div class="lg:col-span-7">
-					<figure class="showcase home-frame m-0">
-						<ThemedShot shot={shots.videoEditor} eager sizes="(min-width: 64rem) 52rem, 100vw" />
-					</figure>
-				</div>
+				<figure class="l-shot l-shot-hero m-0">
+					<HomeShot screen={screens.home} eager class="l-desktop-only" />
+					<HomeShot screen={screens.homeMobile} sizes="300px" class="l-mobile-only" />
+				</figure>
 			</div>
 		</section>
 
 		<!-- 2. One path -->
-		<section id="path" aria-labelledby="path-title" class="home-section">
-			<div class="site-container">
-				<div class="home-head">
-					<p class="eyebrow">{path.eyebrow}</p>
-					<h2 id="path-title" class="display-title mt-4 text-fg">{path.title}</h2>
-					<p class="lead mt-5 max-w-2xl">{path.lead}</p>
+		<section id="path" aria-labelledby="path-title" class="l-section l-section-path">
+			<div class="l-container l-stack">
+				<div class="l-head">
+					<p class="l-eyebrow">{path.eyebrow}</p>
+					<h2 id="path-title" class="l-title">{path.title}</h2>
+					<p class="l-lead">{path.lead}</p>
 				</div>
-				<ol class="home-steps">
-					{path.steps.map((s, i) => (
-						<li class="home-step" aria-labelledby={`step-${s.id}`}>
-							<div class="home-step-text">
-								<p class="home-step-n" aria-hidden="true">{String(i + 1).padStart(2, "0")}</p>
-								<h3 id={`step-${s.id}`} class="home-h3">{s.title}</h3>
-								<p class="home-p">{s.text}</p>
-							</div>
-							<figure class="showcase home-frame m-0">
-								{s.screen.kind === "shot" ? (
-									<ThemedShot shot={stepShots[s.screen.shot]} sizes="(min-width: 64rem) 36rem, 100vw" />
-								) : (
-									<ScreenSlot slot={s.screen.slot} src={screenSlots[s.screen.slot].src} srcDark={screenSlots[s.screen.slot].srcDark} />
-								)}
-							</figure>
-						</li>
-					))}
+				<ol class="l-steps">
+					{
+						path.steps.map((s, i) => (
+							<li class="l-step" aria-labelledby={`step-${s.id}`}>
+								<div class="l-step-text">
+									<p class="l-step-n" aria-hidden="true">{i + 1}</p>
+									<h3 id={`step-${s.id}`} class="l-step-title">{s.title}</h3>
+									<p class="l-lead">{s.text}</p>
+								</div>
+								<figure class="l-shot m-0">
+									<HomeShot screen={screens[s.screen]} sizes={stepSizes} />
+								</figure>
+							</li>
+						))
+					}
 				</ol>
 			</div>
 		</section>
 
-		<!-- 3. Agent transparency -->
-		<section id="transparency" aria-labelledby="transparency-title" class="home-section home-band">
-			<div class="site-container grid items-center gap-12 lg:grid-cols-12">
-				<div class="lg:col-span-5">
-					<p class="eyebrow">{transparency.eyebrow}</p>
-					<h2 id="transparency-title" class="display-title mt-4 text-fg">{transparency.title}</h2>
-					<p class="lead mt-5">{transparency.lead}</p>
-					<dl class="home-defs mt-8">
-						{transparency.points.map((p) => (
-							<div>
-								<dt class="home-h3">{p.title}</dt>
-								<dd class="home-p">{p.text}</dd>
-							</div>
-						))}
-					</dl>
+		<!-- 3. Nothing hidden -->
+		<section id="transparency" aria-labelledby="transparency-title" class="l-section l-band-wide">
+			<div class="l-container l-stack">
+				<div class="l-head">
+					<p class="l-eyebrow">{transparency.eyebrow}</p>
+					<h2 id="transparency-title" class="l-title">{transparency.title}</h2>
+					<p class="l-lead">{transparency.lead}</p>
 				</div>
-				<div class="grid gap-6 lg:col-span-7">
-					<figure class="showcase home-frame m-0"><ThemedShot shot={shots.agentChat} sizes="(min-width: 64rem) 46rem, 100vw" /></figure>
-					<figure class="showcase home-frame m-0"><ThemedShot shot={shots.approvals} sizes="(min-width: 64rem) 46rem, 100vw" /></figure>
-				</div>
+				<ul class="l-notes">
+					{
+						transparency.points.map((p) => (
+							<li class="l-note-item">
+								<Icon name={p.icon} size={24} class="l-icon-accent" />
+								<h3 class="l-h3">{p.title}</h3>
+								<p class="l-body">{p.text}</p>
+							</li>
+						))
+					}
+				</ul>
+				<figure class="l-shot m-0"><HomeShot screen={screens[transparency.screen]} /></figure>
 			</div>
 		</section>
 
 		<!-- 4. A text is a complete project -->
-		<section id="text" aria-labelledby="text-title" class="home-section">
-			<div class="site-container grid items-center gap-12 lg:grid-cols-12">
-				<div class="lg:order-2 lg:col-span-5">
-					<p class="eyebrow">{textProject.eyebrow}</p>
-					<h2 id="text-title" class="display-title mt-4 text-fg">{textProject.title}</h2>
-					<p class="lead mt-5">{textProject.lead}</p>
-					<ul class="home-checks mt-6">
-						{textProject.points.map((p) => <li>{p}</li>)}
-					</ul>
+		<section id="text" aria-labelledby="text-title" class="l-section l-section-text">
+			<div class="l-container l-stack">
+				<div class="l-head">
+					<p class="l-eyebrow">{textProject.eyebrow}</p>
+					<h2 id="text-title" class="l-title">{textProject.title}</h2>
+					<p class="l-lead">{textProject.lead}</p>
 				</div>
-				<div class="lg:order-1 lg:col-span-7">
-					<figure class="showcase home-frame m-0"><ThemedShot shot={shots.writing} sizes="(min-width: 64rem) 46rem, 100vw" /></figure>
-				</div>
+				<figure class="l-shot m-0"><HomeShot screen={screens[textProject.screen]} /></figure>
 			</div>
 		</section>
 
-		<!-- 5. Areas -->
-		<section id="areas" aria-labelledby="areas-title" class="home-section home-band">
-			<div class="site-container">
-				<div class="home-head">
-					<p class="eyebrow">{areas.eyebrow}</p>
-					<h2 id="areas-title" class="display-title mt-4 text-fg">{areas.title}</h2>
+		<!-- 5. One studio -->
+		<section id="areas" aria-labelledby="areas-title" class="l-section l-band-wide">
+			<div class="l-container l-stack">
+				<div class="l-head">
+					<p class="l-eyebrow">{areas.eyebrow}</p>
+					<h2 id="areas-title" class="l-title">{areas.title}</h2>
 				</div>
-				<figure class="showcase home-frame home-wide m-0">
-					<ScreenSlot slot="home" src={screenSlots.home.src} srcDark={screenSlots.home.srcDark} sizes="(min-width: 64rem) 64rem, 100vw" />
-				</figure>
-				<ul class="home-cards">
-					{areas.items.map((a) => (
-						<li class="home-card">
-							<h3 class="home-h3">{a.title}</h3>
-							<p class="home-p">{a.text}</p>
-						</li>
-					))}
+				<ul class="l-cards l-cards-wide">
+					{
+						areas.items.map((a) => (
+							<li class="l-card">
+								<span class="l-tile"><Icon name={a.icon} size={20} /></span>
+								<h3 class="l-h3">{a.title}</h3>
+								<p class="l-small">{a.text}</p>
+							</li>
+						))
+					}
 				</ul>
 			</div>
 		</section>
 
-		<!-- 6. Agents -->
-		<section id="agents" aria-labelledby="agents-title" class="home-section">
-			<div class="site-container">
-				<div class="home-head">
-					<p class="eyebrow">{agents.eyebrow}</p>
-					<h2 id="agents-title" class="display-title mt-4 text-fg">{agents.title}</h2>
-					<p class="lead mt-5 max-w-2xl">{agents.lead}</p>
+		<!-- 6. Agent-first -->
+		<section id="agents" aria-labelledby="agents-title" class="l-section">
+			<div class="l-container l-stack">
+				<div class="l-head">
+					<p class="l-eyebrow">{agents.eyebrow}</p>
+					<h2 id="agents-title" class="l-title">{agents.title}</h2>
+					<p class="l-lead">{agents.lead}</p>
 				</div>
-				<DriveTabs idPrefix="home" class="mt-10" />
+				<HomeDrive idPrefix="home" />
 			</div>
 		</section>
 
-		<!-- 7. Privacy -->
-		<section id="privacy" aria-labelledby="privacy-title" class="home-section home-band">
-			<div class="site-container">
-				<div class="home-head">
-					<p class="eyebrow">{privacy.eyebrow}</p>
-					<h2 id="privacy-title" class="display-title mt-4 text-fg">{privacy.title}</h2>
+		<!-- 7. On the roadmap: the only place for what is not released -->
+		<section id="roadmap" aria-labelledby="roadmap-title" class="l-section l-band l-roadmap">
+			<div class="l-container l-stack">
+				<div class="l-head">
+					<p class="l-badge"><Icon name="clock" size={16} />{roadmap.badge}</p>
+					<h2 id="roadmap-title" class="l-title">{roadmap.title}</h2>
+					<p class="l-lead">{roadmap.lead}</p>
 				</div>
-				<ul class="home-cards home-cards-3">
-					{privacy.points.map((p) => (
-						<li class="home-card">
-							<h3 class="home-h3">{p.title}</h3>
-							<p class="home-p">{p.text}</p>
-						</li>
-					))}
+				<ul class="l-cards">
+					{
+						roadmap.items.map((r) => (
+							<li class="l-card" data-state={r.state}>
+								<span class="l-tile"><Icon name={r.icon} size={20} /></span>
+								<h3 class="l-h3">{r.title}</h3>
+								<p class="l-small">{r.text}</p>
+							</li>
+						))
+					}
 				</ul>
 			</div>
 		</section>
 
-		<!-- 8. Downloads -->
-		<section id="download" aria-labelledby="download-title" class="home-section">
-			<div class="site-container text-center">
-				<p class="eyebrow">{downloads.eyebrow}</p>
-				<h2 id="download-title" class="display-title mx-auto mt-4 text-fg">{downloads.title}</h2>
-				<p class="lead mx-auto mt-5 max-w-xl">{downloads.lead}</p>
-				<div class="mt-10">
-					<LandingActions idPrefix="home" align="center" />
+		<!-- 8. On your machine, on your terms -->
+		<section id="privacy" aria-labelledby="privacy-title" class="l-section l-yours">
+			<div class="l-container l-stack">
+				<div class="l-stack l-stack-tight">
+					<h2 id="privacy-title" class="l-hero-title">{privacy.title}</h2>
+					<p class="l-subtitle">{privacy.subtitle}</p>
 				</div>
-			</div>
-		</section>
-
-		<!-- 9. On the roadmap: the only place for what is not released -->
-		<section id="roadmap" aria-labelledby="roadmap-title" class="home-section home-band">
-			<div class="site-container">
-				<div class="home-head">
-					<p class="eyebrow">{roadmap.eyebrow}</p>
-					<h2 id="roadmap-title" class="display-title mt-4 text-fg">{roadmap.title}</h2>
-					<p class="lead mt-5 max-w-2xl">{roadmap.lead}</p>
-				</div>
-				<ul class="home-cards home-cards-3">
-					{roadmap.items.map((r) => (
-						<li class="home-card" data-state={r.state}>
-							<p class="home-state">{roadmap.stateLabel[r.state]}</p>
-							<h3 class="home-h3">{r.title}</h3>
-							<p class="home-p">{r.text}</p>
-						</li>
-					))}
+				<ul class="l-notes">
+					{
+						privacy.points.map((p) => (
+							<li class="l-note-item">
+								<Icon name={p.icon} size={24} class="l-icon-accent" />
+								<h3 class="l-h3">{p.title}</h3>
+								<p class="l-body">{p.text}</p>
+							</li>
+						))
+					}
 				</ul>
 			</div>
 		</section>
+
+		<!-- 9. Downloads -->
+		<section id="download" aria-labelledby="download-title" class="l-section">
+			<div class="l-container l-stack">
+				<div class="l-head">
+					<p class="l-eyebrow">{downloads.eyebrow}</p>
+					<h2 id="download-title" class="l-title">{downloads.title}</h2>
+					<p class="l-lead">{downloads.lead}</p>
+				</div>
+				<div class="l-actions">
+					<a class="l-btn l-btn-primary l-btn-lg" href={start}><Icon name="arrow-right" size={16} />{downloads.primary}</a>
+					<a class="l-btn l-btn-secondary l-btn-lg l-desktop-only" href={docs}><Icon name="book-open" size={16} />{downloads.secondary}</a>
+				</div>
+				<ul class="l-downloads">
+					{
+						cards.map((c) => (
+							<li>
+								<a class="l-download" href={c.href} rel={c.external ? "noreferrer" : undefined}>
+									<Icon name={c.icon} size={20} class="l-icon-muted" />
+									<span class="l-download-text">
+										<span class="l-download-title">{c.title}</span>
+										<span class="l-download-sub">{c.sub}</span>
+									</span>
+									<Icon name="download" size={16} class="l-icon-muted" />
+								</a>
+							</li>
+						))
+					}
+				</ul>
+				<p class="l-note">
+					<Icon name="triangle-alert" size={16} class="l-warn" />
+					<span class="l-desktop-only">{downloads.note}</span><span class="l-mobile-only">{downloads.noteMobile}</span>
+				</p>
+			</div>
+		</section>
+
+		<ZoomDialog />
 	</main>
-	<footer class="home-footer">
-		<div class="site-container">
-			<p>{capturedNote}</p>
-			<p>{credits}</p>
-			<p><a href={withBase("/docs/introduction/")}>Documentation</a> · <a href={withBase("/changelog/")}>Changelog</a></p>
-		</div>
-	</footer>
+	<HomeFooter />
 </Base>
 
 <script>

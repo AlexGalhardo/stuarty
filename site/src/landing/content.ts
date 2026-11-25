@@ -1,10 +1,21 @@
 /**
- * The copy of the landing page (epic 88), English only. Every claim about the product carries the epics that deliver
- * it, and `content.test.ts` checks them against the status column of docs/plans/00-roadmap.md: a claim outside
- * `roadmap` needs every one of its epics DONE, and a feature that is not released lives only in `roadmap`. Commands
- * shown on the page come from `drive` in lib/landing-pages.ts, copied from the build. Never add a testimonial, a
- * customer logo, a number nobody measured or an award (ADR-0045, epic 88).
+ * The copy of the landing page (epic 95), English only, word for word from the final design of the landing. Every claim
+ * about the product carries the epics that deliver it, and `content.test.ts` checks them against the status column of
+ * docs/plans/00-roadmap.md: a claim outside `roadmap` needs every one of its epics DONE, and a feature that is not
+ * released lives only in `roadmap`. The commands and the demo of the agent tab come from `drive` and `homeDemo` in
+ * lib/landing-pages.ts, copied from the build. Never add a testimonial, a customer logo, a number nobody measured or an
+ * award (ADR-0045, epics 88 and 95).
  */
+
+/** A real capture of the released UI: a dark and a light picture, `src` names the dark one. */
+export type Screen = {
+	/** Base path under public/, without the size suffix, the theme suffix and the extension. */
+	src: string;
+	alt: string;
+	/** The size of the capture, from its 1600 px file. */
+	width: number;
+	height: number;
+};
 
 export type Claim = {
 	/** What the page says. */
@@ -13,176 +24,218 @@ export type Claim = {
 	epics: number[];
 };
 
-export type Step = {
-	id: string;
-	title: string;
-	text: string;
-	/** Key of `shots` in lib/landing-pages.ts, or a slot of a screen that is not merged yet. */
-	screen: { kind: "shot"; shot: "writing" | "videoEditor" | "imageEditor" | "approvals" | "calendar" } | { kind: "slot"; slot: ScreenSlotId };
-	claims: Claim[];
-};
+/** The icons of the page, by the name of their lucide icon (components/landing/Icon.astro). */
+export type IconName =
+	| "folder-open"
+	| "compass"
+	| "pen-line"
+	| "images"
+	| "clapperboard"
+	| "image"
+	| "bot"
+	| "brain"
+	| "plug"
+	| "shield-check"
+	| "wand-sparkles"
+	| "terminal"
+	| "workflow"
+	| "hard-drive"
+	| "video"
+	| "mouse-pointer-click"
+	| "scan-face"
+	| "cpu"
+	| "file-clock"
+	| "layout-template";
 
-/**
- * The screens of epic 79 (home, projects, briefing). Each has the captures of the released UI (`src` is the light one,
- * `srcDark` the dark one, both under public/ without the size suffix and the extension); a screen with no capture
- * would draw a named slot instead.
- */
-export type ScreenSlotId = "home" | "projects" | "briefing";
-
-export const screenSlots: Record<ScreenSlotId, { label: string; alt: string; src?: string; srcDark?: string }> = {
+/** The product images of the page, in both themes. Every one is a capture of the released UI (CREDITS.txt). */
+export const screens = {
 	home: {
-		label: "The Stuarty home",
-		alt: "The Stuarty home: the project to continue with its steps, what waits for you and your projects, each with its kind.",
-		src: "/landing/dashboard-light",
-		srcDark: "/landing/dashboard",
+		src: "/landing/dashboard",
+		alt: "The Stuarty home: the project in progress with its path from briefing to publication, what waits for your yes and your projects.",
+		width: 1600,
+		height: 1000,
 	},
-	projects: {
-		label: "The projects page",
-		alt: "The projects page: a text, a video, an image and a project not decided yet, each as a card with its kind and when it was updated.",
-		src: "/landing/projects-light",
-		srcDark: "/landing/projects",
+	homeMobile: {
+		src: "/landing/home-mobile",
+		alt: "The Stuarty home on a phone: the project in progress, what waits for your yes and the scene bar at the bottom.",
+		width: 780,
+		height: 1688,
 	},
 	briefing: {
-		label: "The guided briefing",
+		src: "/landing/project-brief",
 		alt: "The briefing of a new project: its name, description and goal, answered before the project is created.",
-		src: "/landing/project-brief-light",
-		srcDark: "/landing/project-brief",
+		width: 1600,
+		height: 1000,
 	},
-};
+	editor: {
+		src: "/landing/video-editor",
+		alt: "The Stuarty video editor on a demo project: a vertical clip with a caption, the media bin on the left, the inspector on the right and a timeline with caption, footage, voice and music tracks.",
+		width: 1600,
+		height: 1000,
+	},
+	approvals: {
+		src: "/landing/approvals",
+		alt: "Approvals: what waits for your yes, the rules that approve without asking and the cost ceilings.",
+		width: 1600,
+		height: 1000,
+	},
+	calendar: {
+		src: "/landing/publish-calendar",
+		alt: "The Publish section: the month view of the publishing calendar, with a note that every post waits for your approval before it is sent.",
+		width: 1600,
+		height: 1000,
+	},
+	trail: {
+		src: "/landing/project-trail",
+		alt: "The path of a video project, from briefing to publication: each step says who does it, with which tool and what it costs.",
+		width: 1600,
+		height: 1000,
+	},
+	textTrail: {
+		src: "/landing/text-trail",
+		alt: "The path of a text project: briefing, writing, review, approval and publication, with no timeline and no media.",
+		width: 1600,
+		height: 1000,
+	},
+} satisfies Record<string, Screen>;
 
 export const hero = {
 	eyebrow: "Open source studio for creators",
 	title: "Create, edit, manage and publish your content in one place.",
-	lead: "Stuarty is a self-hosted studio for video, images and text, on the web and on your desktop. Your AI agent works beside you, and nothing is published until you say yes.",
-	facts: ["Open source (MIT)", "Self-hosted", "No telemetry", "Agents are first-class users"],
+	lead: "Plan, describe, cut, caption, thumbnail, post texts, images and videos from one studio on your own machine. Your AI agent works for and beside you, all integrated.",
+	/** The phone layout of the design shortens the lead and the note under the buttons. */
+	leadMobile: "Write, cut, caption and post from one studio on your own machine. Your AI agent works for and beside you.",
+	primary: "Get started",
+	secondary: "Read the docs",
+	note: "Free and open source. No subscriptions. Stuarty is in alpha: expect rough edges.",
+	noteMobile: "Free and open source. No subscriptions.",
+	claims: [
+		{ text: "An AI agent works for and beside you, through the same commands.", epics: [13, 14] },
+		{ text: "Texts, images and videos from one studio.", epics: [17, 28, 37, 78] },
+	] satisfies Claim[],
+};
+
+export type Step = {
+	id: string;
+	title: string;
+	text: string;
+	screen: keyof typeof screens;
+	claims: Claim[];
 };
 
 export const path = {
 	eyebrow: "One path",
-	title: "From the idea to the post.",
-	lead: "Every project follows the steps from its briefing to its publication, and shows which one is done and which is next.",
+	title: "From the first idea to the published post.",
+	lead: "Stuarty always shows where you are and what comes next, so you can learn it by using it.",
 	steps: [
 		{
-			id: "project",
-			title: "Start a project",
-			text: "Name it and pick what it is: a text, a video, an image, or decide later. A project keeps its brief, its media, its texts and its exports together.",
-			screen: { kind: "slot", slot: "projects" },
+			id: "plan",
+			title: "Plan it",
+			text: "Answer a few plain questions. The brief becomes the context your agent reads before it suggests anything.",
+			screen: "briefing",
 			claims: [
-				{ text: "A project is the container of one production.", epics: [6, 56] },
-				{ text: "A project can be only a text, a video, an image or undecided.", epics: [78] },
+				{ text: "A guided briefing turns answers into the brief of the production.", epics: [16, 79] },
+				{ text: "Your agent reads the saved brief.", epics: [16] },
 			],
 		},
 		{
-			id: "brief",
-			title: "Answer the brief",
-			text: "Describe it and set its goal and due date before it is created. Then the guided briefing asks who it is for, where it goes, how long and in which tone. Your answers become the brief your agent reads.",
-			screen: { kind: "slot", slot: "briefing" },
+			id: "make",
+			title: "Make it",
+			text: "Write the text, or cut, caption and mix on a timeline, by hand or with your agent. The screen shows what the server confirmed.",
+			screen: "editor",
 			claims: [
-				{ text: "A new project asks for its description, its goal and its due date.", epics: [79] },
-				{ text: "A guided briefing turns answers into the brief of the production.", epics: [16] },
+				{ text: "The video editor, with captions and a timeline, by hand or with an agent.", epics: [37, 35, 14] },
+				{ text: "Writing of texts with revisions.", epics: [17] },
 			],
 		},
 		{
-			id: "write",
-			title: "Write the script",
-			text: "Scripts, copy, captions and blog posts, with revisions you can go back to and an estimate of how long a script takes read aloud.",
-			screen: { kind: "shot", shot: "writing" },
-			claims: [{ text: "Writing with revisions and a read-aloud estimate.", epics: [17] }],
-		},
-		{
-			id: "edit",
-			title: "Cut and caption",
-			text: "Trim, split, transitions, colour and keyframes, with captions that follow the voice. Cut by editing the transcript, remove filler words, style the captions, blur what must stay private and clean the voice. Export a checked MP4.",
-			screen: { kind: "shot", shot: "videoEditor" },
-			claims: [
-				{ text: "The video editor, with captions and export.", epics: [37, 35] },
-				{ text: "Edit by text, filler words, caption styles, sensitive-data blur and studio voice.", epics: [69, 71] },
-			],
-		},
-		{
-			id: "thumbnail",
-			title: "Make the thumbnail",
-			text: "Layers, text, masks and templates in the image editor, with the same undo and history as the video editor.",
-			screen: { kind: "shot", shot: "imageEditor" },
-			claims: [{ text: "The image editor, with layers, text, masks and templates.", epics: [28, 29] }],
+			id: "approve",
+			title: "Approve it",
+			text: "Agents prepare. Only you say yes. Every publication and paid generation waits in one queue, with its cost in sight.",
+			screen: "approvals",
+			claims: [{ text: "One queue of approvals with the cost of each request.", epics: [5, 20, 77, 82] }],
 		},
 		{
 			id: "publish",
-			title: "Approve and publish",
-			text: "Plan each post on a calendar, for your own accounts. It goes out only after you approve it.",
-			screen: { kind: "shot", shot: "calendar" },
-			claims: [{ text: "A publishing calendar where every post waits for approval.", epics: [20, 5] }],
+			title: "Publish it",
+			text: "Plan the month, the week or a list. A post goes out only after your approval.",
+			screen: "calendar",
+			claims: [{ text: "A publishing calendar by month, week and list where every post waits for approval.", epics: [20, 5, 82] }],
 		},
 	] satisfies Step[],
 };
 
 export const transparency = {
-	eyebrow: "Agent transparency",
-	title: "See what the agent does, and decide.",
-	lead: "An agent is a user like you, not a black box. What it touches is on screen in plain words, and what costs money or goes public waits for a person.",
+	eyebrow: "Nothing hidden",
+	title: "You always know what the agent is doing.",
+	lead: "The skill in use, whether it is loaded, the tool at work in plain words, and every stage up to the published post.",
 	points: [
-		{ title: "Its work is signed", text: "Every edit lands in the history with who made it, and you can undo it.", epics: [36, 14] },
-		{ title: "You see its skill and its tool", text: "The scene bar shows the skill it loaded, whether that skill is active for the task, the tool it is using and what that tool does, in plain words.", epics: [75, 76] },
-		{ title: "A person decides", text: "A publication or a paid generation waits in one queue until you approve it. An agent cannot approve its own request or raise a ceiling.", epics: [5, 20] },
-		{ title: "You bring your own agent", text: "Claude Code, Codex, OpenCode or Gemini CLI, signed in with your own account, work in the chat panel beside the project.", epics: [14] },
-	] satisfies { title: string; text: string; epics: number[] }[],
+		{ icon: "wand-sparkles", title: "The skill, by name", text: "Loaded, available or none. Always in words, never only a color.", epics: [75, 76] },
+		{ icon: "terminal", title: "The tool, in plain words", text: "What it is about to do, with the technical name right beside it.", epics: [75, 76] },
+		{ icon: "workflow", title: "The whole path", text: "Each stage to publication: who does it, what it costs, what comes next.", epics: [78, 79] },
+	] satisfies { icon: IconName; title: string; text: string; epics: number[] }[],
+	screen: "trail" as keyof typeof screens,
 };
 
 export const textProject = {
 	eyebrow: "Not only video",
 	title: "A text is a complete project.",
-	lead: "A blog post, a newsletter or a script needs no footage and no format. Its steps are its own: brief, draft, review, then copy or export, or a blog when you choose.",
-	points: ["Count words and reading time as you write.", "Every save is a revision you can compare or restore.", "Add a video or an image later without starting over."],
+	lead: "A blog post, a copy or a script needs no timeline, no format and no media. Write it, review it, approve it and send it to your blog.",
+	screen: "textTrail" as keyof typeof screens,
 	claims: [
-		{ text: "A project can be only a text, with the steps of a text.", epics: [78] },
-		{ text: "Revisions and reading time of a text.", epics: [17] },
-		{ text: "Blog posts with their destinations.", epics: [23] },
+		{ text: "A project can be only a text, with the steps of a text.", epics: [78, 80] },
+		{ text: "A blog post is sent to your blog after your approval.", epics: [23, 82] },
 	] satisfies Claim[],
 };
 
 export const areas = {
-	eyebrow: "Areas",
-	title: "Everything a creator keeps in hand.",
+	eyebrow: "One studio",
+	title: "Every part of the work, under one roof.",
 	items: [
-		{ id: "projects", title: "Projects", text: "Productions with their brief, media, texts and exports.", epics: [6, 56, 78] },
-		{ id: "video", title: "Video", text: "A timeline editor with captions, editing by text, transitions, audio tools and export presets.", epics: [37, 34, 35, 69] },
-		{ id: "image", title: "Images", text: "An editor for thumbnails and posts, with layers, filters and masks.", epics: [28, 29] },
-		{ id: "write", title: "Writing", text: "Scripts, copy, captions and blog posts with revisions.", epics: [17, 23] },
-		{ id: "assets", title: "Assets", text: "One library with where each file came from, its rights and where it is used.", epics: [8, 81] },
-		{ id: "publish", title: "Publishing", text: "A calendar and an approval queue for your own social accounts and blog.", epics: [18, 19, 20, 22, 23] },
-		{ id: "agents", title: "Skills, prompts and memory", text: "Procedures you review, texts with variables and facts your agents read.", epics: [15, 16] },
-		{ id: "connections", title: "Connections", text: "The AI providers and accounts Stuarty may reach, each with your own key.", epics: [4, 9, 12, 84] },
-	],
+		{ id: "projects", icon: "folder-open", title: "Projects", text: "A text, a video or an image, from the brief to the post. A format only when you add a timeline.", epics: [6, 56, 78] },
+		{ id: "briefing", icon: "compass", title: "Briefing", text: "Guided questions on audience, goal and tone. Your agent reads the saved brief.", epics: [16, 79] },
+		{ id: "writing", icon: "pen-line", title: "Writing", text: "Scripts, captions and blog posts with revisions and read-aloud timing.", epics: [17, 23] },
+		{ id: "assets", icon: "images", title: "Assets", text: "Footage, music, voice-overs and images, tagged by origin and reusable.", epics: [8, 81] },
+		{ id: "video", icon: "clapperboard", title: "Video editor", text: "Trims, transitions, word-timed captions, silence removal. MP4, GIF, WAV, AAC.", epics: [37, 34, 35, 69] },
+		{ id: "image", icon: "image", title: "Image editor", text: "Layers, text, masks, presets and templates for thumbnails and posts.", epics: [28, 29] },
+		{ id: "agents", icon: "bot", title: "Agents", text: "Claude Code, Codex, OpenCode and Gemini CLI. You approve each tool request.", epics: [14, 83] },
+		{ id: "library", icon: "brain", title: "Skills, prompts, memory", text: "Reviewed procedures, reusable prompts and notes you approve before they stay.", epics: [15, 16, 83] },
+		{ id: "connections", icon: "plug", title: "Connections", text: "Your own AI keys and social accounts, in an encrypted local vault.", epics: [4, 9, 12, 84] },
+		{ id: "publishing", icon: "shield-check", title: "Approvals and publishing", text: "A queue, cost ceilings and a calendar. Nothing is sent without your yes.", epics: [5, 20, 82] },
+	] satisfies { id: string; icon: IconName; title: string; text: string; epics: number[] }[],
 };
 
 export const agents = {
-	eyebrow: "Agents are first-class users",
-	title: "Four doors to one command core.",
-	lead: "Everything you do in the editor, an agent can do through MCP, the CLI or the HTTP API. The doors are thin adapters over one core, and a parity test keeps them equal.",
+	eyebrow: "Agent-first",
+	title: "Agents drive it too.",
+	lead: "The editor, the CLI, the HTTP API and MCP are thin doors to one command core, tested for parity.",
 	epics: [13, 14],
+	permissionTitle: "Every tool call asks first",
 };
 
 export const privacy = {
-	eyebrow: "Yours",
 	title: "On your machine. On your terms.",
+	subtitle: "No subscriptions. No pay once. Open Source.",
 	points: [
-		{ title: "Open source", text: "MIT licensed. Read it, build it, change it.", epics: [] as number[] },
-		{ title: "Self-hosted", text: "Web and desktop, or your own server. Files and tokens stay with you.", epics: [21, 24, 25] },
-		{ title: "No telemetry", text: "With nothing connected, Stuarty opens no outbound connection.", epics: [4] },
-		{ title: "A local vault", text: "Your keys and tokens live in an encrypted vault, and no tool ever returns one.", epics: [4, 57] },
-		{ title: "Your own access", text: "Your AI key, Sign in with ChatGPT, OpenRouter or your local agent. Your own developer apps for the social networks.", epics: [9, 12, 18] },
-		{ title: "Publishing waits for you", text: "An agent can prepare a post. Only a person, or a rule you wrote, can send it.", epics: [5, 20] },
-	],
+		{ icon: "hard-drive", title: "Your files stay here", text: "Projects, media and credentials live on your machine or your own server.", epics: [21, 24, 25, 57] },
+		{ icon: "plug", title: "Nothing leaves by default", text: "With no connection set up, Stuarty opens no outbound connection. No telemetry.", epics: [4] },
+		{ icon: "shield-check", title: "You hold the last word", text: "An agent can prepare. It can never approve, publish or raise a limit.", epics: [5, 20] },
+	] satisfies { icon: IconName; title: string; text: string; epics: number[] }[],
 };
 
 export const downloads = {
-	eyebrow: "Download",
-	title: "Try it on your machine.",
-	lead: "Stuarty is in alpha: expect rough edges. Free and open source, for Windows, macOS, Linux and your own server.",
+	eyebrow: "Free and open source",
+	title: "Make the next one in one place.",
+	lead: "Runs on Windows, macOS, Linux and your own server.",
+	primary: "Get started",
+	secondary: "Read the docs",
+	note: "Stuarty is in alpha: expect rough edges.",
+	noteMobile: "Alpha: expect rough edges.",
 };
 
 export type RoadmapItem = {
 	id: string;
+	icon: IconName;
 	title: string;
 	text: string;
 	/**
@@ -193,47 +246,65 @@ export type RoadmapItem = {
 	epics: number[];
 };
 
-/** The only place for what is not released. A feature leaves this list in the change that releases it. */
+/**
+ * The only place for what is not released. A feature leaves this list in the change that releases it. The design shows
+ * six cards here; three of them (edit by text, vertical cuts, caption styles with blur and studio voice) are epics 69, 70
+ * and 71, which are DONE and ship with this page, so they are not here: the test of the roadmap refuses a finished epic.
+ * Their places hold other planned work.
+ */
 export const roadmap = {
-	eyebrow: "On the roadmap",
-	title: "Not released yet.",
-	lead: "These are planned or in progress. Something in progress may have a first part in the product you download today, but it is not finished.",
+	badge: "On the roadmap",
+	title: "Planned. Not available yet.",
+	lead: "None of this ships today. It is what we plan to build next, in the open.",
 	stateLabel: { "in-progress": "In progress", planned: "Planned" } as Record<RoadmapItem["state"], string>,
 	items: [
 		{
 			id: "recording",
+			icon: "video",
 			title: "Screen recording",
-			text: "Screen recording on Windows, with sound, webcam, pause and pointer events, is in the product while its performance is measured. Recording on the web, macOS and Linux comes next, with the take edited in the same project.",
+			text: "Screen, window, microphone and webcam. Only a person can start a capture.",
 			state: "in-progress",
-			epics: [61, 63, 67, 68],
+			epics: [61, 62, 63, 67, 68],
 		},
 		{
-			id: "recording-edit",
-			title: "Automatic zoom, cursor and layouts",
-			text: "Follow the cursor with an automatic zoom, highlight clicks, and set layouts, backgrounds and a teleprompter for a recording.",
+			id: "recording-finish",
+			icon: "mouse-pointer-click",
+			title: "Recording finish",
+			text: "Zoom on clicks, a smooth cursor and click highlights.",
 			state: "planned",
-			epics: [65, 66],
-		},
-		{
-			id: "local-ai",
-			title: "Optional local models",
-			text: "Optional local models for background removal and depth, running on your machine.",
-			state: "planned",
-			epics: [72],
+			epics: [65],
 		},
 		{
 			id: "agents-recording",
+			icon: "bot",
 			title: "Agents in the recording flow",
-			text: "Let an agent start, review and cut a recording through the same doors it uses today.",
+			text: "An agent can prepare, mark takes, pause and stop. Only a person can start a capture.",
 			state: "planned",
 			epics: [64],
 		},
 		{
+			id: "layouts",
+			icon: "layout-template",
+			title: "Layouts and teleprompter",
+			text: "Layouts and backgrounds for a recording, and a teleprompter to read from.",
+			state: "planned",
+			epics: [66],
+		},
+		{
 			id: "metrics",
-			title: "Metrics of published posts",
+			icon: "file-clock",
+			title: "Post metrics",
 			text: "How each published post performs, read from your own accounts.",
 			state: "planned",
 			epics: [45],
+		},
+		{
+			id: "local-ai",
+			icon: "cpu",
+			title: "Optional local models",
+			text: "Small models, downloaded on request, with size and licence shown first.",
+			state: "planned",
+			epics: [72],
 		},
 	] satisfies RoadmapItem[],
 };
@@ -245,6 +316,13 @@ export const credits = "The pictures, clips and sounds in the screenshots were m
 
 /**
  * The screenshots are real captures of the UI that ships with this page, from a demo workspace, taken on this date. They
- * name no version: the build reported v0.52.0, but the home, projects and briefing screens (epic 79) came after it.
+ * name no version: the sidebar of the capture shows the version of the build that took it.
  */
 export const capturedNote = "Screenshots are captures of the Stuarty UI taken on 24 November 2026, from a demo workspace.";
+
+/** The labels of the zoom of a screenshot (components/landing/Zoomable.astro). */
+export const zoom = {
+	enlarge: "Enlarge: ",
+	close: "Close",
+	dialog: "Enlarged screenshot",
+};

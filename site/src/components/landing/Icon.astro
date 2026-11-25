@@ -1,0 +1,123 @@
+---
+// A lucide icon drawn as static markup at build time (no script reaches the page). The names are the lucide names of
+// the icons the final design of the landing uses (epic 95); the stroke follows `currentColor`.
+import {
+	ArrowRight,
+	BookOpen,
+	Bot,
+	Brain,
+	Check,
+	CircleCheck,
+	Clapperboard,
+	Clock,
+	Compass,
+	Container,
+	Cpu,
+	Download,
+	FileClock,
+	FolderOpen,
+	HardDrive,
+	Hourglass,
+	Image,
+	Images,
+	Laptop,
+	LayoutTemplate,
+	Monitor,
+	MousePointerClick,
+	PenLine,
+	Plug,
+	ScanFace,
+	Server,
+	ShieldCheck,
+	Terminal,
+	TriangleAlert,
+	Video,
+	WandSparkles,
+	Workflow,
+	X,
+	type LucideIcon,
+} from "lucide-react";
+
+export type Name =
+	| "arrow-right"
+	| "book-open"
+	| "bot"
+	| "brain"
+	| "check"
+	| "circle-check"
+	| "clapperboard"
+	| "clock"
+	| "compass"
+	| "container"
+	| "cpu"
+	| "download"
+	| "file-clock"
+	| "folder-open"
+	| "hard-drive"
+	| "hourglass"
+	| "image"
+	| "images"
+	| "laptop"
+	| "layout-template"
+	| "monitor"
+	| "mouse-pointer-click"
+	| "pen-line"
+	| "plug"
+	| "scan-face"
+	| "server"
+	| "shield-check"
+	| "terminal"
+	| "triangle-alert"
+	| "video"
+	| "wand-sparkles"
+	| "workflow"
+	| "x";
+
+interface Props {
+	name: Name;
+	/** Size in px; the design draws 16, 20 and 24. */
+	size?: number;
+	class?: string;
+}
+
+const icons: Record<Name, LucideIcon> = {
+	"arrow-right": ArrowRight,
+	"book-open": BookOpen,
+	bot: Bot,
+	brain: Brain,
+	check: Check,
+	"circle-check": CircleCheck,
+	clapperboard: Clapperboard,
+	clock: Clock,
+	compass: Compass,
+	container: Container,
+	cpu: Cpu,
+	download: Download,
+	"file-clock": FileClock,
+	"folder-open": FolderOpen,
+	"hard-drive": HardDrive,
+	hourglass: Hourglass,
+	image: Image,
+	images: Images,
+	laptop: Laptop,
+	"layout-template": LayoutTemplate,
+	monitor: Monitor,
+	"mouse-pointer-click": MousePointerClick,
+	"pen-line": PenLine,
+	plug: Plug,
+	"scan-face": ScanFace,
+	server: Server,
+	"shield-check": ShieldCheck,
+	terminal: Terminal,
+	"triangle-alert": TriangleAlert,
+	video: Video,
+	"wand-sparkles": WandSparkles,
+	workflow: Workflow,
+	x: X,
+};
+
+const { name, size = 16, class: className } = Astro.props;
+const Component = icons[name];
+---
+
+<Component size={size} strokeWidth={2} aria-hidden="true" focusable="false" className={className} />

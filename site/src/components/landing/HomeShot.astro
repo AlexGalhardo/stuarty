@@ -1,0 +1,53 @@
+---
+// A real capture of the product (epic 95), in both themes, that opens enlarged when it is clicked. The dark and the
+// light picture are both in the page and the theme class of the document shows one (home.css); a hidden lazy image is
+// not downloaded until its theme is shown. The button holds the zoom: the dialog of ZoomDialog.astro reads the file
+// of the theme that is showing from the data attributes below. The alt text is the accessible name of the button.
+import { zoom, type Screen } from "@/src/landing/content";
+import { withBase } from "@/lib/site";
+
+interface Props {
+	screen: Screen;
+	/** Fetches the dark picture at once (the one above the fold, in the default theme). */
+	eager?: boolean;
+	sizes?: string;
+	class?: string;
+}
+
+const { screen, eager = false, sizes = "(min-width: 75rem) 75rem, 100vw", class: className } = Astro.props;
+type Theme = "dark" | "light";
+const file = (theme: Theme, w: number, ext: string): string => withBase(`${screen.src}${theme === "light" ? "-light" : ""}${w === 1600 ? "" : "-960"}.${ext}`);
+const themes: Theme[] = ["dark", "light"];
+---
+
+<button
+	type="button"
+	class:list={["shot-zoom", className]}
+	data-zoom
+	data-zoom-alt={screen.alt}
+	data-zoom-dark={file("dark", 1600, "webp")}
+	data-zoom-light={file("light", 1600, "webp")}
+	data-zoom-avif-dark={file("dark", 1600, "avif")}
+	data-zoom-avif-light={file("light", 1600, "avif")}
+	aria-haspopup="dialog"
+	aria-label={`${zoom.enlarge}${screen.alt}`}
+>
+	{
+		themes.map((theme) => (
+			<picture class={`shot-${theme}`}>
+				<source type="image/avif" srcset={`${file(theme, 960, "avif")} 960w, ${file(theme, 1600, "avif")} 1600w`} sizes={sizes} />
+				<img
+					src={file(theme, 1600, "webp")}
+					srcset={`${file(theme, 960, "webp")} 960w, ${file(theme, 1600, "webp")} 1600w`}
+					sizes={sizes}
+					alt={screen.alt}
+					width={screen.width}
+					height={screen.height}
+					loading={eager && theme === "dark" ? "eager" : "lazy"}
+					fetchpriority={eager && theme === "dark" ? "high" : "auto"}
+					decoding="async"
+				/>
+			</picture>
+		))
+	}
+</button>

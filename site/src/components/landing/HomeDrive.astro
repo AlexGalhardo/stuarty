@@ -1,0 +1,111 @@
+---
+// "Agents drive it too" (epic 95): the tabs Agent, CLI, HTTP API and MCP. The Agent tab is the shortened Claude Code
+// session of the design with the permission card the product shows for the edit it asks for; the other three show the
+// real commands of `drive` in lib/landing-pages.ts. The tab switching is the shared [data-tabs] handler of Base.astro,
+// and arrow keys are added by src/landing/tabs.ts.
+import { agents } from "@/src/landing/content";
+import { drive, homeDemo } from "@/lib/landing-pages";
+import { withBase } from "@/lib/site";
+import Icon from "./Icon.astro";
+
+interface Props {
+	idPrefix: string;
+}
+
+const { idPrefix } = Astro.props;
+// What Claude Code prints before each kind of line: the shell prompt, its own prompt, a tool call and its result.
+const SYMBOLS: Record<string, string> = { cmd: "$", prompt: ">", tool: "●", out: "⎿", more: "" };
+const notice = homeDemo.notice;
+// The phone layout of the design shows the first five lines of the session.
+const PHONE_LINES = 5;
+---
+
+<div data-tabs data-drive class="l-drive">
+	<div role="tablist" aria-label="Four ways to drive Stuarty" class="l-tabs">
+		{
+			drive.map((tab, i) => (
+				<button
+					type="button"
+					role="tab"
+					class="l-tab"
+					id={`${idPrefix}-tab-${tab.id}`}
+					data-tab={tab.id}
+					aria-controls={`${idPrefix}-panel-${tab.id}`}
+					aria-selected={i === 0 ? "true" : "false"}
+					tabindex={i === 0 ? 0 : -1}
+				>
+					{tab.id === "http" ? (
+						<>
+							<span class="l-tab-full">{tab.label}</span>
+							<span class="l-tab-short" aria-hidden="true">HTTP</span>
+						</>
+					) : (
+						tab.label
+					)}
+				</button>
+			))
+		}
+	</div>
+	{
+		drive.map((tab, i) => {
+			const lines = tab.id === "agent" ? homeDemo.lines : tab.lines;
+			return (
+				<div role="tabpanel" id={`${idPrefix}-panel-${tab.id}`} data-panel={tab.id} aria-labelledby={`${idPrefix}-tab-${tab.id}`} hidden={i !== 0} class="l-panel">
+					<div class="l-terminal" role="group" aria-label={`${tab.label} example`}>
+						{lines.map((line, n) => (
+							<p class:list={["l-term-line", n >= PHONE_LINES && "l-term-more"]} data-row={line.kind}>
+								{SYMBOLS[line.kind] ? <span class:list={["l-term-mark", line.kind === "tool" && "l-term-tool", line.kind === "prompt" && "l-term-prompt"]} aria-hidden="true">{SYMBOLS[line.kind]}</span> : null}
+								<span class:list={["l-term-text", line.kind === "tool" && "l-term-tool", (line.kind === "out" || line.kind === "more" || line.kind === "note") && "l-term-out"]}>{line.text}</span>
+							</p>
+						))}
+						{tab.id !== "agent" ? (
+							<a class="l-term-doc" href={withBase(tab.doc.href)}>
+								{tab.doc.label} <span aria-hidden="true">&rarr;</span>
+							</a>
+						) : null}
+					</div>
+					{tab.id === "agent" ? (
+						<div class="l-permission">
+							<h3 class="l-h3">{agents.permissionTitle}</h3>
+							<div class="l-notice" role="group" aria-label={`${notice.agent}: ${notice.title}`}>
+								<div class="l-notice-head">
+									<span class="l-notice-agent" aria-hidden="true">
+										<Icon name="bot" size={16} />
+										<i class="l-notice-dot"></i>
+									</span>
+									<span class="l-notice-who">
+										<span class="l-notice-name">{notice.agent}</span>
+										<span class="l-notice-status">
+											<Icon name="hourglass" size={14} />
+											{notice.status}
+										</span>
+									</span>
+								</div>
+								<p class="l-notice-title">{notice.title}</p>
+								<p class="l-notice-why">{notice.why}</p>
+								<dl class="l-notice-rows">
+									{notice.rows.map(([key, value]) => (
+										<div>
+											<dt>{key}</dt>
+											<dd class:list={[key === "Tool" && "l-mono"]}>{value}</dd>
+										</div>
+									))}
+								</dl>
+								<div class="l-notice-actions">
+									<span class="l-btn l-btn-secondary l-btn-md">
+										<Icon name="x" size={16} />
+										{notice.deny}
+									</span>
+									<span class="l-btn l-btn-primary l-btn-md">
+										<Icon name="check" size={16} />
+										{notice.allow}
+									</span>
+								</div>
+							</div>
+						</div>
+					) : null}
+				</div>
+			);
+		})
+	}
+</div>
