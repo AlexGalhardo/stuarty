@@ -230,7 +230,7 @@ function Row({
 				<Fact label={t("ui.shell.notify.asked")} testId="notification-asked">
 					{formatDateTime(item.created_at, locale)}
 				</Fact>
-				{item.answered_at !== null && (
+				{item.answered_at !== null && item.answered_at !== "" && (
 					<Fact
 						label={t("ui.shell.notify.answered")}
 						testId="notification-answered"
@@ -327,15 +327,17 @@ function FailedRow({
 				>
 					<UntrustedText>{item.title}</UntrustedText>
 				</p>
-				{item.message !== "" && (
+				{(item.message !== "" || item.hint !== "") && (
 					<p
 						data-testid="notification-error"
 						className="mt-1 text-xs text-danger-text break-words"
 					>
-						<UntrustedText>{item.message}</UntrustedText>
+						{item.message !== "" && (
+							<UntrustedText>{item.message}</UntrustedText>
+						)}
 						{item.hint !== "" && (
 							<>
-								{" "}
+								{item.message !== "" ? " " : null}
 								<span className="text-muted-foreground">
 									<UntrustedText>{item.hint}</UntrustedText>
 								</span>

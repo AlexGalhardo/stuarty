@@ -31,9 +31,9 @@ import type {
 } from "../../editor/api/types";
 import { continueTarget } from "../../workflow/continueTarget";
 import type { ProjectKind, TextSummary, Workflow } from "../../workflow/types";
+import { PublishedPostState } from "../Publish/PublishedPostState";
 import AddMedia from "./AddMedia";
 import { Briefing } from "./Briefing";
-import FlowFacts from "./FlowFacts";
 import ProjectContextForm from "./ProjectContextForm";
 import WorkflowSection from "./WorkflowSection";
 
@@ -493,6 +493,9 @@ export default function ProjectShow() {
 	const trashed = items.filter((i) => i.state === "trashed");
 	const current = workflow.steps.find((s) => s.id === workflow.current);
 	const textItem = active.find((i) => i.kind === "text");
+	const textPublished =
+		project.kind === "text" &&
+		workflow.steps.find((s) => s.id === "publication")?.state === "done";
 	const target =
 		current === undefined
 			? null
@@ -539,13 +542,6 @@ export default function ProjectShow() {
 								<StatusBadge status="neutral">
 									{t(`ui.projects.kind.${project.kind}`)}
 								</StatusBadge>
-								{project.kind === "text" &&
-								textItem?.text_kind !== undefined ? (
-									<StatusBadge status="info">
-										{t(`ui.write.kind.${textItem.text_kind}`)}
-									</StatusBadge>
-								) : null}
-								<FlowFacts text={text_summary} next={next_post_at} />
 							</div>
 							<p className="mt-1 text-base text-text-muted">
 								{t(`ui.workflow.lead.${project.kind}`)}
@@ -579,9 +575,27 @@ export default function ProjectShow() {
 				</div>
 				<FailureNote failure={failure} />
 
+				{textPublished && (
+					<PublishedPostState
+						title={textItem?.title ?? project.name}
+						workflow={workflow}
+						addVideoAction={
+							<AddMedia
+								projectId={project.id}
+								projectName={project.name}
+								label={t("ui.publish.published_state.add_video")}
+								onAdded={changed}
+							/>
+						}
+					/>
+				)}
+
 				<WorkflowSection
 					projectId={project.id}
 					workflow={workflow}
+					text={text_summary}
+					textKind={project.kind === "text" ? textItem?.text_kind : undefined}
+					next={next_post_at}
 					onChanged={changed}
 				/>
 

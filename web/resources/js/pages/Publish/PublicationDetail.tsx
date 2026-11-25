@@ -8,7 +8,7 @@ import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
 import { formatDateTime, formatInZone } from "@/lib/format";
 import { useLocale, useT } from "@/lib/i18n";
-import { TargetResult } from "./ListView";
+import { hasTargetResult, TargetResult } from "./ListView";
 import { linkOf } from "./publicationState";
 import { TargetStateBadge } from "./TargetStateBadge";
 import type { Publication, Target } from "./types";
@@ -33,10 +33,7 @@ export function PublicationDetailPanel({
 	const isPost = (publication.post ?? "") !== "";
 	const destination = accounts[target.connection_id] ?? target.network;
 	const safeLink = linkOf(target.url);
-	const hasExplicitResult =
-		target.url !== undefined ||
-		target.state === "sent_as_draft" ||
-		target.error !== undefined;
+	const hasResult = hasTargetResult(target);
 
 	return (
 		<div data-testid="publication-detail">
@@ -92,7 +89,7 @@ export function PublicationDetailPanel({
 							</time>
 						)}
 					</dd>
-					{target.published_at !== undefined && (
+					{target.published_at !== undefined && target.published_at !== "" && (
 						<>
 							<dt className="text-text-muted">
 								{t("ui.publish.detail.published_at")}
@@ -106,7 +103,7 @@ export function PublicationDetailPanel({
 					)}
 					<dt className="text-text-muted">{t("ui.publish.detail.result")}</dt>
 					<dd data-testid="detail-result" className="min-w-0 break-words">
-						{hasExplicitResult ? (
+						{hasResult ? (
 							<TargetResult target={target} />
 						) : (
 							<span className="text-text-muted">
