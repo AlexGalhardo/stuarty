@@ -7296,7 +7296,7 @@ Places a screen clip, and a webcam clip when the layout has one, by a named layo
 
 1. The arguments are in range, the ids have their form, and the layout, the camera and the options agree as the table says (`E_VALIDATION`).
 2. Both items exist (`E_NOT_FOUND`) and are clips (`E_TYPE_MISMATCH`) of an asset with a width and a height (`E_INVALID_STATE`).
-3. No `x`, `y`, `scale` or crop side of either clip has keyframes (`E_INVALID_STATE`).
+3. No `x`, `y`, `scale`, `rotation` or crop side of either clip has keyframes (`E_INVALID_STATE`).
 
 **Postconditions.** Each clip gets `fit` `contain`, `x`, `y`, `scale` (rounded down to 4 decimals), `rotation` 0, the `crop` that makes the picture fill its rectangle (a cover) or none, and a `mask` that is an ellipse over the whole picture for a circular camera and none otherwise. The clip that is in front is on a track above the other (its track is moved when it is not). No clip leaves the frame. `effective` has `layout`, `format` (`16:9`, `1:1`, `4:5` or `9:16`) and, for each clip, its rectangle in frame pixels (`screen`, `camera`: `x`, `y`, `width`, `height`).
 

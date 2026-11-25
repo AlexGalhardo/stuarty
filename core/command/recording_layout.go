@@ -17,7 +17,7 @@ func init() {
 			"camera fills the frame, the screen is a small inset). padding is a fraction of the shorter side of the " +
 			"frame, 0 to 0.25, left empty around everything. The result is ordinary fit, position, scale, crop and " +
 			"mask values, so every one stays editable, and no clip leaves the frame. The clip in front is put on the " +
-			"upper track. A clip whose x, y, scale or crop has keyframes cannot be laid out: apply the layout before " +
+			"upper track. A clip whose x, y, scale, rotation or crop has keyframes cannot be laid out: apply the layout before " +
 			"recording.auto_zoom.",
 		Example: `{"layout": "pip", "screen_item_id": "itm_m1n2p3q4r5", "camera_item_id": "itm_s6t7v8w9x0", "corner": "bottom_left"}`,
 		Errors:  []string{CodeValidation, CodeNotFound, CodeTypeMismatch, CodeInvalidState},
@@ -41,7 +41,7 @@ type layoutClip struct {
 }
 
 // layoutKeyframed are the properties a layout writes; a keyframe defines the value of one, so none may have any.
-var layoutKeyframed = []string{"x", "y", "scale", "crop_left", "crop_top", "crop_right", "crop_bottom"}
+var layoutKeyframed = []string{"x", "y", "scale", "rotation", "crop_left", "crop_top", "crop_right", "crop_bottom"}
 
 func (a *applyLayoutArgs) check() *Error {
 	if err := idForm("args.screen_item_id", timeline.PrefixItem, a.ScreenItemID); err != nil {

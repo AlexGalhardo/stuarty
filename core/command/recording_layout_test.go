@@ -3,6 +3,7 @@ package command
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"testing"
 
 	"github.com/AlexGalhardo/stuarty/core/timeline"
@@ -48,5 +49,27 @@ func TestApplyLayoutUndoRestoresThePreviousFraming(t *testing.T) {
 	if restored.Fit != "cover" || restored.Crop == nil || restored.Crop.Left != 0.1 || restored.Scale != 0.4 ||
 		restored.Mask == nil {
 		t.Errorf("the screen clip after undo: %+v", restored)
+	}
+}
+
+// A rotation keyframe defines the angle the layout sets to 0, so a rotated clip would leave its rectangle and the
+// frame: the layout refuses it like the other properties it writes (epic 66 review).
+func TestApplyLayoutRefusesARotationKeyframe(t *testing.T) {
+	t.Parallel()
+
+	doc := layoutDoc(1920, 1080, false, func(d *timeline.Document) {
+		it := d.Items[itemB]
+		it.Keyframes = timeline.Keyframes{"rotation": {kf(0, 0), kf(60, 45)}}
+		d.Items[itemB] = it
+	})().d
+
+	_, err := Default().Apply(doc, Operation{
+		Op:   "recording.apply_layout",
+		Args: json.RawMessage(layoutArgs("pip", withCamera()...)),
+	}, Env{})
+
+	var e *Error
+	if !errors.As(err, &e) || e.Code != CodeInvalidState || e.Path != "args.camera_item_id" {
+		t.Fatalf("a camera clip with rotation keyframes: got %v, want E_INVALID_STATE at args.camera_item_id", err)
 	}
 }
