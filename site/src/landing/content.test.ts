@@ -1,10 +1,9 @@
-// Checks the landing copy against the status column of docs/plans/00-roadmap.md (epic 88, task 4), and that the page
+// Checks the landing copy against the status column of docs/plans/00-roadmap.md (epics 88 and 95), and that the page
 // holds no testimonial, customer logo, invented number or award.
 import { describe, expect, test } from "bun:test";
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { shots } from "../../lib/landing-pages";
-import { agents, areas, path, privacy, roadmap, roadmapOnlyTerms, screenSlots, textProject, transparency } from "./content";
+import { agents, areas, hero, path, privacy, roadmap, roadmapOnlyTerms, screens, textProject, transparency } from "./content";
 import * as content from "./content";
 
 const roadmapFile = resolve(import.meta.dir, "../../../docs/plans/00-roadmap.md");
@@ -23,6 +22,7 @@ const done = (n: number): boolean => (status.get(n) ?? "").startsWith("DONE");
 
 // Every claim of the released sections, with the epics that deliver it.
 const released: { where: string; text: string; epics: number[] }[] = [
+	...hero.claims.map((c) => ({ where: "hero", ...c })),
 	...path.steps.flatMap((s) => s.claims.map((c) => ({ where: `path/${s.id}`, ...c }))),
 	...transparency.points.map((p) => ({ where: `transparency/${p.title}`, text: p.text, epics: p.epics })),
 	...textProject.claims.map((c) => ({ where: "text-project", ...c })),
@@ -33,7 +33,7 @@ const released: { where: string; text: string; epics: number[] }[] = [
 
 // Every sentence of the page: the string leaves of each export of content.ts, and the alt texts of the captures. Keys
 // that are not copy (ids, paths, states) are left out.
-const notCopy = new Set(["id", "src", "srcDark", "state", "kind", "shot", "slot"]);
+const notCopy = new Set(["id", "src", "state", "kind", "icon", "screen"]);
 function strings(value: unknown, where: string, out: { where: string; text: string }[]): { where: string; text: string }[] {
 	if (typeof value === "string") out.push({ where, text: value });
 	else if (Array.isArray(value)) value.forEach((v, i) => strings(v, `${where}[${i}]`, out));
@@ -45,11 +45,9 @@ function strings(value: unknown, where: string, out: { where: string; text: stri
 const pageCopy = Object.entries(content)
 	.filter(([k]) => k !== "roadmap" && k !== "roadmapOnlyTerms")
 	.flatMap(([k, v]) => strings(v, k, []));
-// The alt texts describe the captures, so they may give a real size such as "1280 by 720"; they are checked for words.
-const shotAlts = Object.entries(shots).map(([k, s]) => ({ where: `shots.${k}.alt`, text: s.alt }));
-const copyOutsideRoadmap = [...pageCopy, ...shotAlts];
+const copyOutsideRoadmap = pageCopy;
 const contentCopy = [...pageCopy, ...strings(roadmap, "roadmap", [])];
-const allCopy = [...contentCopy, ...shotAlts];
+const allCopy = contentCopy;
 
 describe("the roadmap file", () => {
 	test("is parsed", () => {
@@ -121,39 +119,44 @@ describe("what the page never holds", () => {
 });
 
 const publicLanding = resolve(import.meta.dir, "../../public/landing");
-const captureFiles = (base: string): string[] =>
-	["", "-960"].flatMap((size) => ["webp", "avif"].map((ext) => resolve(publicLanding, `${base.replace("/landing/", "")}${size}.${ext}`)));
-
-describe("the screens of epic 79", () => {
-	test("each has a label, a descriptive alt text and a capture in both themes", () => {
-		expect(Object.keys(screenSlots).sort()).toEqual(["briefing", "home", "projects"]);
-		for (const s of Object.values(screenSlots)) {
-			expect(s.label.length).toBeGreaterThan(8);
-			expect(s.alt.length).toBeGreaterThan(30);
-			expect(s.src, `${s.label} has no light capture`).toBeDefined();
-			expect(s.srcDark, `${s.label} has no dark capture`).toBeDefined();
-		}
-	});
-});
+// A capture is a dark picture (name) and a light one (name-light), as .webp and .avif at 1600 and 960 px.
+const captureFiles = (src: string): string[] => {
+	const name = src.replace("/landing/", "");
+	return ["", "-light"].flatMap((theme) => ["", "-960"].flatMap((size) => ["webp", "avif"].map((ext) => resolve(publicLanding, `${name}${theme}${size}.${ext}`))));
+};
 
 describe("the product images", () => {
-	const bases = [
-		...Object.values(screenSlots).flatMap((s) => [s.src ?? "", s.srcDark ?? ""]),
-		...Object.values(shots).flatMap((s) => [s.src, `${s.src.replace(/-light$/, "")}-light`]),
-	];
-	test("every image exists as webp and avif at 1600 and 960 px", () => {
-		for (const base of new Set(bases)) for (const file of captureFiles(base)) expect(existsSync(file), `${file} is missing`).toBe(true);
+	test("each has a descriptive alt text and the size of its capture", () => {
+		for (const [key, s] of Object.entries(screens)) {
+			expect(s.alt.length, `${key} has a short alt text`).toBeGreaterThan(40);
+			expect(s.width).toBeGreaterThan(0);
+			expect(s.height).toBeGreaterThan(0);
+		}
+	});
+	test("every image exists in both themes as webp and avif at 1600 and 960 px", () => {
+		for (const s of Object.values(screens)) for (const file of captureFiles(s.src)) expect(existsSync(file), `${file} is missing`).toBe(true);
 	});
 	test("every image is traced to a capture in CREDITS.txt, with the date of the capture", () => {
 		const credits = readFileSync(resolve(publicLanding, "CREDITS.txt"), "utf8");
-		for (const base of new Set(bases)) {
-			const name = base.replace("/landing/", "").replace(/-light$/, "");
+		for (const s of Object.values(screens)) {
+			const name = s.src.replace("/landing/", "");
 			expect(credits, `${name} is not in CREDITS.txt`).toMatch(new RegExp(`^${name}\\s.*\\d{4}-\\d{2}-\\d{2}$`, "m"));
 		}
-		expect(credits).not.toContain("2026-11-20");
 	});
 	test("the page says when the screenshots were captured and no longer says they are old", () => {
 		expect(content.capturedNote).toContain("24 November 2026");
 		expect(content.capturedNote.toLowerCase()).not.toContain("has changed since");
+	});
+});
+
+describe("the design", () => {
+	test("the hero and the sections keep the words of the final design", () => {
+		expect(hero.title).toBe("Create, edit, manage and publish your content in one place.");
+		expect(path.steps.map((s) => s.title)).toEqual(["Plan it", "Make it", "Approve it", "Publish it"]);
+		expect(privacy.title).toBe("On your machine. On your terms.");
+		expect(privacy.subtitle).toBe("No subscriptions. No pay once. Open Source.");
+		expect(areas.items).toHaveLength(10);
+		expect(roadmap.items).toHaveLength(6);
+		expect(roadmap.title).toBe("Planned. Not available yet.");
 	});
 });

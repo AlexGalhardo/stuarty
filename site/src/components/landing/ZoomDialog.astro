@@ -1,0 +1,60 @@
+---
+// The zoom of a product image (epic 95): one modal <dialog> for the whole page. A click, Enter or Space on a
+// `[data-zoom]` button (HomeShot.astro) fills it with the capture of the theme that is showing and opens it with
+// showModal(), so the page behind is inert and the browser traps the focus. The page behind is blurred by ::backdrop
+// (home.css). It closes with Escape, a click outside the picture or the close button, and the focus returns to the
+// image that opened it. No library: the platform does all of it.
+import { zoom } from "@/src/landing/content";
+import Icon from "./Icon.astro";
+---
+
+<dialog class="zoom-dialog" data-zoom-dialog aria-label={zoom.dialog}>
+	<div class="zoom-stage">
+		<picture>
+			<source type="image/avif" srcset="" data-zoom-avif />
+			<img class="zoom-img" data-zoom-img src="data:," alt="" />
+		</picture>
+		<button type="button" class="zoom-close" data-zoom-close aria-label={zoom.close}>
+			<Icon name="x" size={20} />
+		</button>
+	</div>
+</dialog>
+
+<script>
+	const dialog = document.querySelector<HTMLDialogElement>("[data-zoom-dialog]");
+	if (dialog) {
+		const img = dialog.querySelector<HTMLImageElement>("[data-zoom-img]");
+		const avif = dialog.querySelector<HTMLSourceElement>("[data-zoom-avif]");
+		let opener: HTMLElement | null = null;
+
+		const open = (button: HTMLElement): void => {
+			if (!img || !avif) return;
+			const theme = document.documentElement.classList.contains("dark") ? "dark" : "light";
+			opener = button;
+			const alt = button.dataset.zoomAlt ?? "";
+			img.alt = alt;
+			avif.srcset = button.dataset[theme === "dark" ? "zoomAvifDark" : "zoomAvifLight"] ?? "";
+			img.src = button.dataset[theme === "dark" ? "zoomDark" : "zoomLight"] ?? "";
+			dialog.setAttribute("aria-label", alt);
+			dialog.showModal();
+		};
+
+		document.addEventListener("click", (event) => {
+			const target = event.target;
+			if (!(target instanceof Element)) return;
+			const button = target.closest<HTMLElement>("[data-zoom]");
+			if (button) open(button);
+		});
+
+		// A click on the dialog itself is a click outside the picture: the dialog fills the window and the stage
+		// holds the picture and the close button.
+		dialog.addEventListener("click", (event) => {
+			if (event.target === dialog || (event.target instanceof Element && event.target.closest("[data-zoom-close]"))) dialog.close();
+		});
+
+		dialog.addEventListener("close", () => {
+			opener?.focus();
+			opener = null;
+		});
+	}
+</script>

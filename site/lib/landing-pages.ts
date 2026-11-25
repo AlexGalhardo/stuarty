@@ -294,6 +294,40 @@ export const drive: DriveTab[] = [
 	},
 ];
 
+/**
+ * The agent tab of the home page (epic 95): a shortened Claude Code session, and the permission card that the product
+ * shows for the edit it asks for. The commands are the ones of the `agent` tab of `drive` above, copied from the build.
+ */
+export const homeDemo = {
+	lines: [
+		{ kind: "cmd", text: "claude mcp add stuarty -- stuarty mcp --actor claude" },
+		{ kind: "cmd", text: "claude" },
+		{ kind: "prompt", text: 'Check Launch teaser, then add the caption "Approve and publish" at 14.5 s.' },
+		{ kind: "tool", text: 'stuarty - project_get (MCP)(project_id: "prj_6jzec0m2nn")' },
+		{ kind: "out", text: 'project prj_6jzec0m2nn "Launch teaser" rev 5' },
+		{ kind: "tool", text: 'stuarty - lint (MCP)(project_id: "prj_6jzec0m2nn")' },
+		{ kind: "out", text: "lint r5 prj_6jzec0m2nn: errors=0 warnings=1" },
+		{ kind: "tool", text: 'stuarty - edit (MCP)(operations: [{"op": "caption.add", ...}])' },
+		{ kind: "out", text: '{"revision": 6, "applied": true, "actor": "local:claude"}' },
+	] as { kind: "cmd" | "prompt" | "tool" | "out"; text: string }[],
+	notice: {
+		agent: "Claude Code",
+		status: "Asks for your permission",
+		title: "Add a caption at 14.5 s",
+		why: "One item is added. You can undo it from the history.",
+		rows: [
+			["Skill", "short-vertical-video, loaded"],
+			["Tool", "edit: caption.add"],
+			["Item", "Launch teaser, captions"],
+			["Goes to", "Timeline"],
+			["Cost", "Free"],
+			["Undo", "Yes, from the history"],
+		] as [string, string][],
+		deny: "Reject",
+		allow: "Allow",
+	},
+};
+
 export const trust = {
 	eyebrow: "Yours",
 	title: "On your machine. On your terms.",

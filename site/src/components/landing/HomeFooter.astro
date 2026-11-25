@@ -1,0 +1,32 @@
+---
+// The footer of the landing page (epic 95): the logo, the licence line and the links, as the design draws them, and
+// below them the two notes the page owes its screenshots (when they were taken, and that the demo is invented).
+import { capturedNote, credits } from "@/src/landing/content";
+import { site, withBase } from "@/lib/site";
+
+const links = [
+	{ label: "Docs", href: withBase("/docs/introduction/") },
+	{ label: "Agents", href: withBase("/llms.txt") },
+	{ label: "API Reference", href: withBase("/docs/api/overview/") },
+	{ label: "MCP", href: withBase("/docs/mcp/overview/") },
+	{ label: "Changelog", href: withBase("/changelog/") },
+	{ label: "GitHub", href: site.repo },
+];
+---
+
+<footer class="l-footer">
+	<div class="l-container l-footer-row">
+		<a class="l-footer-logo" href={withBase("/")} aria-label="Stuarty">
+			<img class="logo-light" src={withBase("/logo-wordmark-light.png")} alt="" height="28" />
+			<img class="logo-dark" src={withBase("/logo-wordmark-dark.png")} alt="" height="28" />
+		</a>
+		<p class="l-footer-text">MIT license. Open source.</p>
+		<nav class="l-footer-nav" aria-label="Footer">
+			{links.map((l) => <a href={l.href}>{l.label}</a>)}
+		</nav>
+	</div>
+	<div class="l-container l-footer-notes">
+		<p>{capturedNote}</p>
+		<p>{credits}</p>
+	</div>
+</footer>
