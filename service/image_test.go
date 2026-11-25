@@ -1062,3 +1062,49 @@ func (r *recordingWebP) EncodeWebP(_ context.Context, _ []byte, quality int) ([]
 
 	return []byte("RIFFxxxxWEBP"), nil
 }
+
+func TestImageEditReportsTextTheFontsCannotDraw(t *testing.T) {
+	s, _ := newImageService(t)
+	ctx := asActor("local:agent")
+
+	created, err := s.ImageCreate(ctx, ImageCreateRequest{Preset: "video_thumbnail", Name: "Episode 12"})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	edit, err := s.ImageEdit(ctx, ImageEditRequest{ImageID: created.ImageID, BaseRevision: 1, Operations: ops(
+		"layer.add_text", `{"text": "Olá, mundo — 日本 😀", "id": "lyr_aaaaaaaaaa"}`,
+	)})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var found bool
+
+	for _, f := range edit.Findings {
+		if f.Code == coreimage.CodeNoGlyph && f.Item == "lyr_aaaaaaaaaa" && f.Severity == "warning" {
+			found = true
+		}
+	}
+
+	if !found || edit.Lint.Warnings < 1 {
+		t.Fatalf("CJK and emoji must be a warning, got %+v", edit.Findings)
+	}
+
+	if _, err := s.ImageEdit(ctx, ImageEditRequest{ImageID: created.ImageID, BaseRevision: edit.Revision, Operations: ops(
+		"layer.set_text", `{"layer_id": "lyr_aaaaaaaaaa", "text": "Olá, mundo"}`,
+	)}); err != nil {
+		t.Fatal(err)
+	}
+
+	d, err := s.ImageDescribe(ctx, ImageDescribeRequest{ImageID: created.ImageID})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, f := range d.Findings {
+		if f.Code == coreimage.CodeNoGlyph {
+			t.Fatalf("plain text has no such finding: %+v", f)
+		}
+	}
+}

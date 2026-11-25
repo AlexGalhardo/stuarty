@@ -287,7 +287,7 @@ func (s *svc) ImageCreate(ctx context.Context, req ImageCreateRequest) (*ImageCr
 
 		res = &ImageCreateResult{
 			UntrustedNotice: UntrustedNotice, ImageID: id, Revision: 1, Width: doc.Width,
-			Height: doc.Height, Text: coreimage.Describe(doc, 1, coreimage.Lint(doc, coreimage.LintEnv{})),
+			Height: doc.Height, Text: coreimage.Describe(doc, 1, coreimage.Lint(doc, imageLintEnv())),
 		}
 
 		return nil
@@ -467,7 +467,7 @@ func (s *svc) ImageDescribe(ctx context.Context, req ImageDescribeRequest) (*Ima
 		return nil, lerr
 	}
 
-	findings := coreimage.Lint(doc, coreimage.LintEnv{})
+	findings := coreimage.Lint(doc, imageLintEnv())
 
 	return &ImageDescribeResult{
 		UntrustedNotice: UntrustedNotice, ImageID: row.ID, Revision: row.Revision, Name: doc.Name,
@@ -786,7 +786,7 @@ func (s *svc) imageEditResult(
 		}
 	}
 
-	lb, la := coreimage.Lint(before, coreimage.LintEnv{}), coreimage.Lint(out.Doc, coreimage.LintEnv{})
+	lb, la := coreimage.Lint(before, imageLintEnv()), coreimage.Lint(out.Doc, imageLintEnv())
 	t := totals(la)
 	t.LintScope = LintScopeFast
 
@@ -1030,4 +1030,10 @@ func othersTouched(rows []ImageOpRow, actor string) []coreimage.Touched {
 	}
 
 	return out
+}
+
+// imageLintEnv is what the lint of an image reads from the engine: the glyphs the bundled fonts have, so that a
+// text they cannot draw is reported before it is exported as boxes (SDD-004 section 5.1 item 9).
+func imageLintEnv() coreimage.LintEnv {
+	return coreimage.LintEnv{Missing: rasterize.Bundled().Missing}
 }

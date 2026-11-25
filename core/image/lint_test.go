@@ -1,6 +1,7 @@
 package image
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/AlexGalhardo/stuarty/core/lint"
@@ -160,5 +161,51 @@ func TestLintOrderIsStable(t *testing.T) {
 
 	if a[0][:len(CodeEmptySlot)] != CodeEmptySlot {
 		t.Errorf("errors come first: %v", a)
+	}
+}
+
+func TestLintTextNoGlyph(t *testing.T) {
+	d := baseDoc()
+	title, _ := Find(d, lid('c'))
+	title.Text = "Olá 日本 😀"
+
+	lacking := func(family string, _ int, text string) ([]rune, error) {
+		var out []rune
+
+		for _, r := range text {
+			if r > 0x2000 {
+				out = append(out, r)
+			}
+		}
+
+		return out, nil
+	}
+
+	fs := Lint(d, LintEnv{Measure: testMeasure, Missing: lacking})
+
+	var got *lint.Finding
+
+	for i := range fs {
+		if fs[i].Code == CodeNoGlyph {
+			got = &fs[i]
+		}
+	}
+
+	if got == nil || got.Severity != "warning" || Blocking(got.Code) || got.Item != title.ID {
+		t.Fatalf("a text with characters the font lacks is a warning that does not block: %v", codes(fs))
+	}
+
+	if !strings.Contains(got.Message, "U+65E5, U+672C, U+1F600") || got.Hint == "" {
+		t.Errorf("the message names the code points: %q", got.Message)
+	}
+
+	title.Text = "Olá"
+	if hasCode(Lint(d, LintEnv{Measure: testMeasure, Missing: lacking}), CodeNoGlyph) {
+		t.Error("a text the font can draw is not reported")
+	}
+
+	title.Text = "日本"
+	if hasCode(Lint(d, LintEnv{Measure: testMeasure}), CodeNoGlyph) {
+		t.Error("with no glyph source the rule is silent")
 	}
 }
