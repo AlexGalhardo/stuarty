@@ -43,6 +43,7 @@ func libraryFlags() []flagDef {
 		{Name: "tag", Kind: kindString, Repeat: true, Usage: "a tag for the files; repeat it or give a comma list"},
 		{Name: "reusable", Kind: kindBool, Usage: "mark the files to be offered again"},
 		{Name: "description", Kind: kindString, Usage: "what the files are, in your words"},
+		{Name: "sound-kind", Kind: kindString, Usage: "music, voice or effect, for the audio files"},
 	}
 }
 
@@ -77,8 +78,10 @@ func importBlocks(p *parsed) (*asset.Origin, *service.AssetInfo) {
 		break
 	}
 
-	if p.has("tag") || p.has("reusable") || p.has("description") {
-		info = &service.AssetInfo{Tags: splitAll(p.all("tag")), Description: p.str("description")}
+	if p.has("tag") || p.has("reusable") || p.has("description") || p.has("sound-kind") {
+		info = &service.AssetInfo{
+			Tags: splitAll(p.all("tag")), Description: p.str("description"), SoundKind: p.str("sound-kind"),
+		}
 
 		if p.has("reusable") {
 			info.Reusable = new(p.boolean("reusable"))
@@ -102,13 +105,15 @@ var assetListCmd = &spec{
 		{Name: "project", Kind: kindString, Usage: "only the files this project, or one of its timelines, uses"},
 		{Name: "origin", Kind: kindString, Usage: "imported, generated, fetched_by_agent or rendered_externally"},
 		{Name: "reusable", Kind: kindBool, Usage: "only the files marked reusable; --no-reusable keeps the others"},
+		{Name: "sound-kind", Kind: kindString, Usage: "only the audio files of this kind: music, voice or effect"},
 		{Name: "text", Kind: kindString, Usage: "a full-text query over name, tags, description and origin"},
 	}, pageFlags("50")...),
 	run: func(ctx context.Context, c *call) (*output, error) {
 		req := service.AssetListRequest{
 			Kind: c.args.str("kind"), Section: c.args.str("section"), Tag: c.args.str("tag"),
 			Project: c.args.str("project"), Origin: c.args.str("origin"), Text: c.args.str("text"),
-			Limit: c.args.integer("limit"), Cursor: c.args.str("cursor"),
+			SoundKind: c.args.str("sound-kind"),
+			Limit:     c.args.integer("limit"), Cursor: c.args.str("cursor"),
 		}
 
 		if c.args.has("reusable") {
@@ -177,7 +182,7 @@ var assetUsesCmd = &spec{
 
 var assetSetCmd = &spec{
 	name:    "asset:set",
-	summary: "set the description, the rights note and the reuse mark of a file of the library",
+	summary: "set the description, the rights note, the reuse mark and the sound kind of a file of the library",
 	usage: []string{
 		"stuarty asset:set <hash>",
 	},
@@ -194,6 +199,10 @@ var assetSetCmd = &spec{
 			Name:  "reusable",
 			Kind:  kindBool,
 			Usage: "mark the file to be offered again; --no-reusable takes the mark off",
+		},
+		{
+			Name: "sound-kind", Kind: kindString,
+			Usage: "music, voice or effect, for an audio file; an empty value clears it",
 		},
 	},
 	run: func(ctx context.Context, c *call) (*output, error) {
@@ -216,8 +225,12 @@ var assetSetCmd = &spec{
 			req.Reusable = new(c.args.boolean("reusable"))
 		}
 
-		if req.Description == nil && req.RightsNote == nil && req.Reusable == nil {
-			return nil, validation("", "asset:set needs --description, --rights-note or --reusable.")
+		if c.args.has("sound-kind") {
+			req.SoundKind = new(c.args.str("sound-kind"))
+		}
+
+		if req.Description == nil && req.RightsNote == nil && req.Reusable == nil && req.SoundKind == nil {
+			return nil, validation("", "asset:set needs --description, --rights-note, --reusable or --sound-kind.")
 		}
 
 		res, err := c.svc.AssetSetInfo(ctx, req)

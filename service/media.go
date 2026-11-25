@@ -223,6 +223,12 @@ func (s *svc) importFile(
 		return s.reuseFile(ctx, c, project, f, dryRun, rec)
 	}
 
+	if f.soundKind != "" {
+		own := *rec
+		own.info.DefaultSoundKind = f.soundKind
+		rec = &own
+	}
+
 	out := ImportedAsset{Name: displayName(f.Path), State: string(IngestPending)}
 
 	refuse := func(err error) ImportedAsset {

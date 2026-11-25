@@ -8,6 +8,7 @@ import (
 
 	"github.com/AlexGalhardo/stuarty/core/asset"
 	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/engine/ingest"
 	"github.com/AlexGalhardo/stuarty/service"
 	"github.com/AlexGalhardo/stuarty/service/testproject"
 )
@@ -901,5 +902,67 @@ func TestAssetRenameIsRefusedForAFileOfAnotherUser(t *testing.T) {
 	list, err := m.svc.MediaList(alice, service.MediaListRequest{ProjectID: res.ProjectID})
 	if err != nil || list.Assets[0].Name != "private.mp4" {
 		t.Errorf("alice's name changed: %+v, %v", list, err)
+	}
+}
+
+func TestAssetLibrarySoundKindIsSetAtImportChangedAndFiltered(t *testing.T) {
+	wav := silentWav()
+
+	var m *mediaEnv
+
+	// The fake ingest calls every file a video; the sound is told apart by its bytes.
+	m = newMediaEnv(t, mediaCfg{ingest: func(ctx context.Context, in ingest.Input) (*ingest.Result, error) {
+		if "sha256:"+in.Hash == fileHash(wav) {
+			return &ingest.Result{
+				Kind: ingest.KindAudio, Summary: &ingest.Summary{Version: 1, Kind: ingest.KindAudio},
+				Facts: ingest.Facts{HasAudio: true, SampleCount: 48000},
+			}, nil
+		}
+
+		return m.fakeIngest(ctx, in)
+	}})
+	ctx := m.as(ui)
+	project := m.newProject("p")
+
+	res, err := m.svc.MediaImport(ctx, service.MediaImportRequest{
+		ProjectID: project, Files: []service.ImportFile{{Path: m.write("tone.wav", string(wav))}},
+		Info: &service.AssetInfo{SoundKind: "effect"},
+	})
+	if err != nil || len(res.Assets) != 1 || res.Assets[0].Error != nil {
+		t.Fatalf("import = %+v, %v", res, err)
+	}
+
+	sound := res.Assets[0].Hash
+	clip := m.importOne(project, m.write("clip.mp4", clipBytes)).Assets[0].Hash
+
+	list, err := m.svc.AssetList(ctx, service.AssetListRequest{SoundKind: "effect"})
+	if err != nil || !slices.Equal(assetIDs(list), []string{sound}) || list.Assets[0].SoundKind != "effect" {
+		t.Fatalf("filter effect = %v, %v", assetIDs(list), err)
+	}
+
+	music := "music"
+
+	if got, err := m.svc.AssetSetInfo(ctx, service.AssetSetInfoRequest{Hash: sound, SoundKind: &music}); err != nil ||
+		got.SoundKind != "music" {
+		t.Fatalf("set music = %+v, %v", got, err)
+	}
+
+	if list, _ := m.svc.AssetList(ctx, service.AssetListRequest{SoundKind: "effect"}); len(list.Assets) != 0 {
+		t.Errorf("the old kind still lists: %v", assetIDs(list))
+	}
+
+	if _, err := m.svc.AssetSetInfo(ctx, service.AssetSetInfoRequest{Hash: clip, SoundKind: &music}); code(err) !=
+		command.CodeValidation {
+		t.Errorf("a sound kind on a video = %v", err)
+	}
+
+	if _, err := m.svc.AssetList(ctx, service.AssetListRequest{SoundKind: "sfx"}); code(err) != command.CodeValidation {
+		t.Errorf("an unknown sound kind = %v", err)
+	}
+
+	if _, err := m.svc.MediaImport(ctx, service.MediaImportRequest{
+		ProjectID: project, Files: []service.ImportFile{{Hash: sound}}, Info: &service.AssetInfo{SoundKind: "sfx"},
+	}); code(err) != command.CodeValidation {
+		t.Errorf("an unknown sound kind at import = %v", err)
 	}
 }

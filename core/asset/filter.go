@@ -36,12 +36,28 @@ func SectionKinds(section string) []string {
 	return nil
 }
 
+// The kinds of a sound file of the library, which a person sets or an import defaults from its source (SDD-011
+// section 14.12). The empty string is "not set".
+const (
+	SoundMusic  = "music"
+	SoundVoice  = "voice"
+	SoundEffect = "effect"
+)
+
+// SoundKinds is the closed list of sound kinds, in the order a picker lists them.
+var SoundKinds = []string{SoundMusic, SoundVoice, SoundEffect}
+
+// ValidSoundKind reports whether s is a sound kind; the empty string is not (it is the absence of one).
+func ValidSoundKind(s string) bool { return slices.Contains(SoundKinds, s) }
+
 // Entry is what a filter looks at: one file of the library as the service assembled it.
 type Entry struct {
 	MediaKind string
 	Origin    Origin
 	Reusable  bool
 	Tags      []string
+	// SoundKind is the sound kind of an audio file; empty when it is not set or the file is not audio.
+	SoundKind string
 	// Projects are the identifiers of the productions and of the timelines that use the file.
 	Projects []string
 }
@@ -54,6 +70,8 @@ type Filter struct {
 	Project  string // a production or a timeline identifier
 	Origin   OriginKind
 	Reusable *bool
+	// SoundKind keeps the audio files of one sound kind (music, voice or effect).
+	SoundKind string
 }
 
 // Validate normalizes the tag and refuses a name that is not known.
@@ -71,6 +89,14 @@ func (f *Filter) Validate() *RuleError {
 			Path:   "section",
 			Reason: "section_unknown",
 			Detail: fmt.Sprintf("the section %q is not known; use visual, video or audio", f.Section),
+		}
+	}
+
+	if f.SoundKind != "" && !ValidSoundKind(f.SoundKind) {
+		return &RuleError{
+			Path:   "sound_kind",
+			Reason: "sound_kind_unknown",
+			Detail: fmt.Sprintf("the sound kind %q is not known; use music, voice or effect", f.SoundKind),
 		}
 	}
 
@@ -117,6 +143,10 @@ func (f *Filter) Match(e *Entry) bool {
 	}
 
 	if f.Reusable != nil && e.Reusable != *f.Reusable {
+		return false
+	}
+
+	if f.SoundKind != "" && e.SoundKind != f.SoundKind {
 		return false
 	}
 

@@ -260,3 +260,37 @@ func TestCountTags(t *testing.T) {
 		t.Fatalf("CountTags(nil) = %#v, want an empty non-nil list", got)
 	}
 }
+
+func TestSoundKindFilter(t *testing.T) {
+	t.Parallel()
+
+	for _, k := range []string{"music", "voice", "effect"} {
+		if !ValidSoundKind(k) {
+			t.Errorf("%q is a sound kind", k)
+		}
+	}
+
+	for _, k := range []string{"", "Music", "sfx"} {
+		if ValidSoundKind(k) {
+			t.Errorf("%q is not a sound kind", k)
+		}
+	}
+
+	f := Filter{SoundKind: "sfx"}
+
+	bad := f.Validate()
+	if bad == nil || bad.Path != "sound_kind" || bad.Reason != "sound_kind_unknown" {
+		t.Fatalf("Validate = %+v", bad)
+	}
+
+	f = Filter{SoundKind: SoundVoice}
+	if bad := f.Validate(); bad != nil {
+		t.Fatal(bad)
+	}
+
+	if !f.Match(&Entry{MediaKind: KindAudio, SoundKind: SoundVoice}) ||
+		f.Match(&Entry{MediaKind: KindAudio, SoundKind: SoundMusic}) ||
+		f.Match(&Entry{MediaKind: KindAudio}) {
+		t.Error("the sound kind filter keeps only the audio files of that kind")
+	}
+}

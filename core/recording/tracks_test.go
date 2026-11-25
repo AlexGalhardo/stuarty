@@ -173,3 +173,18 @@ func TestTracksAskedAndDeviceValidation(t *testing.T) {
 		t.Errorf("a device id with braces or a space was accepted: %v", fields)
 	}
 }
+
+func TestTrackSoundKindDefaultsOnlyForTheMicrophone(t *testing.T) {
+	t.Parallel()
+
+	for _, k := range TrackKinds {
+		want := ""
+		if k == TrackMicrophone {
+			want = "voice"
+		}
+
+		if got := k.SoundKind(); got != want {
+			t.Errorf("%s: SoundKind() = %q, want %q", k, got, want)
+		}
+	}
+}

@@ -1155,7 +1155,7 @@ func (s *svc) RecordingConfirm(ctx context.Context, req RecordingRef) (*Recordin
 			return nil, newError(CodeCaptureFailed, "the file of the recording is gone.").withDetail("reason", "io")
 		}
 
-		files = append(files, ImportFile{Path: p, recording: true})
+		files = append(files, ImportFile{Path: p, recording: true, soundKind: t.Kind.SoundKind()})
 	}
 
 	res, ierr := s.MediaImport(ctx, MediaImportRequest{
