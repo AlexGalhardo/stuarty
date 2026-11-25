@@ -21,6 +21,10 @@ The first time you start the application it shows a native question, **Check for
 
 The agent surfaces (MCP, the CLI and the HTTP API) cannot start a check or an install. It is a menu action of the desktop window only.
 
+<Callout type="warning" title="The feed is old today">
+The file at `stuarty.com/updates/feed.json` is refreshed only when a tagged release runs the release workflow. At the time of writing it still lists version 0.26.0, so a newer build is offered no update by the menu. Install a newer version from the [releases page](https://github.com/AlexGalhardo/stuarty/releases) by hand until the feed is refreshed.
+</Callout>
+
 ## What a check sends
 
 One HTTPS `GET` of `https://stuarty.com/updates/feed.json`, to that single host.

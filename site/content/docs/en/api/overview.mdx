@@ -42,10 +42,17 @@ export STUARTY_KEY="$(cat ~/.stuarty/token)"
 curl -X POST "http://127.0.0.1:7878/api/v1/projects" \
   -H "Authorization: Bearer $STUARTY_KEY" \
   -H "Content-Type: application/json" \
-  -d '{"name": "Launch teaser", "preset": "9:16"}'
+  -d '{"name": "Launch teaser",
+       "description": "A 30 second vertical video for people who follow the channel, with captions.",
+       "goal": {"specific": "Publish one video that explains the idea",
+                "measurable": "One hundred views in the first week",
+                "achievable": "The footage and the script exist",
+                "relevant": "It brings the first audience",
+                "time_bound": "Edit on Monday, publish on Tuesday",
+                "due": "2027-03-31"}}'
 ```
 
-The answer is `201 Created` with the id of the new project and its revision `0`. Open the same project in the editor to see it.
+The answer is `201 Created` with the id of the new project. A project has a name, a description and a goal, and no timeline yet: add one with `POST /api/v1/projects/{id}/items` ([Projects](/docs/projects)). Open the same project in the editor to see it.
 
 </Step>
 </Steps>
