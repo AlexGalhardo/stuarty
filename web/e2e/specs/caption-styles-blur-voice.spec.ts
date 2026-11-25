@@ -103,6 +103,7 @@ for (const theme of ["dark", "light"] as const) {
 			test("the gallery, the blur form and the voice action work from the keyboard", async ({
 				page,
 				request,
+				browserName,
 			}, testInfo) => {
 				test.setTimeout(180_000);
 				await page.addInitScript((value) => {
@@ -113,7 +114,12 @@ for (const theme of ["dark", "light"] as const) {
 				const html = page.locator("html");
 				if (theme === "dark") await expect(html).toHaveClass(/\bdark\b/);
 				else await expect(html).not.toHaveClass(/\bdark\b/);
+				// The screenshots are evidence for the design review, not an assertion. Playwright's WebKit
+				// injects a `<style>body {}</style>` into the page for each one, which the CSP refuses as
+				// style-src-elem; the page adds no such element, so WebKit takes none and the CSP check
+				// of the fixture stays complete (VV-408).
 				const shot = async (name: string, of: Locator): Promise<void> => {
+					if (browserName === "webkit") return;
 					await of.screenshot({
 						path: testInfo.outputPath(`${name}-${theme}-${width}.png`),
 					});
