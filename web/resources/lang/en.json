@@ -950,7 +950,7 @@
         "back": "Back to Image editor",
         "size": "{w} x {h} px",
         "revision": "revision {revision}",
-        "saved_auto": "Saved automatically: {time}",
+        "saved_auto": "Saved at {time}",
         "rev_short": "Rev {revision}"
       },
       "canvas": {
@@ -1309,7 +1309,8 @@
         "model": "Edit with a model",
         "view": "View",
         "export": "Export",
-        "more": "More tools"
+        "more": "More tools",
+        "more_hint": "Select a layer to use the commands that need one"
       },
       "palette": {
         "open": "Commands",

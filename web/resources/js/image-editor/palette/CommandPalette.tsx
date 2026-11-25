@@ -1,4 +1,5 @@
 import {
+	Fragment,
 	type KeyboardEvent,
 	type ReactNode,
 	useEffect,
@@ -179,6 +180,9 @@ export function CommandPalette(): ReactNode {
 						autoComplete="off"
 						spellCheck={false}
 						data-testid="image-palette-input"
+						// One ring: the 2 px focus outline of the design system sits on the edge, with no second border.
+						className="focus-visible:border-transparent"
+						style={{ outlineOffset: 0 }}
 						onChange={(event) => {
 							setQuery(event.target.value);
 							setActive(0);
@@ -197,37 +201,47 @@ export function CommandPalette(): ReactNode {
 						const Icon = o.icon;
 						const keys =
 							o.shortcut === undefined ? undefined : SHORTCUTS[o.shortcut];
+						const heading = index === 0 || shown[index - 1]?.group !== o.group;
 						return (
-							// The keys belong to the combobox: focus stays in the field, which runs the active option on Enter.
-							// biome-ignore lint/a11y/useKeyWithClickEvents: keyboard handled by the combobox input
-							<div
-								key={o.id}
-								id={`${listId}-${o.id}`}
-								role="option"
-								tabIndex={-1}
-								aria-selected={index === current}
-								aria-disabled={o.disabled || undefined}
-								data-testid={`image-palette-${o.id}`}
-								onClick={() => run(o)}
-								className={cn(
-									"flex cursor-default items-center gap-2 rounded-md px-2 py-1.5 text-sm",
-									index === current && "bg-surface-hover",
-									o.disabled && "cursor-not-allowed opacity-50",
+							<Fragment key={o.id}>
+								{heading && (
+									<div
+										role="presentation"
+										className="px-2 pt-2 pb-1 text-xs font-semibold text-text-muted"
+									>
+										{t(GROUP_LABEL[o.group])}
+									</div>
 								)}
-							>
-								<Icon aria-hidden="true" className="size-4 shrink-0" />
-								<span className="min-w-0 flex-1 truncate">{o.label}</span>
-								<span className="text-xs text-muted-foreground">
-									{o.disabled
-										? t("ui.image.palette.unavailable")
-										: t(GROUP_LABEL[o.group])}
-								</span>
-								{keys !== undefined && (
-									<kbd className="rounded-sm border border-border px-1 font-sans text-xs text-muted-foreground">
-										{keys}
-									</kbd>
-								)}
-							</div>
+								{/* The keys belong to the combobox: focus stays in the field, which runs the active option on Enter. */}
+								{/* biome-ignore lint/a11y/useKeyWithClickEvents: keyboard handled by the combobox input */}
+								<div
+									id={`${listId}-${o.id}`}
+									role="option"
+									tabIndex={-1}
+									aria-selected={index === current}
+									aria-disabled={o.disabled || undefined}
+									data-testid={`image-palette-${o.id}`}
+									onClick={() => run(o)}
+									className={cn(
+										"flex cursor-default items-center gap-2 rounded-md px-2 py-1.5 text-sm",
+										index === current && "bg-accent-soft text-text",
+										o.disabled && "cursor-not-allowed opacity-50",
+									)}
+								>
+									<Icon aria-hidden="true" className="size-4 shrink-0" />
+									<span className="min-w-0 flex-1 truncate">{o.label}</span>
+									{o.disabled && (
+										<span className="text-xs text-muted-foreground">
+											{t("ui.image.palette.unavailable")}
+										</span>
+									)}
+									{keys !== undefined && (
+										<kbd className="rounded-sm border border-border px-1 font-sans text-xs text-muted-foreground">
+											{keys}
+										</kbd>
+									)}
+								</div>
+							</Fragment>
 						);
 					})}
 				</div>

@@ -950,8 +950,8 @@
         "back": "Voltar para Editor de imagem",
         "size": "{w} × {h} px",
         "revision": "revisão {revision}",
-        "saved_auto": "Salvo automaticamente: {time}",
-        "rev_short": "Rev. {revision}"
+        "saved_auto": "Salvo às {time}",
+        "rev_short": "Rev {revision}"
       },
       "canvas": {
         "label": "Tela da imagem",
@@ -1309,7 +1309,8 @@
         "model": "Editar com um modelo",
         "view": "Visualização",
         "export": "Exportar",
-        "more": "Mais ferramentas"
+        "more": "Mais ferramentas",
+        "more_hint": "Selecione uma camada para usar os comandos que precisam de uma"
       },
       "palette": {
         "open": "Comandos",

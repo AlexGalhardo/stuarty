@@ -39,17 +39,19 @@ function DropdownMenuTrigger({
 function DropdownMenuContent({
   className,
   align = "start",
+  side,
   sideOffset = 4,
   children,
 }: {
   className?: string
+  side?: "top" | "right" | "bottom" | "left"
   align?: "start" | "center" | "end"
   sideOffset?: number
   children?: React.ReactNode
 }) {
   return (
     <Menu.Portal>
-      <Menu.Positioner align={align} sideOffset={sideOffset}>
+      <Menu.Positioner side={side} align={align} sideOffset={sideOffset}>
         <Menu.Popup
           data-slot="dropdown-menu-content"
           className={cn(popupClass, "w-(--anchor-width)", className)}

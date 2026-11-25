@@ -7,7 +7,7 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useT } from "@/lib/i18n";
-import { effectiveZoom } from "../canvas/viewport";
+import { BAR_ROOM, effectiveZoom, origin } from "../canvas/viewport";
 import { useImage } from "../state/context";
 import { type Operation, useOperations } from "./operations";
 import { SHORTCUTS } from "./shortcuts";
@@ -19,11 +19,13 @@ function TextTool({
 	operation,
 	label,
 	testId,
+	className,
 	children,
 }: {
 	operation: Operation;
 	label: string;
 	testId: string;
+	className?: string;
 	children: ReactNode;
 }): ReactNode {
 	const keys =
@@ -40,6 +42,7 @@ function TextTool({
 					aria-label={label}
 					aria-keyshortcuts={keys}
 					disabled={operation.disabled}
+					className={className}
 					data-tool=""
 					data-testid={testId}
 					onClick={operation.run}
@@ -77,18 +80,24 @@ export function ZoomBar(): ReactNode {
 	const zoomIn = find("zoom-in");
 	const fit = find("zoom-fit");
 	const actual = find("zoom-actual");
-	const percent =
-		doc === null
-			? null
-			: Math.round(
-					effectiveZoom(view, stage, { w: doc.width, h: doc.height }) * 100,
+	const size = doc === null ? null : { w: doc.width, h: doc.height };
+	const zoom = size === null ? 1 : effectiveZoom(view, stage, size);
+	const percent = size === null ? null : Math.round(zoom * 100);
+	// Under the picture, 24 px below its edge, and never lower than the foot of the stage.
+	const top =
+		size === null
+			? undefined
+			: Math.min(
+					origin(view, stage, size, zoom).y + size.h * zoom + BAR_ROOM - 32,
+					stage.h - 36,
 				);
 
 	return (
 		<Toolbar
 			label={t("ui.image.toolbar.view")}
 			testId="image-view-toolbar"
-			className="justify-center gap-1 border-t-0 bg-ed-bg py-2"
+			className="absolute left-1/2 -translate-x-1/2 gap-1 bg-transparent p-0"
+			style={top === undefined ? { bottom: 4 } : { top }}
 		>
 			<ToolButton
 				icon={zoomOut.icon}
@@ -109,7 +118,7 @@ export function ZoomBar(): ReactNode {
 			>
 				<span
 					data-testid="image-zoom-percent"
-					className="min-w-10 text-center text-xs tabular-nums"
+					className="min-w-10 text-center text-xs text-text-muted tabular-nums"
 				>
 					{percent === null ? "" : `${percent}%`}
 				</span>
@@ -122,7 +131,12 @@ export function ZoomBar(): ReactNode {
 				onClick={zoomIn.run}
 				testId={zoomIn.testId}
 			/>
-			<TextTool operation={fit} label={fit.label} testId={fit.testId}>
+			<TextTool
+				operation={fit}
+				label={fit.label}
+				testId={fit.testId}
+				className="ml-5 text-sm font-semibold text-text"
+			>
 				{t("ui.image.view.fit_short")}
 			</TextTool>
 		</Toolbar>

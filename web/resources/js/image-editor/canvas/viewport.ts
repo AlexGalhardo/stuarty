@@ -7,6 +7,9 @@ export const MIN_ZOOM = 0.1;
 export const MAX_ZOOM = 8;
 export const ZOOM_STEP = 1.25;
 const FIT_MARGIN = 24;
+// The room under the picture for the zoom bar: a gap and the bar (ZoomBar.tsx). The picture and the bar are
+// centred together in the stage, as the final design draws them.
+export const BAR_ROOM = 56;
 
 export interface Size {
 	w: number;
@@ -26,7 +29,7 @@ export function clampZoom(zoom: number): number {
 export function fitZoom(stage: Size, doc: Size): number {
 	if (doc.w <= 0 || doc.h <= 0) return 1;
 	const w = Math.max(stage.w - 2 * FIT_MARGIN, 1);
-	const h = Math.max(stage.h - 2 * FIT_MARGIN, 1);
+	const h = Math.max(stage.h - 2 * FIT_MARGIN - BAR_ROOM, 1);
 	return clampZoom(Math.min(w / doc.w, h / doc.h, 1));
 }
 
@@ -44,7 +47,7 @@ export function origin(
 ): Point {
 	return {
 		x: (stage.w - doc.w * zoom) / 2 + view.panX,
-		y: (stage.h - doc.h * zoom) / 2 + view.panY,
+		y: (stage.h - BAR_ROOM - doc.h * zoom) / 2 + view.panY,
 	};
 }
 

@@ -218,8 +218,8 @@ function Shell({ live }: { live: boolean }): ReactNode {
 							</StateCard>
 						)}
 						{doc !== null && doc.layers.length === 0 && <EmptyDocument />}
+						<ZoomBar />
 					</div>
-					<ZoomBar />
 				</div>
 				<aside
 					aria-label={t("ui.image.inspector.title")}
