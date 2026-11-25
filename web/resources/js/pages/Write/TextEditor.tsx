@@ -1,3 +1,4 @@
+import { ArrowLeft, ArrowRight, History } from "lucide-react";
 import {
 	type FormEvent,
 	type ReactNode,
@@ -5,8 +6,10 @@ import {
 	useEffect,
 	useState,
 } from "react";
+import { createPortal } from "react-dom";
 
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
+import { PageHeaderAction } from "@/components/PageHeader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +25,7 @@ import EditorState from "./EditorState";
 import EndPanel, { type EndStatus } from "./EndPanel";
 import FlowPath from "./FlowPath";
 import { endOf, exportName, primaryAction } from "./meta";
+import Panel from "./Panel";
 import PostPanel from "./PostPanel";
 import MarkdownPreview from "./Preview";
 import RevisionsPanel from "./RevisionsPanel";
@@ -35,11 +39,14 @@ export default function TextEditor({
 	client,
 	projectId,
 	itemId,
+	actionsSlot,
 	onChanged,
 }: {
 	client: WritingClient;
 	projectId: string;
 	itemId: string;
+	// Where the page header takes the actions of the open text: Revisions and Send for review.
+	actionsSlot: HTMLElement | null;
 	onChanged: () => void;
 }): ReactNode {
 	const t = useT();
@@ -187,15 +194,21 @@ export default function TextEditor({
 		setEnded({ state: "exported", file });
 	}
 
+	// Review is a view of this page: the comparison takes the place of the editor, and the checks of a post stay
+	// beside it. The heading of the checks (a post) or of the revisions takes the focus once the view is drawn.
 	function review(): void {
 		setReviewed(true);
-		// A post is checked before it is compared; any other text goes straight to its revisions.
+	}
+
+	const isPost = loaded?.item.text_kind === "post";
+	useEffect(() => {
+		if (!reviewed) return;
 		const target = document.getElementById(
-			loaded?.item.text_kind === "post" ? "post-heading" : "revisions-heading",
+			isPost ? "post-heading" : "revisions-heading",
 		);
 		target?.scrollIntoView({ block: "start" });
 		target?.focus();
-	}
+	}, [reviewed, isPost]);
 
 	if (loaded === null) {
 		return (
@@ -213,149 +226,254 @@ export default function TextEditor({
 	const primary = primaryAction({ dirty, reviewed });
 
 	return (
-		<div className="flex flex-col gap-6" data-testid="text-editor">
-			<form className="flex flex-col gap-4" onSubmit={save}>
-				<div className="flex flex-col gap-2">
-					<div className="flex flex-wrap items-center gap-2">
-						<Badge variant="outline">{t(`ui.write.kind.${kind}`)}</Badge>
-						<p
-							className="text-sm text-text-muted"
-							data-testid="text-meta"
-							aria-live="off"
-						>
-							{t("ui.write.meta.words", {
-								count: loaded.item.words,
-							})}
-							{` · ${t("ui.write.meta.reading", { minutes: String(loaded.item.reading_minutes) })}`}
-							{` · ${t("ui.write.meta.revision", { revision: String(loaded.item.revision) })}`}
+		<div
+			className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_20rem] xl:items-start"
+			data-testid="text-editor"
+		>
+			{actionsSlot === null
+				? null
+				: createPortal(
+						reviewed ? (
+							<PageHeaderAction
+								type="button"
+								variant="outline"
+								onClick={() => setReviewed(false)}
+							>
+								<ArrowLeft aria-hidden="true" />
+								{t("ui.write.editor.back_to_writing")}
+							</PageHeaderAction>
+						) : (
+							<>
+								<PageHeaderAction
+									type="button"
+									variant="outline"
+									onClick={() => {
+										const target = document.getElementById("revisions-heading");
+										target?.scrollIntoView({ block: "start" });
+										target?.focus();
+									}}
+								>
+									<History aria-hidden="true" />
+									{t("ui.write.editor.revisions")}
+								</PageHeaderAction>
+								<PageHeaderAction
+									type="button"
+									variant={primary === "review" ? "default" : "outline"}
+									data-primary={primary === "review" ? "true" : undefined}
+									disabled={dirty}
+									onClick={review}
+								>
+									<ArrowRight aria-hidden="true" />
+									{t("ui.write.editor.review")}
+								</PageHeaderAction>
+							</>
+						),
+						actionsSlot,
+					)}
+			<div className="flex min-w-0 flex-col gap-6">
+				{reviewed ? (
+					<section
+						aria-label={t(`ui.write.review.title.${kind}`)}
+						data-testid="review-view"
+						className="flex flex-col gap-4"
+					>
+						<h2 className="text-2xl font-semibold text-text">
+							{t(`ui.write.review.title.${kind}`)}
+						</h2>
+						<p className="text-sm text-text-muted">
+							{t("ui.write.review.lead", { title })}
 						</p>
-					</div>
-					<div className="flex flex-col gap-1">
-						<Label htmlFor="text-title">{t("ui.write.editor.title")}</Label>
-						<Input
-							id="text-title"
-							value={title}
-							maxLength={120}
-							required
-							onChange={(event) => setTitle(event.target.value)}
+						<RevisionsPanel
+							client={client}
+							projectId={projectId}
+							itemId={itemId}
+							latest={loaded.item.revision}
+							onReverted={changedElsewhere}
 						/>
-					</div>
-				</div>
-				<FlowPath flow={flow} />
-				<Tabs defaultValue="edit">
-					<TabsList>
-						<TabsTrigger value="edit">
-							{t("ui.write.editor.tab_edit")}
-						</TabsTrigger>
-						<TabsTrigger value="preview">
-							{t("ui.write.editor.tab_preview")}
-						</TabsTrigger>
-					</TabsList>
-					<TabsContent value="edit">
+						<dl className="grid grid-cols-3 gap-3 rounded-lg border border-border bg-surface p-4 text-sm">
+							<div>
+								<dt className="text-text-muted">
+									{t("ui.write.review.words")}
+								</dt>
+								<dd className="text-lg font-semibold tabular-nums">
+									{loaded.item.words}
+								</dd>
+							</div>
+							<div>
+								<dt className="text-text-muted">
+									{t("ui.write.review.reading")}
+								</dt>
+								<dd className="text-lg font-semibold tabular-nums">
+									{t("ui.write.meta.reading", {
+										minutes: String(loaded.item.reading_minutes),
+									})}
+								</dd>
+							</div>
+							<div>
+								<dt className="text-text-muted">
+									{t("ui.write.review.revisions")}
+								</dt>
+								<dd className="text-lg font-semibold tabular-nums">
+									{loaded.item.revision}
+								</dd>
+							</div>
+						</dl>
+					</section>
+				) : null}
+				<form className="flex flex-col gap-4" hidden={reviewed} onSubmit={save}>
+					<div className="flex flex-col gap-2">
+						<div className="flex flex-wrap items-center gap-2">
+							<Badge variant="outline">{t(`ui.write.kind.${kind}`)}</Badge>
+							<p
+								className="text-sm text-text-muted"
+								data-testid="text-meta"
+								aria-live="off"
+							>
+								{t("ui.write.meta.words", {
+									count: loaded.item.words,
+								})}
+								{` · ${t("ui.write.meta.reading", { minutes: String(loaded.item.reading_minutes) })}`}
+								{` · ${t("ui.write.meta.revision", { revision: String(loaded.item.revision) })}`}
+							</p>
+						</div>
 						<div className="flex flex-col gap-1">
-							<Label htmlFor="text-body">{t("ui.write.editor.body")}</Label>
-							<Textarea
-								id="text-body"
-								rows={16}
-								value={body}
-								className="font-mono leading-7"
-								onChange={(event) => setBody(event.target.value)}
+							<Label htmlFor="text-title">{t("ui.write.editor.title")}</Label>
+							<Input
+								id="text-title"
+								value={title}
+								maxLength={120}
+								required
+								onChange={(event) => setTitle(event.target.value)}
 							/>
 						</div>
-					</TabsContent>
-					<TabsContent value="preview">
-						<MarkdownPreview
-							text={body}
-							label={t("ui.write.editor.preview_label")}
-							empty={t("ui.write.editor.preview_empty")}
-						/>
-					</TabsContent>
-				</Tabs>
-				<div className="flex flex-wrap items-center gap-3">
-					<Button
-						type="submit"
-						variant={primary === "save" ? "default" : "outline"}
-						data-primary={primary === "save" ? "true" : undefined}
-						disabled={busy || !dirty}
-					>
-						{busy ? t("ui.write.editor.saving") : t("ui.write.editor.save")}
-					</Button>
-					<Button
-						type="button"
-						variant={primary === "review" ? "default" : "outline"}
-						data-primary={primary === "review" ? "true" : undefined}
-						disabled={dirty}
-						onClick={review}
-					>
-						{t("ui.write.editor.review")}
-					</Button>
-					{dirty && (
-						<span className="text-sm text-text-muted">
-							{t("ui.write.editor.unsaved")}
-						</span>
-					)}
-				</div>
-			</form>
-			<FailureNote failure={failure} />
-			<div
-				role="status"
-				aria-live="polite"
-				className="text-sm"
-				data-testid="save-status"
-			>
-				{notice}
-			</div>
-			{conflict !== null && (
-				<div
-					role="alert"
-					className="flex flex-col gap-2 text-sm text-danger-text"
-				>
-					<p>{t("ui.write.editor.conflict", { revision: String(conflict) })}</p>
-					<div>
-						<Button type="button" variant="outline" onClick={() => void load()}>
-							{t("ui.write.editor.reload")}
-						</Button>
 					</div>
+					<Tabs defaultValue="edit">
+						<TabsList variant="line">
+							<TabsTrigger value="edit">
+								{t("ui.write.editor.tab_edit")}
+							</TabsTrigger>
+							<TabsTrigger value="preview">
+								{t("ui.write.editor.tab_preview")}
+							</TabsTrigger>
+						</TabsList>
+						<TabsContent value="edit">
+							<div className="flex flex-col gap-1">
+								<Label htmlFor="text-body">{t("ui.write.editor.body")}</Label>
+								<Textarea
+									id="text-body"
+									rows={22}
+									value={body}
+									className="font-mono leading-7"
+									onChange={(event) => setBody(event.target.value)}
+								/>
+							</div>
+						</TabsContent>
+						<TabsContent value="preview">
+							<MarkdownPreview
+								text={body}
+								label={t("ui.write.editor.preview_label")}
+								empty={t("ui.write.editor.preview_empty")}
+							/>
+						</TabsContent>
+					</Tabs>
+					<div className="flex flex-wrap items-center gap-3">
+						<Button
+							type="submit"
+							variant={primary === "save" ? "default" : "outline"}
+							data-primary={primary === "save" ? "true" : undefined}
+							disabled={busy || !dirty}
+						>
+							{busy ? t("ui.write.editor.saving") : t("ui.write.editor.save")}
+						</Button>
+						{dirty && (
+							<span className="text-sm text-text-muted">
+								{t("ui.write.editor.unsaved")}
+							</span>
+						)}
+					</div>
+				</form>
+				<FailureNote failure={failure} />
+				<div
+					role="status"
+					aria-live="polite"
+					className="text-sm"
+					data-testid="save-status"
+				>
+					{notice}
 				</div>
-			)}
-			{kind === "script" && (
-				<ScriptPanel client={client} projectId={projectId} body={body} />
-			)}
-			{kind === "caption" && (
-				<CaptionPanel client={client} projectId={projectId} body={body} />
-			)}
-			{kind === "post" && (
-				<PostPanel
-					client={client}
+				{conflict !== null && (
+					<div
+						role="alert"
+						className="flex flex-col gap-2 text-sm text-danger-text"
+					>
+						<p>
+							{t("ui.write.editor.conflict", { revision: String(conflict) })}
+						</p>
+						<div>
+							<Button
+								type="button"
+								variant="outline"
+								onClick={() => void load()}
+							>
+								{t("ui.write.editor.reload")}
+							</Button>
+						</div>
+					</div>
+				)}
+			</div>
+			<aside className="flex min-w-0 flex-col gap-6">
+				<Panel title={t("ui.write.reading.title")} testId="reading-card">
+					<p className="text-3xl font-semibold tabular-nums text-text">
+						{t("ui.write.meta.reading", {
+							minutes: String(loaded.item.reading_minutes),
+						})}
+					</p>
+					<p className="text-sm text-text-muted">
+						{t("ui.write.meta.words", { count: loaded.item.words })}
+					</p>
+				</Panel>
+				<FlowPath flow={flow} />
+				{kind === "script" && (
+					<ScriptPanel client={client} projectId={projectId} body={body} />
+				)}
+				{kind === "caption" && (
+					<CaptionPanel client={client} projectId={projectId} body={body} />
+				)}
+				{kind === "post" && (
+					<PostPanel
+						client={client}
+						projectId={projectId}
+						itemId={itemId}
+						revision={loaded.item.revision}
+						dirty={dirty}
+					/>
+				)}
+				{reviewed ? null : (
+					<RevisionsPanel
+						client={client}
+						projectId={projectId}
+						itemId={itemId}
+						latest={loaded.item.revision}
+						onReverted={changedElsewhere}
+					/>
+				)}
+				<EndPanel
+					kind={kind}
+					end={endOf(kind, flow)}
 					projectId={projectId}
-					itemId={itemId}
-					revision={loaded.item.revision}
 					dirty={dirty}
+					reviewed={reviewed}
+					status={ended}
+					onCopy={copy}
+					onExport={exportFile}
 				/>
-			)}
-			<RevisionsPanel
-				client={client}
-				projectId={projectId}
-				itemId={itemId}
-				latest={loaded.item.revision}
-				onReverted={changedElsewhere}
-			/>
-			<EndPanel
-				kind={kind}
-				end={endOf(kind, flow)}
-				projectId={projectId}
-				dirty={dirty}
-				reviewed={reviewed}
-				status={ended}
-				onCopy={copy}
-				onExport={exportFile}
-			/>
-			<AgentPanel
-				client={client}
-				item={loaded.item}
-				flow={flow}
-				onDone={drafted}
-			/>
+				<AgentPanel
+					client={client}
+					item={loaded.item}
+					flow={flow}
+					onDone={drafted}
+				/>
+			</aside>
 		</div>
 	);
 }

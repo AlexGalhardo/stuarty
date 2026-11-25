@@ -114,6 +114,7 @@ export default function WritePage(): ReactNode {
 		}
 	}
 
+	const [actionsSlot, setActionsSlot] = useState<HTMLElement | null>(null);
 	const filtered = project !== "" || kind !== "";
 
 	return (
@@ -123,13 +124,16 @@ export default function WritePage(): ReactNode {
 				title={t("ui.write.title")}
 				description={t("ui.write.intro")}
 				actions={
-					<PageHeaderAction
-						type="button"
-						variant={selected === null ? "default" : "outline"}
-						onClick={() => setCreating((shown) => !shown)}
-					>
-						{t("ui.write.new")}
-					</PageHeaderAction>
+					<>
+						<span ref={setActionsSlot} className="contents" />
+						<PageHeaderAction
+							type="button"
+							variant={selected === null ? "default" : "outline"}
+							onClick={() => setCreating((shown) => !shown)}
+						>
+							{t("ui.write.new")}
+						</PageHeaderAction>
+					</>
 				}
 			/>
 			<div className="flex flex-wrap items-end gap-3">
@@ -212,6 +216,7 @@ export default function WritePage(): ReactNode {
 							client={client}
 							projectId={selected.projectId}
 							itemId={selected.itemId}
+							actionsSlot={actionsSlot}
 							onChanged={() => {
 								void reload();
 								void readProjects();

@@ -10,7 +10,8 @@ import {
 	createThroughTheForm,
 	expect,
 	test,
-	testClip,
+	testClip,,
+	chooseOption,
 } from "./helpers";
 
 // ADR-0031, PRD-004 section 3, epic 38: a creator goes from an idea to a published short vertical video with
@@ -115,16 +116,16 @@ test.describe("first complete flow @chromium-only", () => {
 			await page.goto("/write");
 			await page.getByRole("button", { name: "New text" }).click();
 			const form = page.getByRole("form", { name: "New text" });
-			await form.getByLabel("Project").selectOption(projectId);
+			await chooseOption(page, form.getByLabel("Project"), /Sourdough short/);
 			await form.getByLabel("Title").fill("Script");
-			await form.getByLabel("Kind").selectOption("script");
+			await chooseOption(page, form.getByLabel("Kind"), "Script");
 			await form.getByRole("button", { name: "Create" }).click();
 			const editor = page.getByTestId("text-editor");
 			await expect(editor).toBeVisible();
 
 			const draft = page.getByTestId("draft-panel");
-			await draft.getByLabel("Connection").selectOption({ label: "Fake AI" });
-			await expect(draft.getByLabel("Model")).toHaveValue("fake-small");
+			await chooseOption(page, draft.getByLabel("Connection"), "Fake AI");
+			await expect(draft.getByLabel("Model")).toHaveText("fake-small");
 			await draft
 				.getByLabel("What to write")
 				.fill("A 10 second script about baking a first sourdough loaf");

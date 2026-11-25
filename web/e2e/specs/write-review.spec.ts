@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 import type { Page } from "@playwright/test";
-import { caller, expect, projectBody, test } from "./helpers";
+import { caller, chooseOption, expect, projectBody, test } from "./helpers";
 
 // Epic 80 (SDD-019 section 11): a creator reviews a text before keeping it. Two stored revisions are compared side
 // by side at desktop width and stacked at phone width, a revision is restored as a new revision, and a post is
@@ -60,15 +60,23 @@ test.describe("write review", () => {
 
 		// Review is the primary action of a saved, unreviewed text; Save is not.
 		await expect(
-			page.getByRole("button", { name: "Review", exact: true }),
+			page.getByRole("button", { name: "Send for review", exact: true }),
 		).toHaveAttribute("data-primary", "true");
 		await expect(
 			page.getByRole("button", { name: "Save", exact: true }),
 		).not.toHaveAttribute("data-primary", "true");
 
 		const panel = page.getByTestId("revisions-panel");
-		await panel.getByLabel("Compare revision").selectOption("1");
-		await panel.getByLabel("with revision").selectOption("3");
+		await chooseOption(
+			page,
+			panel.getByLabel("Compare revision"),
+			/^Revision 1, /,
+		);
+		await chooseOption(
+			page,
+			panel.getByLabel("with revision"),
+			/^Revision 3, /,
+		);
 		await panel.getByRole("button", { name: "Compare", exact: true }).click();
 		const diff = page.getByTestId("revision-diff");
 		await expect(diff).toContainText("Changes from revision 1 to 3");
@@ -173,7 +181,7 @@ test.describe("write review", () => {
 			page.getByRole("button", { name: "Save", exact: true }),
 		).toHaveAttribute("data-primary", "true");
 		await expect(
-			page.getByRole("button", { name: "Review", exact: true }),
+			page.getByRole("button", { name: "Send for review", exact: true }),
 		).toBeDisabled();
 	});
 
@@ -199,7 +207,9 @@ test.describe("write review", () => {
 		await expect(page.getByTestId("post-panel")).toContainText(
 			"Ready to publish",
 		);
-		await page.getByRole("button", { name: "Review", exact: true }).click();
+		await page
+			.getByRole("button", { name: "Send for review", exact: true })
+			.click();
 		await expect(page.locator("#post-heading")).toBeFocused();
 		await expect(page.getByTestId("post-slug")).toContainText(slug);
 	});

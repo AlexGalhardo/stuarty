@@ -7,6 +7,7 @@ import {
 	type APIRequestContext,
 	test as base,
 	expect,
+	type Locator,
 	type Page,
 } from "@playwright/test";
 import { cspViolations } from "../support/browsers";
@@ -675,4 +676,20 @@ export async function seedProject(
 		itemIds.push(...(await edit(clips.slice(i, i + 50))));
 	}
 	return { id, assetId, assetIds, trackIds, audioTrackIds, itemIds };
+}
+
+// chooseOption picks an option of an OptionSelect (the styled select of the design system): the trigger is named by
+// its label, the options open in a listbox. It replaces selectOption, which only works on a native select.
+export async function chooseOption(
+	page: Page,
+	trigger: Locator,
+	name: string | RegExp,
+): Promise<void> {
+	await trigger.click();
+	await page
+		.getByRole(
+			"option",
+			typeof name === "string" ? { name, exact: true } : { name },
+		)
+		.click();
 }

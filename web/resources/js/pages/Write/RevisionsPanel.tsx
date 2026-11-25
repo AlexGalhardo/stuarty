@@ -2,9 +2,9 @@ import { type ReactNode, useCallback, useEffect, useState } from "react";
 
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
 import { LoadingState } from "@/components/LoadingState";
+import { OptionSelect } from "@/components/OptionSelect";
 import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { formatDateTime } from "@/lib/format";
 import { useLocale, useT } from "@/lib/i18n";
 import { formatMoney } from "../../dashboard/approval/money";
@@ -164,14 +164,12 @@ export default function RevisionsPanel({
 					}}
 				>
 					<RevisionSelect
-						id="compare-from"
 						label={t("ui.write.revisions.compare_from")}
 						value={from}
 						onChange={setFrom}
 						revisions={revisions}
 					/>
 					<RevisionSelect
-						id="compare-to"
 						label={t("ui.write.revisions.compare_to")}
 						value={to}
 						onChange={setTo}
@@ -271,13 +269,11 @@ export default function RevisionsPanel({
 }
 
 function RevisionSelect({
-	id,
 	label,
 	value,
 	onChange,
 	revisions,
 }: {
-	id: string;
 	label: string;
 	value: string;
 	onChange: (value: string) => void;
@@ -286,22 +282,19 @@ function RevisionSelect({
 	const t = useT();
 	return (
 		<div className="flex min-w-0 max-w-full flex-col gap-1">
-			<Label htmlFor={id}>{label}</Label>
-			<select
-				id={id}
+			<span className="text-sm font-medium text-text">{label}</span>
+			<OptionSelect
+				label={label}
 				value={value}
-				onChange={(event) => onChange(event.target.value)}
-				className="h-8 max-w-full rounded-lg border border-input bg-background px-2 text-sm max-md:h-11"
-			>
-				{revisions.map((revision) => (
-					<option key={revision.revision} value={revision.revision}>
-						{t("ui.write.revisions.option", {
-							revision: String(revision.revision),
-							source: t(`ui.write.revisions.source.${revision.source}`),
-						})}
-					</option>
-				))}
-			</select>
+				onChange={onChange}
+				options={revisions.map((revision) => ({
+					value: String(revision.revision),
+					label: t("ui.write.revisions.option", {
+						revision: String(revision.revision),
+						source: t(`ui.write.revisions.source.${revision.source}`),
+					}),
+				}))}
+			/>
 		</div>
 	);
 }

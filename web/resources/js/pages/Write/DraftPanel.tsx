@@ -8,6 +8,7 @@ import {
 
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
 import { Notice } from "@/components/Notice";
+import { OptionSelect } from "@/components/OptionSelect";
 import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -174,57 +175,49 @@ export default function DraftPanel({
 				<form className="flex flex-col gap-3" onSubmit={submit}>
 					<div className="grid gap-3 sm:grid-cols-2">
 						<div className="flex min-w-0 max-w-full flex-col gap-1">
-							<Label htmlFor="draft-connection">
+							<span className="text-sm font-medium text-text">
 								{t("ui.write.draft.connection")}
-							</Label>
-							<select
-								id="draft-connection"
+							</span>
+							<OptionSelect
+								label={t("ui.write.draft.connection")}
 								value={connection}
-								onChange={(event) => setConnection(event.target.value)}
-								className="h-8 max-w-full rounded-lg border border-input bg-background px-2 text-sm"
-							>
-								{connections.map((c) => (
-									<option key={c.id} value={c.id}>
-										{c.label}
-									</option>
-								))}
-							</select>
+								onChange={setConnection}
+								options={connections.map((c) => ({
+									value: c.id,
+									label: c.label,
+								}))}
+							/>
 						</div>
 						<div className="flex min-w-0 max-w-full flex-col gap-1">
-							<Label htmlFor="draft-model">{t("ui.write.draft.model")}</Label>
-							<select
-								id="draft-model"
+							<span className="text-sm font-medium text-text">
+								{t("ui.write.draft.model")}
+							</span>
+							<OptionSelect
+								label={t("ui.write.draft.model")}
 								value={model}
 								disabled={models === null}
-								onChange={(event) => setModel(event.target.value)}
-								className="h-8 max-w-full rounded-lg border border-input bg-background px-2 text-sm"
-							>
-								{(models ?? []).map((m) => (
-									<option key={m.id} value={m.id}>
-										{m.id}
-									</option>
-								))}
-							</select>
+								onChange={setModel}
+								options={(models ?? []).map((m) => ({
+									value: m.id,
+									label: m.id,
+								}))}
+							/>
 						</div>
 					</div>
 					{item.text_kind === "caption" && (
 						<div className="flex min-w-0 max-w-full flex-col gap-1">
-							<Label htmlFor="draft-network">
+							<span className="text-sm font-medium text-text">
 								{t("ui.write.draft.network")}
-							</Label>
-							<select
-								id="draft-network"
-								value={network}
-								onChange={(event) => setNetwork(event.target.value)}
-								className="h-8 w-fit rounded-lg border border-input bg-background px-2 text-sm"
-							>
-								<option value="">{t("ui.write.draft.whole")}</option>
-								{NETWORKS.map((id) => (
-									<option key={id} value={id}>
-										{id}
-									</option>
-								))}
-							</select>
+							</span>
+							<OptionSelect
+								label={t("ui.write.draft.network")}
+								value={network === "" ? "whole" : network}
+								onChange={(next) => setNetwork(next === "whole" ? "" : next)}
+								options={[
+									{ value: "whole", label: t("ui.write.draft.whole") },
+									...NETWORKS.map((id) => ({ value: id, label: id })),
+								]}
+							/>
 						</div>
 					)}
 					<fieldset className="flex min-w-0 flex-wrap items-center gap-2">
