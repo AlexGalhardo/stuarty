@@ -17,7 +17,7 @@ Three kinds of file make up your library:
 - **Skills**: procedures an agent follows, in the open Agent Skills format. A skill is text an agent reads. Stuarty never runs a script that comes with a skill: the script is stored as an inert file and flagged.
 - **Prompts**: a reusable text with `{{variables}}`.
 
-The files are the truth: plain Markdown in the `library/` folder of your [workspace](/docs/workspace), which you can open, version and copy. A search index sits beside them and can be deleted and rebuilt from the files at any time.
+The files are the truth: Markdown in the `library/` folder of your [workspace](/docs/workspace), which you can copy. When you have an [account](/docs/account), each file is encrypted with your key, so a copy of the folder shows nothing while Stuarty is locked; a plain file you put there from outside is picked up and encrypted, and an encrypted file cannot be edited outside Stuarty. A search index sits beside them and can be deleted and rebuilt from the files at any time.
 
 ## Quick start
 
@@ -51,7 +51,7 @@ Everything that comes out of the library toward an agent is delimited as untrust
 
 ## Common mistakes
 
-- Putting a secret in a note. The library is plain files: keep keys in the vault, which is in Connections.
+- Putting a secret in a note. A note is for facts you want an agent to read: keep keys in the vault, which is in Connections.
 - Expecting a skill's script to run. It never does.
 - Editing a reviewed skill and wondering why an agent stopped seeing it: the review mark goes away with a change; read it again and mark it.
 

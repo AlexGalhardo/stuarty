@@ -53,7 +53,7 @@ The job stays `waiting_approval` while the person decides. When they approve, it
 | a job whose estimate is over a ceiling | `E_COST_CEILING`, with the ceiling and what to change; nothing is recorded |
 | an argument that is a URL, a host or a destination | not accepted: an agent works with the connections a person created |
 
-The calendar of publications is read through the CLI and the HTTP API (`publication:list`, `publication:show`); the MCP server has no tool for it.
+The calendar of publications is read and planned with the `publication` tool of MCP (`create`, `schedule`, `show`, `list`, `duplicate`, `plan`, `day` and `slot`), or with `publication:list` and `publication:show` in the CLI. `schedule` only asks for approval. The tool has no action that sends, cancels, approves or marks a day with no posts.
 
 ## Common mistakes
 
