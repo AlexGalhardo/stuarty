@@ -69,7 +69,7 @@ Guests and attendees, reminders by email or any outbound notification, two-way s
 - [x] 3. Service and adapters: the operations on HTTP, CLI and MCP with parity, and the quiet-day rule in scheduling. Verify: `go test ./service/... ./web/app/...`, the parity tests, `go test -run TestSecurity_ ./...` and `go run ./internal/tools/surfacebudget`.
 - [x] 4. The day view: create at an hour, adjust in place, notes and theme, quiet day with confirmation. Verify: `task test:web`, `bun run check:thin-client`, `bun run check:i18n` and an e2e of the day.
 - [x] 5. Recurring slots, duplicate, the mini month and go to date, the `.ics` download. Verify: unit tests and e2e on Chromium, and the `.ics` checked by a parser test.
-- [ ] 6. The user guide and the generated references. Verify: `task codegen` and, in `site/`, `bun run reference` and `bun run last-updated` with no diff.
+- [x] 6. The user guide and the generated references. Verify: `task codegen` and, in `site/`, `bun run reference` and `bun run last-updated` with no diff.
 
 ## Test strategy
 
