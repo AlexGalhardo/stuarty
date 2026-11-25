@@ -264,7 +264,7 @@ export const roadmap = {
 			title: "Screen recording",
 			text: "Screen, window, microphone and webcam. Only a person can start a capture.",
 			state: "in-progress",
-			epics: [61, 62, 63, 67, 68],
+			epics: [61, 63, 67, 68],
 		},
 		{
 			id: "recording-finish",
@@ -320,7 +320,7 @@ export const credits = "The pictures, clips and sounds in the screenshots were m
  */
 export const capturedNote = "Screenshots are captures of the Stuarty UI taken on 24 November 2026, from a demo workspace.";
 
-/** The labels of the zoom of a screenshot (components/landing/Zoomable.astro). */
+/** The labels of the zoom of a screenshot (components/landing/HomeShot.astro and ZoomDialog.astro). */
 export const zoom = {
 	enlarge: "Enlarge: ",
 	close: "Close",
