@@ -43,7 +43,7 @@ Groups 1 to 5 of the redesign (v0.57.0, v0.58.0). D depends on A.
 ## Tasks
 
 - [ ] 1. A: SDD-000, the SDDs of each domain, then core and service with tests, then the adapters. Verify: `go test ./core/... ./service/...`, `go test -timeout 40m ./web/contract/`, `go run ./internal/tools/surfacebudget`.
-- [ ] 2. B: the stages and inspectors of 25 to 30. Verify: `bun run typecheck`, `check:thin-client`, `bunx vitest run`, the editor e2e specs.
+- [x] 2. B: the stages and inspectors of 25 to 30. Verify: `bun run typecheck`, `check:thin-client`, `bunx vitest run`, the editor e2e specs.
 - [x] 3. C: palette, rail and zoom bar. Verify: the same web checks and the image e2e specs.
 - [ ] 4. D: the screens with A's data. Verify: the same web checks and the specs of those pages.
 - [ ] 5. Captures of the changed screens in both themes, compared with the frames by the designer. Verify: the designer's verdict per screen.
