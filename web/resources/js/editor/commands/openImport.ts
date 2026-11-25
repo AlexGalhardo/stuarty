@@ -1,5 +1,7 @@
-import { OPEN_IMPORT_EVENT } from "../library/importPaths";
 import type { EditorRuntime } from "../state/runtime";
+
+// Asks the library to show its import controls (Mod+I and the menu): they are folded under the button of its header.
+export const OPEN_IMPORT_EVENT = "stuarty:open-import";
 
 // Mod+I and the menu: shows the library and goes to its import control, the
 // native chooser of the desktop shell or else the path field.

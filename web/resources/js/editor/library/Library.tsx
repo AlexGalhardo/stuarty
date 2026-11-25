@@ -18,6 +18,7 @@ import {
 	subscribeDesktopBridge,
 } from "@/lib/desktopBridge";
 import { useT } from "@/lib/i18n";
+import { OPEN_IMPORT_EVENT } from "../commands/openImport";
 import { useCanEdit } from "../commands/useActions";
 import RecordDialog from "../record/RecordDialog";
 import { useStore } from "../state/createStore";
@@ -25,11 +26,7 @@ import { useDocumentState, useRuntime } from "../state/EditorContext";
 import EmptyState from "../ui/EmptyState";
 import { errorHeadline } from "../ui/errorHeadline";
 import AssetCard, { type AssetDragStart } from "./AssetCard";
-import {
-	createImportQueue,
-	OPEN_IMPORT_EVENT,
-	parsePastedPaths,
-} from "./importPaths";
+import { createImportQueue, parsePastedPaths } from "./importPaths";
 import { PanelTitle } from "./PanelFrame";
 import TrashGroup from "./TrashGroup";
 
