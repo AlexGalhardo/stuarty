@@ -1306,6 +1306,23 @@
         },
         "type": "object"
       },
+      "ClipZoom": {
+        "properties": {
+          "end": {
+            "$ref": "#/components/schemas/TimeValue"
+          },
+          "item_id": {
+            "type": "string"
+          },
+          "n": {
+            "type": "integer"
+          },
+          "start": {
+            "$ref": "#/components/schemas/TimeValue"
+          }
+        },
+        "type": "object"
+      },
       "CodecAvailability": {
         "properties": {
           "available": {
@@ -5316,6 +5333,12 @@
                 "type": "null"
               }
             ]
+          },
+          "zooms": {
+            "items": {
+              "$ref": "#/components/schemas/ClipZoom"
+            },
+            "type": "array"
           }
         },
         "type": "object"
@@ -13317,6 +13340,26 @@
             "description": "Absolute start of the blur, inside the clip. Default the start of the clip.",
             "type": "string",
             "x-vv-kind": "time"
+          },
+          "strength": {
+            "description": "A named blur strength instead of a radius; strong is the default.",
+            "enum": [
+              "strong",
+              "medium"
+            ],
+            "type": "string",
+            "x-vv-blur-strengths": [
+              {
+                "id": "strong",
+                "name": "Strong",
+                "share": 0.04
+              },
+              {
+                "id": "medium",
+                "name": "Medium",
+                "share": 0.025
+              }
+            ]
           },
           "track_id": {
             "description": "A visual track above the clip. Default a Blur track above it, made if there is none.",
