@@ -558,9 +558,9 @@ test.describe("publishing calendar @chromium-only", () => {
 		).toBeVisible();
 		await expect(page.getByTestId("publish-mode-week")).toHaveText("Semana");
 		await page.getByTestId("publish-mode-list").click();
-		await expect(
-			page.getByTestId("publish-filter-state").locator("option").first(),
-		).toHaveText("Todos");
+		await expect(page.getByRole("combobox", { name: "Estado" })).toContainText(
+			"Todos",
+		);
 	});
 
 	// Epic 21 (SDD-012 section 21.3 item 7): in the desktop shell, the first post a person schedules brings the

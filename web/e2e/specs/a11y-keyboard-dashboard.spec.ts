@@ -156,10 +156,13 @@ test.describe("a11y-keyboard-dashboard", () => {
 				),
 			)
 			.toBe(true);
+		// The result says what was decided in words (the request has no publication here, so the item is generic).
 		await expect(page.getByTestId("approval-result")).toContainText(
-			`Keyboard post A ${tag}`,
+			"Approved: Publish this item",
 		);
 
+		// The first press of Reject opens the reason, the second sends it.
+		await other.getByRole("button", { name: /^Reject/ }).press("Enter");
 		await other.getByRole("button", { name: /^Reject/ }).press("Enter");
 		await expect(other).toHaveCount(0);
 		expect(await pointerEvents(page)).toBe(0);

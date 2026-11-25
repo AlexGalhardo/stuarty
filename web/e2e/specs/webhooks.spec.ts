@@ -103,11 +103,15 @@ test.describe("webhooks", () => {
 			expect(secret).toMatch(/^whsec_[A-Za-z0-9_-]{43}$/);
 
 			const row = page.locator("[data-webhook-id]").filter({ hasText: name });
-			await expect(row).toContainText("An export is ready, A job failed");
+			await expect(row).toContainText("An export is ready");
+			await expect(row).toContainText("A job failed");
 			await expect(row).toContainText("No delivery yet");
 
 			await row.getByRole("button", { name: "Send test" }).click();
-			await expect(row).toContainText("Last delivery: Delivered");
+			// The list row (the master side) says the last delivery; the detail side lists the deliveries.
+			await expect(
+				page.locator("[data-slot=list-row]").filter({ hasText: name }),
+			).toContainText("Last delivery: Delivered");
 			expect(target.got).toHaveLength(1);
 			expect(target.got[0].event).toBe("webhook.test");
 			expect(verifies(secret, target.got[0])).toBe(true);
@@ -208,8 +212,14 @@ test.describe("webhooks", () => {
 		await expect(
 			page.getByRole("heading", { name: "Webhooks de saída", level: 1 }),
 		).toBeVisible();
+		await expect(page.getByTestId("webhook-new")).toHaveText(
+			"Adicionar webhook",
+		);
+		await page.getByTestId("webhook-new").click();
 		await expect(
-			page.getByRole("button", { name: "Adicionar webhook" }),
+			page.locator("#webhooks-new").getByRole("button", {
+				name: "Adicionar webhook",
+			}),
 		).toBeDisabled();
 	});
 });
