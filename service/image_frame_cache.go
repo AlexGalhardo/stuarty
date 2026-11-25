@@ -86,15 +86,19 @@ func (c *imageFrameCache) reset() {
 
 // putIn keeps a frame drawn in the given epoch, unless the cache was reset since.
 func (c *imageFrameCache) putIn(epoch uint64, k frameKey, body []byte) {
-	c.mu.Lock()
-	stale := epoch != c.epoch
-	c.mu.Unlock()
-
-	if stale {
+	if int64(len(body)) > c.limit {
 		return
 	}
 
-	c.put(k, body)
+	// The check and the insert hold the lock together, so a reset in between cannot let a stale frame in.
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if epoch != c.epoch {
+		return
+	}
+
+	c.putLocked(k, body)
 }
 
 // put keeps a frame, then drops the least recently used ones until the cache is within its limit.
@@ -106,6 +110,13 @@ func (c *imageFrameCache) put(k frameKey, body []byte) {
 
 	c.mu.Lock()
 	defer c.mu.Unlock()
+
+	c.putLocked(k, body)
+}
+
+// putLocked inserts a frame and evicts the least recently used ones; the caller holds c.mu.
+func (c *imageFrameCache) putLocked(k frameKey, body []byte) {
+	size := int64(len(body))
 
 	if el, ok := c.entries[k]; ok {
 		old, _ := el.Value.(*frameEntry)
