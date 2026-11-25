@@ -16,7 +16,7 @@ export function ListRow({
 	className,
 }: {
 	title: ReactNode;
-	description?: string;
+	description?: ReactNode;
 	meta?: string;
 	leading?: ReactNode;
 	trailing?: ReactNode;

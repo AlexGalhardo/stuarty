@@ -148,3 +148,13 @@ export function groupEntries(
 		},
 	].filter((g) => g.entries.length > 0);
 }
+
+// A skill is loaded when the session read it, blocked when it is not reviewed or the service warns about it, and
+// available otherwise: the three facts are the service's.
+export function skillState(
+	entry: LibraryEntry,
+): "loaded" | "blocked" | "available" {
+	if (entry.loaded === true) return "loaded";
+	if (!entry.reviewed || (entry.warning ?? "") !== "") return "blocked";
+	return "available";
+}

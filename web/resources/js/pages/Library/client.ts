@@ -15,7 +15,13 @@ export interface LibraryEntry {
 	origin?: string;
 	reviewed: boolean;
 	kept: boolean;
+	// Skills: the agent session of the request has read it (SDD-018 section 7).
+	loaded?: boolean;
 	actor?: string;
+	// How a screen names the agent that wrote the entry; absent for a person.
+	actor_name?: string;
+	// The name of the project a memory note is scoped to. Untrusted text: draw it as text.
+	project_name?: string;
 	tags?: string[];
 	state: "ok" | "invalid";
 	error?: string;
@@ -153,7 +159,8 @@ const FOLDER: { [kind in LibraryKind]: string } = {
 };
 
 export interface LibraryClient {
-	list(kind: LibraryKind): Promise<LibraryListResult>;
+	// `sessionId` is the agent session whose read skills the list marks `loaded`.
+	list(kind: LibraryKind, sessionId?: string): Promise<LibraryListResult>;
 	search(kind: LibraryKind, query: string): Promise<LibrarySearchResult>;
 	getMemory(name: string): Promise<MemoryGetResult>;
 	writeMemory(body: MemoryWriteBody): Promise<{ entry: LibraryEntry }>;
@@ -207,8 +214,15 @@ export function libraryClient(transport: Transport): LibraryClient {
 	return {
 		// A person sees everything: the notes nobody kept and the skills nobody reviewed are listed
 		// with their state (an agent is not offered them).
-		list: (kind) =>
-			call("GET", `/library/${FOLDER[kind]}?include_unreviewed=true`),
+		list: (kind, sessionId) =>
+			call(
+				"GET",
+				`/library/${FOLDER[kind]}?include_unreviewed=true${
+					sessionId === undefined
+						? ""
+						: `&session_id=${encodeURIComponent(sessionId)}`
+				}`,
+			),
 		search: (kind, query) =>
 			call(
 				"GET",

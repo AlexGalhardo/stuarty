@@ -4,7 +4,7 @@ import { describe, expect, test } from "vitest";
 import { I18nProvider } from "@/lib/i18n";
 import en from "../../../lang/en.json";
 import type { LibraryEntry } from "./client";
-import { EntryBadges, Findings, groupEntries } from "./parts";
+import { EntryBadges, Findings, groupEntries, skillState } from "./parts";
 
 function flat(
 	tree: Record<string, unknown>,
@@ -124,5 +124,33 @@ describe("Findings draws text from a file as text", () => {
 		expect(html).not.toContain("<img");
 		expect(html).not.toContain("<script");
 		expect(html).toContain("&lt;img");
+	});
+});
+
+describe("skillState", () => {
+	const skill = (extra: Partial<LibraryEntry>): LibraryEntry => ({
+		kind: "skill",
+		name: "captions",
+		description: "",
+		reviewed: true,
+		kept: false,
+		state: "ok",
+		updated_at: "2026-11-25T10:00:00Z",
+		...extra,
+	});
+
+	test("a skill the session read is loaded, even when a warning follows it", () => {
+		expect(skillState(skill({ loaded: true, warning: "x" }))).toBe("loaded");
+	});
+
+	test("a skill not reviewed, or with a warning, is blocked", () => {
+		expect(skillState(skill({ reviewed: false }))).toBe("blocked");
+		expect(skillState(skill({ warning: "Changed since you read it." }))).toBe(
+			"blocked",
+		);
+	});
+
+	test("a reviewed skill nobody read is available", () => {
+		expect(skillState(skill({}))).toBe("available");
 	});
 });

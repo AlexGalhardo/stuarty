@@ -54,6 +54,37 @@ test.describe("library", () => {
 		).toContainText("Write an intro about cats in a warm tone.");
 	});
 
+	// Epic 99 task 4 (SDD-018 section 7): a skill the session read is Loaded, one that is not reviewed is Blocked and
+	// the others are Available; the page asks the service with the session it shows.
+	test("the skill rows say Loaded, Blocked or Available as the service marks them", async ({
+		page,
+	}) => {
+		await page.route("**/api/v1/library/skills?*", async (route) => {
+			const response = await route.fetch();
+			const body = (await response.json()) as {
+				entries: { loaded?: boolean; reviewed: boolean; state: string }[];
+			};
+			const ok = body.entries.filter((e) => e.state === "ok");
+			const reviewed = ok.filter((e) => e.reviewed);
+			if (reviewed[0] !== undefined) reviewed[0].loaded = true;
+			await route.fulfill({ response, json: body });
+		});
+		await page.goto("/skills");
+		const states = page.getByTestId("skill-state");
+		await expect(states.first()).toBeVisible();
+		await expect(
+			page.locator('[data-testid="skill-state"][data-state="loaded"]'),
+		).toHaveCount(1);
+		await expect(
+			page.locator('[data-testid="skill-state"][data-state="loaded"]'),
+		).toHaveText("Loaded");
+		await expect(
+			page
+				.locator('[data-testid="skill-state"][data-state="available"]')
+				.first(),
+		).toHaveText("Available");
+	});
+
 	test("an imported skill stays unreviewed until a privileged session marks it", async ({
 		page,
 	}) => {

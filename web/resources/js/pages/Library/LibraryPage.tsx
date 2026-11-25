@@ -40,6 +40,7 @@ import { useLocale, useT } from "@/lib/i18n";
 import { PersonOnlyNote, useSession } from "@/lib/session";
 import { confirmDiscard } from "@/lib/unsaved";
 import { HttpTransport } from "../../editor/api/http";
+import { useOptionalShell } from "../../shell/ShellContext";
 import {
 	type LibraryClient,
 	type LibraryEntry,
@@ -49,7 +50,7 @@ import {
 } from "./client";
 import MemoryPane from "./MemoryPane";
 import PromptPane from "./PromptPane";
-import { groupEntries } from "./parts";
+import { groupEntries, skillState } from "./parts";
 import SkillPane from "./SkillPane";
 
 const EMPTY_ICON = {
@@ -81,7 +82,7 @@ type Loaded =
 // What a row says under its name: the short words of what the service listed, never the long text of the
 // file (that is in the detail). A skill says where it came from and whether it was read; a note, whether it
 // is kept and how long ago it was written.
-function useRowText(entry: LibraryEntry, hit: boolean): string {
+function useRowText(entry: LibraryEntry, hit: boolean): ReactNode {
 	const t = useT();
 	const locale = useLocale();
 	if (hit) return String((entry as LibraryHit).snippet);
@@ -97,9 +98,31 @@ function useRowText(entry: LibraryEntry, hit: boolean): string {
 		});
 	}
 	if (entry.kind === "memory") {
-		return t(entry.kept ? "ui.library.row.kept" : "ui.library.row.pending", {
-			ago: formatAgo(entry.updated_at, locale),
-		});
+		const when = t(
+			entry.kept ? "ui.library.row.kept" : "ui.library.row.pending",
+			{ ago: formatAgo(entry.updated_at, locale) },
+		);
+		const by =
+			entry.actor_name === undefined || entry.actor_name === ""
+				? ""
+				: ` · ${t("ui.library.row.by", { actor: entry.actor_name })}`;
+		return (
+			<>
+				{when}
+				{by}
+				{entry.project_name === undefined ||
+				entry.project_name === "" ? null : (
+					<>
+						{" · "}
+						{t("ui.library.row.project")}
+						{": "}
+						<span data-testid="memory-project">
+							<UntrustedText>{entry.project_name}</UntrustedText>
+						</span>
+					</>
+				)}
+			</>
+		);
 	}
 	return entry.description;
 }
@@ -128,10 +151,15 @@ export default function LibraryPage({
 	const [notice, setNotice] = useState<string | null>(null);
 	const [tab, setTab] = useState("all");
 	const [busyRow, setBusyRow] = useState<string | null>(null);
+	// The skills the agent of the open session has read are marked Loaded: the page asks with that session.
+	const sessionId = useOptionalShell()?.chat.session?.id;
 
 	const reload = useCallback(async (): Promise<void> => {
 		try {
-			const result = await client.list(kind);
+			const result = await client.list(
+				kind,
+				kind === "skill" ? sessionId : undefined,
+			);
 			setLoaded({ state: "ready", entries: result.entries });
 		} catch (error) {
 			setLoaded({
@@ -139,7 +167,7 @@ export default function LibraryPage({
 				code: (error as { code?: string }).code ?? "E_GENERIC",
 			});
 		}
-	}, [client, kind]);
+	}, [client, kind, sessionId]);
 
 	useEffect(() => {
 		void reload();
@@ -545,12 +573,12 @@ function EntryRow({
 						</StatusBadge>
 					)}
 					{entry.kind === "skill" && entry.state === "ok" && (
-						<span className="text-sm text-text-muted">
-							{t(
-								entry.reviewed
-									? "ui.library.state.available"
-									: "ui.library.state.blocked",
-							)}
+						<span
+							className="text-sm text-text-muted"
+							data-testid="skill-state"
+							data-state={skillState(entry)}
+						>
+							{t(`ui.library.state.${skillState(entry)}`)}
 						</span>
 					)}
 					{memory && !waiting && (
