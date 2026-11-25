@@ -673,3 +673,19 @@ The operations of the registry of domain `image` (`core/command` registry built 
 | `Cursor <item id>` | item name | the shape items of the cursor of that clip, one per segment of at most 90 keyframes |
 | `Click <item id> <n>` | item name | the shape item of the nth click of that clip, from 1 |
 | `zooms`, `dropped`, `keyframes`, `segments`, `highlights` | effective member | what the three commands report in `effective` (SDD-002 C.93 to C.95) |
+
+## 19. Recording layouts, backgrounds and the teleprompter (epic 66, SDD-025 section 20, SDD-002 C.96 and C.97)
+
+| Name | Kind | Meaning |
+| --- | --- | --- |
+| `recording.apply_layout`, `recording.set_background` | command | the two commands of the epic, both scope `edit`, on ordinary clips; no service operation, tool or route is added |
+| `screen_only`, `pip`, `split`, `camera_focus` | layout id | the four layouts of `recording.apply_layout`, in this order (`recording.Layouts`) |
+| `top_left`, `top_right`, `bottom_left`, `bottom_right` | corner id | the `corner` of `pip` and `camera_focus` |
+| `circle`, `rect` | camera shape id | the `camera_shape` of `pip` |
+| `color`, `image`, `none` | background kind id | the `kind` of `recording.set_background` |
+| `16:9`, `1:1`, `4:5`, `9:16` | format id | the four formats a layout is made for; a frame is taken as its nearest one |
+| `Background` | track name | the visual track at the bottom of the stack that holds the background |
+| `Background <item id>` | item name | the item of the background of that screen clip |
+| `layout`, `format`, `screen`, `camera`, `kind`, `items`, `track_id` | effective member | what the two commands report in `effective` |
+| `openTeleprompter`, `closeTeleprompter` | bridge operation | the two requests of `window.vukemDesktop` that open and close the teleprompter window (SDD-025 section 20.3) |
+| `stuarty.teleprompter` | browser storage key | the speed, size and mirror of the teleprompter, a preference of the UI |
