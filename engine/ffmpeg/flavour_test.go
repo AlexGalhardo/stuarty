@@ -65,7 +65,7 @@ func ownBuildHasNoGPLFlags(t *testing.T) {
 	}
 
 	for _, bad := range []string{"--enable-gpl", "--enable-nonfree", "--enable-libopenh264"} {
-		out := "ffmpeg version n9.0.2-vukem1 Copyright\nconfiguration: --enable-version3 " + bad + " --extra-version=vukem1\n"
+		out := "ffmpeg version n9.0.2-stuarty3 Copyright\nconfiguration: --enable-version3 " + bad + " --extra-version=stuarty3\n"
 		tampered, _ := ParseVersion("ffmpeg", out)
 		if p := tampered.Flavour().Problems(); !slices.Equal(p, []string{bad}) {
 			t.Errorf("%s: problems = %v", bad, p)

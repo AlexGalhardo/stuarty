@@ -26,7 +26,7 @@ func parsedBuild(t *testing.T, configuration string) VersionInfo {
 // or the BtbN one) whose configure line has a GPL, nonfree or compiled-in OpenH264 flag is reported with
 // that flag, whatever the position, and the clean lines report nothing. A user's FFmpeg is not judged.
 func TestSecurity_T27_OwnBuildConfigureLineRefused(t *testing.T) {
-	const own = "--extra-version=vukem1"
+	const own = "--extra-version=stuarty3"
 	cases := []struct {
 		name string
 		line string
@@ -74,7 +74,7 @@ func ownWithFake(t *testing.T, build string) string {
 }
 
 // TestSecurity_T26_OpenH264DirOnlyForTheOwnBuild: a build that is not the own one never receives
-// STUARTY_OPENH264_DIR, not even from the environment of the process, and the own build gets it only
+// STUARTY_OPENH264_DIR or VUKEM_VIDEO_OPENH264_DIR, not even from the environment of the process, and the own build gets it only
 // from a library that verified.
 func TestSecurity_T26_OpenH264DirOnlyForTheOwnBuild(t *testing.T) {
 	ctx := context.Background()
@@ -87,6 +87,7 @@ func TestSecurity_T26_OpenH264DirOnlyForTheOwnBuild(t *testing.T) {
 	}
 	ambient := t.TempDir()
 	t.Setenv(EnvOpenH264Dir, ambient)
+	t.Setenv(EnvOpenH264DirLegacy, ambient)
 
 	for _, build := range []string{"btbn"} { // the BtbN build has OpenH264 inside
 		bin := ownWithFake(t, build)

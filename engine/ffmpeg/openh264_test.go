@@ -135,8 +135,9 @@ func TestDiscoverOwnBuildOpenH264(t *testing.T) {
 	if !in.OpenH264.Installed {
 		t.Fatalf("after: %+v", in.OpenH264)
 	}
-	if out := runVersion(t, in); !strings.Contains(out, "openh264dir: "+in.OpenH264.Dir) {
-		t.Errorf("the tool did not see the library directory: %s", out)
+	if out := runVersion(t, in); !strings.Contains(out, "openh264dir: "+in.OpenH264.Dir) ||
+		!strings.Contains(out, "openh264dir-legacy: "+in.OpenH264.Dir) {
+		t.Errorf("the tool did not see the library directory under both names (VV-231): %s", out)
 	}
 
 	// Another FFmpeg never gets the variable or a library state.

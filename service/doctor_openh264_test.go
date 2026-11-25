@@ -12,8 +12,12 @@ import (
 )
 
 func ownBuild(flags ...string) *ffmpeg.Installation {
+	return ownBuildMarked("stuarty3", flags...)
+}
+
+func ownBuildMarked(marker string, flags ...string) *ffmpeg.Installation {
 	return &ffmpeg.Installation{Info: ffmpeg.VersionInfo{
-		Version: "9.0.2", Flags: append([]string{"--extra-version=vukem1"}, flags...),
+		Version: "9.0.2", Flags: append([]string{"--extra-version=" + marker}, flags...),
 		License: ffmpeg.License{Name: "lgpl"},
 	}}
 }
@@ -22,8 +26,13 @@ func ownBuild(flags ...string) *ffmpeg.Installation {
 // carry, and is not ok when it has one.
 func TestLicenseCheckNamesTheFlavourAndTheProblems(t *testing.T) {
 	clean := licenseCheck(ownBuild(), false)
-	if !clean.OK || !strings.Contains(clean.Detail, "flavour vukem") || strings.Contains(clean.Detail, "problems") {
+	if !clean.OK || !strings.Contains(clean.Detail, "flavour stuarty") || strings.Contains(clean.Detail, "problems") {
 		t.Errorf("clean own build = %+v", clean)
+	}
+
+	// A build installed before the rename still says vukem<N> and is still the own build (VV-231).
+	if c := licenseCheck(ownBuildMarked("vukem2"), false); !c.OK || !strings.Contains(c.Detail, "flavour stuarty") {
+		t.Errorf("own build with the former marker = %+v", c)
 	}
 
 	bad := licenseCheck(ownBuild("--enable-libopenh264"), false)
