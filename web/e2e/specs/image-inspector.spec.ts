@@ -7,6 +7,7 @@ import {
 	imageState,
 	layerByName,
 	newImage,
+	openMoreTools,
 	seedPhoto,
 	test,
 } from "./image-support";
@@ -295,6 +296,7 @@ test.describe("image inspector", () => {
 		await expect(page.getByTestId("image-text-fields")).toBeVisible();
 		await page.getByTestId("image-add-rect").click();
 		await expect(page.getByTestId("image-shape-fields")).toBeVisible();
+		await openMoreTools(page);
 		await page.getByTestId("image-add-ellipse").click();
 		await page.getByTestId("image-add-fill").click();
 		await page.getByTestId("image-add-image").click();

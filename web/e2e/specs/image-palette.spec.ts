@@ -1,4 +1,10 @@
-import { expect, imageState, newImage, test } from "./image-support";
+import {
+	expect,
+	imageState,
+	newImage,
+	openMoreTools,
+	test,
+} from "./image-support";
 
 // Epic 99 group C: the command palette (Ctrl K) lists the operations the editor offers and runs the chosen one
 // through the same call as its button.
@@ -56,6 +62,7 @@ test.describe("image editor command palette", () => {
 		const { id } = await newImage(request, { name: "Palette over dialog" });
 		await page.goto(`/edit-image/${id}`);
 		await expect(page.getByTestId("image-frame")).toBeVisible();
+		await openMoreTools(page);
 		await page.getByTestId("image-import-open").click();
 		const importing = page.getByTestId("image-import-dialog");
 		await expect(importing).toBeVisible();

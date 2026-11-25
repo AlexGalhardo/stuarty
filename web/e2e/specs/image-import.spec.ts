@@ -1,5 +1,12 @@
 import { caller } from "./helpers";
-import { expect, imageState, newImage, test, testPhoto } from "./image-support";
+import {
+	expect,
+	imageState,
+	newImage,
+	openMoreTools,
+	test,
+	testPhoto,
+} from "./image-support";
 
 // Epic 48 (SDD-021 section 10): a file of the computer becomes an image document, or one more layer of an open
 // one, from the screen. The pictures are real files made by FFmpeg and read by the real ingest.
@@ -66,6 +73,7 @@ test.describe("image import", () => {
 		const { id, call } = await newImage(request, { name: "Put a file" });
 		await page.goto(`/edit-image/${id}`);
 		await expect(page.getByTestId("image-frame")).toBeVisible();
+		await openMoreTools(page);
 		await page.getByTestId("image-import-open").click();
 		const dialog = page.getByTestId("image-import-dialog");
 		await dialog.getByTestId("image-import-file").setInputFiles(testPhoto(2));

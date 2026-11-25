@@ -1,9 +1,11 @@
 import { randomBytes } from "node:crypto";
+import { writeFile } from "node:fs/promises";
 import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
 import { crc32, deflateSync } from "node:zlib";
 import type { Page } from "@playwright/test";
 import { ensureAccount, signInWithPassword } from "../support/account";
+import { mainStatePath } from "../support/accountTargets";
 import { caller, home, makeProject, validName } from "./helpers";
 import {
 	editImage,
@@ -130,9 +132,18 @@ async function fakeProvider(model: string): Promise<FakeProvider> {
 }
 
 // A person decides, and a person is a session opened with the password (ADR-0052, SDD-007 section 3.9 item 5; SDD-007 section 3.4).
+// A sign-in wipes every session of the server and holds the Service closed while it unlocks, so the sessions the
+// global setup opened for the other specs die with it. The spec therefore writes the session it opened into the
+// state file of the suite: a spec that starts after this one begins on a live session instead of on the sign-in
+// page. (A spec that is already running when this one signs in still meets one E_LOCKED; the password sign-in of a
+// person is the only way to get the approval privileges, so the clean fix is a server of its own for this spec.)
 async function signInAsPerson(page: Page): Promise<void> {
 	await ensureAccount(page.request, home);
 	await signInWithPassword(page.request);
+	await writeFile(
+		mainStatePath,
+		JSON.stringify(await page.request.storageState()),
+	);
 	await page.goto("/");
 }
 
