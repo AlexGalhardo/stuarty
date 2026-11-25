@@ -60,6 +60,7 @@ func TestEditorBootstrapCarriesTheSessionAndTheSceneBarCatalogue(t *testing.T) {
 	for _, key := range []string{
 		"ui.shell.scene.allow", "ui.shell.scene.deny", "ui.shell.scene.label",
 		"ui.session.person_only.local", "ui.editor.panels.handoff",
+		"ui.shell.chat", "ui.shell.notify.bell",
 	} {
 		if s, ok := browser.Messages[key].(string); !ok || s == "" {
 			t.Errorf("the catalogue of the editor lacks %q", key)
