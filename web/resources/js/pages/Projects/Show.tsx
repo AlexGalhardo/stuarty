@@ -1,5 +1,5 @@
 import { Head, Link, router, usePage } from "@inertiajs/react";
-import { ArrowDown, ArrowUp } from "lucide-react";
+import { ArrowDown, ArrowRight, ArrowUp } from "lucide-react";
 import { type FormEvent, type ReactNode, useState } from "react";
 
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
@@ -29,7 +29,9 @@ import type {
 	ProjectGoal,
 	ProjectItem,
 } from "../../editor/api/types";
+import { continueTarget } from "../../workflow/continueTarget";
 import type { ProjectKind, Workflow } from "../../workflow/types";
+import AddMedia from "./AddMedia";
 import { Briefing } from "./Briefing";
 import ProjectContextForm from "./ProjectContextForm";
 import WorkflowSection from "./WorkflowSection";
@@ -477,6 +479,12 @@ export default function ProjectShow() {
 		.filter((i) => i.state === "active" && i.kind !== "brief")
 		.sort((a, b) => a.position - b.position);
 	const trashed = items.filter((i) => i.state === "trashed");
+	const current = workflow.steps.find((s) => s.id === workflow.current);
+	const textItem = active.find((i) => i.kind === "text");
+	const target =
+		current === undefined
+			? null
+			: continueTarget(current.id, project.id, textItem?.id);
 
 	const changed = (): void => {
 		setFailure(null);
@@ -502,7 +510,7 @@ export default function ProjectShow() {
 	return (
 		<>
 			<Head title={project.name} />
-			<div className="mx-auto flex max-w-4xl flex-col gap-8">
+			<div className="mx-auto flex max-w-6xl flex-col gap-8">
 				<div className="flex flex-col gap-2">
 					<Link
 						href="/projects"
@@ -510,20 +518,45 @@ export default function ProjectShow() {
 					>
 						{t("ui.error.back")}
 					</Link>
-					<div className="flex flex-wrap items-center gap-3">
-						<h1 className="min-w-0 text-3xl font-semibold text-text">
-							<UntrustedText>{project.name}</UntrustedText>
-						</h1>
-						<StatusBadge status="neutral">
-							{t(`ui.projects.kind.${project.kind}`)}
-						</StatusBadge>
+					<div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
+						<div className="min-w-0 flex-1 basis-64">
+							<div className="flex flex-wrap items-center gap-3">
+								<h1 className="min-w-0 text-3xl font-semibold text-text">
+									<UntrustedText>{project.name}</UntrustedText>
+								</h1>
+								<StatusBadge status="neutral">
+									{t(`ui.projects.kind.${project.kind}`)}
+								</StatusBadge>
+							</div>
+							<p className="mt-1 text-base text-text-muted">
+								{t(`ui.workflow.lead.${project.kind}`)}
+							</p>
+						</div>
+						<div className="flex flex-wrap items-center gap-2">
+							<AddMedia
+								projectId={project.id}
+								projectName={project.name}
+								onAdded={changed}
+							/>
+							{target === null ? null : (
+								<Button asChild size="lg" data-testid="flow-continue">
+									<Link href={target}>
+										<ArrowRight aria-hidden="true" />
+										{t(
+											target.startsWith("/write")
+												? "ui.workflow.open_text"
+												: "ui.workflow.go_current",
+										)}
+									</Link>
+								</Button>
+							)}
+						</div>
 					</div>
 				</div>
 				<FailureNote failure={failure} />
 
 				<WorkflowSection
 					projectId={project.id}
-					projectName={project.name}
 					workflow={workflow}
 					onChanged={changed}
 				/>

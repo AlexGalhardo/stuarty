@@ -126,9 +126,22 @@ export function CalendarView({
 					? ""
 					: t("ui.publish.moving", { time: moving.local.replace("T", " ") })}
 			</div>
+			{view === "month" && (
+				<div
+					aria-hidden="true"
+					className="hidden grid-cols-7 rounded-t-lg border border-b-0 bg-surface-sunken px-2 py-2 text-sm font-medium text-text-muted sm:grid"
+				>
+					{days.slice(0, 7).map((day) => (
+						<span key={day.key}>
+							{short.format(new Date(`${day.key}T00:00:00Z`))}
+						</span>
+					))}
+				</div>
+			)}
 			<ol
 				className={cn(
 					"grid grid-cols-1 gap-px overflow-hidden rounded-lg border bg-border sm:grid-cols-7",
+					view === "month" && "sm:rounded-t-none",
 				)}
 			>
 				{days.map((day) => {
@@ -142,6 +155,7 @@ export function CalendarView({
 							className={cn(
 								"min-h-24 bg-background p-2",
 								!day.inMonth && "bg-muted/40 text-muted-foreground",
+								day.key === now && "bg-accent-soft",
 								view === "week" && "min-h-64",
 							)}
 							onDragOver={(event) => event.preventDefault()}

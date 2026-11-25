@@ -1,15 +1,19 @@
 import { Link } from "@inertiajs/react";
+import { Check, Lock, X } from "lucide-react";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 
+import { StatusBadge } from "@/components/StatusBadge";
 import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/cn";
 import { formatDateTime } from "@/lib/format";
 import { useLocale, useT } from "@/lib/i18n";
 import { PersonOnlyNote, useSession } from "@/lib/session";
 import type { ApprovalRequest, InboxUndo } from "../../editor/api/types";
 import { TargetStateBadge } from "../../pages/Publish/TargetStateBadge";
+import { kindIcon } from "./kindIcon";
 import { formatMoney } from "./money";
 import type { ApprovalContext } from "./useApprovalContext";
 
@@ -20,6 +24,34 @@ const UNDO_KEY: Record<InboxUndo, string> = {
 	cannot: "ui.approvals.undo_no",
 	not_verified: "ui.approvals.undo_not_verified",
 };
+
+// One fact of a request: the label above its value, as the final design sets them.
+function Fact({
+	label,
+	testId,
+	mono = false,
+	children,
+}: {
+	label: string;
+	testId?: string;
+	mono?: boolean;
+	children: ReactNode;
+}): ReactNode {
+	return (
+		<div className="min-w-0">
+			<dt className="text-xs text-text-subtle">{label}</dt>
+			<dd
+				className={cn(
+					"break-words font-medium text-text",
+					mono && "font-mono text-[13px]",
+				)}
+				data-testid={testId}
+			>
+				{children}
+			</dd>
+		</div>
+	);
+}
 
 const NO_CONTEXT: ApprovalContext = {};
 
@@ -54,95 +86,104 @@ export function ApprovalItem({
 		) : (
 			<UntrustedText>{s}</UntrustedText>
 		);
+	const Icon = kindIcon(request.kind);
 	return (
 		<li
-			className="flex flex-col gap-3 p-4"
+			className="flex flex-col gap-4 rounded-lg border border-warning bg-surface p-4"
 			data-approval-id={request.id}
 			data-testid="approval-row"
 		>
-			<div className="min-w-0">
-				<p className="text-xs text-muted-foreground">
-					{t("ui.approvals.what")}
-				</p>
-				<p className="break-words font-medium" data-testid="approval-summary">
-					{text(request.summary)}
-				</p>
-				{post !== undefined && (
-					<div
-						className="mt-2 rounded-lg border bg-muted/40 p-3 text-sm"
-						data-testid="approval-post"
+			<div className="flex items-start gap-3">
+				<span
+					aria-hidden="true"
+					className="flex size-10 shrink-0 items-center justify-center rounded-md bg-accent-soft text-accent-text"
+				>
+					<Icon className="size-5" />
+				</span>
+				<div className="min-w-0 flex-1">
+					<p className="sr-only">{t("ui.approvals.what")}</p>
+					<p
+						className="break-words text-base font-semibold text-text"
+						data-testid="approval-summary"
 					>
-						<p className="font-medium break-words">
-							{text(publication?.title)}
-						</p>
-						<p
-							className="mt-1 line-clamp-3 whitespace-pre-wrap break-words text-muted-foreground"
-							data-testid="approval-excerpt"
-						>
-							{text(post.text.slice(0, 400))}
-						</p>
-						<p className="mt-1 text-xs text-muted-foreground">
-							<span data-testid="approval-words">
-								{t("ui.approvals.words", { count: post.words })}
-							</span>
-							{" · "}
-							{t("ui.approvals.address")}{" "}
-							<span data-testid="approval-address">{text(post.slug)}</span>
-						</p>
-					</div>
-				)}
-				<dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs text-muted-foreground">
-					<dt>{t("ui.approvals.item")}</dt>
-					<dd className="break-words" data-testid="approval-item">
-						{text(publication?.title)}
-					</dd>
-					<dt>{t("ui.approvals.destination")}</dt>
-					<dd className="break-words" data-testid="approval-destination">
-						{text(destination ?? undefined)}
-					</dd>
-					<dt>{t("ui.approvals.cost")}</dt>
-					<dd data-testid="approval-cost">
-						{free
-							? t("ui.approvals.no_cost")
-							: formatMoney(request.estimate, locale)}
-					</dd>
-					<dt>{t("ui.approvals.undo")}</dt>
-					<dd data-testid="approval-undo">
-						{row === undefined
-							? notReported
-							: t(UNDO_KEY[row.undo] ?? UNDO_KEY.not_verified)}
-					</dd>
-					<dt>{t("ui.approvals.kind")}</dt>
-					<dd className="break-words" data-testid="approval-tool">
-						{text(request.kind)}
-					</dd>
-					<dt>{t("ui.approvals.skill")}</dt>
-					<dd className="break-words" data-testid="approval-skill">
-						{row === undefined ? notReported : text(row.skill)}
-					</dd>
-					<dt>{t("ui.approvals.path")}</dt>
-					<dd data-testid="approval-path">
-						{target === undefined || publication === undefined ? (
-							notReported
-						) : (
-							<span className="flex flex-wrap items-center gap-2">
-								<TargetStateBadge state={target.state} />
-								<Link href="/publish" className="underline">
-									{t("ui.approvals.open_publish")}
-								</Link>
-							</span>
-						)}
-					</dd>
-					<dt>{t("ui.approvals.actor")}</dt>
-					<dd className="break-words" data-testid="approval-actor">
-						<UntrustedText>{request.actor}</UntrustedText>
-					</dd>
-					<dt>{t("ui.approvals.asked")}</dt>
-					<dd>{formatDateTime(request.created_at, locale)}</dd>
-				</dl>
+						{text(request.summary)}
+					</p>
+				</div>
+				<StatusBadge status="waiting">{t("ui.approvals.queue")}</StatusBadge>
 			</div>
-			<div className="flex flex-wrap items-end gap-2">
-				<div className="flex min-w-48 flex-1 flex-col gap-1">
+			{post !== undefined && (
+				<div
+					className="rounded-lg border bg-muted/40 p-3 text-sm"
+					data-testid="approval-post"
+				>
+					<p className="font-medium break-words">{text(publication?.title)}</p>
+					<p
+						className="mt-1 line-clamp-3 whitespace-pre-wrap break-words text-muted-foreground"
+						data-testid="approval-excerpt"
+					>
+						{text(post.text.slice(0, 400))}
+					</p>
+					<p className="mt-1 text-xs text-muted-foreground">
+						<span data-testid="approval-words">
+							{t("ui.approvals.words", { count: post.words })}
+						</span>
+						{" · "}
+						{t("ui.approvals.address")}{" "}
+						<span data-testid="approval-address">{text(post.slug)}</span>
+					</p>
+				</div>
+			)}
+			<dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm md:grid-cols-3">
+				<Fact label={t("ui.approvals.actor")} testId="approval-actor">
+					<UntrustedText>{request.actor}</UntrustedText>
+				</Fact>
+				<Fact label={t("ui.approvals.skill")} testId="approval-skill">
+					{row === undefined ? notReported : text(row.skill)}
+				</Fact>
+				<Fact label={t("ui.approvals.kind")} testId="approval-tool" mono>
+					{text(request.kind)}
+				</Fact>
+				<Fact label={t("ui.approvals.item")} testId="approval-item">
+					{text(publication?.title)}
+				</Fact>
+				<Fact
+					label={t("ui.approvals.destination")}
+					testId="approval-destination"
+				>
+					{text(destination ?? undefined)}
+				</Fact>
+				<Fact label={t("ui.approvals.cost")} testId="approval-cost">
+					{free
+						? t("ui.approvals.no_cost")
+						: formatMoney(request.estimate, locale)}
+				</Fact>
+				<Fact label={t("ui.approvals.undo")} testId="approval-undo">
+					{row === undefined
+						? notReported
+						: t(UNDO_KEY[row.undo] ?? UNDO_KEY.not_verified)}
+				</Fact>
+				<Fact label={t("ui.approvals.path")} testId="approval-path">
+					{target === undefined || publication === undefined ? (
+						notReported
+					) : (
+						<span className="flex flex-wrap items-center gap-2">
+							<TargetStateBadge state={target.state} />
+							<Link href="/publish" className="underline">
+								{t("ui.approvals.open_publish")}
+							</Link>
+						</span>
+					)}
+				</Fact>
+				<Fact label={t("ui.approvals.asked")}>
+					{formatDateTime(request.created_at, locale)}
+				</Fact>
+			</dl>
+			<div className="flex flex-wrap items-end gap-3">
+				<p className="flex min-w-48 flex-1 items-center gap-2 text-sm text-text-subtle">
+					<Lock aria-hidden="true" className="size-4 shrink-0" />
+					{t("ui.approvals.person_decides")}
+				</p>
+				<div className="flex min-w-48 flex-col gap-1">
 					<Label htmlFor={`reason-${request.id}`} className="text-xs">
 						{t("ui.approvals.reason")}
 					</Label>
@@ -156,12 +197,15 @@ export function ApprovalItem({
 				</div>
 				<Button
 					type="button"
+					variant="outline"
+					size="lg"
 					className="min-w-24"
 					disabled={busy || !privileged}
 					aria-describedby={privileged ? undefined : "approvals-person-only"}
-					onClick={() => onDecide("approve", "")}
+					onClick={() => onDecide("reject", reason)}
 				>
-					{t("ui.approvals.approve")}
+					<X aria-hidden="true" />
+					{t("ui.approvals.reject")}
 					<span className="sr-only">
 						{" "}
 						<UntrustedText>{request.summary}</UntrustedText>
@@ -169,13 +213,14 @@ export function ApprovalItem({
 				</Button>
 				<Button
 					type="button"
-					variant="outline"
+					size="lg"
 					className="min-w-24"
 					disabled={busy || !privileged}
 					aria-describedby={privileged ? undefined : "approvals-person-only"}
-					onClick={() => onDecide("reject", reason)}
+					onClick={() => onDecide("approve", "")}
 				>
-					{t("ui.approvals.reject")}
+					<Check aria-hidden="true" />
+					{t("ui.approvals.approve")}
 					<span className="sr-only">
 						{" "}
 						<UntrustedText>{request.summary}</UntrustedText>
@@ -248,15 +293,25 @@ export default function ApprovalQueue({
 			<p role="status" className="sr-only" data-testid="approval-result">
 				{result}
 			</p>
-			<div className="flex items-center justify-between gap-4">
-				<h2
-					ref={heading}
-					id="approvals-queue"
-					tabIndex={-1}
-					className="text-lg font-semibold"
-				>
-					{t("ui.approvals.queue")}
-				</h2>
+			<div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+				<div className="flex items-baseline gap-3">
+					<h2
+						ref={heading}
+						id="approvals-queue"
+						tabIndex={-1}
+						className="text-xl font-semibold"
+					>
+						{t("ui.approvals.queue")}
+					</h2>
+					{requests.length > 0 && (
+						<span
+							className="text-sm text-text-subtle"
+							data-testid="approval-count"
+						>
+							{t("ui.approvals.count", { count: requests.length })}
+						</span>
+					)}
+				</div>
 				<p
 					className="text-xs text-muted-foreground"
 					role="status"
@@ -282,7 +337,7 @@ export default function ApprovalQueue({
 					</p>
 				)
 			) : (
-				<ul className="mt-4 divide-y rounded-xl border bg-card text-card-foreground">
+				<ul className="mt-4 flex flex-col gap-4">
 					{requests.map((request) => (
 						<ApprovalItem
 							key={request.id}

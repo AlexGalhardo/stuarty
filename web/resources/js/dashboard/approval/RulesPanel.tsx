@@ -194,7 +194,7 @@ export default function RulesPanel({
 
 	return (
 		<section aria-labelledby="approvals-rules">
-			<h2 id="approvals-rules" className="text-lg font-semibold">
+			<h2 id="approvals-rules" className="text-xl font-semibold scroll-mt-20">
 				{t("ui.approvals.rules.title")}
 			</h2>
 			<p className="mt-1 text-sm text-muted-foreground">
@@ -206,7 +206,7 @@ export default function RulesPanel({
 					{t("ui.approvals.rules.empty")}
 				</p>
 			) : (
-				<ul className="mt-4 divide-y rounded-xl border bg-card text-card-foreground">
+				<ul className="mt-4 divide-y rounded-lg border border-border">
 					{rules.map((rule) => (
 						<RuleRow
 							key={rule.id}
@@ -252,7 +252,7 @@ export default function RulesPanel({
 			)}
 			<form
 				onSubmit={(event) => void create(event)}
-				className="mt-4 flex flex-col gap-4 rounded-xl border bg-card p-5 text-card-foreground"
+				className="mt-4 flex flex-col gap-4 border-t border-border pt-4"
 			>
 				<h3 className="font-medium">{t("ui.approvals.rules.new")}</h3>
 				<div className="flex flex-col gap-2">
@@ -296,7 +296,7 @@ export default function RulesPanel({
 						onChange={(event) => setProject(event.target.value)}
 					/>
 				</div>
-				<div className="grid gap-4 sm:grid-cols-3">
+				<div className="grid grid-cols-1 gap-4">
 					<div className="flex flex-col gap-2">
 						<Label htmlFor="rule-currency">{t("ui.approvals.currency")}</Label>
 						<Input

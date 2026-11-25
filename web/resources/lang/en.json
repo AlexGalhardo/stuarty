@@ -9,9 +9,21 @@
     "workflow": {
       "label": "Path to publication",
       "stage": "Stage {number} of {total}: {step}",
+      "go_current": "Go to the current stage",
+      "open_text": "Open the text",
+      "lead": {
+        "undecided": "From idea to publication: who does each stage, with which tool, and what it costs.",
+        "text": "A text-only project: from idea to publication, with no recording or video editing.",
+        "video": "From idea to publication: who does each stage, with which tool, and what it costs.",
+        "image": "From idea to publication: who does each stage, with which tool, and what it costs."
+      },
+      "summary": {
+        "done": "{count} done",
+        "waiting": "{count} waiting for you"
+      },
       "not_reported": "Not reported",
       "optional": "Optional",
-      "who": "Who does it",
+      "who": "Who",
       "tool": "Tool",
       "cost": "Cost",
       "state_label": "State",
@@ -224,8 +236,10 @@
       "scene": {
         "label": "Agent status",
         "project": "Project",
-        "none": "No agent session",
-        "none_hint": "Nothing is running",
+        "none": "Agent",
+        "none_hint": "Waiting for your request",
+        "skill_not_in_use": "No skill in use",
+        "tool_not_in_use": "None in use",
         "skill": "Skill",
         "not_reported": "Not reported",
         "skill_state": {
@@ -3717,8 +3731,13 @@
     },
     "publish": {
       "title": "Publishing",
-      "intro": "Plan which piece goes to which account and when. Every post waits for your yes in Approvals before it is sent.",
-      "new": "New publication",
+      "intro": "Plan what goes live. Every post waits for your yes in Approvals.",
+      "new": "New post",
+      "count_waiting": "{count} waiting for you",
+      "count_failed": {
+        "one": "{count} failed",
+        "other": "{count} failed"
+      },
       "view": "View",
       "view_month": "Month",
       "view_week": "Week",
@@ -3813,7 +3832,13 @@
     },
     "approvals": {
       "title": "Approvals",
-      "intro": "Publishing and costly generation wait here for you. An agent can prepare them; only you can say yes, or write a rule that says yes for you.",
+      "intro": "The agent prepares. Only you say yes. Nothing is published or paid before that.",
+      "rules_link": "Rules",
+      "person_decides": "Only a person decides. The agent does not approve.",
+      "count": {
+        "one": "{count} request",
+        "other": "{count} requests"
+      },
       "queue": "Waiting for you",
       "live": "Live: new requests appear here by themselves.",
       "offline": "Not live: reload the page to see new requests.",
@@ -3840,7 +3865,7 @@
       "address": "Address:",
       "cost": "Estimated cost",
       "no_cost": "Free",
-      "actor": "Asked by",
+      "actor": "Requested by",
       "asked": "Asked",
       "reason": "Reason (optional, when rejecting)",
       "approve": "Approve",
@@ -3848,15 +3873,15 @@
       "currency": "Currency",
       "per_item": "Most per item",
       "per_day": "Most per day",
-      "cost_title": "Cost",
-      "cost_intro": "A ceiling stops further spending, whoever approves it: raise it here first. A day is a UTC day.",
+      "cost_title": "Cost limit",
+      "cost_intro": "A ceiling on spending, whoever approves.",
       "spent_today": "Spent today",
       "nothing_spent": "Nothing spent today.",
       "scope_workspace": "Whole workspace",
       "ceilings": "Ceilings",
       "no_ceilings": "No ceilings: every costly request still waits for you.",
       "set_ceiling": "Set a ceiling",
-      "ceiling_note": "Leave both limits empty to remove the ceiling of that currency.",
+      "ceiling_note": "A day is a UTC day. Leave both limits empty to remove the ceiling of that currency.",
       "save_ceiling": "Save ceiling",
       "rules": {
         "title": "Rules that approve for you",

@@ -63,12 +63,13 @@ const refusal = (answer: "reject" | "cancel"): Partial<ChatEvent> => ({
 });
 
 describe("SceneBar variants", () => {
-	test("none: says there is no session and invents no skill, tool or step", () => {
+	test("none: the agent waits for a request, with no skill and no tool in use and no step invented", () => {
 		const html = draw(sceneOf(null, []));
 		expect(html).toContain('data-variant="none"');
-		expect(html).toContain("No agent session");
-		expect(html).not.toContain('data-testid="scene-skill"');
-		expect(html).not.toContain('data-testid="scene-tool"');
+		expect(html).toContain("Waiting for your request");
+		expect(html).toMatch(/data-testid="scene-skill".*No skill in use/s);
+		expect(html).toMatch(/data-testid="scene-tool".*None in use/s);
+		expect(html).not.toContain("Not reported");
 		expect(html).not.toContain("scene-allow");
 		expect(html).toContain("Open chat");
 	});
@@ -310,7 +311,7 @@ describe("SceneBar variants", () => {
 
 	test("every variant tells its state with a word, not a colour", () => {
 		const words: Record<string, string> = {
-			none: "No agent session",
+			none: "Waiting for your request",
 			idle: "Waiting for you",
 			working: "Working",
 			waiting: "Asks your permission",

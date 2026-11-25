@@ -186,64 +186,66 @@ export default function SceneBar({
 					</p>
 				</div>
 			</div>
-			{variant !== "none" && (
-				<>
-					<Slot
-						icon={Sparkles}
-						label={
-							model.skill === null
-								? t("ui.shell.scene.skill")
-								: `${t("ui.shell.scene.skill")} · ${t(`ui.shell.scene.skill_state.${model.skill.state}`)}`
-						}
-						testId="scene-skill"
-						className="max-md:hidden"
-					>
-						{model.skill === null ? (
-							<span className="text-muted-foreground">
-								{t("ui.shell.scene.not_reported")}
-							</span>
-						) : model.skill.state === "loaded" ? (
-							<UntrustedText>{model.skill.name}</UntrustedText>
-						) : (
-							<span className="text-muted-foreground">
-								{t(
-									model.skill.state === "available"
-										? "ui.shell.scene.skill_available"
-										: "ui.shell.scene.skill_none",
-								)}
-							</span>
+			<Slot
+				icon={Sparkles}
+				label={
+					model.skill === null
+						? t("ui.shell.scene.skill")
+						: `${t("ui.shell.scene.skill")} · ${t(`ui.shell.scene.skill_state.${model.skill.state}`)}`
+				}
+				testId="scene-skill"
+				className="max-md:hidden"
+			>
+				{model.skill === null ? (
+					<span className="text-muted-foreground">
+						{t(
+							variant === "none"
+								? "ui.shell.scene.skill_not_in_use"
+								: "ui.shell.scene.not_reported",
 						)}
-					</Slot>
-					<Slot
-						icon={SquareTerminal}
-						label={toolLabel(model, t)}
-						testId="scene-tool"
-						// 7 rem at least: squeezed beside a long agent line it goes to a line of its own
-						className="min-w-28 flex-1"
-					>
-						{model.tool === null ? (
-							<span className="text-muted-foreground">
-								{model.reported
-									? t("ui.shell.scene.no_tool")
-									: t("ui.shell.scene.not_reported")}
-							</span>
-						) : model.tool.descriptionKey !== null ? (
-							// the plain description of a tool of Stuarty, in words a person can judge, and the title the agent
-							// gave the call: the tool is recognised from that title, so an agent can claim the name of a tool
-							// of Stuarty, and the person sees what it wrote
-							<>
-								{t(model.tool.descriptionKey)}
-								<span className="font-normal text-muted-foreground">
-									{" · "}
-									<UntrustedText>{model.tool.title}</UntrustedText>
-								</span>
-							</>
-						) : (
+					</span>
+				) : model.skill.state === "loaded" ? (
+					<UntrustedText>{model.skill.name}</UntrustedText>
+				) : (
+					<span className="text-muted-foreground">
+						{t(
+							model.skill.state === "available"
+								? "ui.shell.scene.skill_available"
+								: "ui.shell.scene.skill_none",
+						)}
+					</span>
+				)}
+			</Slot>
+			<Slot
+				icon={SquareTerminal}
+				label={toolLabel(model, t)}
+				testId="scene-tool"
+				// 7 rem at least: squeezed beside a long agent line it goes to a line of its own
+				className="min-w-28 flex-1"
+			>
+				{model.tool === null ? (
+					<span className="text-muted-foreground">
+						{variant === "none"
+							? t("ui.shell.scene.tool_not_in_use")
+							: model.reported
+								? t("ui.shell.scene.no_tool")
+								: t("ui.shell.scene.not_reported")}
+					</span>
+				) : model.tool.descriptionKey !== null ? (
+					// the plain description of a tool of Stuarty, in words a person can judge, and the title the agent
+					// gave the call: the tool is recognised from that title, so an agent can claim the name of a tool
+					// of Stuarty, and the person sees what it wrote
+					<>
+						{t(model.tool.descriptionKey)}
+						<span className="font-normal text-muted-foreground">
+							{" · "}
 							<UntrustedText>{model.tool.title}</UntrustedText>
-						)}
-					</Slot>
-				</>
-			)}
+						</span>
+					</>
+				) : (
+					<UntrustedText>{model.tool.title}</UntrustedText>
+				)}
+			</Slot>
 			<div className="ms-auto flex flex-wrap items-center gap-2 max-md:w-full max-md:justify-end">
 				{variant === "none" && (
 					<Button

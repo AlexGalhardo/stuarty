@@ -218,6 +218,18 @@ test.describe("publishing calendar @chromium-only", () => {
 				page.getByRole("heading", { name: "Publishing", level: 1 }),
 			).toBeVisible();
 			await expect(page.getByTestId("calendar-month")).toBeVisible();
+			// The header and the month of the final design: the sentence, the weekdays from Monday and the view switch.
+			await expect(
+				page.getByText(
+					"Plan what goes live. Every post waits for your yes in Approvals.",
+				),
+			).toBeVisible();
+			await expect(page.getByTestId("publish-new")).toHaveText("New post");
+			await expect(page.getByTestId("calendar-month")).toContainText("Mon");
+			await expect(page.getByTestId("publish-mode-month")).toHaveAttribute(
+				"aria-pressed",
+				"true",
+			);
 			await page.getByTestId("publish-new").click();
 
 			const dialog = page.getByTestId("publication-editor");
@@ -539,7 +551,7 @@ test.describe("publishing calendar @chromium-only", () => {
 		await signInAsPerson(page);
 		await page.goto("/publish");
 		await expect(
-			page.getByRole("heading", { name: "Publicar", level: 1 }),
+			page.getByRole("heading", { name: "Publicação", level: 1 }),
 		).toBeVisible();
 		await expect(
 			page.getByRole("button", { name: "Nova publicação" }),
