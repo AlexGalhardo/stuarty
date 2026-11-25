@@ -22,16 +22,23 @@ test.describe("import-errors", () => {
 	}) => {
 		const seeded = await seedProject(request, { tracks: 0 });
 		await page.goto(`/editor/${seeded.id}`);
+		await page.locator("[data-import-open]").click();
 		const path = page.getByLabel("Path of a file to import");
 
 		await path.fill(join(tmpdir(), "stuarty-e2e-no-such-file.mp4"));
-		await page.getByRole("button", { name: "Import" }).click();
+		await page
+			.locator("#library-import")
+			.getByRole("button", { name: "Import", exact: true })
+			.click();
 		await expect(page.getByText("File not found").first()).toBeVisible();
 
 		const text = join(tmpdir(), "stuarty-e2e-not-media.txt");
 		writeFileSync(text, "this is not a video\n");
 		await path.fill(text);
-		await page.getByRole("button", { name: "Import" }).click();
+		await page
+			.locator("#library-import")
+			.getByRole("button", { name: "Import", exact: true })
+			.click();
 		await expect(page.getByText("Unsupported media").first()).toBeVisible();
 		await expect(page.getByText(/not a media file/).first()).toBeVisible();
 		await expect(
@@ -272,8 +279,12 @@ test.describe("prototype-reference", () => {
 		await expect(page).toHaveURL(/\/editor\/prj_/);
 
 		// 1. Import by path, see the card.
+		await page.locator("[data-import-open]").click();
 		await page.getByLabel("Path of a file to import").fill(testClip(0));
-		await page.getByRole("button", { name: "Import" }).click();
+		await page
+			.locator("#library-import")
+			.getByRole("button", { name: "Import", exact: true })
+			.click();
 		const add = page.getByRole("button", { name: "Add to timeline" }).first();
 		await expect(add).toBeEnabled({ timeout: 30_000 });
 

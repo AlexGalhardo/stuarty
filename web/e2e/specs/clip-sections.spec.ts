@@ -138,7 +138,7 @@ test.describe("clip-sections", () => {
 		// The editor builds each mask command from the read model (SDD-012 section
 		// 1, T3), so the next edit waits until the revision of the last one is
 		// shown: a command sent before it would carry the old mask.
-		const revision = page.locator("[data-connection] .font-mono");
+		const revision = page.locator("[data-project-revision]");
 		const applied = async (change: () => Promise<void>): Promise<void> => {
 			const before = await revision.textContent();
 			await change();

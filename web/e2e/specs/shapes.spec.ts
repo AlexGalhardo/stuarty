@@ -92,12 +92,12 @@ test.describe("shapes", () => {
 		await expect.poll(() => bitmaps.length).toBeGreaterThan(0);
 
 		await item.click();
+		await openInspectorTab(page, "Text");
 		await expect(
-			page.getByRole("heading", { name: "Shape", exact: true }),
+			page.getByRole("button", { name: "Shape", exact: true }),
 		).toBeVisible();
 		const itemId = (await item.getAttribute("data-item-id")) ?? "";
 
-		await openInspectorTab(page, "Text");
 		const width = page.getByLabel("Width", { exact: true });
 		await width.fill("600");
 		await width.press("Enter");
