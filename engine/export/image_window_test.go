@@ -303,3 +303,61 @@ func TestImageWindowAfterACancelledRenderGivesTheBytes(t *testing.T) {
 		}
 	}
 }
+
+// TestImageWindowAtExtremeScales: the band of a window receives only the part of a prepared picture that its
+// rectangle can read (windowCrop), and the margin of that part holds when the layer is drawn much smaller than its
+// picture (the 64 by 48 photo in 6 by 5 pixels) and much larger (in 620 by 470 pixels), turned or not, at a place
+// that is not a whole pixel: every edit of a small layer over them gives the bytes of the full render.
+func TestImageWindowAtExtremeScales(t *testing.T) {
+	d := &coreimage.Document{
+		SchemaVersion: coreimage.SchemaVersion, ID: "img_bbbbbbbbbb", Name: "scales", Width: 640, Height: 480,
+		Background: "#203040",
+		Assets:     map[string]coreimage.AssetRef{testHash: {Hash: testHash, Name: "src.png", Width: 64, Height: 48}},
+	}
+
+	id := func(i int) string { return fmt.Sprintf("lyr_%010d", i) }
+	photo := func(i, x, y, w, h, rot int) coreimage.Layer {
+		return coreimage.Layer{
+			ID: id(i), Name: fmt.Sprintf("Photo %d", i), Kind: coreimage.KindImage, Asset: testHash, Visible: true,
+			Opacity: 100, X: x, Y: y, W: w, H: h, Rotation: rot,
+		}
+	}
+
+	d.Layers = append(d.Layers,
+		photo(0, 10, 5, 620, 470, 0),
+		photo(1, -40, -30, 720, 540, 33),
+		photo(2, 200, 150, 6, 5, 0),
+		photo(3, 300, 200, 7, 5, 41),
+		photo(4, 100, 300, 3, 2, 0),
+		coreimage.Layer{
+			ID: id(5), Name: "Box", Kind: coreimage.KindShape, Shape: coreimage.ShapeRoundedRect, Fill: "#E0A040",
+			Radius: 6, Visible: true, Opacity: 100, X: 180, Y: 140, W: 50, H: 40, Rotation: 12,
+		},
+	)
+	coreimage.ReorderAll(d)
+
+	cache := NewImageCache(0)
+	cfg := cachedConfig(t, cache, "u1")
+	plain := cachedConfig(t, nil, "")
+
+	renderWith(t, d, cfg)
+
+	moves := [][2]int{{190, 135}, {295, 195}, {97, 295}, {301, 203}, {20, 20}, {560, 400}, {199, 151}}
+	n := 0
+
+	for _, mv := range moves {
+		for _, l := range []string{id(5), id(2), id(3), id(4)} {
+			n++
+			d = applyLook(t, d, lookOp("layer.transform", fmt.Sprintf(`{"layer_id": %q, "x": %d, "y": %d}`, l, mv[0], mv[1])))
+			d = withOpacity(t, d, id(n%2), 60+n%40)
+
+			if got, want := renderWith(t, d, cfg), renderWith(t, d, plain); !bytes.Equal(got.Pix, want.Pix) {
+				t.Fatalf("edit %d of %s: the window render differs from the full render", n, l)
+			}
+		}
+	}
+
+	if s := cache.Stats(); s.Windows < n/2 {
+		t.Errorf("only %d of %d edits were drawn as a window: %+v", s.Windows, n, s)
+	}
+}
