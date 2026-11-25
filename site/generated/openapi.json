@@ -5788,6 +5788,9 @@
               "marker.remove",
               "marker.set",
               "project.rename",
+              "recording.auto_zoom",
+              "recording.set_click_highlight",
+              "recording.set_cursor",
               "settings.reframe",
               "settings.set",
               "settings.set_fps",
@@ -6032,6 +6035,15 @@
           },
           "project.rename": {
             "$ref": "#/components/schemas/args.project.rename"
+          },
+          "recording.auto_zoom": {
+            "$ref": "#/components/schemas/args.recording.auto_zoom"
+          },
+          "recording.set_click_highlight": {
+            "$ref": "#/components/schemas/args.recording.set_click_highlight"
+          },
+          "recording.set_cursor": {
+            "$ref": "#/components/schemas/args.recording.set_cursor"
           },
           "settings.reframe": {
             "$ref": "#/components/schemas/args.settings.reframe"
@@ -14910,6 +14922,144 @@
         },
         "required": [
           "name"
+        ],
+        "type": "object"
+      },
+      "args.recording.auto_zoom": {
+        "additionalProperties": false,
+        "properties": {
+          "hold_ms": {
+            "description": "The least time a zoom is held after its last click, 500 to 10000 ms. Default 1200.",
+            "maximum": 10000,
+            "minimum": 500,
+            "type": "integer"
+          },
+          "item_id": {
+            "description": "A clip of a screen recording.",
+            "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+            "type": "string"
+          },
+          "lead_ms": {
+            "description": "The full zoom is reached this long before the first click, 0 to 3000 ms. Default 400.",
+            "maximum": 3000,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "level": {
+            "description": "How far the view zooms in, 1.1 to 3. Default 1.6.",
+            "maximum": 3,
+            "minimum": 1.1,
+            "type": "number"
+          },
+          "max_zooms": {
+            "description": "The most zooms made, the first in time, 1 to 24. Default 24.",
+            "maximum": 24,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "merge_ms": {
+            "description": "Clicks closer than this, in one window, make one zoom, 0 to 10000 ms. Default 2500.",
+            "maximum": 10000,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "ramp_ms": {
+            "description": "The length of the ease in and of the ease out, 200 to 3000 ms. Default 700.",
+            "maximum": 3000,
+            "minimum": 200,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "item_id"
+        ],
+        "type": "object"
+      },
+      "args.recording.set_click_highlight": {
+        "additionalProperties": false,
+        "properties": {
+          "color": {
+            "description": "A colour; default #FFC400.",
+            "type": "string"
+          },
+          "duration_ms": {
+            "description": "How long one highlight lasts, 200 to 2000 ms. Default 600.",
+            "maximum": 2000,
+            "minimum": 200,
+            "type": "integer"
+          },
+          "item_id": {
+            "description": "A clip of a screen recording.",
+            "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+            "type": "string"
+          },
+          "size": {
+            "description": "Pixels of the frame, 16 to 400. Default a twelfth of the frame height.",
+            "maximum": 400,
+            "minimum": 16,
+            "type": "number"
+          },
+          "style": {
+            "description": "ring (default), wave, pulse, or none to remove the highlights.",
+            "enum": [
+              "ring",
+              "wave",
+              "pulse",
+              "none"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "item_id"
+        ],
+        "type": "object"
+      },
+      "args.recording.set_cursor": {
+        "additionalProperties": false,
+        "properties": {
+          "color": {
+            "description": "A colour; default #FFFFFF.",
+            "type": "string"
+          },
+          "item_id": {
+            "description": "A clip of a screen recording.",
+            "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+            "type": "string"
+          },
+          "keyframe_ms": {
+            "description": "The time between two keyframes, 50 to 1000 ms. Default 100.",
+            "maximum": 1000,
+            "minimum": 50,
+            "type": "integer"
+          },
+          "size": {
+            "description": "Pixels of the frame, 8 to 128. Default a fortieth of the frame height, at least 16.",
+            "maximum": 128,
+            "minimum": 8,
+            "type": "number"
+          },
+          "smoothing_ms": {
+            "description": "Time constant of the smoothing, 0 to 2000 ms; 0 follows the raw path. Default 150.",
+            "maximum": 2000,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "style": {
+            "description": "dot (default) or ring.",
+            "enum": [
+              "dot",
+              "ring"
+            ],
+            "type": "string"
+          },
+          "visible": {
+            "description": "false removes the cursor of the clip. Default true.",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "item_id"
         ],
         "type": "object"
       },
