@@ -7,6 +7,71 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.57.0] - 2026-11-25
+
+### Added
+
+- **core:** Add the day of the publishing calendar, notes, quiet days, slots and .ics ([b64916c](https://github.com/AlexGalhardo/stuarty/commit/b64916c92861ae31bfde5bb11ce2aac996f513e0))
+- **service:** Add the calendar day operations on HTTP, CLI and MCP with the quiet-day rule ([6b1b718](https://github.com/AlexGalhardo/stuarty/commit/6b1b718cf5a97288759ddbca64f7ec0aadecd86c))
+- **web:** Add the day view of the publish page with slots, copy, mini month and .ics ([f49259d](https://github.com/AlexGalhardo/stuarty/commit/f49259d8509ce17198df8ed1c255bc3bc2b48113))
+- **core:** Add the plan, marks, proposals and the cut planner of a recording ([fd71080](https://github.com/AlexGalhardo/stuarty/commit/fd71080df6e32d85d632abbb4487d972b9e25b6a))
+- **service:** Prepare, mark and propose cuts of a recording, and decide them as a person ([ae2f856](https://github.com/AlexGalhardo/stuarty/commit/ae2f8560a68418b9e2a8f1ded01ea0e644b659a7))
+- **desktop:** Show a host-driven indicator while a capture helper is alive ([0964410](https://github.com/AlexGalhardo/stuarty/commit/09644106871d512e896c1d28339f287d601dde21))
+- **cli:** Add the recording prepare, mark, propose and decide commands ([05844b7](https://github.com/AlexGalhardo/stuarty/commit/05844b7ea904f8bf296df34b246e96b281f86df4))
+- **web:** Add the record-with-a-person skill for the agent flow of a recording ([c26ad61](https://github.com/AlexGalhardo/stuarty/commit/c26ad6122e8f7dd2e07911bcc3eba5a5dc7825e2))
+- **ui:** Show prepared recordings, the cuts to decide and a banner while a capture is on ([5878383](https://github.com/AlexGalhardo/stuarty/commit/58783835b6aea840e5006da5553459bd9bcb32b7))
+- **web:** Scene bar gets the Depois slot, Skill label, Permitir and Recusar ([ebd13f4](https://github.com/AlexGalhardo/stuarty/commit/ebd13f40dab21b8112ba4685d73c365590196b1d))
+- **ui:** Shared components of the final design, PageHeaderAction, OptionSelect, Segment, TabBar ([bb8ceee](https://github.com/AlexGalhardo/stuarty/commit/bb8ceee53b1fe6be42c745d02ba76fc6e68533ea))
+- **web:** Account pages as one centred card, known account and locked studio screens ([b17c9ea](https://github.com/AlexGalhardo/stuarty/commit/b17c9eaca02bfbf0ac0e797b4a68efa9071cf71c))
+- **web:** Error page with a translated title, How to fix and the trash link ([6182115](https://github.com/AlexGalhardo/stuarty/commit/61821150bb8b80c3916c26c419698a243a664f7f))
+- **ui:** Image editor in the full-window frame of the final design ([84085cf](https://github.com/AlexGalhardo/stuarty/commit/84085cf8253df8dd1381c1192b3b14742f47720b))
+- **ui:** Asset libraries use a live filter bar, a design grid and a preview ([1307738](https://github.com/AlexGalhardo/stuarty/commit/13077388ea15b57b62144655fd57e569f9d4a606))
+- **ui:** Brand kit as colour, font, logo and preview cards ([6bca7dd](https://github.com/AlexGalhardo/stuarty/commit/6bca7dd9a8b6fa26d14950b44f9eb6660d496eeb))
+- **ui:** Skills, prompts and memory as compact lists beside a detail panel ([173e5ec](https://github.com/AlexGalhardo/stuarty/commit/173e5ec7a20c018ae9721072e88ee6bfacbcd81e))
+- **web:** Projects list in tabs with the primary header action ([b0094b2](https://github.com/AlexGalhardo/stuarty/commit/b0094b2e7f8422a2767c66d907dae8081c635012))
+- **web:** New project asks the name and uses centered cards and a Segment ([23347c2](https://github.com/AlexGalhardo/stuarty/commit/23347c2b6a822677703173bea7621104f40e8217))
+- **web:** Write page filters and new text use OptionSelect ([50da6eb](https://github.com/AlexGalhardo/stuarty/commit/50da6ebb2ce150ba0fb80ba2b2a286e5947993db))
+- **web:** Project page back button and the media is optional note ([5285b31](https://github.com/AlexGalhardo/stuarty/commit/5285b312d15e4eee71f31381050136f0341c027e))
+- **web:** Project card actions are compact ghost buttons ([d7c7e39](https://github.com/AlexGalhardo/stuarty/commit/d7c7e39f7a9756107a8228b7f07c589c1d811607))
+- **web:** Briefing as a page with steps and the agent panel, next step strip and import in the list ([0ac50d5](https://github.com/AlexGalhardo/stuarty/commit/0ac50d5bdb0f7f15cb433d7e2e19df1aa1b711c3))
+- **web:** Write page in three columns with a review view and OptionSelect in the panels ([b1c54e1](https://github.com/AlexGalhardo/stuarty/commit/b1c54e1540fcdddb2144d98fe10259cf75ab4730))
+
+### Fixed
+
+- **repo:** The agent harness person signs in with a password, not a launch code ([aaa3332](https://github.com/AlexGalhardo/stuarty/commit/aaa3332fb4d79a20c496798d129df5e285872f90))
+- **export:** Draw an image document of more than 64 layers in passes ([bfbb173](https://github.com/AlexGalhardo/stuarty/commit/bfbb173750a4eb93cc27a1229fc138c9a32c2a98))
+- **export:** Name the masks that leave an image with no pass cut ([d17bc20](https://github.com/AlexGalhardo/stuarty/commit/d17bc204827eed110dd54c4cc2f8421ece2930c0))
+- **repo:** Give the harness child process an allow-listed environment ([8822080](https://github.com/AlexGalhardo/stuarty/commit/8822080ee719da40ae3330417008898ef4749ac2))
+- **repo:** Pass HOME to the harness child process like USERPROFILE ([27841e4](https://github.com/AlexGalhardo/stuarty/commit/27841e4c9c39b831bfccf5113b4d83f0f1d1c895))
+- **workspace:** Refuse the default home to a build that is not a release and to every test ([83b3dbb](https://github.com/AlexGalhardo/stuarty/commit/83b3dbb4019ddab21cf0dac2199a1996205ebb67))
+- **desktop:** The shell reads its release from main.version and passes the allowance to its server ([4427092](https://github.com/AlexGalhardo/stuarty/commit/442709262fa1faa9cb9f2a373fde722112e694ca))
+- **cli:** The agent skill points to the guide of each domain instead of listing every operation ([97e9f25](https://github.com/AlexGalhardo/stuarty/commit/97e9f250ab079bf6dcef4febe6b8f8c0a132f65a))
+- **workspace:** Compare folders, not names, and guard the former folder too ([d894968](https://github.com/AlexGalhardo/stuarty/commit/d894968f77f723b94621c3f876ddab72fec223c9))
+- **desktop:** Only a release shell passes the default workspace allowance ([bc44fa3](https://github.com/AlexGalhardo/stuarty/commit/bc44fa3c557af2b4f48a989437cff07ce58a4cb5))
+- **workspace:** A snapshot build is not a release either ([ba73acc](https://github.com/AlexGalhardo/stuarty/commit/ba73acc15254987d0e38c3f3759d40f61e0aab1b))
+- **cli:** The agent skill says that command_help lists the operations ([a73523b](https://github.com/AlexGalhardo/stuarty/commit/a73523b28ff2dbba35899bfb829cddff74dd835f))
+- **service:** Keep the zone of a quiet day for a person only ([5bebb25](https://github.com/AlexGalhardo/stuarty/commit/5bebb25345be25feaa78a00a8cb1197736a23fc1))
+- **web:** Add the slots and export actions to the publish page header of the final design ([ae43d4d](https://github.com/AlexGalhardo/stuarty/commit/ae43d4d161393a70d0cd2d745ed42c61c3064e7f))
+- **store:** Move the recordings agent flow migration to 20261125110000 ([687c7e1](https://github.com/AlexGalhardo/stuarty/commit/687c7e1ffb53c4e71818f1efd80fabb5ad5a8894))
+- **service:** A decision of cuts conflicts with any edit made since its read ([864e4a6](https://github.com/AlexGalhardo/stuarty/commit/864e4a6cbb428a3c00c705a5d8212999092e3496))
+- **web:** The record-with-a-person skill names the members of a range ([c775d67](https://github.com/AlexGalhardo/stuarty/commit/c775d676e4c2b8e48aeafc822d41c18a4d65e0cd))
+- **web:** Name the range members of the skill in prose ([4e86d0a](https://github.com/AlexGalhardo/stuarty/commit/4e86d0a34d2460504d23fe4faf62ddfe9c43e1c6))
+- **service:** A person sees and records the real source of a prepared recording ([0797e03](https://github.com/AlexGalhardo/stuarty/commit/0797e036a6350ac76b29cb567bd7cc40bf4e5254))
+- **e2e:** The browsers of one run never record at once, a blocked dialog must agree with the browser ([d315535](https://github.com/AlexGalhardo/stuarty/commit/d315535e975746e2c64b290d165cc42b97b7a5ad))
+- **web:** Settings about card first in the column, the workspace path wraps in full width ([67f8907](https://github.com/AlexGalhardo/stuarty/commit/67f890724a694d0a1fc8e5dfd21f50d41c39d456))
+- **ui:** Open the agent chat over the video editor on the shell layer ([a07d1ed](https://github.com/AlexGalhardo/stuarty/commit/a07d1ed144ee2e92763f8a0443bbc75f9454179d))
+- **ui:** Drop a project the chat panel no longer finds instead of showing Not found ([3cfa6d7](https://github.com/AlexGalhardo/stuarty/commit/3cfa6d79a394814c83e710246f3d2e6f5b81d177))
+- **web:** Sidebar keeps Settings and Sair at the bottom, 240 px wide ([99de4b3](https://github.com/AlexGalhardo/stuarty/commit/99de4b3cb114087ff5cace99c28ff53b9b50caf9))
+- **core:** A trail never shows a step done after the current one ([e2eff8b](https://github.com/AlexGalhardo/stuarty/commit/e2eff8baafa115d3e157e0a165ae73f9f1c0d5f7))
+- **web:** Home says approvals in words and fails with Try again and How to fix ([9494b22](https://github.com/AlexGalhardo/stuarty/commit/9494b2259bc1ebc69162fcb9fcc212ffc6935f63))
+- **web:** The top bar chat button reads Chat in pt-BR ([4d59318](https://github.com/AlexGalhardo/stuarty/commit/4d59318a8a4fbf755583736931c7d7910220f999))
+- **web:** Image editor live badge, history closed and add a photo from the empty stage ([b8b1124](https://github.com/AlexGalhardo/stuarty/commit/b8b112407fc3bc5023c929cc4f5f7df55b4844e3))
+- **web:** The briefing back button keeps the click when a field blurs ([ee59de0](https://github.com/AlexGalhardo/stuarty/commit/ee59de04415d9ed55e58619f56ddd61f89c498a3))
+
+### Security
+
+- **security:** Renumber the threats of the calendar day to T-180 to T-183 ([935130b](https://github.com/AlexGalhardo/stuarty/commit/935130b43b73f52c982891d5ce0f74825fdc1603))
+
 ## [0.56.0] - 2026-11-25
 
 ### Added
@@ -2721,7 +2786,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **security:** Count retries in the rolling render quota ([1bc8114](https://github.com/AlexGalhardo/vukem-studio/commit/1bc81140afc4efcc346d68dd16bd7e91abbc15f4))
 - **security:** Add a global rolling daily model budget ([7d3afc4](https://github.com/AlexGalhardo/vukem-studio/commit/7d3afc46c8da935e36ad5bcd179ea12a474d0423))
 
-[Unreleased]: https://github.com/AlexGalhardo/stuarty/compare/v0.56.0...HEAD
+[Unreleased]: https://github.com/AlexGalhardo/stuarty/compare/v0.57.0...HEAD
+[0.57.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.56.0...v0.57.0
 [0.56.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.55.0...v0.56.0
 [0.55.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.54.0...v0.55.0
 [0.54.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.53.0...v0.54.0
