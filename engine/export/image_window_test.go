@@ -348,7 +348,8 @@ func TestImageWindowAtExtremeScales(t *testing.T) {
 	for _, mv := range moves {
 		for _, l := range []string{id(5), id(2), id(3), id(4)} {
 			n++
-			d = applyLook(t, d, lookOp("layer.transform", fmt.Sprintf(`{"layer_id": %q, "x": %d, "y": %d}`, l, mv[0], mv[1])))
+			move := fmt.Sprintf(`{"layer_id": %q, "x": %d, "y": %d}`, l, mv[0], mv[1])
+			d = applyLook(t, d, lookOp("layer.transform", move))
 			d = withOpacity(t, d, id(n%2), 60+n%40)
 
 			if got, want := renderWith(t, d, cfg), renderWith(t, d, plain); !bytes.Equal(got.Pix, want.Pix) {
