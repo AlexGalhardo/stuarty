@@ -174,3 +174,27 @@ func TestZoomOptionsValidate(t *testing.T) {
 		}
 	}
 }
+
+// A pan is over before the click it goes to, so the view is on the second place when the click happens, and the
+// first place is held the least time after its last click.
+func TestPlanZoomsPanEndsBeforeTheNextClick(t *testing.T) {
+	o := DefaultZoomOptions()
+	o.LeadMS = 200
+
+	zooms, _ := PlanZooms([]Click{click(800, 800, 300), click(1800, 100, 700)}, o, Unit, Unit, 0, 10000)
+	if len(zooms) != 2 || !zooms[0].ToNext {
+		t.Fatalf("want a chained pair: %+v", zooms)
+	}
+
+	if zooms[1].FullMS > 1800 {
+		t.Errorf("the pan ends at %d ms, after the click at 1800", zooms[1].FullMS)
+	}
+
+	if hold := zooms[0].ReleaseMS - 800; hold < MinHoldMS {
+		t.Errorf("the first place is held %d ms after its click, least %d", hold, MinHoldMS)
+	}
+
+	if zooms[1].StartMS != zooms[0].ReleaseMS {
+		t.Errorf("the pan starts at the release: %+v", zooms)
+	}
+}
