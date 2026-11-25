@@ -3,6 +3,7 @@ package service
 import (
 	"bytes"
 	"context"
+	"os"
 	"testing"
 )
 
@@ -216,6 +217,45 @@ func TestImageFrameCacheRefusesAnAssetTheCallerLost(t *testing.T) {
 
 	if f, err := s.ImageFrame(alice, ImageFrameRequest{ImageID: c.ImageID, Width: 32}); err == nil {
 		t.Fatalf("a cached frame of a file the caller lost was served: %+v", f)
+	}
+}
+
+// TestImageFrameCacheRefusesAFileRemovedFromTheWorkspace: the file of an image is gone after its frame was kept, so
+// the hit is refused as the render would be, and no picture of what is no longer there is served.
+func TestImageFrameCacheRefusesAFileRemovedFromTheWorkspace(t *testing.T) {
+	s, _ := newImageService(t)
+	ctx := asActor("local:person")
+
+	c, err := s.ImageCreate(ctx, ImageCreateRequest{Width: 64, Height: 48})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := s.ImageEdit(ctx, ImageEditRequest{
+		ImageID: c.ImageID, BaseRevision: 1,
+		Operations: ops("layer.add_image", `{"asset": "`+imgHash+`", "id": "lyr_aaaaaaaaaa"}`),
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	frameOf(ctx, t, s, c.ImageID, 32)
+	frameOf(ctx, t, s, c.ImageID, 32)
+
+	if s.frameCache.stats().Hits != 1 {
+		t.Fatalf("the frame was not cached: %+v", s.frameCache.stats())
+	}
+
+	path, err := s.preparedImagePath(imgHash)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := os.Remove(path); err != nil {
+		t.Fatal(err)
+	}
+
+	if f, err := s.ImageFrame(ctx, ImageFrameRequest{ImageID: c.ImageID, Width: 32}); err == nil {
+		t.Fatalf("a cached frame of a file removed from the workspace was served: %+v", f)
 	}
 }
 
