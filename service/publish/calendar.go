@@ -150,6 +150,14 @@ func (m *Manager) putDay(
 
 		d.Date = date
 
+		// The zone says where the interval of the day starts: moving it moves a quiet day, so only a person does.
+		if zone != "" && zone != d.Zone && d.Quiet && !m.env.Actor(ctx).Person {
+			return &Error{
+				Kind: KindPersonOnly, Path: "zone", Hint: hintPersonMarksQuiet,
+				Message: date + " is a quiet day (no posts): only a person changes the zone it was planned in.",
+			}
+		}
+
 		if zone != "" {
 			d.Zone = zone
 		}
