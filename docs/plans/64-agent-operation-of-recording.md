@@ -60,7 +60,7 @@ Names are proposals until task 1 writes them to SDD-000.
 
 - [x] 1. SDD-025, SDD-000, SDD-007 and the agent docs. Verify: `task lint:md` and `go run ./internal/tools/threatcheck` exit 0.
 - [x] 2. Prepare, mark and the proposal rules in the core. Verify: `go test ./core/recording/...` passes.
-- [ ] 3. Service operations and the person rule, including approval rules. Verify: `go test ./service/...` and `go test -run TestSecurity_ ./...` pass.
+- [x] 3. Service operations and the person rule, including approval rules. Verify: `go test ./service/...` and `go test -run TestSecurity_ ./...` pass.
 - [ ] 4. The host-driven indicator on Windows. Verify: a test with a fake helper that the indicator signal starts and ends with the process, and a manual check recorded in the hand-off.
 - [ ] 5. HTTP, CLI and MCP within the budget. Verify: `go test ./web/...` and `go run ./internal/tools/surfacebudget` pass.
 - [ ] 6. The UI: prepared card, proposal review with accept and reject per range. Verify: `bun run typecheck`, `bun run check:thin-client`, `bun run check:i18n`, `task test:web` and `bun run e2e` pass.

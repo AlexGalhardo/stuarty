@@ -145,16 +145,25 @@ func Decide(p Proposal, accept []bool, by string, atMs int64) (Proposal, []CutRa
 }
 
 // SharedSpan is the part of a take that every track holds, [lo, hi] in active milliseconds of the shared clock:
-// from the latest start to the earliest end. With no track it is [0, durationMS].
+// from the latest start to the earliest end. A track whose duration is not known (a recording settled without
+// the report of the helper) is taken to last as long as the recording. With no track it is [0, durationMS].
 func SharedSpan(tracks []Track, durationMS int64) (lo, hi int64) {
 	if len(tracks) == 0 {
 		return 0, durationMS
 	}
 
-	lo, hi = tracks[0].StartMS, tracks[0].StartMS+tracks[0].DurationMS
+	end := func(t Track) int64 {
+		if t.DurationMS <= 0 {
+			return durationMS
+		}
+
+		return t.StartMS + t.DurationMS
+	}
+
+	lo, hi = tracks[0].StartMS, end(tracks[0])
 
 	for _, t := range tracks[1:] {
-		lo, hi = max(lo, t.StartMS), min(hi, t.StartMS+t.DurationMS)
+		lo, hi = max(lo, t.StartMS), min(hi, end(t))
 	}
 
 	if lo > hi {

@@ -901,6 +901,24 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 			_, err := e.svc.RecordingPlace(ctx, service.RecordingPlaceRequest{ID: "rec_0000000001"})
 			return err
 		},
+		"RecordingPrepare": func() error {
+			_, err := e.svc.RecordingPrepare(ctx, service.RecordingPrepareRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"RecordingMark": func() error {
+			_, err := e.svc.RecordingMark(ctx, service.RecordingMarkRequest{ID: "rec_0000000001", Kind: "good"})
+			return err
+		},
+		"RecordingProposeCuts": func() error {
+			_, err := e.svc.RecordingProposeCuts(ctx, service.RecordingProposeCutsRequest{ID: "rec_0000000001"})
+			return err
+		},
+		"RecordingProposalDecide": func() error {
+			_, err := e.svc.RecordingProposalDecide(ctx, service.RecordingProposalDecideRequest{
+				ID: "rec_0000000001", ProposalID: "prp_0000000001",
+			})
+			return err
+		},
 		"RecordingUploadBegin": func() error {
 			_, err := e.svc.RecordingUploadBegin(ctx, service.RecordingUploadBeginRequest{
 				ProjectID: "prj_0000000001", Container: "webm",

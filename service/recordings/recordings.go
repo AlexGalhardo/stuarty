@@ -41,6 +41,11 @@ type Row struct {
 	Tracks      string
 	Pauses      string
 	EventsCount int64
+	// Plan is the JSON of a prepared recording a person has still to start, empty for every other (SDD-025 section
+	// 19.1). Marks and Proposals are JSON lists (core/recording Mark and Proposal; SDD-025 section 19.6).
+	Plan      string
+	Marks     string
+	Proposals string
 }
 
 // Store is the recordings table.
@@ -57,6 +62,7 @@ type Store interface {
 	// ListByAssetHash is the recordings whose screen asset has that content hash, with no source label (the
 	// emptying of the trash needs none).
 	ListByAssetHash(ctx context.Context, hash string) ([]Row, error)
-	// Open is the recordings that are not final: prepared, recording or finishing.
+	// Open is the recordings that are not final: prepared, recording, paused or finishing. A recording prepared
+	// with a plan, which no helper has started, is not open.
 	Open(ctx context.Context) ([]Row, error)
 }

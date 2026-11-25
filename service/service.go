@@ -252,6 +252,15 @@ type Service interface {
 	RecordingConfirm(ctx context.Context, req RecordingRef) (*Recording, error)
 	RecordingDismiss(ctx context.Context, req RecordingRef) (*Recording, error)
 	RecordingPlace(ctx context.Context, req RecordingPlaceRequest) (*EditResult, error)
+	// RecordingPrepare, RecordingMark and RecordingProposeCuts are the agent flow of SDD-025 section 19; none starts
+	// a capture. RecordingProposalDecide is a person's: the accepted ranges are one batch.
+	RecordingPrepare(ctx context.Context, req RecordingPrepareRequest) (*Recording, error)
+	RecordingMark(ctx context.Context, req RecordingMarkRequest) (*Recording, error)
+	RecordingProposeCuts(ctx context.Context, req RecordingProposeCutsRequest) (*Recording, error)
+	RecordingProposalDecide(
+		ctx context.Context,
+		req RecordingProposalDecideRequest,
+	) (*RecordingProposalDecideResult, error)
 	// A recording a browser captures and uploads (SDD-025 section 18): all three are for a person in a privileged
 	// browser session, and HTTP only.
 	RecordingUploadBegin(ctx context.Context, req RecordingUploadBeginRequest) (*Recording, error)
@@ -499,6 +508,7 @@ type svc struct {
 	captureReason string
 	recMaxSeconds int
 	recMu         sync.Mutex
+	decideMu      sync.Mutex
 	recSessions   map[string]*recSession
 	recUploads    map[string]*upload
 	recAssembling map[string]*assembly
