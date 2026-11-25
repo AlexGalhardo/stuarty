@@ -849,7 +849,7 @@ type ProbeSummary struct {
 type MediaInspectRequest struct {
 	ProjectID  string   `json:"project_id"`
 	AssetID    string   `json:"asset_id"`
-	Sections   []string `json:"sections,omitempty"`    // default ["probe"]; any of "probe","transcript","silences","loudness","beats","words","fillers"
+	Sections   []string `json:"sections,omitempty"`    // default ["probe"]; any of "probe","transcript","silences","loudness","beats","words","fillers","zooms"
 	MinSilence string   `json:"min_silence,omitempty"` // time as a length; default "0.4s"
 	Page                                                  // cursor and limit page the transcript lines; limit default 20, maximum 200
 }
@@ -2527,6 +2527,8 @@ The asset name is untrusted text. In `structuredContent` it appears under `asset
 
 #### `media_inspect`
 
+The section `zooms` (epic 99, SDD-025 section 17.8) lists the zooms in the scale keyframes of the clips that play the asset: `structuredContent.zooms` has one `{item_id, n, start, end}` for each, the times being `{frame, seconds}` on the timeline; it reads the document and changes nothing.
+
 The sections `words` and `fillers` (epic 69, SDD-023) answer `TranscriptView` and `TranscriptDetectFillers` for the asset: `structuredContent.untrusted.words` has the words with their index, their frames in the asset and the ranges of the timeline that show them (the index is what the `from_word` and `to_word` of `transcript.delete_range` name), and `structuredContent.untrusted.suggestions` the suggestions to review, because their text comes from the media (§2.6); `structuredContent.words` and `.fillers` carry the revision, the language and, for the suggestions, the rule that says what was checked. The text of the result lists the same page in an untrusted block (`index:text`, `~` for a word not on the timeline; `from-to kind strength: text`). Both are one page within the cap of §3.10: `cursor` pages the transcript when that section is asked for, else the words, else the fillers, and a section that does not own the cursor says that the rest is left out. They read the newest transcript, start no job and change nothing; the text of a word is escaped and capped.
 
 ```json
@@ -2558,7 +2560,8 @@ The sections `words` and `fillers` (epic 69, SDD-023) answer `TranscriptView` an
             "loudness",
             "beats",
             "words",
-            "fillers"
+            "fillers",
+            "zooms"
           ]
         },
         "default": [

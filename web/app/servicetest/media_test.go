@@ -2,6 +2,7 @@ package servicetest
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -805,5 +806,59 @@ func TestAssetListShowsTheFilesByHash(t *testing.T) {
 
 	if _, err := m.svc.AssetList(m.as(ui), service.AssetListRequest{Kind: "gif"}); code(err) != command.CodeValidation {
 		t.Errorf("an unknown kind = %v", err)
+	}
+}
+
+// The zooms section lists the zooms in the scale keyframes of the clips that play the asset, in the time of the
+// timeline (SDD-025 section 17.8): the core finds them, the service only gives them their times.
+func TestMediaInspectZoomsSection(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{})
+	project, clip, _, _ := m.speechProject()
+	asset := m.document(project)
+
+	var doc timeline.Document
+	if err := json.Unmarshal(asset, &doc); err != nil {
+		t.Fatal(err)
+	}
+
+	assetID := doc.Items[clip].Asset
+
+	inspect := func() *service.MediaInspectResult {
+		res, err := m.svc.MediaInspect(m.as(ui), service.MediaInspectRequest{
+			ProjectID: project, AssetID: assetID, Sections: []string{"zooms"},
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		return res
+	}
+
+	if res := inspect(); len(res.Zooms) != 0 || !strings.Contains(res.Text, "zooms: none") {
+		t.Fatalf("a clip with no zoom lists none: %+v %q", res.Zooms, res.Text)
+	}
+
+	keyframe := func(frame int, value string) command.Operation {
+		return op("keyframe.set", fmt.Sprintf(
+			`{"item_id":%q,"property":"scale","at":"%df","value":%s}`, clip, frame, value,
+		))
+	}
+
+	m.mustEdit(ui, project, m.head(project).Revision,
+		keyframe(0, "1"), keyframe(6, "1.6"), keyframe(24, "1.6"), keyframe(36, "1"),
+	)
+
+	res := inspect()
+	if len(res.Zooms) != 1 {
+		t.Fatalf("zooms = %+v, want one", res.Zooms)
+	}
+
+	z := res.Zooms[0]
+	if z.ItemID != clip || z.N != 1 || z.Start.Frame != 0 || z.End.Frame != 36 || z.End.Seconds != 1.2 {
+		t.Errorf("the zoom = %+v, want the clip, 1, frames 0 to 36 (1.2 s)", z)
+	}
+
+	if !slices.Contains(res.Available, "zooms") || !strings.Contains(res.Text, "zooms: 1") {
+		t.Errorf("available %v, text %q", res.Available, res.Text)
 	}
 }

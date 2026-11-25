@@ -328,6 +328,10 @@ The smoothed position is an exponential filter of time constant `smoothing_ms` (
 
 Golden cases of the three commands (SDD-002 C.93 to C.95) on a fixture with five clicks ten seconds apart, the planner tests of `core/recording`, a parity test of the service (edit by the Service, CLI, HTTP and MCP gives the same document), and an export test of a recorded fixture that compares frames with golden images. Not run: a real recording with the real pointer on the author machine.
 
+### 17.8 The zooms of a take (epic 99)
+
+The finishing panel of the editor lists the zooms of a screen take and draws them on a lane of the timeline. They are read, not computed by the editor: `media_inspect` (`GET /projects/{id}/media/{asset_id}`, `stuarty media:inspect`) takes the section `zooms`, and the service answers with one `{item_id, n, start, end}` for every zoom in the scale keyframes of every clip that plays the asset, in time order, `n` counting from 1 for each clip and the times as `{frame, seconds}` on the timeline. The core finds them (`recording.ZoomSpans`): a zoom is a hold, two keyframes in a row at one scale above the resting scale of the clip, which is what `recording.auto_zoom` writes; the keyframe before the hold starts the zoom and the one after it ends it. A pan from one zoom to the next is two zooms. Keyframes set by hand count the same way. The "use the clicks" switch of the panel needs no option: on sends `recording.auto_zoom`, off sends `keyframe.clear` for `x`, `y` and `scale`, and the list is the read after either. No tool, route or command is added.
+
 ## 18. Basic recording in the browser (epic 63)
 
 A person who uses Stuarty in a browser (on Docker, on a server, or on a machine with no native helper) records the screen, the microphone and, if the browser offers it, the sound the page shares, and the take lands in the same project through the same recording row, states, review and placement as a native one. The browser captures and uploads; **the server decides**: the order and integrity of what arrives, the limits, who may upload, and the file that results. The browser computes no edit and holds no rule (ADR-0007).

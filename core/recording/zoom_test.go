@@ -4,6 +4,8 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/AlexGalhardo/stuarty/core/timeline"
 )
 
 // click is a press at the share (x, y) of the source, in tenths of a percent.
@@ -197,4 +199,39 @@ func TestPlanZoomsPanEndsBeforeTheNextClick(t *testing.T) {
 	if zooms[1].StartMS != zooms[0].ReleaseMS {
 		t.Errorf("the pan starts at the release: %+v", zooms)
 	}
+}
+
+func TestZoomSpans(t *testing.T) {
+	kf := func(frame int, v float64) timeline.Keyframe { return timeline.NewKeyframe(frame, v) }
+
+	t.Run("two separated zooms", func(t *testing.T) {
+		got := ZoomSpans([]timeline.Keyframe{
+			kf(0, 1), kf(10, 1.6), kf(40, 1.6), kf(60, 1), kf(100, 1), kf(110, 1.6), kf(150, 1.6), kf(170, 1),
+		}, 1)
+		want := []ZoomSpan{
+			{StartFrame: 0, FullFrame: 10, ReleaseFrame: 40, EndFrame: 60},
+			{StartFrame: 100, FullFrame: 110, ReleaseFrame: 150, EndFrame: 170},
+		}
+
+		if !reflect.DeepEqual(got, want) {
+			t.Fatalf("got %+v, want %+v", got, want)
+		}
+	})
+
+	t.Run("a pan between two zooms keeps both", func(t *testing.T) {
+		got := ZoomSpans([]timeline.Keyframe{kf(0, 1), kf(10, 1.6), kf(40, 1.6), kf(60, 2), kf(90, 2), kf(110, 1)}, 1)
+		if len(got) != 2 || got[0].EndFrame != 40 || got[1].StartFrame != 40 {
+			t.Fatalf("got %+v", got)
+		}
+	})
+
+	t.Run("no zoom at rest", func(t *testing.T) {
+		if got := ZoomSpans([]timeline.Keyframe{kf(0, 1), kf(50, 1)}, 1); len(got) != 0 {
+			t.Fatalf("got %+v, want none", got)
+		}
+
+		if got := ZoomSpans(nil, 1); len(got) != 0 {
+			t.Fatalf("got %+v, want none", got)
+		}
+	})
 }
