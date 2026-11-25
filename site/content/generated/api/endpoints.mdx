@@ -290,10 +290,13 @@ Every operation has its own page with the parameters, the body, the responses an
 | `POST` | `/api/v1/recordings/{id}/confirm` | [`recordings.confirm`](/docs/api/recordings.confirm) | Add a finished recording to the project (a person in the browser only; agents can then read it) |
 | `POST` | `/api/v1/recordings/{id}/dismiss` | [`recordings.dismiss`](/docs/api/recordings.dismiss) | Not now: keep a recording out of the project and out of sight of agents (a person in the browser only) |
 | `GET` | `/api/v1/recordings/{id}/events` | [`recordings.events`](/docs/api/recordings.events) | Read the pointer and click events of a finished recording, in pixels of the captured source |
+| `POST` | `/api/v1/recordings/{id}/finish` | [`recordings.upload.finish`](/docs/api/recordings.upload.finish) | Finish a browser recording: the server assembles the chunks into a file (a person in the browser only) |
 | `POST` | `/api/v1/recordings/{id}/pause` | [`recordings.pause`](/docs/api/recordings.pause) | Pause a recording: every source stops writing and the paused time is cut from every file (anyone with media) |
 | `POST` | `/api/v1/recordings/{id}/place` | [`recordings.place`](/docs/api/recordings.place) | Place a recording the person added on the timeline, as one batch |
 | `POST` | `/api/v1/recordings/{id}/resume` | [`recordings.resume`](/docs/api/recordings.resume) | Resume a paused recording (a person in the browser only: it restarts the capture of the screen) |
 | `POST` | `/api/v1/recordings/{id}/stop` | [`recordings.stop`](/docs/api/recordings.stop) | Stop a recording and keep what was written (anyone with media) |
+| `PUT` | `/api/v1/recordings/{id}/upload/{track}/{index}` | [`recordings.upload.chunk`](/docs/api/recordings.upload.chunk) | Upload one chunk of a track of a browser recording, in order, with its SHA-256 (a person in the browser only) |
+| `POST` | `/api/v1/recordings/upload` | [`recordings.upload.begin`](/docs/api/recordings.upload.begin) | Begin a recording that the browser captures and uploads (a person in the browser only) |
 
 ## Agent chat
 

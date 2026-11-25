@@ -182,11 +182,13 @@ type Recording struct {
 	Pauses      []RecordingPause `json:"pauses"`
 	EventsCount int64            `json:"events_count"`
 	Levels      *RecordingLevels `json:"levels,omitempty"`
-	Actor       string           `json:"actor"`
-	CreatedAt   time.Time        `json:"created_at"`
-	StartedAt   *time.Time       `json:"started_at,omitempty"`
-	EndedAt     *time.Time       `json:"ended_at,omitempty"`
-	Text        string           `json:"text"`
+	// Upload is where a browser recording is, while it receives chunks (SDD-025 section 17.3).
+	Upload    *RecordingUpload `json:"upload,omitempty"`
+	Actor     string           `json:"actor"`
+	CreatedAt time.Time        `json:"created_at"`
+	StartedAt *time.Time       `json:"started_at,omitempty"`
+	EndedAt   *time.Time       `json:"ended_at,omitempty"`
+	Text      string           `json:"text"`
 }
 
 // recSession is a recording that is running in this process.
@@ -392,10 +394,7 @@ func (s *svc) RecordingStart(ctx context.Context, req RecordingStartRequest) (*R
 
 	limits := s.recordingLimits()
 	if lerr := limits.CheckStart(s.freeBytes()); lerr != nil {
-		return nil, newError("E_LIMIT_EXCEEDED", "The disk of the workspace has too little free space to record.").
-			withHint("free space on the disk of the workspace; the person running the server can lower "+
-				"STUARTY_MIN_FREE_BYTES").
-			withDetail("reason", "disk_low").withDetail("variable", "STUARTY_MIN_FREE_BYTES")
+		return nil, diskLowError()
 	}
 
 	fps := recording.FPSOrDefault(req.FPS)
@@ -422,6 +421,9 @@ func (s *svc) RecordingStart(ctx context.Context, req RecordingStartRequest) (*R
 		if err != nil {
 			return err
 		}
+
+		// A recording a browser uploads uses no helper and has its own limits (SDD-025 section 17.4).
+		open = slices.DeleteFunc(open, func(o recordings.Row) bool { return o.SourceKind == recording.SourceBrowser })
 
 		if len(open) > 0 {
 			return newError(CodeQueueFull, "a recording is already in progress.").
@@ -768,6 +770,10 @@ func (s *svc) RecordingStop(ctx context.Context, req RecordingRef) (*Recording, 
 		return s.liveView(r), nil
 	}
 
+	if r.SourceKind == recording.SourceBrowser {
+		return s.uploadStop(ctx, r)
+	}
+
 	s.recMu.Lock()
 	sess := s.recSessions[req.ID]
 	s.recMu.Unlock()
@@ -972,6 +978,10 @@ func (s *svc) RecordingCancel(ctx context.Context, req RecordingRef) (*Recording
 	}
 
 	st, rv := recording.State(r.State), recording.Review(r.Review)
+
+	if !st.Final() && r.SourceKind == recording.SourceBrowser {
+		return s.uploadDiscard(ctx, r)
+	}
 
 	if !st.Final() {
 		s.recMu.Lock()
@@ -1416,8 +1426,19 @@ func (s *svc) liveView(r recordings.Row) *Recording {
 		}
 	}
 
+	var up *RecordingUpload
+
+	if r.SourceKind == recording.SourceBrowser && r.State == string(recording.Recording) {
+		up = s.uploadView(r)
+
+		u := s.uploadFor(r)
+		u.cmu.Lock()
+		r.DurationMs, r.Bytes = u.elapsedMS, u.total()
+		u.cmu.Unlock()
+	}
+
 	v := s.recordingView(r)
-	v.Levels = levels
+	v.Levels, v.Upload = levels, up
 
 	return v
 }
@@ -1574,6 +1595,15 @@ func (s *svc) recoverRecordings(ctx context.Context) error {
 
 	for i := range rows {
 		r := rows[i]
+
+		if r.SourceKind == recording.SourceBrowser {
+			if uerr := s.recoverUpload(ctx, r); uerr != nil {
+				return uerr
+			}
+
+			continue
+		}
+
 		path := s.recordingPath(r.ID)
 
 		var info CaptureInfo
@@ -1663,4 +1693,7 @@ func (s *svc) shutdownRecordings() {
 	}
 
 	wg.Wait()
+
+	// An assembly that does not end in time leaves its recording finishing, and the next start assembles it again.
+	s.waitAssemblies(10 * time.Second)
 }

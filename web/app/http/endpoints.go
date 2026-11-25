@@ -8,6 +8,7 @@ package httpapi
 import (
 	"net/http"
 
+	"github.com/AlexGalhardo/stuarty/core/recording"
 	"github.com/AlexGalhardo/stuarty/service"
 )
 
@@ -39,6 +40,9 @@ type Endpoint struct {
 	// MaxInFlight caps the calls of one caller that run at once on a route that is
 	// Uncounted but does work on a cache miss (ViewFrame renders a frame).
 	MaxInFlight int
+	// MaxBody replaces the body limit of the router for this route, in bytes: a route that takes a file or a
+	// chunk of one raises it (the recording upload, SDD-025 section 17.3). Zero keeps the router's limit.
+	MaxBody int64
 }
 
 // FullPath is the path a client requests.
@@ -556,6 +560,30 @@ var Endpoints = []Endpoint{
 		Service: "RecordingStart",
 		Status:  200,
 		Summary: "Start recording a display or a window (a person in the browser only; the local token and keys get 403)",
+	},
+	{
+		ID: "recordings.upload.begin", Method: http.MethodPost, Path: "/recordings/upload", Scope: service.ScopeMedia,
+		Service: "RecordingUploadBegin", Status: 200,
+		Summary: "Begin a recording that the browser captures and uploads (a person in the browser only)",
+	},
+	{
+		ID:      "recordings.upload.chunk",
+		Method:  http.MethodPut,
+		Path:    "/recordings/{id}/upload/{track}/{index}",
+		Scope:   service.ScopeMedia,
+		Service: "RecordingUploadChunk",
+		Status:  200,
+		MaxBody: recording.MaxChunkBytes,
+		Summary: "Upload one chunk of a track of a browser recording, in order, with its SHA-256 (a person in the browser only)",
+	},
+	{
+		ID:      "recordings.upload.finish",
+		Method:  http.MethodPost,
+		Path:    "/recordings/{id}/finish",
+		Scope:   service.ScopeMedia,
+		Service: "RecordingUploadFinish",
+		Status:  200,
+		Summary: "Finish a browser recording: the server assembles the chunks into a file (a person in the browser only)",
 	},
 	{
 		ID: "recordings.get", Method: http.MethodGet, Path: "/recordings/{id}", Scope: service.ScopeRead,

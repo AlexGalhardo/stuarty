@@ -869,6 +869,22 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 			_, err := e.svc.RecordingPlace(ctx, service.RecordingPlaceRequest{ID: "rec_0000000001"})
 			return err
 		},
+		"RecordingUploadBegin": func() error {
+			_, err := e.svc.RecordingUploadBegin(ctx, service.RecordingUploadBeginRequest{
+				ProjectID: "prj_0000000001", Container: "webm",
+			})
+			return err
+		},
+		"RecordingUploadChunk": func() error {
+			_, err := e.svc.RecordingUploadChunk(ctx, service.RecordingUploadChunkRequest{
+				ID: "rec_0000000001", Track: "screen",
+			})
+			return err
+		},
+		"RecordingUploadFinish": func() error {
+			_, err := e.svc.RecordingUploadFinish(ctx, service.RecordingUploadFinishRequest{ID: "rec_0000000001"})
+			return err
+		},
 	}
 
 	// Every method of the interface is checked here and has a scope entry.
