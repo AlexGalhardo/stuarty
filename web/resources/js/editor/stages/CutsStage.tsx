@@ -1,4 +1,11 @@
-import { Check, Hourglass, ScanFace, X } from "lucide-react";
+import {
+	Check,
+	CircleDashed,
+	Clock,
+	Hourglass,
+	ScanFace,
+	X,
+} from "lucide-react";
 import type { ReactNode } from "react";
 
 import UntrustedText from "@/components/UntrustedText";
@@ -54,40 +61,42 @@ function ProposalCard({
 				</span>
 			</button>
 			<div className="flex flex-col gap-1">
-				<span lang="en" className="text-sm font-semibold">
+				<span
+					lang="en"
+					className="text-[13px] font-medium"
+					title={t("ui.editor.vertical_cuts.meta", {
+						words: proposal.words,
+						share: sharePercent(proposal.face_share),
+					})}
+				>
 					<UntrustedText>{proposal.title}</UntrustedText>
 				</span>
 				<span className="flex items-center justify-between gap-2 text-xs">
-					<span className="font-mono text-muted-foreground tabular-nums">
+					<span className="font-mono text-xs whitespace-nowrap text-muted-foreground tabular-nums">
 						{t("ui.editor.vertical_cuts.range", {
 							start: clockLabel(proposal.start_ms),
 							end: clockLabel(proposal.end_ms),
 						})}
 					</span>
 					<span
-						className={
-							reviewing
-								? "text-accent-text"
-								: "rounded-full border border-border px-2 text-muted-foreground"
-						}
+						className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-xs whitespace-nowrap ${reviewing ? "bg-accent-soft text-accent-text" : "border border-border text-muted-foreground"}`}
 					>
+						{reviewing ? (
+							<Clock aria-hidden="true" className="size-3.5" />
+						) : (
+							<CircleDashed aria-hidden="true" className="size-3.5" />
+						)}
 						{reviewing
 							? t("ui.editor.cuts_stage.in_review")
 							: t("ui.editor.cuts_stage.proposed")}
 					</span>
 				</span>
-				<span className="text-xs text-muted-foreground">
-					{t("ui.editor.vertical_cuts.meta", {
-						words: proposal.words,
-						share: sharePercent(proposal.face_share),
-					})}
-				</span>
 			</div>
-			<div className="grid grid-cols-2 gap-2">
+			<div className="grid grid-cols-2 gap-1">
 				<Button
 					type="button"
 					variant="outline"
-					size="sm"
+					className="h-8"
 					onClick={() => state.refuse(proposal.n)}
 				>
 					<X aria-hidden="true" />
@@ -95,7 +104,7 @@ function ProposalCard({
 				</Button>
 				<Button
 					type="button"
-					size="sm"
+					className="h-8"
 					disabled={!state.canEdit || state.busy}
 					onClick={() => void state.accept(proposal.n)}
 				>
@@ -187,7 +196,7 @@ export default function CutsStage({ onClose }: { onClose(): void }): ReactNode {
 					</p>
 				) : (
 					<ul
-						className="grid grid-cols-[repeat(auto-fill,minmax(11rem,1fr))] gap-4"
+						className="grid grid-cols-3 gap-3"
 						aria-label={t("ui.editor.vertical_cuts.proposals")}
 					>
 						{state.visible.map((proposal) => (
