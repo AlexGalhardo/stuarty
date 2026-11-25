@@ -6,7 +6,11 @@
 #   bash scripts/ffmpeg-verify.sh signatures <dir>               cosign verify-blob and gh attestation verify for every asset
 # `binary` fails when: the configure line is not LGPL safe (internal/tools/ffmpegconf), -buildconf
 # or -version names --enable-gpl, --enable-nonfree, libx264, libx265, libfdk_aac, the linker
-# listing shows an OpenH264 library, the libopenh264, libmp3lame, libvorbis, libwebp or libwebp_anim encoder is missing, the h264, hevc and av1 encoders (qsv, amf, nvenc; D-034, RF-089) of a hardware flag on the line, or h264_mf and hevc_mf (Media Foundation), h264_videotoolbox and hevc_videotoolbox (macOS) are missing on linux and windows x86_64, or a filter the engine references is missing (FILTERS_FILE,
+# listing shows an OpenH264 library, the libopenh264, libmp3lame, libvorbis, libwebp or libwebp_anim encoder is missing,
+# the qsv, amf and nvenc flags are missing on linux and windows x86_64 (D-034), an encoder of a hardware flag on the line
+# is missing (h264, hevc and av1 for qsv, amf and nvenc, RF-089; h264_mf and hevc_mf for Media Foundation;
+# h264_videotoolbox and hevc_videotoolbox for VideoToolbox), the binary does not read STUARTY_OPENH264_DIR or still
+# reads VUKEM_VIDEO_OPENH264_DIR (VV-231), or a filter the engine references is missing (FILTERS_FILE,
 # default scripts/ffmpeg-filters.txt; eq and boxblur must be absent).
 # `signatures` needs cosign and gh, and REPO (owner/name) or GITHUB_REPOSITORY.
 set -euo pipefail

@@ -1,6 +1,7 @@
 # The build machine of the own FFmpeg (epic 46, ADR-0011): the Linux and the Windows (mingw-w64) targets are built
-# in this image, so two builds on one host see the same compiler and the same tools. The workflow
-# .github/workflows/ffmpeg-build.yml builds in the same Debian image, with the same packages.
+# in this image, so two builds on one host see the same compiler and the same tools. The Linux jobs of the workflow
+# .github/workflows/ffmpeg-build.yml build in the same Debian image, with the same packages; its Windows job builds
+# on the runner, so a local Windows build and the published one are not expected to have the same digest.
 #
 #   docker build -f .config/ffmpeg-build/builder.Dockerfile -t stuarty-ffbuild:1 .config/ffmpeg-build
 #   docker run --rm -v "$PWD:/src:ro" -v "$OUT:/out" stuarty-ffbuild:1 \
