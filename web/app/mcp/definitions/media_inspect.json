@@ -26,7 +26,8 @@
       "loudness",
       "beats",
       "words",
-      "fillers"
+      "fillers",
+      "zooms"
      ]
     },
     "default": [

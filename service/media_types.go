@@ -155,7 +155,7 @@ type MediaInspectRequest struct {
 	ProjectID  string   `json:"project_id"`
 	TimelineID string   `json:"timeline_id,omitempty"` // SDD-003 section 1.7
 	AssetID    string   `json:"asset_id"`
-	Sections   []string `json:"sections,omitempty"` // default ["probe"]: probe, transcript, silences, loudness, beats, words, fillers
+	Sections   []string `json:"sections,omitempty"` // default ["probe"]: probe, transcript, silences, loudness, beats, words, fillers, zooms
 	MinSilence string   `json:"min_silence,omitempty"`
 	Page
 }
@@ -212,12 +212,15 @@ type MediaInspectResult struct {
 	Beats     *BeatGrid     `json:"beats,omitempty"`
 	// Words and Fillers answer the sections of that name: the transcript with the timeline range of each word,
 	// and the filler words and repetitions to review (SDD-023).
-	Words      *TranscriptViewResult   `json:"words,omitempty"`
-	Fillers    *TranscriptDetectResult `json:"fillers,omitempty"`
-	Untrusted  *UntrustedData          `json:"untrusted,omitempty"`
-	Error      *Error                  `json:"error,omitempty"`
-	NextCursor *string                 `json:"next_cursor"`
-	Text       string                  `json:"text"`
+	Words   *TranscriptViewResult   `json:"words,omitempty"`
+	Fillers *TranscriptDetectResult `json:"fillers,omitempty"`
+	// Zooms answers the section of that name: the zooms in the scale keyframes of the clips that play the asset, which
+	// is what a screen take finished with recording.auto_zoom holds (SDD-025 section 17).
+	Zooms      []ClipZoom     `json:"zooms,omitempty"`
+	Untrusted  *UntrustedData `json:"untrusted,omitempty"`
+	Error      *Error         `json:"error,omitempty"`
+	NextCursor *string        `json:"next_cursor"`
+	Text       string         `json:"text"`
 }
 
 // FileRef names a stored file for download (SDD-003 section 2.9).
@@ -243,4 +246,13 @@ type File struct {
 	Header map[string]string
 	// Pending says the file does not exist yet and is being made: the answer is 202, not a file (kind audio_preview).
 	Pending bool
+}
+
+// ClipZoom is one zoom of a clip that plays the asset, in the time of the timeline: N counts the zooms of the clip from
+// 1, Start is where the view starts to move in and End where it is back.
+type ClipZoom struct {
+	ItemID string    `json:"item_id"`
+	N      int       `json:"n"`
+	Start  TimeValue `json:"start"`
+	End    TimeValue `json:"end"`
 }

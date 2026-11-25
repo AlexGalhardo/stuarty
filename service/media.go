@@ -22,6 +22,7 @@ import (
 	"golang.org/x/text/unicode/norm"
 
 	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/core/recording"
 	"github.com/AlexGalhardo/stuarty/core/timeline"
 	"github.com/AlexGalhardo/stuarty/core/timeval"
 	"github.com/AlexGalhardo/stuarty/engine/ingest"
@@ -1042,7 +1043,7 @@ func stripOf(arts []ArtifactRow) *Strip {
 	return &Strip{TileW: l.TileW, TileH: l.TileH, Columns: l.Columns, Count: l.Count, IntervalMS: l.IntervalMS}
 }
 
-var inspectSections = []string{"probe", "transcript", "silences", "loudness", "beats", "words", "fillers"}
+var inspectSections = []string{"probe", "transcript", "silences", "loudness", "beats", "words", "fillers", "zooms"}
 
 func (s *svc) MediaInspect(ctx context.Context, req MediaInspectRequest) (*MediaInspectResult, error) {
 	c, err := s.authorizeProject(ctx, "MediaInspect", req.ProjectID)
@@ -1062,7 +1063,7 @@ func (s *svc) MediaInspect(ctx context.Context, req MediaInspectRequest) (*Media
 	for _, sec := range sections {
 		if !slices.Contains(inspectSections, sec) {
 			return nil, newError(command.CodeValidation, "the section %q is not known.", sec).
-				withPath("sections").withHint("use probe, transcript, silences, loudness, beats, words or fillers")
+				withPath("sections").withHint("use probe, transcript, silences, loudness, beats, words, fillers or zooms")
 		}
 	}
 
@@ -1137,12 +1138,72 @@ func (s *svc) MediaInspect(ctx context.Context, req MediaInspectRequest) (*Media
 			if err := s.inspectWords(ctx, &req, pa.AssetID, sec, res, &text); err != nil {
 				return nil, err
 			}
+		case "zooms":
+			zooms, zerr := zoomsSection(&row, pa.AssetID, res)
+			if zerr != nil {
+				return nil, zerr
+			}
+
+			text.WriteString(zooms)
 		}
 	}
 
 	res.Text = text.String()
 
 	return res, nil
+}
+
+// zoomsSection fills res.Zooms from the scale keyframes of the clips that play the asset, in the order of the
+// timeline. The core finds the zooms; this only puts them in time.
+func zoomsSection(row *ProjectRow, assetID string, res *MediaInspectResult) (string, error) {
+	doc, err := decodeRow(row)
+	if err != nil {
+		return "", err
+	}
+
+	fps := doc.Settings.FPS
+	res.Zooms = []ClipZoom{}
+
+	ids := make([]string, 0, len(doc.Items))
+	for id := range doc.Items {
+		if it := doc.Items[id]; it.Type == timeline.ItemClip && it.Asset == assetID {
+			ids = append(ids, id)
+		}
+	}
+
+	slices.SortFunc(ids, func(a, b string) int {
+		if d := doc.Items[a].Start - doc.Items[b].Start; d != 0 {
+			return d
+		}
+
+		return strings.Compare(a, b)
+	})
+
+	var text strings.Builder
+
+	for _, id := range ids {
+		it := doc.Items[id]
+		for i, z := range recording.ZoomSpans(it.Keyframes["scale"], it.Scale) {
+			res.Zooms = append(res.Zooms, ClipZoom{
+				ItemID: id, N: i + 1,
+				Start: timeValue(fps, int64(it.Start+z.StartFrame)), End: timeValue(fps, int64(it.Start+z.EndFrame)),
+			})
+		}
+	}
+
+	if len(res.Zooms) == 0 {
+		return "\nzooms: none", nil
+	}
+
+	res.Available = append(res.Available, "zooms")
+
+	fmt.Fprintf(&text, "\nzooms: %d", len(res.Zooms))
+
+	for _, z := range res.Zooms {
+		fmt.Fprintf(&text, "\n  %s #%d %.3fs to %.3fs", z.ItemID, z.N, z.Start.Seconds, z.End.Seconds)
+	}
+
+	return text.String(), nil
 }
 
 func orDash(s string) string {

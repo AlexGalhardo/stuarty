@@ -661,6 +661,7 @@ The operations of the registry of domain `image` (`core/command` registry built 
 | `studio`, `broadcast`, `room_rescue` | voice preset id | the three chains of `audio.apply_voice_preset`, in this order |
 | `Blur` | track name | the visual track `clip.blur_region` creates, directly above the track of the clip, when no free track of that name lies above it |
 | `Blur region` | item name | the name of the clip item that `clip.blur_region` adds |
+| `strong`, `medium` | blur strength id | the two named strengths of `clip.blur_region` (`strength`), in this order: 4% and 2.5% of the shorter side of the project; carried by the registry as `x-vv-blur-strengths` (epic 99) |
 | `overridden_items`, `new_track_id`, `radius`, `min_radius` | effective member | what the four commands report in `effective` (SDD-002 C.88 to C.91) |
 
 ## 18. Finishing a screen take (epic 65, SDD-025 section 17, SDD-002 C.93 to C.95)
@@ -673,6 +674,7 @@ The operations of the registry of domain `image` (`core/command` registry built 
 | `Click highlight` | track name | the visual track of the click highlight items, directly above the track of the clip |
 | `Cursor <item id>` | item name | the shape items of the cursor of that clip, one per segment of at most 90 keyframes |
 | `Click <item id> <n>` | item name | the shape item of the nth click of that clip, from 1 |
+| `zooms` | `media_inspect` section | the zooms of the clips of an asset, `{item_id, n, start, end}` each (SDD-025 section 17.8, epic 99) |
 | `zooms`, `dropped`, `keyframes`, `segments`, `highlights` | effective member | what the three commands report in `effective` (SDD-002 C.93 to C.95) |
 
 ## 19. Recording layouts, backgrounds and the teleprompter (epic 66, SDD-025 section 20, SDD-002 C.96 and C.97)
