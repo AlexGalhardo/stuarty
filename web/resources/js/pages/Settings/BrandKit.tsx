@@ -36,6 +36,31 @@ function fileName(path: string): string {
 	return path.split(/[\\/]/).pop() ?? path;
 }
 
+// The body that saves the whole kit. The service refuses a body with no member, and a kit emptied on the page has
+// none, so an empty kit says it with an explicit empty member (VV-434).
+export function kitBody(
+	logo: string,
+	colors: { name: string; value: string }[],
+	fonts: { [family: string]: BrandFont },
+): {
+	logo?: string;
+	colors?: Record<string, string>;
+	fonts?: Record<string, BrandFont>;
+} {
+	const body = {
+		...(logo.trim() === "" ? {} : { logo: logo.trim() }),
+		...(colors.length === 0
+			? {}
+			: {
+					colors: Object.fromEntries(
+						colors.map((row) => [row.name.trim(), row.value.trim()]),
+					),
+				}),
+		...(Object.keys(fonts).length === 0 ? {} : { fonts }),
+	};
+	return Object.keys(body).length === 0 ? { colors: {} } : body;
+}
+
 // The label of an image of the workspace in the logo picker: its name and, when the service knows
 // them, its dimensions.
 export function logoLabel(asset: LibraryAsset): string {
@@ -162,17 +187,7 @@ export default function BrandKitPage(): ReactNode {
 	async function save(): Promise<void> {
 		setSaving(true);
 		touch();
-		const body = {
-			...(logo.trim() === "" ? {} : { logo: logo.trim() }),
-			...(colors.length === 0
-				? {}
-				: {
-						colors: Object.fromEntries(
-							colors.map((row) => [row.name.trim(), row.value.trim()]),
-						),
-					}),
-			...(Object.keys(fonts).length === 0 ? {} : { fonts }),
-		};
+		const body = kitBody(logo, colors, fonts);
 		try {
 			apply(await createClient(new HttpTransport("/api/v1")).setBrandKit(body));
 			setSaved(true);
