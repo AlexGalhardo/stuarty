@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useT } from "@/lib/i18n";
 import { formatSeconds } from "../commands/units";
+import UndoRedo from "../history/UndoRedo";
 import { ToolLine } from "../inspector/Section";
 import { useTranscriptState } from "./useTranscript";
 
@@ -169,6 +170,9 @@ export default function TranscriptReview(): ReactNode {
 					)}
 				</div>
 			)}
+			<div className="flex gap-1">
+				<UndoRedo />
+			</div>
 			<p className="flex items-start gap-2 text-xs text-muted-foreground">
 				<Undo2 aria-hidden="true" className="mt-0.5 size-3.5 shrink-0" />
 				{t("ui.editor.transcript_review.undo_note")}

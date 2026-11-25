@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n";
 import { thumbnailUrl } from "../api/urls";
 import { formatSeconds } from "../commands/units";
+import UndoRedo from "../history/UndoRedo";
 import Section, { ToolLine } from "../inspector/Section";
 import { useStore } from "../state/createStore";
 import { useDocumentState, useRuntime } from "../state/EditorContext";
@@ -121,6 +122,9 @@ export function CutsReview(): ReactNode {
 					</Button>
 				</>
 			)}
+			<div className="flex gap-1">
+				<UndoRedo />
+			</div>
 			<p className="flex items-start gap-2 text-xs text-muted-foreground">
 				<Users aria-hidden="true" className="mt-0.5 size-3.5 shrink-0" />
 				{t("ui.editor.cuts_stage.only_a_person")}
