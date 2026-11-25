@@ -2,6 +2,7 @@ package export
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"image"
 	"strings"
@@ -9,6 +10,7 @@ import (
 
 	coreimage "github.com/AlexGalhardo/stuarty/core/image"
 	"github.com/AlexGalhardo/stuarty/core/plan"
+	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
 )
 
 const (
@@ -92,6 +94,29 @@ func TestImagePassesAreTheOnePassPixels(t *testing.T) {
 	}
 
 	for _, limit := range []int{2, 7, 31, 41} {
+		got, err := renderImagePasses(context.Background(), d, ImageConfig{}, 0, limit)
+		if err != nil {
+			t.Fatalf("passes of %d layers: %v", limit, err)
+		}
+
+		if n := pictureDiff(one, got); n != 0 {
+			t.Fatalf("passes of %d layers differ from one pass in %d bytes", limit, n)
+		}
+	}
+}
+
+// On a transparent canvas the picture a pass starts from is not opaque: the passes are still the one pass pixels,
+// alpha included.
+func TestImagePassesOnATransparentCanvas(t *testing.T) {
+	d := gridDoc(60)
+	d.Background = coreimage.Transparent
+
+	one, err := renderImagePasses(context.Background(), d, ImageConfig{}, 0, maxPlanLayers)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, limit := range []int{2, 7, 41} {
 		got, err := renderImagePasses(context.Background(), d, ImageConfig{}, 0, limit)
 		if err != nil {
 			t.Fatalf("passes of %d layers: %v", limit, err)
@@ -255,5 +280,45 @@ func TestSplitPassesCountsThePictureBelowAndAvoidsAClip(t *testing.T) {
 	_, err = splitPasses(layers, 0, false, []int{130}, maxPlanLayers)
 	if err == nil || !strings.Contains(err.Error(), "render_layers") {
 		t.Errorf("a clip across 120 layers: err = %v, want the limit of layers", err)
+	}
+
+	// 62 layers apart, a clip leaves a cut; 63 apart, after a first pass, it may not
+	layers = mk(130)
+	layers[126].Clip = &plan.ClipSpec{Source: "l64"}
+
+	got, err = splitPasses(layers, 0, false, []int{130}, maxPlanLayers)
+	if err != nil || fmt.Sprint(got) != "[64 127 130]" {
+		t.Errorf("a clip 62 layers long after a cut: %v, %v; want [64 127 130]", got, err)
+	}
+
+	layers[126].Clip, layers[127].Clip = nil, &plan.ClipSpec{Source: "l64"}
+
+	if _, err := splitPasses(layers, 0, false, []int{130}, maxPlanLayers); err == nil {
+		t.Error("a clip 63 layers long from the start of a pass found a cut")
+	}
+}
+
+// No mask is longer than a pass, but masks that overlap one another cover every cut of the first pass: the
+// render is refused with an error that names the case and a layer to move, not the bare limit of the module.
+func TestSplitPassesRefusesOverlappingMasksByName(t *testing.T) {
+	layers := make([]plan.Layer, 100)
+	for i := range layers {
+		layers[i] = plan.Layer{ItemID: fmt.Sprintf("l%d", i), Kind: plan.Bitmap, Opacity: 1}
+	}
+
+	for _, pair := range [][2]int{{0, 30}, {20, 50}, {40, 70}} {
+		layers[pair[1]].Clip = &plan.ClipSpec{Source: fmt.Sprintf("l%d", pair[0])}
+	}
+
+	_, err := splitPasses(layers, 0, false, []int{100}, maxPlanLayers)
+
+	var fe *ffmpeg.Error
+	if !errors.As(err, &fe) || fe.Code != ffmpeg.CodeLimitExceeded || fe.Details["limit"] != "render_layers" {
+		t.Fatalf("err = %v, want E_LIMIT_EXCEEDED with render_layers", err)
+	}
+
+	if !strings.Contains(fe.Message, "masks taken from other layers") || fe.Details["layer"] != "l70" ||
+		fe.Details["source"] != "l40" || !strings.Contains(fe.Hint, "l70") {
+		t.Fatalf("the error does not name the case: %+v", fe)
 	}
 }

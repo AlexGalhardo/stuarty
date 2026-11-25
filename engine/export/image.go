@@ -10,6 +10,7 @@ import (
 	coreimage "github.com/AlexGalhardo/stuarty/core/image"
 	"github.com/AlexGalhardo/stuarty/core/plan"
 	"github.com/AlexGalhardo/stuarty/engine/compositor"
+	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
 	"github.com/AlexGalhardo/stuarty/engine/lut"
 	"github.com/AlexGalhardo/stuarty/engine/rasterize"
 	"github.com/AlexGalhardo/stuarty/engine/renderhost"
@@ -147,7 +148,7 @@ func splitPasses(live []plan.Layer, start int, haveBase bool, stops []int, limit
 			}
 
 			if cut == start {
-				return nil, rendererError(&renderhost.Error{Reason: renderhost.LimitExceeded, Detail: "render_layers"})
+				return nil, noCutError(live, position, start+limit-boolInt(haveBase), limit)
 			}
 
 			out = append(out, cut)
@@ -159,6 +160,37 @@ func splitPasses(live []plan.Layer, start int, haveBase bool, stops []int, limit
 	}
 
 	return out, nil
+}
+
+// noCutError is the refusal of a stack that has no cut a pass can end at: the masks taken from other layers
+// cross every cut of a pass of limit layers (one layer 63 or more layers from its mask source, or pairs that
+// overlap one another over that many layers). It names a layer whose mask crosses the last cut tried, k.
+func noCutError(live []plan.Layer, position map[string]int, k, limit int) error {
+	layer, source := "", ""
+
+	for i := range live {
+		c := live[i].Clip
+		if c == nil {
+			continue
+		}
+
+		if src, ok := position[c.Source]; ok && (i < k) != (src < k) {
+			layer, source = live[i].ItemID, c.Source
+
+			break
+		}
+	}
+
+	return &ffmpeg.Error{
+		Code:   ffmpeg.CodeLimitExceeded,
+		Reason: "limit_exceeded",
+		Message: fmt.Sprintf("The image cannot be drawn: its masks taken from other layers reach across more "+
+			"than the %d layers the renderer draws at once.", limit),
+		Hint: fmt.Sprintf("Move layer %s closer to %s, the layer it takes its mask from, or give it a mask of "+
+			"its own.", layer, source),
+		Details: map[string]any{"limit": "render_layers", "ceiling": limit, "layer": layer, "source": source},
+		Err:     &renderhost.Error{Reason: renderhost.LimitExceeded, Detail: "render_layers"},
+	}
 }
 
 func boolInt(b bool) int {
