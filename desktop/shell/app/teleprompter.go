@@ -55,6 +55,12 @@ func (t *teleprompter) open(app *application.App, port int, address string) {
 		t.mu.Unlock()
 	})
 
+	// Wails holds every ExecJS until the page says "wails:runtime:ready", which the web UI never does (bridge.install
+	// says it for the main window). Without this the navigation guard of this window would wait forever and never run.
+	ready := func(*application.WindowEvent) { win.HandleMessage("wails:runtime:ready") }
+	win.RegisterHook(events.Windows.WebViewNavigationCompleted, ready)
+	win.RegisterHook(events.Mac.WebViewDidFinishNavigation, ready)
+	win.RegisterHook(events.Linux.WindowLoadFinished, ready)
 	guardNavigation(win, port, address)
 
 	t.win = win
