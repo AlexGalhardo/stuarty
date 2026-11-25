@@ -527,6 +527,12 @@ export default function ProjectShow() {
 								<StatusBadge status="neutral">
 									{t(`ui.projects.kind.${project.kind}`)}
 								</StatusBadge>
+								{project.kind === "text" &&
+								textItem?.text_kind !== undefined ? (
+									<StatusBadge status="info">
+										{t(`ui.write.kind.${textItem.text_kind}`)}
+									</StatusBadge>
+								) : null}
 							</div>
 							<p className="mt-1 text-base text-text-muted">
 								{t(`ui.workflow.lead.${project.kind}`)}

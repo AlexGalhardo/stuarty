@@ -288,6 +288,7 @@ export default function TextEditor({
 							projectId={projectId}
 							itemId={itemId}
 							latest={loaded.item.revision}
+							autoCompare
 							onReverted={changedElsewhere}
 						/>
 						<dl className="grid grid-cols-3 gap-3 rounded-lg border border-border bg-surface p-4 text-sm">

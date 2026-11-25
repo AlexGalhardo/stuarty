@@ -30,7 +30,7 @@ export default function FlowPath({
 			<p className="mb-2 text-sm font-semibold text-text-muted">
 				{t("ui.write.flow.label")}
 			</p>
-			<ol className="grid gap-x-4 gap-y-3 sm:grid-cols-2 xl:grid-cols-3">
+			<ol className="grid grid-cols-1 gap-y-3">
 				{steps.map((step, index) => (
 					<NumberedStep
 						key={step.id}

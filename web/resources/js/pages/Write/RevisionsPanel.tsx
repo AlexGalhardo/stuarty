@@ -33,6 +33,7 @@ export default function RevisionsPanel({
 	projectId,
 	itemId,
 	latest,
+	autoCompare = false,
 	onReverted,
 }: {
 	client: WritingClient;
@@ -40,6 +41,8 @@ export default function RevisionsPanel({
 	itemId: string;
 	// The latest revision of the text: when it changes, the list is read again.
 	latest: number;
+	// The review view shows what changed between the newest two revisions without a click.
+	autoCompare?: boolean;
 	onReverted: (message: string) => void;
 }): ReactNode {
 	const t = useT();
@@ -56,7 +59,7 @@ export default function RevisionsPanel({
 	const [to, setTo] = useState("");
 	const [busy, setBusy] = useState(false);
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: `latest` is the trigger of the read
+	// biome-ignore lint/correctness/useExhaustiveDependencies: `latest` is the trigger of the read, `autoCompare` is fixed for a panel
 	useEffect(() => {
 		let live = true;
 		setLoading(true);
@@ -72,6 +75,22 @@ export default function RevisionsPanel({
 				const numbers = result.revisions.map((r) => r.revision);
 				setTo(String(numbers[0] ?? ""));
 				setFrom(String(numbers[1] ?? ""));
+				const older = numbers[1];
+				const newer = numbers[0];
+				if (autoCompare && older !== undefined && newer !== undefined) {
+					void client
+						.revisions(projectId, itemId, { from: older, to: newer })
+						.then((got) => {
+							if (!live) return;
+							setComparison({
+								from: older,
+								to: newer,
+								hunks: got.diff?.hunks ?? [],
+								coarse: got.diff?.coarse ?? false,
+							});
+						})
+						.catch(() => undefined);
+				}
 			})
 			.catch((error: unknown) => {
 				if (live) setFailure(failureOf(error));
