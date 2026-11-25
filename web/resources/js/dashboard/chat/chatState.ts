@@ -97,3 +97,19 @@ export function activityStamp(events: readonly ChatEvent[]): string {
 	}
 	return `${skills}#${tool}`;
 }
+
+// The project the chat talks about once the list of projects is known (VV-427): the one it has when the service
+// lists it, else the one the person picked last, else the first. A project that is not in the list (trashed, or
+// deleted while the page of another one was open) is never kept, or the select would show the first option while
+// the session was read for an id the service no longer has.
+export function chooseProject(
+	projects: readonly { id: string }[],
+	current: string | null,
+	stored: string | null,
+): string | null {
+	const listed = (id: string | null): id is string =>
+		id !== null && projects.some((p) => p.id === id);
+	if (listed(current)) return current;
+	if (listed(stored)) return stored;
+	return projects[0]?.id ?? null;
+}

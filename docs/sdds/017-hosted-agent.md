@@ -151,6 +151,8 @@ Everything the agent does reaches the panel as **events** over Server-Sent Event
 
 The SSE frame's `id` is `seq`, so a client that reconnects with `Last-Event-ID` is sent what it missed: the stream first replays the stored events from that number (the event the id names is sent again, whole, because a message that was still growing when the connection dropped is one event), then follows the live ones; the snapshot and the subscription are taken together so no event falls between. Chunks of one message are one event whose text grows: the live stream sends each chunk with `append` true, the store keeps the whole text. A heartbeat keeps the connection alive; an unauthorized caller is ended at the next revalidation. At most 8 chat streams per credential.
 
+**The project of the panel (VV-427).** The panel talks about one project: the one in the address, else the one the person picked last, else the first of the list. The layout outlives a page, so the id it holds can be of a project that was deleted (the trash was emptied) after it was read. A read of the sessions of a project that answers `E_NOT_FOUND` therefore reads the list of projects again and moves the panel to one that exists (the picked one, else the first), with no error on the screen; a project the list does not hold yet (the agent made it) makes the panel read the list again, and the select always names the project the panel talks about. The panel is also drawn over the video editor, from the Open chat button of its scene bar (SDD-012 section 23.4).
+
 Agent text is never interpreted by Stuarty: no HTML, no Markdown rendering, no link made clickable from it. The panel shows a URL as text in full, with the host visible (T-71).
 
 ### 7.1 What a permission says about the call (epic 77)
