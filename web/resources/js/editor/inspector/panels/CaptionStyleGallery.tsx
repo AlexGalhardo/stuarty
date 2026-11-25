@@ -1,3 +1,4 @@
+import { Info } from "lucide-react";
 import { type ReactNode, useId, useState } from "react";
 
 import { useT } from "@/lib/i18n";
@@ -8,6 +9,7 @@ import {
 } from "../../commands/captionStyles";
 import { useActions, useCanEdit } from "../../commands/useActions";
 import { useCommandsExposed } from "../../commands/useExposedCommands";
+import { ToolLine } from "../Section";
 
 // The style gallery of a caption track (SDD-012 section 12.1, SDD-002 C.88): one tile for each named style of the
 // core, with a sample, its name and its font. A tile sends `caption.apply_style` with the style id; the core
@@ -27,10 +29,8 @@ export default function CaptionStyleGallery({
 	if (!exposed || CAPTION_STYLES.length === 0) return null;
 	return (
 		<div className="flex flex-col gap-2" data-testid="caption-style-gallery">
-			<p className="text-xs text-muted-foreground">
-				{t("ui.editor.caption_gallery.hint")}
-			</p>
-			<ul className="grid grid-cols-2 gap-2">
+			<ToolLine name="caption.apply_style" />
+			<ul className="grid grid-cols-[repeat(auto-fill,minmax(6rem,1fr))] gap-2">
 				{CAPTION_STYLES.map((style) => {
 					const name = t(`ui.editor.caption_gallery.styles.${style.id}`);
 					return (
@@ -40,7 +40,7 @@ export default function CaptionStyleGallery({
 								disabled={!canEdit || busy}
 								aria-label={t("ui.editor.caption_gallery.apply", { name })}
 								data-style-id={style.id}
-								className="flex w-full flex-col gap-1 rounded-md border border-border p-1 text-left hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-50"
+								className="flex w-full flex-col gap-1 rounded-lg border border-border p-1 text-left hover:border-border-strong hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-50"
 								onClick={async () => {
 									setBusy(true);
 									try {
@@ -55,7 +55,7 @@ export default function CaptionStyleGallery({
 								{/* The specimen sits on the dark canvas in both themes, as a caption sits on footage:
 								    a white caption on the light canvas would hide the look it shows. It is a
 								    picture of the style (WCAG 1.4.3, incidental text); the name below is the text. */}
-								<span className="dark flex h-14 items-center justify-center overflow-hidden rounded-sm bg-ed-preview-surround px-1">
+								<span className="dark flex h-14 items-center justify-center overflow-hidden rounded-md bg-ed-preview-surround px-1">
 									<span
 										aria-hidden="true"
 										data-caption-sample=""
@@ -73,6 +73,10 @@ export default function CaptionStyleGallery({
 					);
 				})}
 			</ul>
+			<p className="flex items-start gap-2 text-xs text-muted-foreground">
+				<Info aria-hidden="true" className="mt-0.5 size-3.5 shrink-0" />
+				{t("ui.editor.caption_gallery.hint")}
+			</p>
 			<div className="flex items-center gap-2 text-xs">
 				<input
 					id={resetId}

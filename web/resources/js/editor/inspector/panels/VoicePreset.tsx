@@ -13,6 +13,7 @@ import {
 import { useActions, useCanEdit } from "../../commands/useActions";
 import { useCommandsExposed } from "../../commands/useExposedCommands";
 import SelectField from "../fields/SelectField";
+import { ToolLine } from "../Section";
 
 // The studio voice action of an item or a track (SDD-002 C.91): one choice and one button for a clean, even
 // voice. The core replaces the chain with the preset; the processors are edited below as before, and the export
@@ -31,6 +32,7 @@ export default function VoicePreset({
 	if (!exposed || chosen === undefined) return null;
 	return (
 		<div className="flex flex-col gap-2" data-testid="voice-preset">
+			<ToolLine name="audio.apply_voice_preset" />
 			<p className="text-xs text-muted-foreground">
 				{t("ui.editor.voice_preset.hint")}
 			</p>
@@ -49,7 +51,6 @@ export default function VoicePreset({
 			/>
 			<Button
 				type="button"
-				variant="outline"
 				size="sm"
 				disabled={!canEdit}
 				onClick={() =>

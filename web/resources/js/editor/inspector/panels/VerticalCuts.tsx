@@ -1,3 +1,4 @@
+import { Check, ScanFace } from "lucide-react";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 
 import UntrustedText from "@/components/UntrustedText";
@@ -208,7 +209,7 @@ export default function VerticalCuts({
 	const percent = Math.round((job?.progress ?? 0) * 100);
 
 	return (
-		<Section title={t("ui.editor.vertical_cuts.title")}>
+		<Section title={t("ui.editor.vertical_cuts.title")} icon={ScanFace}>
 			<p className="text-xs text-muted-foreground">
 				{t("ui.editor.vertical_cuts.hint")}
 			</p>
@@ -261,7 +262,10 @@ export default function VerticalCuts({
 							aria-label={t("ui.editor.vertical_cuts.proposals")}
 						>
 							{phase.proposals.map((proposal) => (
-								<li key={proposal.n} className="flex items-start gap-2 text-xs">
+								<li
+									key={proposal.n}
+									className="flex items-start gap-2 rounded-lg border border-border p-2 text-xs"
+								>
 									<input
 										type="checkbox"
 										className="mt-0.5 size-4 accent-primary"
@@ -277,7 +281,7 @@ export default function VerticalCuts({
 										}}
 									/>
 									<span>
-										<span className="font-medium [font-variant-numeric:tabular-nums]">
+										<span className="font-mono font-medium [font-variant-numeric:tabular-nums]">
 											{t("ui.editor.vertical_cuts.range", {
 												start: clockLabel(proposal.start_ms),
 												end: clockLabel(proposal.end_ms),
@@ -305,6 +309,7 @@ export default function VerticalCuts({
 							disabled={!canEdit || chosen.size === 0}
 							onClick={() => void accept(phase.proposals, phase.mediaFile)}
 						>
+							<Check aria-hidden="true" />
 							{t("ui.editor.vertical_cuts.accept", { count: chosen.size })}
 						</Button>
 						<Button
