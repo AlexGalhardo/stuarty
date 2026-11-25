@@ -35,7 +35,7 @@ task ci
 
 `task setup` checks the tools and activates the hooks of `.githooks/`: the pre-commit hook checks staged Go and Markdown files, and the pre-push hook refreshes the "Last updated" dates of the site. `task ci` runs `task lint`, `task vet`, `task test`, `task tidy:check` and `task notices:check`.
 
-To run the program from the clone, build the front end with `bun install` and `bun run build` in `web/` (the program embeds the files that the build writes), then `go run ./web/cmd/app serve` from the root. It behaves as [the binary](/docs/self-hosting/binary).
+To run the program from the clone, build the front end with `bun install` and `bun run build` in `web/` (the program embeds the files that the build writes), then `go run ./web/cmd/app serve` from the root. It behaves as [the binary](/docs/self-hosting/binary), with one difference: a build from the clone is not a release, so it does not open the default workspace `~/.stuarty`, which belongs to the installed application. Set `STUARTY_HOME` to a folder of its own, or `STUARTY_ALLOW_DEFAULT_HOME=1` to open the default one on purpose; `go test` follows the same rule.
 
 | Command | Does |
 | --- | --- |
