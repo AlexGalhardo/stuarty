@@ -47,7 +47,9 @@ test.describe("asset-library", () => {
 			page.getByRole("heading", { name: "Videos", level: 1 }),
 		).toBeVisible();
 
-		await page.getByLabel("Tag").fill(tag);
+		// The tag is chosen from the tags in use, each with the number of files that carry it.
+		await page.getByRole("combobox", { name: "Tag" }).click();
+		await page.getByRole("option", { name: `${tag} (1 file)` }).click();
 		const card = page.locator(`[data-asset-hash="${hash}"]`);
 		await expect(card).toBeVisible();
 		await expect(page.getByTestId("asset-grid").locator("li")).toHaveCount(1);

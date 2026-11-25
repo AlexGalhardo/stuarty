@@ -14,7 +14,7 @@ import {
 } from "../editor/timeline/items/waveform";
 import { formatSeconds } from "../editor/ui/timeFormat";
 import { AssetSize } from "./AssetSize";
-import { OriginBadge, ReusableBadge, TagChip } from "./badges";
+import { OriginBadge, ReusableBadge, SoundKindBadge, TagChip } from "./badges";
 import { type Reveal, RevealMenuItem } from "./reveal";
 
 const WAVE_WIDTH = 480;
@@ -141,6 +141,7 @@ export function SoundRow({
 					</span>
 				)}
 				<OriginBadge kind={asset.origin?.kind} />
+				<SoundKindBadge kind={asset.sound_kind} />
 				{asset.reusable === true && <ReusableBadge />}
 				{(asset.tags ?? []).map((tag) => (
 					<TagChip key={tag} tag={tag} />

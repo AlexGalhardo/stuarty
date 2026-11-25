@@ -4,7 +4,7 @@ import type { ComponentType, ReactNode } from "react";
 import UntrustedText from "@/components/UntrustedText";
 import { cn } from "@/lib/cn";
 import { useT } from "@/lib/i18n";
-import type { OriginKind } from "../editor/api/types";
+import type { OriginKind, SoundKind } from "../editor/api/types";
 
 const ORIGIN_ICON: Record<OriginKind, ComponentType<{ className?: string }>> = {
 	imported: Upload,
@@ -40,6 +40,20 @@ export function ReusableBadge(): ReactNode {
 		<span className={cn(CHIP, "bg-accent-soft text-accent-text")}>
 			<CircleCheck aria-hidden="true" className="size-3.5 shrink-0" />
 			{t("ui.assets.reusable_badge")}
+		</span>
+	);
+}
+
+// What a sound is for: music, a voice or an effect, as the service says it. A sound with no kind shows nothing.
+export function SoundKindBadge({ kind }: { kind?: SoundKind }): ReactNode {
+	const t = useT();
+	if (kind === undefined) return null;
+	return (
+		<span
+			data-testid="sound-kind-badge"
+			className={cn(CHIP, "bg-surface-hover text-text-muted")}
+		>
+			{t(`ui.assets.sound.kind.${kind}`)}
 		</span>
 	);
 }

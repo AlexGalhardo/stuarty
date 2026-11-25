@@ -7,7 +7,7 @@
 
 import type { ProjectDocument } from "@/generated/timeline";
 import type { ProjectSummary } from "@/types";
-import type { ProjectKind, Workflow } from "../../workflow/types";
+import type { ProjectKind, TextSummary, Workflow } from "../../workflow/types";
 
 export type ProjectState = "active" | "trashed";
 
@@ -762,6 +762,9 @@ export interface ProjectDescribeResult {
 	// The effective kind and the workflow the service computed (SDD-000 section 1, epic 78).
 	kind?: ProjectKind;
 	workflow?: Workflow;
+	// The same facts a list of projects gives (SDD-005 section 5.12.4).
+	text_summary?: TextSummary;
+	next_post_at?: string | null;
 	items: {
 		id: string;
 		kind: string;
@@ -1036,6 +1039,8 @@ export interface LibraryAsset {
 	description?: string;
 	reusable?: boolean;
 	tags?: string[];
+	// An audio file only: music, voice or effect; absent when the file has none.
+	sound_kind?: SoundKind;
 	created_by?: string;
 	created_at?: string;
 	projects: number;
@@ -1043,6 +1048,9 @@ export interface LibraryAsset {
 	poster?: AssetPoster;
 	uses?: AssetUse[];
 }
+
+// What a sound is for (SDD-011 section 14.12); a sound with none has no kind at all.
+export type SoundKind = "music" | "voice" | "effect";
 
 export type OriginKind =
 	| "imported"
@@ -1086,7 +1094,15 @@ export interface AssetListResult {
 	// How many of those files have no known size.
 	unsized: number;
 	next_cursor: string | null;
+	// The tags of the files that match every filter but the tag, with how many files carry each (SDD-011 section
+	// 14.11): the tag picker lists them.
+	tags_in_use?: TagInUse[];
 	text: string;
+}
+
+export interface TagInUse {
+	tag: string;
+	count: number;
 }
 
 // POST /assets/{hash}/reveal: the checked path of the stored file, for a person in local mode (SDD-011 section
@@ -1101,6 +1117,7 @@ export interface AssetQuery {
 	section?: "visual" | "video" | "audio";
 	kind?: "image" | "video" | "audio" | "lut";
 	tag?: string;
+	sound_kind?: SoundKind;
 	origin?: OriginKind;
 	reusable?: boolean;
 	text?: string;
@@ -1116,6 +1133,8 @@ export interface AssetInfoBody {
 	description?: string;
 	rights_note?: string;
 	reusable?: boolean;
+	// Sets the kind of an audio file; the empty string clears it.
+	sound_kind?: SoundKind | "";
 }
 
 // GET /system (Doctor).

@@ -96,7 +96,11 @@
       "skip": "Pular",
       "restore": "Recolocar",
       "skip_step": "Pular a etapa {step}",
-      "restore_step": "Recolocar a etapa {step}"
+      "restore_step": "Recolocar a etapa {step}",
+      "skill": "Skill da etapa",
+      "spent": "{amount} gastos",
+      "estimate": "{amount} estimados",
+      "no_skill": "Nenhuma"
     },
     "unsaved": {
       "leave": "Você tem texto que ainda não foi salvo. Se sair, ele será perdido. Sair mesmo assim?"
@@ -715,7 +719,9 @@
         "details": "Detalhes",
         "timelines": "Linhas do tempo: {count}",
         "delete_title": "Excluir este projeto?",
-        "delete_body": "O projeto vai para a lixeira, de onde você pode restaurá-lo."
+        "delete_body": "O projeto vai para a lixeira, de onde você pode restaurá-lo.",
+        "next_post": "Próxima publicação {date}",
+        "now": "Agora: {step}"
       },
       "briefing": {
         "title": "Briefing guiado",
@@ -4554,7 +4560,14 @@
         "any_origin": "Qualquer origem",
         "reusable": "Só reutilizáveis",
         "bar": "Filtrar os arquivos",
-        "text_hint": "Nome, etiqueta ou projeto"
+        "text_hint": "Nome, etiqueta ou projeto",
+        "any_tag": "Qualquer tag",
+        "tag_option": {
+          "one": "{tag} ({count} arquivo)",
+          "other": "{tag} ({count} arquivos)"
+        },
+        "sound_kind": "Tipo",
+        "any_kind": "Qualquer tipo"
       },
       "origin": {
         "imported": "Importado",
@@ -4678,7 +4691,8 @@
         "counted_once": "O arquivo é guardado uma vez e contado uma vez no total da biblioteca.",
         "file_on_disk": "Renomear muda o nome mostrado aqui. O arquivo no disco mantém o nome, e Desfazer não traz o nome antigo de volta.",
         "trash": "Mover para a lixeira de {project}",
-        "trashed": "Movido para a lixeira."
+        "trashed": "Movido para a lixeira.",
+        "sound_kind": "O que é este som"
       },
       "sound": {
         "waveform": "Forma de onda de {name}",
@@ -4691,7 +4705,13 @@
         "import_submit": "Importar",
         "import_started": "O arquivo está sendo preparado. Ele aparece na lista quando estiver pronto; recarregue a página para vê-lo.",
         "import_no_project": "Crie um projeto antes: um som é importado em um projeto.",
-        "import_open": "Importar áudio"
+        "import_open": "Importar áudio",
+        "kind": {
+          "music": "Música",
+          "voice": "Voz",
+          "effect": "Efeito",
+          "none": "Sem tipo"
+        }
       }
     },
     "write": {
@@ -5103,11 +5123,14 @@
         "reviewed": "revisada",
         "unreviewed": "não revisada",
         "kept": "Mantida, {ago}",
-        "pending": "Escrita por um agente, espera por você, {ago}"
+        "pending": "Escrita por um agente, espera por você, {ago}",
+        "by": "por {actor}",
+        "project": "Projeto"
       },
       "state": {
         "available": "Disponível",
-        "blocked": "Bloqueada"
+        "blocked": "Bloqueada",
+        "loaded": "Carregada"
       },
       "tabs": {
         "all": "Todas",

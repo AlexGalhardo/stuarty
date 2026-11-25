@@ -313,14 +313,16 @@ for (const theme of ["dark", "light"] as const) {
 						await expect(page.getByTestId("asset-detail")).toBeVisible();
 						await expect(page.getByTestId("asset-rights")).toBeVisible();
 					}
-					// Every filter control (the origin choice and the reusable toggle) is a target of at least 32 px
-					// (design system, section 7).
+					// Every filter control (the tag and origin choices, the kind choice of the sounds and the reusable
+					// toggle) is a target of at least 32 px (design system, section 7).
 					const heights = await page
 						.locator("search button")
 						.evaluateAll((labels) =>
 							labels.map((label) => label.getBoundingClientRect().height),
 						);
-					expect(heights).toHaveLength(2);
+					expect(heights).toHaveLength(
+						section.path === "/sound-assets" ? 4 : 3,
+					);
 					expect(Math.min(...heights)).toBeGreaterThanOrEqual(32);
 					await noViolation(page);
 					await noSidewaysScroll(page);

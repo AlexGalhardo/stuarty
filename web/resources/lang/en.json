@@ -96,7 +96,11 @@
       "skip": "Skip",
       "restore": "Put back",
       "skip_step": "Skip the step {step}",
-      "restore_step": "Put back the step {step}"
+      "restore_step": "Put back the step {step}",
+      "skill": "Skill",
+      "spent": "{amount} spent",
+      "estimate": "{amount} estimated",
+      "no_skill": "None"
     },
     "unsaved": {
       "leave": "You have text that is not saved yet. If you leave, it is lost. Leave anyway?"
@@ -715,7 +719,9 @@
         "details": "Details",
         "timelines": "Timelines: {count}",
         "delete_title": "Delete this project?",
-        "delete_body": "The project moves to the trash, where you can restore it."
+        "delete_body": "The project moves to the trash, where you can restore it.",
+        "next_post": "Next post {date}",
+        "now": "Now: {step}"
       },
       "briefing": {
         "title": "Guided briefing",
@@ -4554,7 +4560,14 @@
         "any_origin": "Any origin",
         "reusable": "Reusable only",
         "bar": "Filter the files",
-        "text_hint": "Name, tag or project"
+        "text_hint": "Name, tag or project",
+        "any_tag": "Any tag",
+        "tag_option": {
+          "one": "{tag} ({count} file)",
+          "other": "{tag} ({count} files)"
+        },
+        "sound_kind": "Kind",
+        "any_kind": "Any kind"
       },
       "origin": {
         "imported": "Imported",
@@ -4678,7 +4691,8 @@
         "counted_once": "The file is stored once and counted once in the library total.",
         "file_on_disk": "Renaming changes the name shown here. The file on disk keeps its name, and Undo does not bring the old name back.",
         "trash": "Move to the trash of {project}",
-        "trashed": "Moved to the trash."
+        "trashed": "Moved to the trash.",
+        "sound_kind": "What this sound is"
       },
       "sound": {
         "waveform": "Waveform of {name}",
@@ -4691,7 +4705,13 @@
         "import_submit": "Import",
         "import_started": "The file is being prepared. It appears in the list when it is ready; reload the page to see it.",
         "import_no_project": "Create a project first: a sound is imported into one.",
-        "import_open": "Import audio"
+        "import_open": "Import audio",
+        "kind": {
+          "music": "Music",
+          "voice": "Voice",
+          "effect": "Effect",
+          "none": "No kind"
+        }
       }
     },
     "write": {
@@ -5103,11 +5123,14 @@
         "reviewed": "reviewed",
         "unreviewed": "not reviewed",
         "kept": "Kept, {ago}",
-        "pending": "Written by an agent, waits for you, {ago}"
+        "pending": "Written by an agent, waits for you, {ago}",
+        "by": "by {actor}",
+        "project": "Project"
       },
       "state": {
         "available": "Available",
-        "blocked": "Blocked"
+        "blocked": "Blocked",
+        "loaded": "Loaded"
       },
       "tabs": {
         "all": "All",
