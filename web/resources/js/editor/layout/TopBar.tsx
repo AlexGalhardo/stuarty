@@ -230,7 +230,11 @@ export default function TopBar({
 			<CompositionBreadcrumb />
 			{name !== undefined && <ProjectName name={name} />}
 			{revision !== null && (
-				<Badge variant="secondary" className="font-mono tabular-nums">
+				<Badge
+					variant="secondary"
+					className="font-mono tabular-nums"
+					data-project-revision={revision}
+				>
 					<History aria-hidden="true" />
 					{t("ui.editor.revision", { revision })}
 				</Badge>

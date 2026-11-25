@@ -177,8 +177,12 @@ test.describe("first complete flow @chromium-only", () => {
 
 		await test.step("import the footage and cut it to four seconds", async () => {
 			await page.goto(`/editor/${projectId}`);
+			await page.locator("[data-import-open]").click();
 			await page.getByLabel("Path of a file to import").fill(testClip(0));
-			await page.getByRole("button", { name: "Import" }).click();
+			await page
+				.locator("#library-import")
+				.getByRole("button", { name: "Import", exact: true })
+				.click();
 			const add = page.getByRole("button", { name: "Add to timeline" }).first();
 			await expect(add).toBeEnabled({ timeout: 60_000 });
 			await add.click();

@@ -177,7 +177,8 @@ async function connect(
 	const manage = page.getByTestId("chat-manage");
 	// The panel loads the profiles first: wait for whichever it shows.
 	await expect(manage.or(page.getByTestId("chat-setup"))).toBeVisible();
-	if (await manage.isVisible()) await manage.click();
+	const managingExistingProfiles = await manage.isVisible();
+	if (managingExistingProfiles) await manage.click();
 	await expect(page.getByTestId("chat-setup")).toBeVisible();
 	await page
 		.getByTestId("chat-panel")
@@ -196,7 +197,7 @@ async function connect(
 	);
 	await page.getByRole("button", { name: "Connect the agent" }).click();
 	// The first agent takes the panel to the conversation by itself; later ones leave it on the setup.
-	if (await manage.isVisible()) {
+	if (managingExistingProfiles) {
 		await expect(
 			page.getByTestId("chat-profile").filter({ hasText: name }),
 		).toBeVisible();

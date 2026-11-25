@@ -299,6 +299,7 @@ test.describe("security-ui", () => {
 		const trashed = await hostileNamedProject(call);
 		await call("POST", `/projects/${trashed}/trash`, {});
 		await page.goto("/projects");
+		await page.getByRole("tab", { name: "Trash", exact: true }).click();
 		await expect(page.getByText(PAYLOAD).first()).toBeVisible();
 		await clean("projects page: list, trash and templates");
 

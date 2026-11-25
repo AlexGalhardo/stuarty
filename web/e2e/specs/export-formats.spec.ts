@@ -55,14 +55,16 @@ test.describe("export-formats", () => {
 		const outside = join(dir, `${seeded.id}.vvbundle`);
 		writeFileSync(outside, await file.body());
 
+		await page.getByRole("tab", { name: "Templates", exact: true }).click();
 		await page
 			.getByLabel("Bundle file path on the machine of the service")
 			.fill(outside);
 		await page.getByRole("button", { name: "Import bundle" }).click();
-		await expect(page.getByRole("status")).toContainText("Imported:");
-		await expect(page.getByRole("status")).toContainText(name);
+		const imported = page.getByRole("status").filter({ hasText: "Imported:" });
+		await expect(imported).toContainText(name);
+		await page.goto("/projects");
 		await expect(
-			page.locator("li p.font-medium", { hasText: name }),
+			page.locator("[data-project-card]").filter({ hasText: name }),
 		).toHaveCount(2);
 	});
 

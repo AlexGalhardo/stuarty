@@ -9,6 +9,11 @@ interface Posted {
 	operations: { op: string; args: Record<string, unknown> }[];
 }
 
+async function openTemplates(page: Page): Promise<void> {
+	await page.goto("/projects");
+	await page.getByRole("tab", { name: "Templates", exact: true }).click();
+}
+
 // `settled.count` is how many of the posted edits the server has answered. A
 // field builds its batch from the document it shows, so a test that edits the
 // same item again must wait for the answer, not for the request: the next
@@ -220,7 +225,7 @@ test.describe("templates", () => {
 		await expect(
 			page.getByRole("status").filter({ hasText: name }),
 		).toBeVisible();
-		await page.goto("/projects");
+		await openTemplates(page);
 		await expect(
 			page.locator("[data-template-id]", { hasText: name }),
 		).toBeVisible();
@@ -229,7 +234,7 @@ test.describe("templates", () => {
 	test("the projects page lists the starter templates and makes a project from one", async ({
 		page,
 	}) => {
-		await page.goto("/projects");
+		await openTemplates(page);
 		const rows = page.locator("[data-template-id]");
 		await expect(rows.first()).toBeVisible();
 		await expect(
@@ -257,7 +262,7 @@ test.describe("templates", () => {
 					Promise.resolve(["C:\tspring.stuarty-template.zip"]),
 			};
 		});
-		await page.goto("/projects");
+		await openTemplates(page);
 		await page.getByRole("button", { name: "Choose file" }).click();
 		await expect(
 			page.getByLabel("Path of a template file on this computer"),
@@ -265,7 +270,7 @@ test.describe("templates", () => {
 	});
 
 	test("a browser has no template file dialog", async ({ page }) => {
-		await page.goto("/projects");
+		await openTemplates(page);
 		await expect(
 			page.getByLabel("Path of a template file on this computer"),
 		).toBeVisible();
@@ -288,7 +293,7 @@ test.describe("templates", () => {
 					templates: { template_id: string; name: string }[];
 				}
 			).templates;
-		await page.goto("/projects");
+		await openTemplates(page);
 		const rows = page.locator("[data-template-id]");
 		await expect(rows.first()).toBeVisible();
 		const id = (await rows.first().getAttribute("data-template-id")) as string;
@@ -304,15 +309,19 @@ test.describe("templates", () => {
 		writeFileSync(path, await file.body());
 
 		const field = page.getByLabel("Path of a template file on this computer");
+		const submit = page
+			.locator("form")
+			.filter({ has: field })
+			.getByRole("button", { name: "Import template" });
 		await field.fill(path);
-		await page.getByRole("button", { name: "Import template" }).click();
+		await submit.click();
 		await expect(
 			page.getByRole("status").filter({ hasText: "Imported:" }),
 		).toBeVisible();
 		const afterFirst = await stored();
 
 		await field.fill(path);
-		await page.getByRole("button", { name: "Import template" }).click();
+		await submit.click();
 		await expect(
 			page.getByText("This file was already imported, so nothing was added."),
 		).toBeVisible();

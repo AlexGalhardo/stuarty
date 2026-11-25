@@ -50,6 +50,7 @@ test.describe("desktop-bridge", () => {
 		await fakeBridge(page, picked);
 		await page.goto(`/editor/${seeded.id}`);
 		const imports = recordImports(page);
+		await page.locator("[data-import-open]").click();
 
 		await page.getByRole("button", { name: "Choose files" }).click();
 		await expect.poll(() => imports.length).toBe(2);
@@ -66,9 +67,7 @@ test.describe("desktop-bridge", () => {
 		const picked = [testClip(1)];
 		await fakeBridge(page, picked);
 		await page.goto(`/editor/${seeded.id}`);
-		await expect(
-			page.getByRole("button", { name: "Choose files" }),
-		).toBeVisible();
+		await expect(page.locator("[data-import-open]")).toBeVisible();
 		const imports = recordImports(page);
 
 		await page.keyboard.press("Control+i");
@@ -91,6 +90,7 @@ test.describe("desktop-bridge", () => {
 		const seeded = await seedProject(request, { tracks: 1, perTrack: 0 });
 		await fakeBridge(page, []);
 		await page.goto(`/editor/${seeded.id}`);
+		await page.locator("[data-import-open]").click();
 		await expect(
 			page.getByRole("button", { name: "Choose files" }),
 		).toBeVisible();
@@ -116,7 +116,7 @@ test.describe("desktop-bridge", () => {
 	}) => {
 		const seeded = await seedProject(request, { tracks: 1, perTrack: 0 });
 		await page.goto(`/editor/${seeded.id}`);
-		await expect(page.getByRole("button", { name: "Import" })).toBeVisible();
+		await page.locator("[data-import-open]").click();
 		await expect(
 			page.getByRole("button", { name: "Choose files" }),
 		).toHaveCount(0);
