@@ -60,8 +60,10 @@ func (r *recEnv) takePlaced(t *testing.T, events bool) (project, clip string) {
 		t.Fatalf("RecordingPlace: %v", err)
 	}
 
-	for id, it := range r.document2(t, project).Items {
-		if it.Type == timeline.ItemClip {
+	items := r.document2(t, project).Items
+
+	for id := range items {
+		if items[id].Type == timeline.ItemClip {
 			return project, id
 		}
 	}

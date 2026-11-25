@@ -92,9 +92,10 @@ func screenRecordingOf(ctx context.Context, tx Tx, projectID, hash string) (reco
 		return recordings.Row{}, false, asError(err)
 	}
 
-	for _, r := range rows {
-		if r.AssetHash == hash && recording.Placeable(recording.State(r.State), recording.Review(r.Review)) {
-			return r, true, nil
+	for i := range rows {
+		if r := &rows[i]; r.AssetHash == hash &&
+			recording.Placeable(recording.State(r.State), recording.Review(r.Review)) {
+			return *r, true, nil
 		}
 	}
 
