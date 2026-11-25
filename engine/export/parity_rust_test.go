@@ -91,7 +91,21 @@ func parityBinary(t *testing.T) string {
 	if runtime.GOOS == "windows" {
 		name += ".exe"
 	}
-	return filepath.Join(root, "target", "release", name)
+	return filepath.Join(parityTargetDir(root, os.Getenv("CARGO_TARGET_DIR")), "release", name)
+}
+
+// parityTargetDir is the folder cargo writes its builds to: the one CARGO_TARGET_DIR names (a relative path is
+// relative to the folder the test runs in, as it is to the cargo it started there), or the renderer's own.
+func parityTargetDir(root, fromEnv string) string {
+	if fromEnv == "" {
+		return filepath.Join(root, "target")
+	}
+
+	if abs, err := filepath.Abs(fromEnv); err == nil {
+		return abs
+	}
+
+	return fromEnv
 }
 
 // renderInput is the render input of SDD-013 section 2.1 for a frame plan, for the rows of one band when
@@ -416,4 +430,24 @@ func TestRustCPUPathEqualsGoCompositor(t *testing.T) {
 			report(t, label, got)
 		}
 	})
+}
+
+// TestParityBinaryIsLookedForWhereCargoWroteIt: a CARGO_TARGET_DIR of its own moves the build, and the gate must
+// find vr-parity there and not in renderer/target (VV-410).
+func TestParityBinaryIsLookedForWhereCargoWroteIt(t *testing.T) {
+	root := filepath.Join(t.TempDir(), "renderer")
+	own := filepath.Join(t.TempDir(), "own-target")
+
+	if got, want := parityTargetDir(root, ""), filepath.Join(root, "target"); got != want {
+		t.Fatalf("with no CARGO_TARGET_DIR: %q, want %q", got, want)
+	}
+
+	if got := parityTargetDir(root, own); got != own {
+		t.Fatalf("with CARGO_TARGET_DIR %q: %q", own, got)
+	}
+
+	rel := parityTargetDir(root, filepath.Join("..", "somewhere"))
+	if !filepath.IsAbs(rel) || filepath.Base(rel) != "somewhere" {
+		t.Fatalf("a relative CARGO_TARGET_DIR must become the absolute folder cargo used: %q", rel)
+	}
 }
