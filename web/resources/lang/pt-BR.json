@@ -561,6 +561,9 @@
       }
     },
     "projects": {
+      "views": {
+        "label": "Visões dos projetos"
+      },
       "title": "Projetos",
       "new": "Novo projeto",
       "lead": "Tudo o que você está criando, um projeto por vez.",
@@ -579,7 +582,11 @@
         "submit": "Adicionar o vídeo"
       },
       "new_project": {
-        "title": "Novo projeto",
+        "title": "Começar um novo projeto",
+        "name": "Nome do projeto",
+        "name_placeholder": "Ex.: Lançamento do curso",
+        "chosen": "Escolhido",
+        "text_note": "Sem formato e sem mídia: só o texto, e mídia é opcional depois.",
         "description": "Escolha o que você quer criar. Dá para adicionar os outros depois.",
         "step_two": "Passo 2 de 2: o briefing. O projeto é criado quando você o envia.",
         "kind_legend": "O que você quer criar?",

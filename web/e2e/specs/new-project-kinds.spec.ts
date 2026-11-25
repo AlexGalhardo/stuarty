@@ -31,7 +31,7 @@ test.describe("new project kinds", () => {
 	}) => {
 		await page.goto("/projects");
 		await page.getByRole("button", { name: "New project" }).click();
-		const dialog = page.getByRole("dialog", { name: "New project" });
+		const dialog = page.getByRole("dialog", { name: "Start a new project" });
 		const cards = dialog.locator("[data-choice]");
 		await expect(cards).toHaveCount(4);
 		const sizes = await cards.evaluateAll((els) =>
@@ -48,21 +48,21 @@ test.describe("new project kinds", () => {
 		}
 		// Nothing is chosen for the person.
 		await expect(dialog.getByRole("radio", { checked: true })).toHaveCount(0);
-		await expect(dialog.getByLabel("Format")).toHaveCount(0);
+		await expect(dialog.getByRole("group", { name: "Format" })).toHaveCount(0);
 		await expect(dialog.getByText("What kind of text?")).toHaveCount(0);
 
 		await cards.nth(1).click();
-		await expect(dialog.getByLabel("Format")).toBeVisible();
+		await expect(dialog.getByRole("group", { name: "Format" })).toBeVisible();
 		await expect(dialog.getByText("What kind of text?")).toHaveCount(0);
 		await cards.nth(0).click();
-		await expect(dialog.getByLabel("Format")).toHaveCount(0);
+		await expect(dialog.getByRole("group", { name: "Format" })).toHaveCount(0);
 		for (const type of ["Blog post", "Copy", "Script", "Caption"]) {
 			await expect(
-				dialog.getByRole("radio", { name: type, exact: true }),
+				dialog.getByRole("button", { name: type, exact: true }),
 			).toBeVisible();
 		}
 		await cards.nth(2).click();
-		await expect(dialog.getByLabel("Format")).toHaveCount(0);
+		await expect(dialog.getByRole("group", { name: "Format" })).toHaveCount(0);
 		await expect(dialog.getByText("What kind of text?")).toHaveCount(0);
 	});
 
@@ -102,7 +102,7 @@ test.describe("new project kinds", () => {
 		await page.goto("/projects");
 		await page.getByRole("button", { name: "New project" }).click();
 		await page.locator('[data-choice="text"]').click();
-		await page.getByRole("radio", { name: "Copy", exact: true }).check();
+		await page.getByRole("button", { name: "Copy", exact: true }).click();
 		await page
 			.getByRole("button", { name: "Continue to the briefing" })
 			.click();
@@ -157,7 +157,7 @@ test.describe("new project kinds", () => {
 		await page.goto("/projects");
 		await page.getByRole("button", { name: "New project" }).click();
 		await page.locator('[data-choice="video"]').click();
-		await page.getByLabel("Format").selectOption("1:1");
+		await page.locator("label", { hasText: "1:1" }).click();
 		await page
 			.getByRole("button", { name: "Continue to the briefing" })
 			.click();

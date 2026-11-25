@@ -92,7 +92,7 @@ test.describe("projects-page", () => {
 		const box = await list.boundingBox();
 		expect(box?.y ?? Number.POSITIVE_INFINITY).toBeLessThan(720);
 		await page.getByRole("button", { name: "New project" }).click();
-		const dialog = page.getByRole("dialog", { name: "New project" });
+		const dialog = page.getByRole("dialog", { name: "Start a new project" });
 		await expect(dialog.getByRole("radio")).toHaveCount(4);
 		await expect(
 			dialog.getByRole("button", { name: "Continue to the briefing" }),
