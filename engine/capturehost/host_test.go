@@ -125,6 +125,9 @@ func start(mode string, in *bufio.Reader) {
 		hang()
 	case "exit":
 		_, _ = os.Stderr.WriteString("boom: the encoder died\n")
+		// Under `go test -cover`, os.Exit runs Go's coverage hook which writes a
+		// "GOCOVERDIR not set" warning to stderr after our message; close stderr first.
+		_ = os.Stderr.Close()
 		os.Exit(1)
 	default:
 		for i := 1; i <= 3; i++ {
@@ -574,7 +577,7 @@ func TestAHelperThatExitsWithoutFinishingIsLost(t *testing.T) {
 
 	lost, ok := end.(Lost)
 	if !ok || !errors.Is(lost.Err, ErrLost) || !strings.Contains(lost.Err.Error(), "boom") {
-		t.Fatalf("end = %#v", end)
+		t.Fatalf("end = %#v (err = %v, stderr = %q)", end, lost.Err, h.Stderr())
 	}
 }
 
