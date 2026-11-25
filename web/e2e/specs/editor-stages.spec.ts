@@ -165,7 +165,7 @@ for (const theme of ["light", "dark"] as const) {
 					},
 				],
 			});
-			await expect(inspector.getByText("1 zooms on lane Z1")).toBeVisible();
+			await expect(inspector.getByText("1 zoom on lane Z1")).toBeVisible();
 			await capture(page, "25 Editor de vídeo_ acabamento", theme);
 		});
 
