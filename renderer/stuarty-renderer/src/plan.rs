@@ -40,6 +40,9 @@ pub struct Output {
 	pub scale: f64,
 	/// The rows `[y0, y1)` to draw, the whole frame when absent.
 	pub rows: core::ops::Range<usize>,
+	/// The columns `[x0, x1)` to draw, the whole width when absent (SDD-013 section 2.1): the dirty window of
+	/// an edit of one layer.
+	pub cols: core::ops::Range<usize>,
 }
 
 /// Where the pixels of a layer are held.
@@ -719,6 +722,7 @@ fn decode_output(v: Value) -> Result<Output, Error> {
 	let (w, h) = (f.int("width")?, f.int("height")?);
 	let scale = f.num("scale")?;
 	let (y0, y1) = (f.opt_int("y0")?, f.opt_int("y1")?);
+	let (x0, x1) = (f.opt_int("x0")?, f.opt_int("x1")?);
 	f.finish()?;
 
 	if w < 1 || h < 1 {
@@ -741,11 +745,22 @@ fn decode_output(v: Value) -> Result<Output, Error> {
 			));
 		}
 	};
+	let cols = match (x0, x1) {
+		(None, None) => 0..width,
+		(Some(a), Some(b)) if 0 <= a && a < b && b <= w => a as usize..b as usize,
+		_ => {
+			return Err(Error::new(
+				Reason::InvalidArgument,
+				"output: x0 and x1 do not name columns of the frame",
+			));
+		}
+	};
 	Ok(Output {
 		width,
 		height,
 		scale,
 		rows,
+		cols,
 	})
 }
 

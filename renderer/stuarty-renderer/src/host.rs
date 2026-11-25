@@ -286,6 +286,7 @@ impl Renderer {
 			width,
 			height,
 			rows: r.output.rows.clone(),
+			cols: r.output.cols.clone(),
 		};
 		compose(
 			&mut target,
@@ -458,6 +459,44 @@ mod tests {
 		assert!(out[..2 * 16].iter().all(|&b| b == 7));
 		assert!(out[3 * 16..].iter().all(|&b| b == 7));
 		assert_eq!(out[2 * 16 + 4..2 * 16 + 8], [255; 4]);
+	}
+
+	#[test]
+	fn a_window_writes_only_its_columns_and_rows() {
+		let mut r = Renderer::new(Limits::default());
+		r.put_texture("a", 2, 2, &white(2, 2), true).unwrap();
+		let win = INPUT.replace(
+			"\"scale\":1",
+			"\"scale\":1,\"y0\":1,\"y1\":3,\"x0\":1,\"x1\":3",
+		);
+		let mut out = vec![7_u8; 4 * 4 * 4];
+		r.render(win.as_bytes(), &mut out).unwrap();
+		for y in 0..4 {
+			for x in 0..4 {
+				let px = &out[(y * 4 + x) * 4..(y * 4 + x) * 4 + 4];
+				if (1..3).contains(&y) && (1..3).contains(&x) {
+					assert_ne!(px, [7; 4], "({x}, {y}) is in the window");
+				} else {
+					assert_eq!(px, [7; 4], "({x}, {y}) is outside it");
+				}
+			}
+		}
+		assert_eq!(out[(4 + 1) * 4..(4 + 1) * 4 + 4], [255; 4]);
+	}
+
+	#[test]
+	fn a_window_outside_the_frame_is_refused() {
+		let mut r = Renderer::new(Limits::default());
+		r.put_texture("a", 2, 2, &white(2, 2), true).unwrap();
+		let mut out = vec![0_u8; 64];
+		for cols in ["\"x0\":3,\"x1\":5", "\"x0\":2,\"x1\":2", "\"x0\":1"] {
+			let input = INPUT.replace("\"scale\":1", &format!("\"scale\":1,{cols}"));
+			assert_eq!(
+				r.render(input.as_bytes(), &mut out).unwrap_err().reason,
+				Reason::InvalidArgument,
+				"{cols}"
+			);
+		}
 	}
 
 	#[test]

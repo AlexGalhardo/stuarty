@@ -22,6 +22,7 @@ fn render(c: &Case, bands: usize) -> Vec<u8> {
 				width: c.w,
 				height: c.h,
 				rows,
+				cols: 0..c.w,
 			},
 			c.bg,
 			&layers,

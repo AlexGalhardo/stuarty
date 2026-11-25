@@ -12,11 +12,13 @@ const RenderInputVersion = 1
 // Output is the frame to write (SDD-013 section 2.1). Width and Height are whole pixels from 1 to 4096; Scale
 // is the output scale of SDD-004 section 6, which multiplies every position and size of the plan. When Y1 is
 // greater than Y0 the module draws only the rows [Y0, Y1) of the frame, which is how a band of the export is
-// rendered by its own instance.
+// rendered by its own instance. When X1 is greater than X0 it draws, and Render writes, only the columns
+// [X0, X1) of those rows: the window of an edit of one layer (SDD-013 section 2.1).
 type Output struct {
 	Width, Height int
 	Scale         float64
 	Y0, Y1        int
+	X0, X1        int
 }
 
 // RenderInput is what one render call reads: the frame to write and the frame plan to draw.
@@ -48,6 +50,8 @@ type jsonOutput struct {
 	Scale  float64 `json:"scale"`
 	Y0     *int    `json:"y0,omitempty"`
 	Y1     *int    `json:"y1,omitempty"`
+	X0     *int    `json:"x0,omitempty"`
+	X1     *int    `json:"x1,omitempty"`
 }
 
 // MarshalJSON writes the render input of SDD-013 section 2.1: the plan keeps the JSON names of core/plan.
@@ -63,6 +67,10 @@ func (in RenderInput) MarshalJSON() ([]byte, error) {
 	out := jsonOutput{Width: in.Output.Width, Height: in.Output.Height, Scale: in.Output.Scale}
 	if in.Output.Y1 > in.Output.Y0 {
 		out.Y0, out.Y1 = &in.Output.Y0, &in.Output.Y1
+	}
+
+	if in.Output.X1 > in.Output.X0 {
+		out.X0, out.X1 = &in.Output.X0, &in.Output.X1
 	}
 
 	return json.Marshal(struct {
