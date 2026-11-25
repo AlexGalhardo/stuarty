@@ -137,6 +137,18 @@
   },
   {
     "group": "programs",
+    "name": "nv-codec-headers",
+    "version": "n13.0.19.0 (inside the own FFmpeg build)",
+    "spdx": "MIT",
+    "copyright": "Copyright (c) 2010-2024 NVIDIA Corporation",
+    "files": [
+      "licenses/programs/nv-codec-headers/LICENSE"
+    ],
+    "note": "headers only, used to build the NVENC encoders of the own FFmpeg build on Windows and Linux (D-034); the encoder loads the NVIDIA driver at run time and nothing of NVIDIA is shipped; listed as shipped when the pins of that build replace the BtbN pin",
+    "shipped_in": []
+  },
+  {
+    "group": "programs",
     "name": "AMD AMF headers",
     "version": "1.5.3 (inside the own FFmpeg build)",
     "spdx": "MIT",
