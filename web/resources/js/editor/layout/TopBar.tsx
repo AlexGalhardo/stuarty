@@ -2,7 +2,6 @@ import {
 	ArrowLeft,
 	Check,
 	History,
-	House,
 	Loader,
 	MessagesSquare,
 	Pencil,
@@ -213,17 +212,20 @@ export default function TopBar({
 			data-landmark="1"
 			className="col-span-full flex h-12 items-center gap-3 border-b border-ed-track-line bg-ed-panel px-3"
 		>
-			<EditorMenu />
+			<a
+				href="/"
+				aria-label={t("ui.nav.dashboard")}
+				data-testid="product-mark"
+				className="flex size-8 shrink-0 items-center justify-center rounded-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+			>
+				<img src="/icon.png" alt="" className="size-7" />
+			</a>
 			<Button asChild variant="ghost" size="icon-sm">
 				<a href="/projects" aria-label={t("ui.editor.back")}>
 					<ArrowLeft aria-hidden="true" />
 				</a>
 			</Button>
-			<Button asChild variant="ghost" size="icon-sm">
-				<a href="/" aria-label={t("ui.nav.dashboard")}>
-					<House aria-hidden="true" />
-				</a>
-			</Button>
+			<EditorMenu />
 			<span aria-hidden="true" className="h-5 w-px bg-ed-track-line" />
 			<CompositionBreadcrumb />
 			{name !== undefined && <ProjectName name={name} />}
