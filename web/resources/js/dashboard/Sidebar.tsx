@@ -178,17 +178,10 @@ function Profile({
 
 	const name = user?.email ?? account?.username ?? t("ui.nav.local");
 	return (
-		<section aria-label={t("ui.nav.profile")} className="flex flex-col gap-1">
-			<p
-				className={cn(
-					"flex h-8 items-center gap-2 px-3 text-sm",
-					collapsed && "justify-center px-0",
-				)}
-				data-testid="profile-name"
-			>
-				<User aria-hidden="true" className="size-4 shrink-0" />
-				<span className={cn("truncate", collapsed && "sr-only")}>{name}</span>
-			</p>
+		<section
+			aria-label={t("ui.nav.profile")}
+			className="flex flex-col gap-0.5 border-t border-border pt-2"
+		>
 			<Item
 				href="/settings"
 				current={path === "/settings"}
@@ -202,7 +195,10 @@ function Profile({
 					type="button"
 					variant="ghost"
 					size="sm"
-					className={cn("justify-start", collapsed && "justify-center")}
+					className={cn(
+						"h-8 justify-start px-3 text-sm font-normal text-muted-foreground",
+						collapsed && "min-w-8 justify-center px-0",
+					)}
 					aria-label={collapsed ? t("ui.account.logout") : undefined}
 					data-testid="account-logout"
 					onClick={() => void logout()}
@@ -218,7 +214,10 @@ function Profile({
 					type="button"
 					variant="ghost"
 					size="sm"
-					className={cn("justify-start", collapsed && "justify-center")}
+					className={cn(
+						"h-8 justify-start px-3 text-sm font-normal text-muted-foreground",
+						collapsed && "min-w-8 justify-center px-0",
+					)}
 					aria-label={collapsed ? t("ui.login.logout") : undefined}
 					onClick={() =>
 						void createClient(new HttpTransport(""))
@@ -233,6 +232,16 @@ function Profile({
 					</span>
 				</Button>
 			)}
+			<p
+				className={cn(
+					"flex h-6 items-center gap-2 px-3 text-xs text-muted-foreground",
+					collapsed && "justify-center px-0",
+				)}
+				data-testid="profile-name"
+			>
+				<User aria-hidden="true" className="size-3.5 shrink-0" />
+				<span className={cn("truncate", collapsed && "sr-only")}>{name}</span>
+			</p>
 		</section>
 	);
 }
@@ -513,7 +522,7 @@ export default function Sidebar({
 			data-form={form}
 			className={cn(
 				"flex shrink-0 flex-col bg-surface-sunken p-2 max-md:hidden md:sticky md:top-0 md:h-dvh md:border-r",
-				collapsed ? "w-14" : "w-64",
+				collapsed ? "w-14" : "w-60",
 			)}
 		>
 			{body(collapsed, false)}
