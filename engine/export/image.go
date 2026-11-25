@@ -11,6 +11,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/core/plan"
 	"github.com/AlexGalhardo/stuarty/engine/compositor"
 	"github.com/AlexGalhardo/stuarty/engine/lut"
+	"github.com/AlexGalhardo/stuarty/engine/renderhost"
 	"github.com/AlexGalhardo/stuarty/engine/rasterize"
 )
 
@@ -38,9 +39,17 @@ func RenderImage(ctx context.Context, doc *coreimage.Document, cfg ImageConfig) 
 	return renderImage(ctx, doc, cfg, 0)
 }
 
-// renderImage is RenderImage with the number of bands the canvas is drawn in; 0 is as many as the work and the
-// machine allow (SDD-021 section 6.2). The pixels never depend on it.
+// renderImage is renderImagePasses with the layers the module draws in one pass.
 func renderImage(ctx context.Context, doc *coreimage.Document, cfg ImageConfig, bands int) (*image.RGBA, error) {
+	return renderImagePasses(ctx, doc, cfg, bands, maxPlanLayers)
+}
+
+// renderImagePasses is RenderImage with the number of bands the canvas is drawn in; 0 is as many as the work and
+// the machine allow (SDD-021 section 6.2), and with the layers one pass draws, passLayers (at most the module's
+// maxPlanLayers; a test lowers it to force a document into several passes). The pixels depend on neither.
+func renderImagePasses(
+	ctx context.Context, doc *coreimage.Document, cfg ImageConfig, bands, passLayers int,
+) (*image.RGBA, error) {
 	fonts := cfg.Fonts
 	if fonts == nil {
 		fonts = rasterize.Bundled()
@@ -77,6 +86,13 @@ func renderImage(ctx context.Context, doc *coreimage.Document, cfg ImageConfig, 
 		stops = []int{len(live) - 1, len(live)}
 	}
 
+	// The module draws at most passLayers layers at once, so a longer stack is drawn in passes: each pass draws
+	// the picture of the passes below it as its bottom layer (SDD-021 section 6.1, SDD-013 section 7.2).
+	stops, err := splitPasses(live, start, base != nil, stops, passLayers)
+	if err != nil {
+		return nil, err
+	}
+
 	// The instances that do not test the context at every loop back edge draw about three times faster
 	// (SDD-021 section 13.2); the cancellation is kept by checking the context between the layers and by
 	// not waiting for the work in flight (SDD-021 section 6.2).
@@ -91,7 +107,8 @@ func renderImage(ctx context.Context, doc *coreimage.Document, cfg ImageConfig, 
 			return nil, err
 		}
 
-		if chain != nil && stop < len(live) {
+		// A cut a clip crosses has no picture of its own, so it is not kept (the passes avoid it when they can).
+		if chain != nil && stop < len(live) && chain.valid[stop] {
 			cfg.Cache.put(cfg.CacheScope, chain.digest[stop], img)
 		}
 
@@ -103,6 +120,53 @@ func renderImage(ctx context.Context, doc *coreimage.Document, cfg ImageConfig, 
 	}
 
 	return base, nil
+}
+
+// splitPasses cuts the passes of stops into passes of at most limit layers, where a pass that starts from a
+// picture counts that picture as one of its layers. A cut is the latest one under the limit that no clip
+// crosses (a clip needs its source in the same draw); when a clip holds more layers than a pass draws together,
+// there is no cut and the module's own limit is reported.
+func splitPasses(live []plan.Layer, start int, haveBase bool, stops []int, limit int) ([]int, error) {
+	var position map[string]int
+
+	out := make([]int, 0, len(stops))
+
+	for _, stop := range stops {
+		for stop-start > limit-boolInt(haveBase) {
+			if position == nil {
+				position = layerPositions(live)
+			}
+
+			cut := start
+			for k := start + limit - boolInt(haveBase); k > start; k-- {
+				if cutIsClean(live, position, k) {
+					cut = k
+
+					break
+				}
+			}
+
+			if cut == start {
+				return nil, rendererError(&renderhost.Error{Reason: renderhost.LimitExceeded, Detail: "render_layers"})
+			}
+
+			out = append(out, cut)
+			start, haveBase = cut, true
+		}
+
+		out = append(out, stop)
+		start, haveBase = stop, true
+	}
+
+	return out, nil
+}
+
+func boolInt(b bool) int {
+	if b {
+		return 1
+	}
+
+	return 0
 }
 
 // livePlan is the one-frame plan of a document and the layers of it that draw something, in plan order.

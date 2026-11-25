@@ -270,10 +270,7 @@ func newLayerChain(fp plan.FramePlan, live []plan.Layer) *layerChain {
 	_, _ = fmt.Fprintf(h, "stuarty image cache v1 %d %d %s %t", fp.Width, fp.Height, fp.Background, fp.Transparent)
 	h.Sum(ch.digest[0][:0])
 
-	position := make(map[string]int, len(live))
-	for i := range live {
-		position[live[i].ItemID] = i
-	}
+	position := layerPositions(live)
 
 	for i := range live {
 		body, err := json.Marshal(&live[i])
@@ -293,6 +290,16 @@ func newLayerChain(fp plan.FramePlan, live []plan.Layer) *layerChain {
 	}
 
 	return ch
+}
+
+// layerPositions is the place of each layer in the plan, by item id.
+func layerPositions(live []plan.Layer) map[string]int {
+	position := make(map[string]int, len(live))
+	for i := range live {
+		position[live[i].ItemID] = i
+	}
+
+	return position
 }
 
 // cutIsClean tells that no clip of a layer crosses the cut after the first k layers.
