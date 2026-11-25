@@ -144,12 +144,19 @@ func TestSecurity_T180_AnAgentCannotScheduleOnAQuietDayByAnyPathOrSurface(t *tes
 				}
 			}
 
+			// Nor move the day by writing its note in another zone, which would free hours of it.
+			moved := "moved"
+			refuse("the zone of the quiet day", mkStep(t, "CalendarDaySet", service.CalendarDaySetRequest{
+				Date: "2026-12-25", Zone: "Pacific/Kiritimati", Note: &moved,
+			}))
+
 			plan, err := svc.CalendarPlan(
 				callerCtx(),
 				service.CalendarPlanRequest{From: "2026-12-25", To: "2026-12-26"},
 			)
-			if err != nil || len(plan.Days) != 1 || !plan.Days[0].Quiet {
-				t.Errorf("the day is not quiet any more: %+v, %v", plan, err)
+			if err != nil || len(plan.Days) != 1 || !plan.Days[0].Quiet || plan.Days[0].Zone != "UTC" ||
+				plan.Days[0].Note != "" {
+				t.Errorf("the day is not as the person left it: %+v, %v", plan, err)
 			}
 		})
 	}
