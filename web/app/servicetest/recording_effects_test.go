@@ -99,6 +99,7 @@ func TestFinishingATakeReadsThePointerEventsOfItsRecording(t *testing.T) {
 	r := newRecEnv(t)
 	project, clip := r.takePlaced(t, true)
 	base := r.revision(t, project)
+	start := r.document(project)
 
 	res := r.mustEdit(agent, project, base,
 		op("recording.auto_zoom", `{"item_id":"`+clip+`"}`),
@@ -142,6 +143,11 @@ func TestFinishingATakeReadsThePointerEventsOfItsRecording(t *testing.T) {
 	if len(after.Items) >= len(before.Items) || len(after.Items[clip].Keyframes) != 0 {
 		t.Errorf("undo left %d items and keyframes %v", len(after.Items), after.Items[clip].Keyframes)
 	}
+
+	// epic 65 acceptance 3: the content of the timeline is the one before the batch, byte for byte
+	if !bytes.Equal(start, r.document(project)) {
+		t.Errorf("undo did not give back the document:\n%s\n%s", start, r.document(project))
+	}
 }
 
 func TestFinishingATakeWithoutPointerEventsChangesNothing(t *testing.T) {
@@ -174,11 +180,29 @@ func TestFinishingATakeRefusesWhatIsNotAScreenRecording(t *testing.T) {
 		t.Errorf("resolved from a caller: %v", err)
 	}
 
-	// a clip of any other video has no recording to read
-	other := r.newProject("other")
+	// a clip of any other video has no recording to read: refused before anything is applied
+	plain := r.importOne(project, r.write("plain.mp4", clipBytes)).Assets[0].AssetID
+	doc := r.document2(t, project)
+	added := r.mustEdit(ui, project, r.revision(t, project), op("clip.add", `{"track_id":"`+doc.Items[clip].Track+
+		`","asset_id":"`+plain+`","start":"60s","duration":"1s"}`))
+	other, rev := added.Created[0], r.revision(t, project)
+	before := r.document(project)
+
+	for _, name := range []string{"recording.auto_zoom", "recording.set_cursor", "recording.set_click_highlight"} {
+		if _, err = r.edit(agent, project, rev, op(name, `{"item_id":"`+other+`"}`)); code(err) != "E_INVALID_STATE" {
+			t.Errorf("%s on a clip of a plain video: %v", name, err)
+		}
+	}
+
+	if !bytes.Equal(before, r.document(project)) || r.revision(t, project) != rev {
+		t.Error("a refused edit changed the project")
+	}
+
+	// an item that is not there
+	empty := r.newProject("other")
 	if _, err = r.edit(
 		agent,
-		other,
+		empty,
 		0,
 		op("recording.auto_zoom", `{"item_id":"itm_zzzzzzzzzz"}`),
 	); code(
