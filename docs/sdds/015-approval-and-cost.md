@@ -114,6 +114,8 @@ A request is `expired` when it is pending at `expires_at`; the service marks it 
 
 **A ledger entry** (`cost_ledger`): `id`, `request_id`, `job_id`, `connection_id`, `project_id`, `kind`, `currency`, `estimate_micros`, `actual_micros` (null until the job ends), `state` (`reserved`, `settled` or `released`), `day` (the UTC date of the reservation, `YYYY-MM-DD`), `created_at`, `settled_at`.
 
+The real cost of a project by kind of job is `Store.SettledByKind(project)` (epic 99): the sum of `actual_micros` of the `settled` entries, by `kind` and `currency`, counting the entries of the timelines of the project for the project; a reservation is not in it. The project screens read it to show what each step cost (SDD-005 section 5.12.4); it is the only reader that groups by kind.
+
 Migrations: `create_approval_tables` (the four tables above), and `jobs_waiting_approval`, which rebuilds `jobs` to allow the state `waiting_approval`, to drop the closed list of kinds (a kind registered by a feature epic must be storable; the service validates the kind) and to add `approval_id`. SQLite cannot change a `CHECK` in place, and nothing references `jobs`.
 
 ## 4. Service operations and who may call them

@@ -434,6 +434,8 @@ A publication belongs to one project (ADR-0039) and holds what the networks shar
 
 A publication is an item of its project (ADR-0039): it is listed in `ProjectDescribe` and in the overview of the project with kind `publication`. It is kept in its own tables (section 29) and not in `project_items`, because its rows have a state machine, leases and a schedule that no other item has, and because the table of items is rebuilt, with a longer `CHECK`, by every epic that adds a kind; the item the surfaces show is read from the publication.
 
+**The next post of a project (epic 99).** A project overview says when its next post goes out: `core/publish.NextPost` takes the targets of the project's publications (state and `scheduled_at`) and returns the earliest instant, not yet past, of a target that is `waiting_approval`, `approved` or `scheduled`; a target that is a draft, publishing, published, sent as a draft, failed, missed or cancelled is not next, and neither is one with no instant. It is `next_post_at` of `ProjectGet`, `ProjectDescribe` and each project of `ProjectList` (SDD-005 section 5.12.4), `null` when there is none.
+
 ## 24. The state of a target
 
 `draft`, `waiting_approval`, `approved`, `scheduled`, `publishing`, `published`, `failed`, `missed`, `cancelled`. `core/publish.CanTarget(from, to)` says whether a move is allowed; no other move exists.

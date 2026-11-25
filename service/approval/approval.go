@@ -252,6 +252,13 @@ type Total struct {
 	Micros       int64  `json:"micros"`
 }
 
+// KindSpend is what the settled jobs of one kind cost a project, in one currency.
+type KindSpend struct {
+	Kind     string
+	Currency string
+	Micros   int64
+}
+
 // Store is where the records live (the tables of SDD-015 section 3). On a transaction it is bound to it.
 type Store interface {
 	// InsertRequest adds a request.
@@ -294,6 +301,9 @@ type Store interface {
 	Spent(ctx context.Context, q SpentQuery) (int64, error)
 	// Totals is the spend per day, connection and project, from fromDay (inclusive) on.
 	Totals(ctx context.Context, fromDay string) ([]Total, error)
+	// SettledByKind is what the settled entries of a project cost, by job kind and currency: the real cost
+	// only, never an estimate. The id of a timeline counts for the project that holds it (SDD-015 section 6).
+	SettledByKind(ctx context.Context, projectID string) ([]KindSpend, error)
 	// Reserved reports whether a job has a ledger entry that still counts as reserved.
 	Reserved(ctx context.Context, jobID string) (bool, error)
 }
