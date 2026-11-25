@@ -4,37 +4,38 @@ The eight images of the landing page (epic 95) are made again by site/scripts/ca
 with the CLI and the HTTP API of the product, takes the screens in both themes and encodes them; the other images were
 captured on 2026-11-24 for epic 88 and are used by the alternative pages of the landing.
 
-Every image is a capture of the user interface at 1600 x 1000 px, in the dark theme (name.*) and in the light
-theme (name-light.*), as .webp and .avif at 1600 px and, with the suffix -960, at 960 px. The 960 px files are the
-1600 px capture scaled down (home-mobile is the 390 px wide home at 1600 px). Nothing is drawn or composed: no design file, render or mock-up. The files were encoded
-from the PNG captures with the repository's pinned LGPL FFmpeg, carry no metadata, and are part of this repository under
-its MIT licence (LICENSE.md).
+Every image is a capture of the user interface at 1600 x 1000 px (home-mobile: the home in a 390 px wide window,
+captured at 1600 x 3464 px), in the dark theme (name.*) and in the light theme (name-light.*), as .webp and .avif at
+1600 px and, with the suffix -960, at 960 px. The 960 px files are the 1600 px capture scaled down. Nothing is drawn or
+composed: no design file, render or mock-up. The files were encoded from the PNG captures with the repository's pinned
+LGPL FFmpeg, carry no metadata, and are part of this repository under its MIT licence (LICENSE.md).
 
 Media shown inside the screenshots: none from outside the repository. The clips, pictures and sounds of the demo
-workspace were generated for the capture (gradients and sine tones made with the project's own FFmpeg). 
-content (a text project, a video project, an image project, a project not decided yet, and a few skills, prompts and
-memory notes about an invented community garden) is invented: it names no real person, brand or number, and it holds
-no logo, testimonial or metric. The agent profiles and the home folder shown are the defaults of the machine that
-captured them; no account, key or token of any user appears.
+workspace were generated for the capture (gradients and sine tones made with the project's own FFmpeg). The demo
+content is invented: for epic 88, a text project, a video project, an image project, a project not decided yet, and a
+few skills, prompts and memory notes about a community garden; for epic 95, the user alex, a Reel on five filming
+mistakes, a blog post on natural light at home and four posts on a local blog folder. It names no real person, brand or
+number, and it holds no logo, testimonial or metric. The agent profiles and the home folder shown are the defaults of the
+machine that captured them; no account, key or token of any user appears.
 
-Image                      Screen                                  Captured
-dashboard                  Home, a video project in progress with approvals waiting /                                       2026-11-24
-projects                   Projects                     /projects                               2026-11-24
-project-brief              Briefing of a new project    /projects, New project, video, Continue 2026-11-24
-writing                    Write, a script selected     /write                                  2026-11-24
-video-editor              Video editor, a clip selected /editor/<project>                      2026-11-24
-image-editor               Image editor, a layer selected /edit-image/<image>                   2026-11-24
-publish-calendar           Publish, month calendar with posts /publish                                2026-11-24
-agent-chat                 Agent chat panel on a project /projects/<project>, Chat              2026-11-24
-visual-assets              Visual Assets                /visual-assets                          2026-11-24
-video-assets               Video Assets                 /video-assets                           2026-11-24
-skills                     Skills, one selected         /skills                                 2026-11-24
-prompts                    Prompts, one selected        /prompts                                2026-11-24
-memory                     Memory, one note selected    /memory                                 2026-11-24
-connections                Connections                  /connections                            2026-11-24
-approvals                  Approvals, requests waiting  /approvals                              2026-11-24
-project-trail              Path of a video project      /projects/<project>                     2026-11-24
-text-trail                 Path of a text project       /projects/<project>                     2026-11-24
-home-mobile                Home at 390 px wide          /                                       2026-11-24
+Image                Screen                              Route                                    Captured
+dashboard            Home, a project in progress         /                                        2026-11-24
+projects             Projects                            /projects                                2026-11-24
+project-brief        Briefing of a new project           /projects, New project, video, Continue  2026-11-24
+writing              Write, a script selected            /write                                   2026-11-24
+video-editor         Video editor, a clip selected       /editor/<project>                        2026-11-24
+image-editor         Image editor, a layer selected      /edit-image/<image>                      2026-11-24
+publish-calendar     Publish, month calendar with posts  /publish                                 2026-11-24
+agent-chat           Agent chat panel on a project       /projects/<project>, Chat                2026-11-24
+visual-assets        Visual Assets                       /visual-assets                           2026-11-24
+video-assets         Video Assets                        /video-assets                            2026-11-24
+skills               Skills, one selected                /skills                                  2026-11-24
+prompts              Prompts, one selected               /prompts                                 2026-11-24
+memory               Memory, one note selected           /memory                                  2026-11-24
+connections          Connections                         /connections                             2026-11-24
+approvals            Approvals, requests waiting         /approvals                               2026-11-24
+project-trail        Path of a video project             /projects/<project>                      2026-11-24
+text-trail           Path of a text project              /projects/<project>                      2026-11-24
+home-mobile          Home at 390 px wide                 /                                        2026-11-24
 
 Nothing from outside the repository is used by the landing page: no external fonts, images, scripts or trackers.
