@@ -127,6 +127,8 @@ export const ACTIONS: Readonly<Record<string, readonly string[]>> = {
 	"inspector.track_caption_style": ["track.set_caption_style"],
 	"inspector.caption_gallery": ["caption.apply_style"],
 	"inspector.blur_region": ["clip.blur_region"],
+	"inspector.recording_layout": ["recording.apply_layout"],
+	"inspector.recording_background": ["recording.set_background"],
 	"inspector.screen_zoom": ["recording.auto_zoom"],
 	"inspector.screen_cursor": ["recording.set_cursor"],
 	"inspector.screen_highlight": ["recording.set_click_highlight"],
@@ -258,8 +260,14 @@ export const COVERAGE: Readonly<Record<string, readonly EntryPoint[]>> = {
 		{ kind: "inspector", action: "inspector.blur_region" },
 		palette,
 	],
-	"recording.apply_layout": [palette],
-	"recording.set_background": [palette],
+	"recording.apply_layout": [
+		{ kind: "inspector", action: "inspector.recording_layout" },
+		palette,
+	],
+	"recording.set_background": [
+		{ kind: "inspector", action: "inspector.recording_background" },
+		palette,
+	],
 	"recording.auto_zoom": [
 		{ kind: "inspector", action: "inspector.screen_zoom" },
 		palette,
