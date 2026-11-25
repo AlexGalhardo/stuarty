@@ -1,5 +1,6 @@
-import { Head } from "@inertiajs/react";
+import { Head, Link } from "@inertiajs/react";
 import {
+	ArrowRight,
 	CalendarClock,
 	Check,
 	ChevronLeft,
@@ -26,6 +27,7 @@ import type {
 	SocialAccount,
 	SocialNetwork,
 } from "../../editor/api/types";
+import type { Workflow } from "../../workflow/types";
 import { CalendarView } from "./CalendarView";
 import {
 	addDays,
@@ -44,7 +46,9 @@ import { type Adjustment, DayView } from "./DayView";
 import type { CalendarDay } from "./dayTypes";
 import { ListView } from "./ListView";
 import { MiniMonth } from "./MiniMonth";
+import { PublicationDetailPanel } from "./PublicationDetail";
 import { type EditorInitial, PublicationEditor } from "./PublicationEditor";
+import { latestPublishedPost, PublishedPostState } from "./PublishedPostState";
 import { SlotsDialog } from "./SlotsDialog";
 import { type ListFilter, type Publication, TARGET_STATES } from "./types";
 import { useCalendarPlan } from "./useCalendarPlan";
@@ -86,6 +90,13 @@ export default function Publish(): ReactNode {
 		target?: string;
 		initial?: EditorInitial;
 	} | null>(null);
+	const [inspected, setInspected] = useState<{
+		id: string;
+		target: string;
+	} | null>(null);
+	const [publishedWorkflow, setPublishedWorkflow] = useState<Workflow | null>(
+		null,
+	);
 	const [slotsOpen, setSlotsOpen] = useState(false);
 	const [failure, setFailure] = useState<Failure | null>(null);
 	const quiet = useQuietConfirm();
@@ -164,6 +175,38 @@ export default function Publish(): ReactNode {
 		editing?.id == null
 			? null
 			: (publications.find((p) => p.id === editing.id) ?? null);
+	const inspectedPair = useMemo(() => {
+		if (inspected === null) return null;
+		const publication = publications.find((p) => p.id === inspected.id);
+		const target = publication?.targets.find((x) => x.id === inspected.target);
+		return publication !== undefined && target !== undefined
+			? { publication, target }
+			: null;
+	}, [inspected, publications]);
+	const publishedPost = useMemo(
+		() => latestPublishedPost(publications),
+		[publications],
+	);
+	const publishedProjectId = publishedPost?.publication.project_id ?? "";
+
+	useEffect(() => {
+		if (publishedProjectId === "") {
+			setPublishedWorkflow(null);
+			return;
+		}
+		let active = true;
+		api()
+			.describeProject(publishedProjectId)
+			.then((desc) => {
+				if (active) setPublishedWorkflow(desc.workflow ?? null);
+			})
+			.catch(() => {
+				if (active) setPublishedWorkflow(null);
+			});
+		return () => {
+			active = false;
+		};
+	}, [publishedProjectId]);
 
 	function step(direction: -1 | 1): void {
 		setAnchor((was) =>
@@ -304,6 +347,33 @@ export default function Publish(): ReactNode {
 					}
 				/>
 
+				{publishedPost !== null && (
+					<PublishedPostState
+						title={
+							publishedPost.target.fields.title ||
+							publishedPost.publication.title
+						}
+						destination={
+							accountNames[publishedPost.target.connection_id] ??
+							publishedPost.target.network
+						}
+						publishedAt={publishedPost.target.published_at}
+						zone={publishedPost.target.zone}
+						url={publishedPost.target.url}
+						workflow={publishedWorkflow}
+						addVideoAction={
+							<Button asChild variant="outline" size="sm">
+								<Link
+									href={`/projects/${publishedPost.publication.project_id}`}
+								>
+									<ArrowRight aria-hidden="true" />
+									{t("ui.publish.published_state.add_video")}
+								</Link>
+							</Button>
+						}
+					/>
+				)}
+
 				<div className="flex flex-wrap items-center gap-3">
 					{mode !== "list" && (
 						<div className="flex flex-wrap items-center gap-2">
@@ -424,6 +494,7 @@ export default function Publish(): ReactNode {
 								publications={feed.publications}
 								accounts={accountNames}
 								onOpen={(id, target) => setEditing({ id, target })}
+								onInspect={(id, target) => setInspected({ id, target })}
 							/>
 						) : mode === "day" ? (
 							<DayView
@@ -465,6 +536,20 @@ export default function Publish(): ReactNode {
 						)}
 					</div>
 					<aside className="flex flex-col gap-4">
+						{inspectedPair !== null && (
+							<PublicationDetailPanel
+								publication={inspectedPair.publication}
+								target={inspectedPair.target}
+								accounts={accountNames}
+								onEdit={() =>
+									setEditing({
+										id: inspectedPair.publication.id,
+										target: inspectedPair.target.id,
+									})
+								}
+								onClose={() => setInspected(null)}
+							/>
+						)}
 						<MiniMonth
 							month={mini}
 							selected={anchor}

@@ -27,10 +27,12 @@ const TITLE_MAX = 120;
 export default function AddMedia({
 	projectId,
 	projectName,
+	label,
 	onAdded,
 }: {
 	projectId: string;
 	projectName: string;
+	label?: string;
 	onAdded(): void;
 }): ReactNode {
 	const t = useT();
@@ -69,7 +71,7 @@ export default function AddMedia({
 	return (
 		<>
 			<Button type="button" variant="outline" onClick={() => setOpen(true)}>
-				{t("ui.projects.add_media.open")}
+				{label ?? t("ui.projects.add_media.open")}
 			</Button>
 			<Dialog
 				open={open}
