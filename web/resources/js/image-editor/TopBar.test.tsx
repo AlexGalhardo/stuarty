@@ -17,12 +17,12 @@ function render(revision: number | null): string {
 
 describe("image editor SavedIndicator", () => {
 	test("names the time of the open revision once a document is on screen", () => {
-		expect(render(3)).toMatch(/Saved automatically: \d{1,2}:\d{2}/);
+		expect(render(3)).toMatch(/Saved at \d{1,2}:\d{2}/);
 	});
 
-	test("marks the saved state with a decorative check, never the only signal", () => {
+	test("is plain text with no icon, as the final design draws it", () => {
 		const html = render(3);
-		expect(html).toContain('aria-hidden="true"');
+		expect(html).not.toContain("<svg");
 		expect(html).toContain("data-saved-at");
 	});
 

@@ -51,6 +51,7 @@ export function ExportTool(): ReactNode {
 			<Button
 				type="button"
 				size="sm"
+				className="h-8 px-3 font-semibold"
 				aria-label={t("ui.image.export.open")}
 				disabled={doc === null}
 				onClick={() => setOpen(true)}
