@@ -253,7 +253,13 @@ export default function ProjectContextForm({
 						{submitLabel}
 					</Button>
 					{onCancel && (
-						<Button type="button" variant="outline" onClick={onCancel}>
+						<Button
+							type="button"
+							variant="outline"
+							// No focus change on the press: the blur of a field would show its error, move this button, and the click would land beside it.
+							onMouseDown={(event) => event.preventDefault()}
+							onClick={onCancel}
+						>
 							{cancelLabel ?? t("ui.projects.card.cancel")}
 						</Button>
 					)}
