@@ -61,6 +61,8 @@ RUN stamp=""; \
 FROM --platform=$BUILDPLATFORM ${RUNTIME_IMAGE} AS ffmpeg
 ARG TARGETARCH
 ARG FFMPEG_SOURCE=
+# Where the assets of the own build are served; a test of the image before the release exists points it at a local server (the SHA-256 of the pin still decides).
+ARG FFMPEG_OWN_BASE_URL=https://github.com/AlexGalhardo/stuarty/releases/download
 COPY .config/ffmpeg.env /tmp/ffmpeg.env
 RUN apt-get update \
 	&& apt-get install -y --no-install-recommends ca-certificates curl xz-utils \
@@ -77,11 +79,11 @@ RUN apt-get update \
 	esac \
 	&& if [ "$source" = own ]; then \
 		[ -n "$FFMPEG_OWN_TAG" ] && [ -n "$asset" ] || { echo "no own FFmpeg build is pinned in .config/ffmpeg.env" >&2; exit 1; }; \
-		url="https://github.com/AlexGalhardo/stuarty/releases/download/${FFMPEG_OWN_TAG}/${asset}"; \
+		url="${FFMPEG_OWN_BASE_URL}/${FFMPEG_OWN_TAG}/${asset}"; \
 	else url="https://github.com/BtbN/FFmpeg-Builds/releases/download/${FFMPEG_RELEASE_TAG}/${asset}"; fi \
 	&& curl -fsSL -o /tmp/ffmpeg.tar.xz "$url" \
 	&& echo "${sum}  /tmp/ffmpeg.tar.xz" | sha256sum -c - \
-	&& mkdir -p /opt/ffmpeg \
+	&& mkdir -p /opt/ffmpeg/licenses \
 	&& tar -xJf /tmp/ffmpeg.tar.xz -C /opt/ffmpeg --strip-components=1 \
 	&& test -x /opt/ffmpeg/bin/ffmpeg && test -x /opt/ffmpeg/bin/ffprobe && test -s /opt/ffmpeg/LICENSE.txt \
 	&& echo "$source" > /opt/ffmpeg/pin-kind.txt \
@@ -120,6 +122,8 @@ RUN apt-get update \
 COPY --from=ffmpeg /opt/ffmpeg/bin/ffmpeg /opt/ffmpeg/bin/ffprobe /opt/ffmpeg/bin/
 COPY --from=ffmpeg /opt/ffmpeg/LICENSE.txt /usr/share/doc/stuarty/ffmpeg/LICENSE.txt
 COPY --from=ffmpeg /opt/ffmpeg/SOURCE.txt /usr/share/doc/stuarty/ffmpeg/SOURCE.txt
+# The licence texts of the libraries of the own build (an empty folder for the BtbN build).
+COPY --from=ffmpeg /opt/ffmpeg/licenses/ /usr/share/doc/stuarty/ffmpeg/licenses/
 COPY --from=ffmpeg /opt/ffmpeg/pin-kind.txt /tmp/ffmpeg-pin-kind.txt
 # The licence obligations of the LGPL build (ADR-0011 item 2): the licence text,
 # the configure line and where the corresponding source is (SOURCE.txt, above).
