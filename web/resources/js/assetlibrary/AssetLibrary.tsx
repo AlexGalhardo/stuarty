@@ -30,6 +30,7 @@ import type {
 } from "../editor/api/types";
 import { thumbnailUrl } from "../editor/api/urls";
 import { AssetSize } from "./AssetSize";
+import { localizeSize } from "./localizeSize";
 import { OriginBadge } from "./badges";
 import { GenerateDialog, type Kind as GenerateKind } from "./GenerateDialog";
 import { LibraryFilters } from "./LibraryFilters";
@@ -656,6 +657,7 @@ export function AssetDetail({
 // One section of the library: the filters, the files and the detail of the file that is open.
 export function AssetLibrary({ section }: { section: Section }): ReactNode {
 	const t = useT();
+	const locale = useLocale();
 	const [items, setItems] = useState<LibraryAsset[] | null>(null);
 	const [total, setTotal] = useState(0);
 	const [next, setNext] = useState<string | null>(null);
@@ -792,7 +794,9 @@ export function AssetLibrary({ section }: { section: Section }): ReactNode {
 						<p className="text-sm text-text-muted" data-testid="library-total">
 							{summary.size === ""
 								? t("ui.assets.size.unknown")
-								: t("ui.assets.total", { size: summary.size })}
+								: t("ui.assets.total", {
+										size: localizeSize(summary.size, locale),
+									})}
 							{summary.unsized > 0 &&
 								summary.size !== "" &&
 								` ${t("ui.assets.unsized", { count: summary.unsized })}`}
