@@ -46,6 +46,8 @@ function draw(view: RecordView, over: Partial<RecordFlow> = {}): string {
 		busy: false,
 		placed: false,
 		start: async () => {},
+		startBrowser: async () => {},
+		stopBrowser: async () => {},
 		stop: async () => {},
 		pause: async () => {},
 		resume: async () => {},
@@ -80,6 +82,152 @@ describe("the record dialog", () => {
 		expect(html).toContain("Displays");
 		expect(html).toContain('data-record-start=""');
 		expect(html).toContain("Frames per second");
+	});
+
+	test("where capture is unavailable the browser records: what it can do is said before the person starts", () => {
+		const html = draw({
+			step: "browser",
+			capability: {
+				ok: true,
+				mimeType: "video/webm;codecs=vp9,opus",
+				container: "webm",
+				label: "vp9",
+				camera: true,
+				microphone: true,
+			},
+			kept: [],
+		});
+		expect(html).toContain(
+			"This browser records WebM with VP9 video and Opus sound.",
+		);
+		expect(html).toContain("asks your permission");
+		expect(html).toContain(
+			"Pointer and click positions are not recorded in a browser.",
+		);
+		expect(html).toContain('data-record-browser-microphone=""');
+		expect(html).toContain('data-record-browser-camera=""');
+		expect(html).toContain('data-record-start=""');
+		expect(html).not.toContain("data-record-browser-blocked");
+		expect(html).not.toContain('disabled=""');
+	});
+
+	test("on a page that is not a secure context recording is disabled and the reason is shown", () => {
+		const html = draw({
+			step: "browser",
+			capability: { ok: false, reason: "insecure_context" },
+			kept: [],
+		});
+		expect(html).toContain('data-record-browser-blocked="insecure_context"');
+		expect(html).toContain("HTTPS or on localhost");
+		expect(html).toMatch(/<button[^>]*disabled=""[^>]*data-record-start=""/);
+		expect(html).not.toContain("<form");
+	});
+
+	test("each reason a browser cannot record has its own sentence", () => {
+		for (const [reason, words] of [
+			["no_display_capture", "cannot capture the screen"],
+			["no_media_recorder", "cannot record what it captures"],
+			["no_codec", "format Stuarty cannot take"],
+			["no_digest", "cannot check the files it sends"],
+		] as const) {
+			expect(
+				draw({ step: "browser", capability: { ok: false, reason }, kept: [] }),
+			).toContain(words);
+		}
+	});
+
+	test("a camera that the browser cannot give is not offered", () => {
+		const html = draw({
+			step: "browser",
+			capability: {
+				ok: true,
+				mimeType: "video/mp4",
+				container: "mp4",
+				label: "default-mp4",
+				camera: false,
+				microphone: false,
+			},
+			kept: [],
+		});
+		expect(html).toContain(
+			"cannot give the microphone or the camera to a page",
+		);
+		expect(html).toContain("This browser records MP4.");
+	});
+
+	test("a recording made in the browser shows its clock, what is shared and what the server holds", () => {
+		const base = {
+			recordingId: "rec_0123456789",
+			elapsedMs: 65_000,
+			shared: {
+				screen: true,
+				microphone: true,
+				displayAudio: false,
+				camera: false,
+			},
+			upload: {
+				phase: "sending",
+				pending: 0,
+				chunks: { screen: 3, camera: 0 },
+				bytes: 3 * 1024 * 1024,
+				end: null,
+			},
+			stoppedBy: null,
+			recording: null,
+			error: null,
+		} as const;
+		const html = draw({
+			step: "browser_live",
+			state: { ...base, phase: "recording" },
+		});
+		expect(html).toContain("Elapsed 1:05");
+		expect(html).toContain('data-record-browser-shared-item="microphone"');
+		expect(html).not.toContain('data-record-browser-shared-item="camera"');
+		expect(html).toContain("3.0 MB saved on your server");
+		expect(html).toContain('data-record-stop=""');
+		expect(html).not.toContain("data-record-browser-retrying");
+
+		const retrying = draw({
+			step: "browser_live",
+			state: {
+				...base,
+				phase: "recording",
+				upload: { ...base.upload, phase: "retrying" },
+			},
+		});
+		expect(retrying).toContain(
+			"The connection dropped. Trying again: nothing is lost.",
+		);
+
+		const limited = draw({
+			step: "browser_live",
+			state: {
+				...base,
+				phase: "sending",
+				stoppedBy: "limit",
+				upload: { ...base.upload, end: { kind: "limit", reason: "size" } },
+			},
+		});
+		expect(limited).toContain("reached the size limit");
+		expect(limited).toContain("Saving the file");
+		expect(limited).toContain('disabled=""');
+
+		const browser = draw({
+			step: "browser_live",
+			state: { ...base, phase: "sending", stoppedBy: "browser" },
+		});
+		expect(browser).toContain("You stopped sharing in the browser");
+	});
+
+	test("a take whose tab is gone can be finished with what the server holds, or deleted", () => {
+		const html = draw({
+			step: "interrupted",
+			recording: rec({ source: { kind: "browser" }, bytes: 5 * 1024 * 1024 }),
+		});
+		expect(html).toContain("was interrupted");
+		expect(html).toContain("5.0 MB saved on your server");
+		expect(html).toContain('data-record-finish-interrupted=""');
+		expect(html).toContain('data-record-delete=""');
 	});
 
 	test("shows a recording in progress with the clock of the service and a stop button", () => {

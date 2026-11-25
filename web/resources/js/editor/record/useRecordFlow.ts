@@ -2,7 +2,15 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { type Failure, failureOf } from "@/components/Failure";
 import type { ApiClient } from "../api/client";
+import { currentCapability } from "./browserCapture";
 import {
+	type BrowserRecording,
+	type CaptureChoice,
+	type RecorderState,
+	startBrowserRecording,
+} from "./browserRecorder";
+import {
+	browserOffered,
 	isKept,
 	isLive,
 	LIVE_POLL_MS,
@@ -26,6 +34,9 @@ export interface RecordFlow {
 		extras: StartOptions,
 	): Promise<void>;
 	stop(): Promise<void>;
+	// a recording made in the browser (SDD-025 section 17): the browser captures and uploads, the server decides
+	startBrowser(choice: CaptureChoice): Promise<void>;
+	stopBrowser(): Promise<void>;
 	// pausing is for anyone; resuming restarts the capture of the screen, so the service asks for a person
 	pause(): Promise<void>;
 	resume(): Promise<void>;
@@ -52,6 +63,8 @@ export function useRecordFlow(
 	const [busy, setBusy] = useState(false);
 	const [placed, setPlaced] = useState(false);
 	const alive = useRef(true);
+	// the recording this tab is making in the browser, if any: it outlives the dialog being closed
+	const browser = useRef<BrowserRecording | null>(null);
 
 	useEffect(() => {
 		alive.current = true;
@@ -69,7 +82,11 @@ export function useRecordFlow(
 				(r) => isLive(r) || (r.state === "ready" && r.review === "pending"),
 			);
 			if (waiting !== undefined) {
-				if (alive.current) setView(viewOf(waiting));
+				const own = browser.current;
+				if (own !== null && own.recordingId === waiting.recording_id) {
+					if (alive.current)
+						setView({ step: "browser_live", state: own.state() });
+				} else if (alive.current) setView(viewOf(waiting));
 				return;
 			}
 			const sources = await client.recordingSources();
@@ -82,7 +99,23 @@ export function useRecordFlow(
 		} catch (error) {
 			const reason = unavailableReason(error);
 			if (!alive.current) return;
-			if (reason !== null) setView({ step: "unavailable", reason });
+			if (reason !== null && browserOffered(reason)) {
+				// no native capture here: the browser records and uploads instead
+				try {
+					const list = await client.listRecordings(projectId);
+					if (alive.current)
+						setView({
+							step: "browser",
+							capability: currentCapability(),
+							kept: list.recordings.filter(isKept),
+						});
+				} catch (inner) {
+					if (alive.current) {
+						setView({ step: "loading" });
+						setFailure(failureOf(inner));
+					}
+				}
+			} else if (reason !== null) setView({ step: "unavailable", reason });
 			else {
 				setView({ step: "loading" });
 				setFailure(failureOf(error));
@@ -96,6 +129,7 @@ export function useRecordFlow(
 
 	const recordingId =
 		view.step === "recording" ||
+		view.step === "interrupted" ||
 		view.step === "review" ||
 		view.step === "added" ||
 		view.step === "failed"
@@ -160,6 +194,55 @@ export function useRecordFlow(
 				),
 			),
 		stop: () => run(async () => viewOf(await client.stopRecording(current()))),
+		// The browser asks the person for the screen on this click; a refusal is the browser's answer, not a failure of
+		// the product, and leaves the dialog as it was.
+		startBrowser: (choice) =>
+			run(async () => {
+				const capability = currentCapability();
+				if (!capability.ok) return null;
+				let handle: BrowserRecording;
+				try {
+					handle = await startBrowserRecording({
+						client,
+						projectId,
+						mimeType: capability.mimeType,
+						container: capability.container,
+						choice,
+						onChange: (state: RecorderState) => {
+							if (alive.current && browser.current !== null) {
+								setView({ step: "browser_live", state });
+							}
+						},
+					});
+				} catch (error) {
+					if (
+						error instanceof DOMException &&
+						error.name === "NotAllowedError"
+					) {
+						return null;
+					}
+					throw error;
+				}
+				browser.current = handle;
+				return { step: "browser_live", state: handle.state() };
+			}),
+		stopBrowser: async () => {
+			const own = browser.current;
+			if (own === null) return;
+			setBusy(true);
+			try {
+				const end = await own.stop();
+				browser.current = null;
+				if (!alive.current) return;
+				if (end.recording !== null) setView(viewOf(end.recording));
+				else {
+					setView({ step: "loading" });
+					if (end.error !== null) setFailure(failureOf(end.error));
+				}
+			} finally {
+				if (alive.current) setBusy(false);
+			}
+		},
 		pause: () =>
 			run(async () => viewOf(await client.pauseRecording(current()))),
 		resume: () =>

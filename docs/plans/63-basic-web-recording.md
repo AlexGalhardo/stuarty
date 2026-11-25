@@ -59,7 +59,7 @@ Names are proposals until task 1 writes them to SDD-000.
 - [x] 1. SDD-025, SDD-000 and SDD-007: the upload contract, limits and threats. Verify: `task lint:md` and `go run ./internal/tools/threatcheck` exit 0.
 - [x] 2. Service and upload route: order, checksum, limits, resume after a dropped connection. Verify: `go test ./service/... ./web/...` and `go test -run TestSecurity_ ./...` pass.
 - [x] 3. The recorder module and its capability check. Verify: `bun run typecheck`, `bun run check:thin-client` and `task test:web` pass.
-- [ ] 4. The dialog, the secure-context message and the visible state. Verify: `bun run check:i18n` and `task test:web` pass.
+- [x] 4. The dialog, the secure-context message and the visible state. Verify: `bun run check:i18n` and `task test:web` pass.
 - [ ] 5. End to end with fake media devices in Chromium. Verify: `bun run e2e` passes a spec that records, uploads and places a clip.
 
 ## Test strategy
