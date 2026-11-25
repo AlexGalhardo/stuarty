@@ -160,7 +160,7 @@ describe("the changes of the author after the review", () => {
 	});
 	test("screen recording is claimed only on Windows, with the epic that is done", () => {
 		const recording = areas.items.find((a) => a.id === "recording");
-		expect(recording?.epics).toEqual([62]);
+		expect(recording?.epics).toEqual([62, 65]);
 		expect(recording?.text.toLowerCase()).not.toMatch(/\bweb\b|macos|linux/);
 	});
 });
@@ -179,7 +179,7 @@ describe("the design", () => {
 		expect(privacy.title).toBe("On your machine. On your terms.");
 		expect(privacy.subtitle).toBe("No subscriptions. No pay once. Open Source.");
 		expect(areas.items).toHaveLength(12);
-		expect(roadmap.items).toHaveLength(6);
+		expect(roadmap.items).toHaveLength(5);
 		expect(roadmap.title).toBe("More of the studio, in the same place.");
 	});
 });
