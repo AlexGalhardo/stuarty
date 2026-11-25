@@ -1,4 +1,5 @@
 import {
+	ArrowRight,
 	Ban,
 	Bot,
 	CircleAlert,
@@ -98,8 +99,11 @@ export default function SceneBar({
 	busy,
 	onAnswer,
 	onOpenChat,
+	next = null,
 }: {
 	model: SceneModel;
+	// what comes after this step, in words (untrusted text), when the page knows it; the bar never guesses one
+	next?: string | null;
 	// the name of the project of the session (untrusted text): the page may be about another one, or none
 	project?: string | null;
 	// whether an agent profile exists: null until the list was read
@@ -249,6 +253,20 @@ export default function SceneBar({
 					</>
 				) : (
 					<UntrustedText>{model.tool.title}</UntrustedText>
+				)}
+			</Slot>
+			<Slot
+				icon={ArrowRight}
+				label={t("ui.shell.scene.next")}
+				testId="scene-next"
+				className="max-lg:hidden"
+			>
+				{next === null ? (
+					<span className="text-muted-foreground">
+						{t("ui.shell.scene.next_none")}
+					</span>
+				) : (
+					<UntrustedText>{next}</UntrustedText>
 				)}
 			</Slot>
 			<div className="ms-auto flex flex-wrap items-center gap-2 max-md:w-full max-md:justify-end">
