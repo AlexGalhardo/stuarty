@@ -55,7 +55,7 @@ None.
 
 ## Tasks
 
-- [ ] 1. Compare the current page with the four frames and list each difference (section, copy, size, spacing, image). Verify: the list is in the hand-off.
+- [x] 1. Compare the current page with the four frames and list each difference (section, copy, size, spacing, image). Verify: the list is in the hand-off.
 - [ ] 2. Structure and copy of every section as in the frames, with the claims and their epics kept in `content.ts`. Verify: `cd site && bun run lint && bun run check:command-mentions && bun test src/landing/content.test.ts`.
 - [ ] 3. Layout, type, spacing and colours at 1440 and 390 px in both themes. Verify: screenshots of the page beside the frames at 1440 and 390 in both themes, attached to the hand-off.
 - [ ] 4. Staged captures of the real UI in both themes, with "Good morning, Alex.", and the credits updated. Verify: every image exists at both sizes and in both themes, and `task site:build` passes.
