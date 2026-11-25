@@ -350,7 +350,7 @@ The core module has these properties, each tested (§4.8):
 2. It exports its memory as `memory` and the functions of §4.2, and nothing else.
 3. It declares a **maximum** memory size (65,536 pages of 64 KiB would be 4 GiB; the module declares 16,384 pages, 1 GiB) and a panic aborts the call with the `unreachable` instruction, which the host turns into `render_trap` (§7).
 4. It is single threaded, has no start function that runs code, and uses no `simd128` unless §3.9 rule 6 allows it.
-5. It is a build artifact: reproducible (`scripts/build-renderer.sh`, whose `embed` mode writes `engine/renderhost/renderer.wasm` and its SHA-256 in `renderer.wasm.sha256`, and whose `check` mode fails when the embedded module is not the one the source builds), embedded in the Go binary with `go:embed`, served to the browser at `/assets/renderer-<sha256 first 12 hex>.wasm`, and checked by digest like every pinned input (ADR-0029, Consequences).
+5. It is a build artifact: reproducible (`scripts/build-renderer.sh`, whose `embed` mode writes `engine/renderhost/renderer.wasm` and its SHA-256 in `renderer.wasm.sha256`, and whose `check` mode fails when the embedded module is not the one the source builds; the digest is the same on the Linux runner and on Windows, because off x86-64 Linux the script builds through `internal/tools/rustchost`, which gives cargo the host of the runner, the only line of `rustc -vV` that changes the symbols, see `docs/quality/2026-11-25-renderer-digest.md`), embedded in the Go binary with `go:embed`, served to the browser at `/assets/renderer-<sha256 first 12 hex>.wasm`, and checked by digest like every pinned input (ADR-0029, Consequences).
 
 ### 4.2 The exports
 
