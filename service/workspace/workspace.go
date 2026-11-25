@@ -43,10 +43,10 @@ func Resolve(getenv func(string) string) (Dir, error) {
 	path := getenv(EnvHome)
 	adopt := ""
 
+	home, homeErr := os.UserHomeDir()
 	if path == "" {
-		home, err := os.UserHomeDir()
-		if err != nil {
-			return "", fmt.Errorf("workspace: cannot find the home directory: %w", err)
+		if homeErr != nil {
+			return "", fmt.Errorf("workspace: cannot find the home directory: %w", homeErr)
 		}
 		path = filepath.Join(home, defaultDir)
 		adopt = filepath.Join(home, formerDir)
@@ -55,6 +55,13 @@ func Resolve(getenv func(string) string) (Dir, error) {
 	abs, err := filepath.Abs(path)
 	if err != nil {
 		return "", fmt.Errorf("workspace: %w", err)
+	}
+	// Before anything is created, adopted or migrated: a build that is not a release never touches the
+	// workspace of the installed application (VV-421).
+	if homeErr == nil {
+		if err := guardDefaultHome(getenv, abs, filepath.Join(home, defaultDir)); err != nil {
+			return "", err
+		}
 	}
 	if strings.ContainsAny(abs, "?#%") {
 		return "", fmt.Errorf("%w: %q holds ?, # or %%; choose another with %s", ErrUnusablePath, abs, EnvHome)

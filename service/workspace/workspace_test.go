@@ -38,7 +38,7 @@ func TestResolveDefaultsToTheHomeDirectory(t *testing.T) {
 	t.Setenv("HOME", home)
 	t.Setenv("USERPROFILE", home)
 
-	d, err := Resolve(func(string) string { return "" })
+	d, err := Resolve(allowDefaultHome)
 	if err != nil {
 		t.Fatal(err)
 	}

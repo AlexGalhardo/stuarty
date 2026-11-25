@@ -386,7 +386,7 @@ func TestResolveAdoptsTheFormerWorkspace(t *testing.T) {
 	t.Setenv("USERPROFILE", home)
 
 	former := makeFormer(t, home)
-	noEnv := func(string) string { return "" }
+	noEnv := allowDefaultHome
 
 	var said bytes.Buffer
 
@@ -482,7 +482,7 @@ func TestResolveSaysWhenBothFoldersExist(t *testing.T) {
 
 	t.Cleanup(func() { Notice = old })
 
-	dir, err := Resolve(func(string) string { return "" })
+	dir, err := Resolve(allowDefaultHome)
 	if err != nil || string(dir) != current {
 		t.Fatalf("Resolve = %s, %v", dir, err)
 	}

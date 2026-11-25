@@ -46,23 +46,6 @@ func TestResolve(t *testing.T) {
 		}
 	})
 
-	t.Run("defaults to the home directory", func(t *testing.T) {
-		t.Parallel()
-		home, err := os.UserHomeDir()
-		if err != nil {
-			t.Skip("no home directory")
-		}
-		// Resolve would create the real folder, so check only the path logic.
-		want := filepath.Join(home, ".stuarty")
-		if _, err := os.Stat(want); err != nil {
-			t.Skip("not creating the real default workspace in a test")
-		}
-		d, err := Resolve(func(string) string { return "" })
-		if err != nil || string(d) != want {
-			t.Errorf("Resolve = %q, %v; want %q", d, err, want)
-		}
-	})
-
 	for _, bad := range []string{"a?b", "a#b", "a%b"} {
 		t.Run("refuses "+bad, func(t *testing.T) {
 			t.Parallel()

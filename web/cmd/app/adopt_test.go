@@ -63,7 +63,8 @@ func runIn(t *testing.T, bin, home string, extra []string, args ...string) (stdo
 		env = append(env, kv)
 	}
 
-	env = append(env, "HOME="+home, "USERPROFILE="+home, "APP_KEY=", "APP_ENV=")
+	// HOME is a temporary folder, so opening the default workspace in it is safe (VV-421).
+	env = append(env, "HOME="+home, "USERPROFILE="+home, "APP_KEY=", "APP_ENV=", "STUARTY_ALLOW_DEFAULT_HOME=1")
 	env = append(env, addrEnv(t)...)
 	env = append(env, extra...)
 
