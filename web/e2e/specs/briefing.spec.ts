@@ -71,6 +71,126 @@ test.describe("guided briefing", () => {
 		);
 	});
 
+	// VV-399: a text project asks the questions of a text, with no word about a video, and its answers become the
+	// brief like those of a video; answering again needs no replace.
+	test("a text project answers the guided briefing in its own questions", async ({
+		page,
+		request,
+	}) => {
+		const call = await caller(request);
+		const created = await call("POST", "/projects", {
+			name: `Briefing text ${Date.now()}`,
+			kind: "text",
+		});
+		const id = created.project_id as string;
+
+		await page.goto(`/projects/${id}`);
+		await expect(
+			page.getByRole("heading", { name: "Guided briefing" }),
+		).toBeVisible();
+		await expect(page.getByText(/this video/i)).toHaveCount(0);
+
+		await page.getByLabel("Who is this for?").fill("indie makers");
+		await page.getByLabel("Which tone of voice?").fill("warm and plain");
+		await page
+			.getByLabel("What should the reader do next?")
+			.fill("reply to this email");
+		await page.getByLabel("Where will it appear?").selectOption("newsletter");
+		await page.getByLabel("How long, in words?").fill("400");
+		await page
+			.getByRole("button", { name: "Save the answers as the brief" })
+			.click();
+		await expect(
+			page.getByRole("status").filter({ hasText: "saved" }),
+		).toHaveText("The brief was saved from your answers.");
+
+		const brief = (await call("GET", `/projects/${id}/brief`)) as {
+			text: string;
+		};
+		expect(brief.text).toContain("# Brief\n\n## Audience\n\nindie makers");
+		expect(brief.text).toContain("## Length (words)\n\n400");
+
+		// The form starts from what the brief holds, and answering again replaces it with no replace.
+		await page.reload();
+		await expect(page.getByLabel("How long, in words?")).toHaveValue("400");
+		await page.getByLabel("How long, in words?").fill("600");
+		await page
+			.getByRole("button", { name: "Save the answers as the brief" })
+			.click();
+		await expect(
+			page.getByRole("status").filter({ hasText: "saved" }),
+		).toBeVisible();
+
+		const asked = (await call(
+			"GET",
+			`/briefing/questions?project_id=${id}`,
+		)) as {
+			production_kind: string;
+			guided: boolean;
+			answers: { id: string; value: string }[];
+		};
+		expect(asked.production_kind).toBe("text");
+		expect(asked.guided).toBe(true);
+		expect(asked.answers.find((a) => a.id === "length")?.value).toBe("600");
+	});
+
+	test("the service refuses a text that is too short, and says which", async ({
+		page,
+		request,
+	}) => {
+		const call = await caller(request);
+		const created = await call("POST", "/projects", {
+			name: `Briefing short text ${Date.now()}`,
+			kind: "text",
+		});
+		const id = created.project_id as string;
+
+		await page.goto(`/projects/${id}`);
+		await page.getByLabel("Who is this for?").fill("makers");
+		await page.getByLabel("Which tone of voice?").fill("plain");
+		await page.getByLabel("What should the reader do next?").fill("sign up");
+		await page.getByLabel("Where will it appear?").selectOption("blog");
+		await page.getByLabel("How long, in words?").fill("2");
+		await page
+			.getByRole("button", { name: "Save the answers as the brief" })
+			.click();
+		await expect(page.getByRole("alert")).toContainText("number of words");
+	});
+
+	test("an image project asks for its format and its style", async ({
+		page,
+		request,
+	}) => {
+		const call = await caller(request);
+		const created = await call("POST", "/projects", {
+			name: `Briefing image ${Date.now()}`,
+			kind: "image",
+		});
+		const id = created.project_id as string;
+
+		await page.goto(`/projects/${id}`);
+		await page.getByLabel("Who is this for?").fill("followers");
+		await page.getByLabel("Which format?").selectOption("portrait-4x5");
+		await page
+			.getByLabel("Which style: the look, the colours, the mood?")
+			.fill("flat colours");
+		await page
+			.getByLabel("Where will it appear?")
+			.selectOption("instagram-feed");
+		await page
+			.getByRole("button", { name: "Save the answers as the brief" })
+			.click();
+		await expect(
+			page.getByRole("status").filter({ hasText: "saved" }),
+		).toBeVisible();
+
+		const brief = (await call("GET", `/projects/${id}/brief`)) as {
+			text: string;
+		};
+		expect(brief.text).toContain("## Style\n\nflat colours");
+		expect(brief.text).toContain("## Format\n\nportrait-4x5");
+	});
+
 	test("the service refuses what is not an answer, and says which", async ({
 		page,
 		request,

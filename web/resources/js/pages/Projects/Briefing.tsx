@@ -23,12 +23,36 @@ export function savedAnswers(
 	return out;
 }
 
+// The words of a question are the page's translation by question id. A text and an image have their own words
+// (a question of the same id says "for whom" of a post, not of a video), so the set the service served picks the
+// catalogue; the questions themselves are always the service's.
+export function questionKey(set: string, id: string): string {
+	if (set === "text") return `ui.projects.briefing.text.q.${id}`;
+	if (set === "image") return `ui.projects.briefing.image.q.${id}`;
+	return `ui.projects.briefing.q.${id}`;
+}
+
+export function optionKey(set: string, id: string, option: string): string {
+	if (set === "text") return `ui.projects.briefing.text.option.${id}.${option}`;
+	if (set === "image")
+		return `ui.projects.briefing.image.option.${id}.${option}`;
+	return `ui.projects.briefing.option.${id}.${option}`;
+}
+
+function introKey(set: string): string {
+	if (set === "text") return "ui.projects.briefing.text.intro";
+	if (set === "image") return "ui.projects.briefing.image.intro";
+	return "ui.projects.briefing.intro";
+}
+
 function Field({
 	q,
+	set,
 	value,
 	onChange,
 }: {
 	q: BriefingQuestion;
+	set: string;
 	value: string;
 	onChange(value: string): void;
 }): ReactNode {
@@ -54,13 +78,14 @@ function Field({
 					<option value="">{t("ui.projects.briefing.choose")}</option>
 					{(q.options ?? []).map((o) => (
 						<option key={o} value={o}>
-							{t(`ui.projects.briefing.option.${q.id}.${o}`)}
+							{t(optionKey(set, q.id, o))}
 						</option>
 					))}
 				</select>
 			);
 			break;
 		case "seconds":
+		case "words":
 			control = (
 				<Input
 					id={id}
@@ -105,16 +130,18 @@ function Field({
 	return (
 		<div className="flex flex-col gap-1" data-question={q.id}>
 			<Label htmlFor={id}>
-				{t(`ui.projects.briefing.q.${q.id}`)}{" "}
+				{t(questionKey(set, q.id))}{" "}
 				<span className="font-normal text-muted-foreground">({need})</span>
 			</Label>
 			{control}
-			{q.kind === "seconds" && (
+			{(q.kind === "seconds" || q.kind === "words") && (
 				<p id={`${id}-hint`} className="text-xs text-muted-foreground">
-					{t("ui.projects.briefing.seconds_hint", {
-						min: q.min ?? 0,
-						max: q.max ?? 0,
-					})}
+					{t(
+						q.kind === "words"
+							? "ui.projects.briefing.words_hint"
+							: "ui.projects.briefing.seconds_hint",
+						{ min: q.min ?? 0, max: q.max ?? 0 },
+					)}
 				</p>
 			)}
 		</div>
@@ -133,6 +160,7 @@ export function Briefing({
 	onSaved(text: string): void;
 }): ReactNode {
 	const t = useT();
+	const set = briefing.production_kind;
 	const [answers, setAnswers] = useState<Record<string, string>>(
 		savedAnswers(briefing),
 	);
@@ -170,9 +198,7 @@ export function Briefing({
 			<h2 id="briefing-title" className="text-lg font-semibold">
 				{t("ui.projects.briefing.title")}
 			</h2>
-			<p className="text-sm text-muted-foreground">
-				{t("ui.projects.briefing.intro")}
-			</p>
+			<p className="text-sm text-muted-foreground">{t(introKey(set))}</p>
 			<form
 				onSubmit={(event) => void submit(event)}
 				className="flex flex-col gap-4 rounded-xl border bg-card p-4 text-card-foreground"
@@ -181,6 +207,7 @@ export function Briefing({
 					<Field
 						key={q.id}
 						q={q}
+						set={set}
 						value={answers[q.id] ?? ""}
 						onChange={(value) => setAnswers({ ...answers, [q.id]: value })}
 					/>

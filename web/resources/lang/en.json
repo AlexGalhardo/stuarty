@@ -569,6 +569,57 @@
             "horizontal-16x9": "Horizontal, 16:9"
           }
         },
+        "words_hint": "From {min} to {max} words",
+        "text": {
+          "intro": "Answer a few questions about the text. The answers become the brief of this project, and your agent reads them.",
+          "q": {
+            "audience": "Who is this for?",
+            "tone": "Which tone of voice?",
+            "call_to_action": "What should the reader do next?",
+            "channel": "Where will it appear?",
+            "length": "How long, in words?",
+            "deadline": "By when?"
+          },
+          "option": {
+            "channel": {
+              "blog": "A blog",
+              "newsletter": "A newsletter",
+              "social-post": "A social network post",
+              "website": "A website",
+              "email": "An email",
+              "other": "Another place"
+            }
+          }
+        },
+        "image": {
+          "intro": "Answer a few questions about the image. The answers become the brief of this project, and your agent reads them.",
+          "q": {
+            "audience": "Who is this for?",
+            "format": "Which format?",
+            "size": "Which size, in pixels (for example 1080x1350)?",
+            "style": "Which style: the look, the colours, the mood?",
+            "channel": "Where will it appear?",
+            "deadline": "By when?"
+          },
+          "option": {
+            "format": {
+              "square-1x1": "Square, 1:1",
+              "portrait-4x5": "Portrait, 4:5",
+              "vertical-9x16": "Vertical, 9:16",
+              "horizontal-16x9": "Horizontal, 16:9",
+              "horizontal-3x2": "Horizontal, 3:2"
+            },
+            "channel": {
+              "instagram-feed": "Instagram feed",
+              "instagram-story": "Instagram story",
+              "facebook-feed": "Facebook feed",
+              "youtube-thumbnail": "YouTube thumbnail",
+              "blog": "A blog",
+              "website": "A website",
+              "other": "Another place"
+            }
+          }
+        },
         "choose": "Choose one"
       },
       "overview": {

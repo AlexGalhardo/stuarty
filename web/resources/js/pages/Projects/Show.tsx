@@ -530,10 +530,10 @@ export default function ProjectShow() {
 
 				<ContextPanel project={project} />
 
-				{/* The guided questions are the core's, and every set of them is about a video (short, commercial or
-				    long): they are asked when the workflow has the steps of a video. A text, an image or a project
-				    not decided yet writes its brief below instead. */}
-				{workflow.steps.some((step) => step.id === "script") && (
+				{/* The guided questions are the core's, and the set follows the kind of the project (a text, an image
+				    or a video), so the same form serves each of them (VV-399). A project not decided yet has the
+				    choice to make first and writes its brief below until it does. */}
+				{project.kind !== "undecided" && (
 					<Briefing
 						projectId={project.id}
 						briefing={briefing}

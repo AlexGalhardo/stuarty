@@ -1842,7 +1842,7 @@ export interface BriefingQuestion {
 	id: string;
 	heading: string;
 	text: string;
-	kind: "text" | "choice" | "seconds" | "date";
+	kind: "text" | "choice" | "seconds" | "words" | "date";
 	required: boolean;
 	options?: string[];
 	max_chars?: number;
@@ -1857,6 +1857,8 @@ export interface BriefingAnswer {
 
 export interface BriefingQuestionsResult {
 	project_id?: string;
+	// The set the questions belong to: short, commercial, long, text or image.
+	production_kind: string;
 	questions: BriefingQuestion[];
 	has_brief: boolean;
 	guided: boolean;
