@@ -55,7 +55,7 @@ type clipBlurRegionArgs struct {
 	Start      Time     `json:"start,omitempty"        desc:"Absolute start of the blur, inside the clip. Default the start of the clip."`
 	Duration   Time     `json:"duration,omitempty"     desc:"A length. Default up to the end of the clip."`
 	Radius     *float64 `json:"radius,omitempty"       desc:"Blur radius in pixels at project resolution, 1.5% of the shorter side to 100. Default 4%."                                                                    max:"100"`
-	Strength   string   `json:"strength,omitempty"     desc:"A named blur strength instead of a radius; strong is the default."                                                                                                         schema:"blur_strength_id"`
+	Strength   string   `json:"strength,omitempty"     desc:"A named blur strength instead of a radius; strong is the default."                                                                                                      schema:"blur_strength_id"`
 	Feather    *int     `json:"feather,omitempty"      desc:"Soft edge of the region in pixels, 0 to 200. Default 0."                                                                                          min:"0"     max:"200"`
 	TrackID    string   `json:"track_id,omitempty"     desc:"A visual track above the clip. Default a Blur track above it, made if there is none."      pattern:"^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
 	NewID      string   `json:"new_id,omitempty"       desc:"The id of the blur item."                                                                  pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
@@ -124,6 +124,44 @@ func BlurRadii(s timeline.Settings) (least, def float64) {
 	return min(maxBlurRadius, math.Ceil(minBlurShare*side)), min(maxBlurRadius, math.Ceil(defaultBlurShare*side))
 }
 
+// blurRadius is the radius a call asks for: the radius it sends, the named strength, or the default one; and the
+// least radius of the project. A strength and a radius together, an unknown strength and a radius below the least
+// are E_VALIDATION.
+func blurRadius(s timeline.Settings, a *clipBlurRegionArgs) (radius, least float64, err *Error) {
+	least, radius = BlurRadii(s)
+
+	if a.Strength != "" {
+		if a.Radius != nil {
+			return 0, 0, invalidArg("args.strength", "args.strength and args.radius both set the blur; send one.").
+				WithHint("Send a strength (%s) or a radius, not both.", strings.Join(BlurStrengthIDs(), ", "))
+		}
+
+		named, ok := BlurStrengthRadius(a.Strength, s)
+		if !ok {
+			return 0, 0, invalidArg("args.strength", "args.strength %q is not a blur strength.", a.Strength).
+				WithHint("Use %s.", strings.Join(BlurStrengthIDs(), ", "))
+		}
+
+		radius = named
+	}
+
+	if a.Radius != nil {
+		radius = round3(*a.Radius)
+		if radius < least {
+			return 0, 0, invalidArg(
+				"args.radius",
+				"args.radius %s is below the least blur, %s, that keeps text unreadable at %d pixels.",
+				trimFloat(radius),
+				trimFloat(least),
+				min(s.Width, s.Height),
+			).
+				WithHint("Send a radius from %s to %d, or leave it out.", trimFloat(least), maxBlurRadius)
+		}
+	}
+
+	return radius, least, nil
+}
+
 func applyClipBlurRegion(c *Context, a *clipBlurRegionArgs) error {
 	for _, f := range []struct{ path, prefix, id string }{
 		{"args.item_id", timeline.PrefixItem, a.ItemID},
@@ -152,32 +190,9 @@ func applyClipBlurRegion(c *Context, a *clipBlurRegionArgs) error {
 		}
 	}
 
-	least, def := BlurRadii(c.Doc.Settings)
-	radius := def
-	if a.Strength != "" {
-		if a.Radius != nil {
-			return invalidArg("args.strength", "args.strength and args.radius both set the blur; send one.").
-				WithHint("Send a strength (%s) or a radius, not both.", strings.Join(BlurStrengthIDs(), ", "))
-		}
-		named, ok := BlurStrengthRadius(a.Strength, c.Doc.Settings)
-		if !ok {
-			return invalidArg("args.strength", "args.strength %q is not a blur strength.", a.Strength).
-				WithHint("Use %s.", strings.Join(BlurStrengthIDs(), ", "))
-		}
-		radius = named
-	}
-	if a.Radius != nil {
-		radius = round3(*a.Radius)
-		if radius < least {
-			return invalidArg(
-				"args.radius",
-				"args.radius %s is below the least blur, %s, that keeps text unreadable at %d pixels.",
-				trimFloat(radius),
-				trimFloat(least),
-				min(c.Doc.Settings.Width, c.Doc.Settings.Height),
-			).
-				WithHint("Send a radius from %s to %d, or leave it out.", trimFloat(least), maxBlurRadius)
-		}
+	radius, least, err := blurRadius(c.Doc.Settings, a)
+	if err != nil {
+		return err
 	}
 
 	start, end, err := c.blurRange(&src, a)

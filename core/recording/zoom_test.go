@@ -202,7 +202,7 @@ func TestPlanZoomsPanEndsBeforeTheNextClick(t *testing.T) {
 }
 
 func TestZoomSpans(t *testing.T) {
-	kf := func(frame int, v float64) timeline.Keyframe { return timeline.NewKeyframe(frame, v) }
+	kf := timeline.NewKeyframe
 
 	t.Run("two separated zooms", func(t *testing.T) {
 		got := ZoomSpans([]timeline.Keyframe{
