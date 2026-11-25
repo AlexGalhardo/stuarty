@@ -62,7 +62,7 @@ Names are proposals until task 1 writes them to SDD-000 and SDD-002. All are und
 - [x] 4. Click highlight. Verify: `go test ./core/...` passes.
 - [x] 5. Frame plan and renderer support. Verify: the Rust gate of `renderer/` and the parity gates of `.agents/skills/renderer-parity/`.
 - [x] 6. Inspector and timeline controls. Verify: `bun run typecheck`, `bun run check:thin-client`, `bun run check:i18n` and `task test:web` pass.
-- [ ] 7. End to end from a recorded fixture to an export. Verify: an export test compares frames with golden images.
+- [x] 7. End to end from a recorded fixture to an export. Verify: an export test compares frames with golden images.
 
 ## Test strategy
 
