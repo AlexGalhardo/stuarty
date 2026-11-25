@@ -552,9 +552,16 @@ func TestRecordingProposalNeedsTheTakeOnTheTimeline(t *testing.T) {
 	}
 }
 
-// agentCallers are the callers that are not a person, in every way a surface can name one.
-func (r *recEnv) agentCallers() map[string]context.Context {
+// agentCallers are the callers that are not a person, in every way a surface can name one; project is the one a
+// project-limited key is limited to.
+func (r *recEnv) agentCallers(project string) map[string]context.Context {
 	return map[string]context.Context{
+		"a project-limited key": service.WithCaller(context.Background(), service.Caller{
+			Actor: "key:key_0000000002", Scopes: service.AllScopes, ProjectID: project,
+		}),
+		"a hosted chat session": service.WithCaller(context.Background(), service.Caller{
+			Actor: "local:claude-code", Scopes: service.AllScopes, ChatSessionID: "cht_0000000001",
+		}),
 		"the local token": service.WithCaller(
 			context.Background(),
 			service.Caller{Actor: "local:cli", Scopes: service.AllScopes},
@@ -577,7 +584,7 @@ func TestSecurity_T165_NoSequenceOfAgentOperationsStartsTheHelper(t *testing.T) 
 	project, taken := r.placedTake(t)
 	startsBefore := r.cap.starts.Load()
 
-	for name, ctx := range r.agentCallers() {
+	for name, ctx := range r.agentCallers(project) {
 		prepared, err := r.svc.RecordingPrepare(ctx, prepareReq(project))
 		if err != nil {
 			t.Fatalf("%s prepares: %v", name, err)
@@ -671,7 +678,7 @@ func TestSecurity_T165_EveryStartOrResumePathNeedsAPerson(t *testing.T) {
 	}
 
 	for name, call := range paths {
-		for who, ctx := range r.agentCallers() {
+		for who, ctx := range r.agentCallers(project) {
 			if e := call(ctx); code(e) != "E_PRIVILEGED_SESSION" {
 				t.Errorf("%s by %s: %v", name, who, e)
 			}
@@ -724,7 +731,7 @@ func TestSecurity_T166_AnAgentNeverDecidesAProposal(t *testing.T) {
 
 	rev := r.revision(t, project)
 
-	for who, ctx := range r.agentCallers() {
+	for who, ctx := range r.agentCallers(project) {
 		_, derr := r.svc.RecordingProposalDecide(ctx, service.RecordingProposalDecideRequest{
 			ID: id, ProposalID: prop.Proposals[0].ID, Accept: []bool{true},
 		})
