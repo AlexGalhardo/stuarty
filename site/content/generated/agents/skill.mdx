@@ -15,7 +15,7 @@ Edit video by commands: CLI `stuarty` or MCP (`stuarty mcp`). `--json` for JSON.
 
 1. Read: `project:show --project <id>` (note `rev`).
 2. Plan a batch.
-3. Apply: `edit --project <id> --base <rev> ...` (base defaults to current); read the diff.
+3. Apply: `edit --project <id> --base <last rev> ...` (default: current); read the diff.
 4. `lint --project <id>`.
 5. Look: `view --at 1s`, `view --mode sheet`.
 6. `export --project <id>`; check the job `checks`.
