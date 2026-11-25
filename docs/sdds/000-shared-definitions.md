@@ -389,6 +389,7 @@ Environment variables, all optional. Names are final. Ceilings that have no vari
 | Variable | Default | Meaning |
 | --- | --- | --- |
 | `STUARTY_HOME` | `~/.stuarty` | workspace directory |
+| `STUARTY_ALLOW_DEFAULT_HOME` | none | `1` lets a build that is not a release, and a test, open the default workspace `~/.stuarty`; without it they refuse with `E_INVALID_STATE` and a message that names `STUARTY_HOME` (SDD-007 section 3.10). A release build never needs it. Not read under a former name |
 | `STUARTY_ADDR` | `127.0.0.1:7878` | bind address; a non-loopback address requires network mode |
 | `STUARTY_MODE` | `local` | `local` or `network` |
 | `STUARTY_FFMPEG`, `STUARTY_FFPROBE` | discovered | explicit binaries |
