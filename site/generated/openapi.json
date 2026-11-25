@@ -5824,7 +5824,9 @@
               "marker.remove",
               "marker.set",
               "project.rename",
+              "recording.apply_layout",
               "recording.auto_zoom",
+              "recording.set_background",
               "recording.set_click_highlight",
               "recording.set_cursor",
               "settings.reframe",
@@ -6072,8 +6074,14 @@
           "project.rename": {
             "$ref": "#/components/schemas/args.project.rename"
           },
+          "recording.apply_layout": {
+            "$ref": "#/components/schemas/args.recording.apply_layout"
+          },
           "recording.auto_zoom": {
             "$ref": "#/components/schemas/args.recording.auto_zoom"
+          },
+          "recording.set_background": {
+            "$ref": "#/components/schemas/args.recording.set_background"
           },
           "recording.set_click_highlight": {
             "$ref": "#/components/schemas/args.recording.set_click_highlight"
@@ -15309,6 +15317,60 @@
         ],
         "type": "object"
       },
+      "args.recording.apply_layout": {
+        "additionalProperties": false,
+        "properties": {
+          "camera_item_id": {
+            "description": "The clip of the webcam take; required by every layout but screen_only, which refuses it.",
+            "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+            "type": "string"
+          },
+          "camera_shape": {
+            "description": "For pip. circle (default) or rect.",
+            "enum": [
+              "circle",
+              "rect"
+            ],
+            "type": "string"
+          },
+          "corner": {
+            "description": "For pip and camera_focus. Default bottom_right.",
+            "enum": [
+              "top_left",
+              "top_right",
+              "bottom_left",
+              "bottom_right"
+            ],
+            "type": "string"
+          },
+          "layout": {
+            "description": "screen_only, pip, split or camera_focus.",
+            "enum": [
+              "screen_only",
+              "pip",
+              "split",
+              "camera_focus"
+            ],
+            "type": "string"
+          },
+          "padding": {
+            "description": "Fraction of the shorter side of the frame left empty around everything, 0 to 0.25. Default 0.",
+            "maximum": 0.25,
+            "minimum": 0,
+            "type": "number"
+          },
+          "screen_item_id": {
+            "description": "The clip of the screen take.",
+            "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "layout",
+          "screen_item_id"
+        ],
+        "type": "object"
+      },
       "args.recording.auto_zoom": {
         "additionalProperties": false,
         "properties": {
@@ -15356,6 +15418,43 @@
         },
         "required": [
           "item_id"
+        ],
+        "type": "object"
+      },
+      "args.recording.set_background": {
+        "additionalProperties": false,
+        "properties": {
+          "asset_id": {
+            "description": "For image: an image asset.",
+            "pattern": "^ast_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+            "type": "string"
+          },
+          "color": {
+            "description": "For color: a colour. Default #0F172A.",
+            "type": "string"
+          },
+          "item_id": {
+            "description": "The screen clip.",
+            "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+            "type": "string"
+          },
+          "kind": {
+            "description": "color, image or none (removes the background and the shadow).",
+            "enum": [
+              "color",
+              "image",
+              "none"
+            ],
+            "type": "string"
+          },
+          "shadow": {
+            "description": "Draw a drop shadow under the clip. Default true.",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "item_id",
+          "kind"
         ],
         "type": "object"
       },
