@@ -274,6 +274,12 @@ func run(t *testing.T, d driver, steps []step, fixtures map[string]string) []out
 			s.Args = json.RawMessage(strings.ReplaceAll(string(s.Args), `"$project:`+strconv.Itoa(n)+`"`, `"`+id+`"`))
 		}
 
+		if s.Call == "SeedRecording" {
+			seedRecording(t, d, s)
+
+			continue
+		}
+
 		if s.As != "" {
 			runAs(t, d, s)
 

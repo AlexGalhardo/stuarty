@@ -1,0 +1,37 @@
+{
+	"name": "screen-take-effects",
+	"actor": "contract",
+	"fixtures": {"take": "not really a video, only bytes the fake ingest accepts"},
+	"steps": [
+		{"call": "ProjectCreate", "args": {"id": "prj_7k2m9x4q1b", "name": "Screen take", "description": "A screen recording of a short tutorial, finished with the zoom, the cursor and the click highlight that the pointer events of the recording make possible.", "goal": {"specific": "Publish one short tutorial", "measurable": "At least one hundred views in the first week", "achievable": "The recording already exists", "relevant": "It brings the first audience to the channel", "time_bound": "Edit on Monday and publish on Tuesday", "due": "2999-12-31"}}},
+		{"call": "ProjectItemAdd", "args": {"project_id": "prj_7k2m9x4q1b", "kind": "timeline", "title": "Screen take"}},
+		{"call": "MediaImport", "args": {"project_id": "prj_7k2m9x4q1b", "files": [{"path": "$take", "asset_id": "ast_3c5v8n2w6d"}], "wait_ms": 20000}},
+		{"call": "SeedRecording", "args": {"project_id": "prj_7k2m9x4q1b", "asset_id": "ast_3c5v8n2w6d", "events": "{\"k\":\"header\",\"v\":1,\"width\":1920,\"height\":1080,\"clock\":\"active_ms\"}\n{\"k\":\"move\",\"t\":100,\"x\":10,\"y\":20}\n{\"k\":\"move\",\"t\":300,\"x\":280,\"y\":380}\n{\"k\":\"down\",\"t\":500,\"b\":\"left\",\"x\":300,\"y\":400}\n{\"k\":\"up\",\"t\":560,\"b\":\"left\",\"x\":300,\"y\":400}\n{\"k\":\"move\",\"t\":1100,\"x\":900,\"y\":500}\n{\"k\":\"down\",\"t\":1500,\"b\":\"left\",\"x\":960,\"y\":540}\n{\"k\":\"up\",\"t\":1580,\"b\":\"left\",\"x\":961,\"y\":540}\n"}},
+		{"call": "Edit", "args": {"project_id": "prj_7k2m9x4q1b", "base_revision": 1, "operations": [
+			{"op": "track.add", "args": {"kind": "visual", "name": "Video", "id": "trk_f6g7h8j9k0"}}]}},
+		{"call": "Edit", "args": {"project_id": "prj_7k2m9x4q1b", "base_revision": 2, "operations": [
+			{"op": "clip.add", "args": {"track_id": "trk_f6g7h8j9k0", "asset_id": "ast_3c5v8n2w6d", "start": "0s", "source_in": "0s", "duration": "2s", "id": "itm_m1n2p3q4r5"}}]}},
+		{"call": "Edit", "args": {"project_id": "prj_7k2m9x4q1b", "base_revision": 3, "operations": [
+			{"op": "recording.auto_zoom", "args": {"item_id": "itm_m1n2p3q4r5", "level": 1.8, "lead_ms": 100}}]}},
+		{"call": "Edit", "args": {"project_id": "prj_7k2m9x4q1b", "base_revision": 4, "operations": [
+			{"op": "recording.set_cursor", "args": {"item_id": "itm_m1n2p3q4r5", "style": "ring", "smoothing_ms": 100}},
+			{"op": "recording.set_click_highlight", "args": {"item_id": "itm_m1n2p3q4r5", "style": "wave", "color": "#33CCFF"}}]}},
+		{"call": "Edit", "args": {"project_id": "prj_7k2m9x4q1b", "base_revision": 5, "operations": [
+			{"op": "recording.set_cursor", "args": {"item_id": "itm_m1n2p3q4r5", "visible": false}}]}},
+		{"call": "Edit", "args": {"project_id": "prj_7k2m9x4q1b", "base_revision": 6, "operations": [
+			{"op": "recording.set_cursor", "args": {"item_id": "itm_m1n2p3q4r5"}}]}},
+		{"call": "Edit", "args": {"project_id": "prj_7k2m9x4q1b", "base_revision": 7, "operations": [
+			{"op": "recording.auto_zoom", "args": {"item_id": "itm_m1n2p3q4r5", "level": 5}}]},
+			"expect_error": {"code": "E_VALIDATION"}},
+		{"call": "Edit", "args": {"project_id": "prj_7k2m9x4q1b", "base_revision": 7, "operations": [
+			{"op": "recording.auto_zoom", "args": {"item_id": "itm_zzzzzzzzzz"}}]},
+			"expect_error": {"code": "E_NOT_FOUND"}},
+		{"call": "Edit", "args": {"project_id": "prj_7k2m9x4q1b", "base_revision": 7, "operations": [
+			{"op": "recording.auto_zoom", "args": {"item_id": "itm_m1n2p3q4r5", "resolved": {"width": 10, "height": 10, "events": []}}}]},
+			"expect_error": {"code": "E_VALIDATION"}},
+		{"call": "Lint", "args": {"project_id": "prj_7k2m9x4q1b"}},
+		{"call": "CommandHelp", "args": {"name": "recording.auto_zoom"}},
+		{"call": "CommandHelp", "args": {"name": "recording.set_cursor"}},
+		{"call": "CommandHelp", "args": {"name": "recording.set_click_highlight"}}
+	]
+}
