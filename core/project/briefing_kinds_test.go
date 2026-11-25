@@ -408,3 +408,18 @@ func TestCheckBriefingReplaceTakesTheBriefOfEveryKindForTheBriefings(t *testing.
 		}
 	}
 }
+
+// Several ids that are no question are refused naming the first in order, every time, so that the four surfaces
+// give the same error (VV-399, found by the briefing scenario of the contract).
+func TestCheckAnswersNamesTheFirstUnknownIDInOrder(t *testing.T) {
+	t.Parallel()
+
+	answers := answersOf(t, project.ProductionText)
+	answers["goal"], answers["duration"], answers["platform"] = "x", "30", "tiktok"
+
+	for range 50 {
+		if _, v := project.CheckAnswersFor(project.ProductionText, answers); v == nil || v.Path != "answers.duration" {
+			t.Fatalf("the unknown id named is not the first in order: %+v", v)
+		}
+	}
+}

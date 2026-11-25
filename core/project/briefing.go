@@ -2,6 +2,7 @@ package project
 
 import (
 	"fmt"
+	"maps"
 	"slices"
 	"strconv"
 	"strings"
@@ -126,7 +127,8 @@ func checkAnswers(set []Question, answers map[string]string) (map[string]string,
 		known[q.ID] = q
 	}
 
-	for id := range answers {
+	// The first unknown id in order, so that every surface names the same one when a caller sends several.
+	for _, id := range slices.Sorted(maps.Keys(answers)) {
 		if _, ok := known[id]; !ok {
 			return nil, validation(
 				"answers."+command.SafeKey(id),
