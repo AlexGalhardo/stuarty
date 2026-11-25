@@ -40,6 +40,7 @@ const (
 	TextCheckFailed   = "check_failed"
 	TextInstallFailed = "install_failed"
 	TextAdopted       = "adopted"
+	TextTeleprompter  = "teleprompter"
 )
 
 var catalogues = map[string]map[string]string{
@@ -56,9 +57,10 @@ var catalogues = map[string]map[string]string{
 			"It connects only to the update server, only for this check, and sends nothing about you. " +
 			"You can change this in Help.",
 		TextYes: "Yes", TextNo: "No", TextDownloading: "Downloading Stuarty ",
-		TextUndone:   "Stuarty could not start the new version, so the previous version was restored. Version ",
-		TextUpToDate: "Stuarty %s is up to date.",
-		TextOffer:    "Version %s is available (this is %s). Download and install it?",
+		TextTeleprompter: "Teleprompter",
+		TextUndone:       "Stuarty could not start the new version, so the previous version was restored. Version ",
+		TextUpToDate:     "Stuarty %s is up to date.",
+		TextOffer:        "Version %s is available (this is %s). Download and install it?",
 		TextNoFeed: "This build has no update feed or signing key, so it cannot check for updates. " +
 			"Download new versions from %s",
 		TextCheckFailed:      "Could not check for updates: ",
@@ -120,12 +122,13 @@ var catalogues = map[string]map[string]string{
 		TextConsentBody: "O Stuarty pode procurar uma versão nova ao iniciar e uma vez por dia. " +
 			"Ele se conecta só ao servidor de atualizações, só para essa verificação, e não envia nada sobre você. " +
 			"Você pode mudar isso em Ajuda.",
-		TextYes:         "Sim",
-		TextNo:          "Não",
-		TextDownloading: "Baixando o Stuarty ",
-		TextUndone:      "O Stuarty não conseguiu iniciar a versão nova e restaurou a anterior. Versão ",
-		TextUpToDate:    "O Stuarty %s está atualizado.",
-		TextOffer:       "A versão %s está disponível (esta é a %s). Baixar e instalar?",
+		TextYes:          "Sim",
+		TextNo:           "Não",
+		TextDownloading:  "Baixando o Stuarty ",
+		TextTeleprompter: "Teleprompter",
+		TextUndone:       "O Stuarty não conseguiu iniciar a versão nova e restaurou a anterior. Versão ",
+		TextUpToDate:     "O Stuarty %s está atualizado.",
+		TextOffer:        "A versão %s está disponível (esta é a %s). Baixar e instalar?",
 		TextNoFeed: "Esta versão não tem endereço de atualizações nem chave de assinatura, então não consegue verificar atualizações. " +
 			"Baixe as versões novas em %s",
 		TextCheckFailed:      "Não foi possível verificar atualizações: ",

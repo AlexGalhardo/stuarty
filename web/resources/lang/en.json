@@ -2647,6 +2647,18 @@
         "radius_default": "Strong default",
         "apply": "Blur this region"
       },
+      "teleprompter": {
+        "title": "Teleprompter",
+        "loading": "Reading the script",
+        "no_script": "This project has no script yet",
+        "no_script_hint": "Write one in Write, and it appears here.",
+        "play": "Start",
+        "pause": "Pause",
+        "restart": "From the top",
+        "speed": "Speed (pixels a second)",
+        "size": "Size (pixels)",
+        "mirror": "Mirror the text"
+      },
       "screen_take": {
         "title": "Screen recording",
         "hint": "For a recording made with pointer events: zoom in on the clicks, draw a smooth cursor and mark every click. Each button makes keyframes or items on the timeline that you can change or delete; Zoom on the clicks replaces the position and scale keyframes of the clip. The cursor and the highlights do not follow later changes: draw them again after you change the zoom by hand or move the clip.",

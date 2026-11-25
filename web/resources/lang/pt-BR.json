@@ -2647,6 +2647,18 @@
         "radius_default": "Padrão forte",
         "apply": "Borrar esta região"
       },
+      "teleprompter": {
+        "title": "Teleprompter do roteiro",
+        "loading": "Lendo o roteiro",
+        "no_script": "Este projeto ainda não tem roteiro",
+        "no_script_hint": "Escreva um em Escrever e ele aparece aqui.",
+        "play": "Iniciar",
+        "pause": "Pausar",
+        "restart": "Do início",
+        "speed": "Velocidade (pixels por segundo)",
+        "size": "Tamanho (pixels)",
+        "mirror": "Espelhar o texto"
+      },
       "screen_take": {
         "title": "Gravação de tela",
         "hint": "Para uma gravação feita com eventos do ponteiro: dá zoom nos cliques, desenha um cursor suave e marca cada clique. Cada botão cria keyframes ou itens na linha do tempo que você pode alterar ou apagar; Dar zoom nos cliques substitui os keyframes de posição e escala do clipe. O cursor e os destaques não acompanham mudanças posteriores: desenhe-os de novo depois de mudar o zoom à mão ou mover o clipe.",

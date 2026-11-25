@@ -128,6 +128,21 @@ func TestPages(t *testing.T) {
 		}
 	}
 
+	// The teleprompter of a project has its own page (epic 66): the id has the shape of a project's.
+	if res := page("/projects/prj_7k2m9x4q1b/teleprompter"); res.status != http.StatusOK ||
+		!strings.Contains(string(res.body), `Teleprompter\/Show`) ||
+		!strings.Contains(string(res.body), `"projectId":"prj_7k2m9x4q1b"`) {
+		t.Errorf("/projects/prj_7k2m9x4q1b/teleprompter = %d, want the teleprompter page", res.status)
+	}
+
+	for _, p := range []string{
+		"/projects/not-an-id/teleprompter", "/projects/prj_0123/teleprompter", "/projects/PRJ_7K2M9X4Q1B/teleprompter",
+	} {
+		if res := page(p); res.status != http.StatusNotFound {
+			t.Errorf("%s = %d, want 404", p, res.status)
+		}
+	}
+
 	// The approval queue has its own page (epic 05).
 	if res := page("/approvals"); res.status != http.StatusOK ||
 		!strings.Contains(string(res.body), `Approvals\/Index`) {

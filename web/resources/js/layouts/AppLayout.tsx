@@ -40,6 +40,11 @@ function Shell({ children }: { children: ReactNode }) {
 	// A page drawn before an idle lock must not stay on the screen after it (ADR-0052). Only local mode has an account.
 	useLockWatch(!accountPage && page.props.account !== undefined);
 
+	// The teleprompter is a window of its own that a person reads while recording: the text and nothing around it.
+	if (page.component === "Teleprompter/Show") {
+		return <TooltipProvider>{children}</TooltipProvider>;
+	}
+
 	// The login has no session and no sections to lead to: a plain header, no
 	// sidebar. Every other page is drawn by the dashboard (SDD-012 section 23.2).
 	// The pages before the studio opens, and the error page, are one centred card with no sidebar and no top bar
