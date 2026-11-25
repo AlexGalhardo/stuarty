@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/tooltip";
 import { useT } from "@/lib/i18n";
 import { useCommandNames } from "../commands/useExposedCommands";
+import { TabIcon } from "../library/PanelFrame";
 import { useRuntime, useUiState } from "../state/EditorContext";
 import type { LeftTab } from "../state/uiStore";
 import { useAssetDrag } from "../timeline/gestures/dragAsset";
@@ -68,7 +69,9 @@ export default function LeftPanel(): ReactNode {
 						value={def.id}
 						className={`flex min-h-0 min-w-0 flex-1 flex-col ${def.bodyClass ?? ""}`}
 					>
-						{def.render({ onAssetDragStart: startAssetDrag })}
+						<TabIcon.Provider value={def.icon}>
+							{def.render({ onAssetDragStart: startAssetDrag })}
+						</TabIcon.Provider>
 					</TabsContent>
 				))}
 			</Tabs>
