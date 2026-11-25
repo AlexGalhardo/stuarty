@@ -358,6 +358,7 @@ Global layers (Tailwind `z-*`):
 | splitters | `z-10` | `ui/Splitter.tsx` hit areas over region edges |
 | sticky page chrome | `z-20` | the sidebar rail (kept value) |
 | in-page banners | `z-30` | offline, unsupported, read-only banners pinned to the top of a region |
+| shell panels | `z-40` | the agent chat panel over the video editor (`EditorSceneBar`, VV-427): drawn in `document.body`, outside the stacking contexts of the editor regions, over every region and under the portals below, so a dialog or a menu opened from it still covers it |
 | portals | `z-50` | Base UI and UI SDK popups: tooltip, popover, menu, select, dialog, sheet, palette (the `z-50` value is kept) |
 | toasts | `z-[60]` | the toast viewport, so a toast raised while a dialog is open is visible |
 
