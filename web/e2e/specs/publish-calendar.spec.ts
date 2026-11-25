@@ -215,7 +215,7 @@ test.describe("publishing calendar @chromium-only", () => {
 
 			await page.goto("/publish");
 			await expect(
-				page.getByRole("heading", { name: "Publish", level: 1 }),
+				page.getByRole("heading", { name: "Publishing", level: 1 }),
 			).toBeVisible();
 			await expect(page.getByTestId("calendar-month")).toBeVisible();
 			await page.getByTestId("publish-new").click();

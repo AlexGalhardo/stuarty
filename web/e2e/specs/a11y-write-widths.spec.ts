@@ -153,7 +153,7 @@ for (const theme of ["dark", "light"] as const) {
 			await page.setViewportSize({ width: 320, height: 640 });
 			await page.goto("/write");
 			await expect(
-				page.getByRole("heading", { name: "Write", level: 1 }),
+				page.getByRole("heading", { name: "Writing", level: 1 }),
 			).toBeVisible();
 			const wide = await page.evaluate(
 				() =>

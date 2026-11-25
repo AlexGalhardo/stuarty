@@ -91,7 +91,7 @@ test.describe("writing", () => {
 
 		await page.goto("/write");
 		await expect(
-			page.getByRole("heading", { name: "Write", level: 1 }),
+			page.getByRole("heading", { name: "Writing", level: 1 }),
 		).toBeVisible();
 
 		await page.getByRole("button", { name: "New text" }).click();

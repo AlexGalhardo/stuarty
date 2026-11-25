@@ -150,7 +150,7 @@ test.describe("image canvas", () => {
 				),
 		).toBeVisible();
 		await expect(
-			page.getByRole("link", { name: "Back to Edit Image" }),
+			page.getByRole("link", { name: "Back to Image editor" }),
 		).toBeVisible();
 	});
 

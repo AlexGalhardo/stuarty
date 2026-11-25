@@ -44,7 +44,7 @@ test.describe("asset-library", () => {
 
 		await page.goto("/video-assets");
 		await expect(
-			page.getByRole("heading", { name: "Video Assets", level: 1 }),
+			page.getByRole("heading", { name: "Videos", level: 1 }),
 		).toBeVisible();
 
 		await page.getByLabel("Tag").fill(tag);
@@ -118,7 +118,7 @@ test.describe("asset-library", () => {
 		// The same file is not in the visual section.
 		await page.goto("/visual-assets");
 		await expect(
-			page.getByRole("heading", { name: "Visual Assets", level: 1 }),
+			page.getByRole("heading", { name: "Images", level: 1 }),
 		).toBeVisible();
 		await expect(page.locator(`[data-asset-hash="${hash}"]`)).toHaveCount(0);
 	});

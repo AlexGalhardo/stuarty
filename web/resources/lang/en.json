@@ -115,13 +115,13 @@
       },
       "section": {
         "projects": "Projects",
-        "edit-video": "Edit Video",
-        "edit-image": "Edit Image",
-        "write": "Write",
-        "visual-assets": "Visual Assets",
-        "video-assets": "Video Assets",
-        "sound-assets": "Sound Assets",
-        "publish": "Publish",
+        "edit-video": "Video editor",
+        "edit-image": "Image editor",
+        "write": "Writing",
+        "visual-assets": "Images",
+        "video-assets": "Videos",
+        "sound-assets": "Sounds",
+        "publish": "Publishing",
         "skills": "Skills",
         "prompts": "Prompts",
         "memory": "Memory",
@@ -212,7 +212,8 @@
       "chat": "Chat",
       "breadcrumb": {
         "label": "Breadcrumb",
-        "studio": "Studio"
+        "studio": "Studio",
+        "account": "Account"
       },
       "waiting_count": "{count} waiting for you",
       "mode": {
@@ -767,7 +768,7 @@
         "title": "Image editor",
         "loading": "Loading image…",
         "failed": "The image could not be opened.",
-        "back": "Back to Edit Image",
+        "back": "Back to Image editor",
         "size": "{w} x {h} px",
         "revision": "revision {revision}",
         "saved_auto": "Saved automatically: {time}"
@@ -3659,7 +3660,7 @@
       "back": "Back to the connections"
     },
     "publish": {
-      "title": "Publish",
+      "title": "Publishing",
       "intro": "Plan which piece goes to which account and when. Every post waits for your yes in Approvals before it is sent.",
       "new": "New publication",
       "view": "View",
@@ -4127,7 +4128,7 @@
       }
     },
     "write": {
-      "title": "Write",
+      "title": "Writing",
       "intro": "Copy, blog posts, scripts and captions of your projects, written by you or with a model. Every save is a revision you can go back to.",
       "meta": {
         "words": {

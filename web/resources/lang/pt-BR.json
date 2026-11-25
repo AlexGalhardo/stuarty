@@ -115,18 +115,18 @@
       },
       "section": {
         "projects": "Projetos",
-        "edit-video": "Editar vídeo",
-        "edit-image": "Editar imagem",
-        "write": "Escrever",
-        "visual-assets": "Recursos visuais",
-        "video-assets": "Recursos de vídeo",
-        "sound-assets": "Recursos de som",
-        "publish": "Publicar",
-        "skills": "Habilidades",
-        "prompts": "Instruções",
+        "edit-video": "Editor de vídeo",
+        "edit-image": "Editor de imagem",
+        "write": "Escrita",
+        "visual-assets": "Visuais",
+        "video-assets": "Vídeos",
+        "sound-assets": "Sons",
+        "publish": "Publicação",
+        "skills": "Skills",
+        "prompts": "Prompts",
         "memory": "Memória",
         "connections": "Conexões",
-        "webhooks": "Webhooks de saída"
+        "webhooks": "Webhooks"
       },
       "sidebar": {
         "title": "Barra lateral",
@@ -212,7 +212,8 @@
       "chat": "Conversa",
       "breadcrumb": {
         "label": "Trilha de navegação",
-        "studio": "Estúdio"
+        "studio": "Estúdio",
+        "account": "Conta"
       },
       "waiting_count": "{count} esperando por você",
       "mode": {
@@ -767,7 +768,7 @@
         "title": "Editor de imagem",
         "loading": "Abrindo a imagem…",
         "failed": "Não foi possível abrir a imagem.",
-        "back": "Voltar para Editar imagem",
+        "back": "Voltar para Editor de imagem",
         "size": "{w} × {h} px",
         "revision": "revisão {revision}",
         "saved_auto": "Salvo automaticamente: {time}"
@@ -3659,7 +3660,7 @@
       "back": "Voltar às conexões"
     },
     "publish": {
-      "title": "Publicar",
+      "title": "Publicação",
       "intro": "Planeje qual peça vai para qual conta e quando. Cada post espera o seu sim em Aprovações antes de ser enviado.",
       "new": "Nova publicação",
       "view": "Visão",
@@ -4127,7 +4128,7 @@
       }
     },
     "write": {
-      "title": "Escrever",
+      "title": "Escrita",
       "intro": "Textos, posts de blog, roteiros e legendas dos seus projetos, escritos por você ou com um modelo. Cada salvamento é uma revisão à qual você pode voltar.",
       "meta": {
         "words": {

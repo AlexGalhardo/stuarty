@@ -2134,15 +2134,15 @@ The frame of every dashboard page shows where a person is, what the agent is doi
 
 | Group | Items |
 | --- | --- |
-| Create | Projects, Write, Edit Video, Edit Image |
-| Assets | Video Assets, Visual Assets, Sound Assets, Brand kit (`/settings/brand-kit`) |
+| Create | Projects, Writing, Video editor, Image editor |
+| Assets | Videos, Images, Sounds, Brand kit (`/settings/brand-kit`) |
 | Agent | Skills, Prompts, Memory |
-| Publish | Approvals (`/approvals`, with the count of open requests), Publish |
+| Publish | Approvals (`/approvals`, with the count of open requests), Publishing |
 | Connect | Connections, Webhooks, API keys (`/settings/keys`, network mode only) |
 
 Settings and Log out stay in the footer, as the local account leaves them (ADR-0052), with the product version (`ReleaseMark`) and the mode. Record and Local models get an item only when the epics that add their routes land; the shell never links a route that does not exist. It has three forms: full, an icon rail and a drawer. With no stored choice the sidebar is full above 1280 px and a rail from 768 to 1280 px; a choice stored in `localStorage.sidebar` wins at every width where there is a rail. Below 768 px it is a drawer opened by the menu button of the top bar: a modal dialog that holds the same navigation in the same order, closes with `Escape` or a choice and gives the focus back to the button. A rail item keeps its accessible name and a tooltip (rule 1 of section 23.3).
 
-**The top bar** (`shell/TopBar.tsx`): the breadcrumb, the bell with its count and the Chat button, which opens the right dock (the floating button is gone). The breadcrumb is built from the path and the section labels (`shell/breadcrumb.ts`, pure); the last item is the current page and carries `aria-current="page"`.
+**The top bar** (`shell/TopBar.tsx`): the breadcrumb, the bell with its count and the Chat button, which opens the right dock (the floating button is gone). The breadcrumb is built from the path and the sidebar (`shell/breadcrumb.ts`, pure): the group that holds the page (the studio for the Home, the account for Settings), linking to the first item of the group, then the item; the last item is the current page and carries `aria-current="page"`. The labels are the plain names of the final design (epic 96): Writing, Video editor, Image editor, Videos, Images, Sounds and Publishing in English; Escrita, Editor de vídeo, Editor de imagem, Vídeos, Visuais, Sons and Publicação in Portuguese.
 
 **The scene bar** (`shell/SceneBar.tsx`, `shell/sceneState.ts`): 56 px at the bottom of every page, a `region` labelled `ui.shell.scene.label`, with the variants `none`, `idle`, `working`, `waiting`, `denied`, `done` and `failed`, each told by an icon and a word, never by colour alone. It reads the chat session of the project the dock talks about: the project in the address when the page has one (a visit to another project's page follows it, though the layout stays mounted), else the one picked last, else the first. Because that project may not be the page's, the bar names it next to the agent, as untrusted text, and a permission row of the center does the same. It shows the agent profile, the state the session reports (`ChatState`), the skill slot, the tool and, for an open `permission_request`, Allow and Deny.
 
