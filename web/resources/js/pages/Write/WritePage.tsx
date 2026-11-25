@@ -11,7 +11,8 @@ import {
 
 import { EmptyState } from "@/components/EmptyState";
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
-import { PageHeader } from "@/components/PageHeader";
+import { OptionSelect } from "@/components/OptionSelect";
+import { PageHeader, PageHeaderAction } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -30,8 +31,7 @@ import TextList, { type Loaded } from "./TextList";
 
 const KINDS: readonly TextKind[] = ["script", "copy", "caption", "post"];
 
-const FIELD =
-	"h-8 max-w-full rounded-lg border border-input bg-background px-2 text-sm max-md:h-11";
+const ALL = "all";
 
 interface Selected {
 	projectId: string;
@@ -123,47 +123,45 @@ export default function WritePage(): ReactNode {
 				title={t("ui.write.title")}
 				description={t("ui.write.intro")}
 				actions={
-					<Button
+					<PageHeaderAction
 						type="button"
 						variant={selected === null ? "default" : "outline"}
 						onClick={() => setCreating((shown) => !shown)}
 					>
 						{t("ui.write.new")}
-					</Button>
+					</PageHeaderAction>
 				}
 			/>
 			<div className="flex flex-wrap items-end gap-3">
 				<div className="flex min-w-0 max-w-full flex-col gap-1">
-					<Label htmlFor="write-project">{t("ui.write.filter.project")}</Label>
-					<select
-						id="write-project"
-						value={project}
-						onChange={(event) => setProject(event.target.value)}
-						className={FIELD}
-					>
-						<option value="">{t("ui.write.filter.all_projects")}</option>
-						{projects.map((p) => (
-							<option key={p.id} value={p.id}>
-								{p.name}
-							</option>
-						))}
-					</select>
+					<span className="text-sm font-medium text-text">
+						{t("ui.write.filter.project")}
+					</span>
+					<OptionSelect
+						label={t("ui.write.filter.project")}
+						value={project === "" ? ALL : project}
+						onChange={(next) => setProject(next === ALL ? "" : next)}
+						options={[
+							{ value: ALL, label: t("ui.write.filter.all_projects") },
+							...projects.map((p) => ({ value: p.id, label: p.name })),
+						]}
+						className="min-w-44"
+					/>
 				</div>
 				<div className="flex min-w-0 max-w-full flex-col gap-1">
-					<Label htmlFor="write-kind">{t("ui.write.filter.kind")}</Label>
-					<select
-						id="write-kind"
-						value={kind}
-						onChange={(event) => setKind(event.target.value as "" | TextKind)}
-						className={FIELD}
-					>
-						<option value="">{t("ui.write.filter.all_kinds")}</option>
-						{KINDS.map((k) => (
-							<option key={k} value={k}>
-								{t(`ui.write.kind.${k}`)}
-							</option>
-						))}
-					</select>
+					<span className="text-sm font-medium text-text">
+						{t("ui.write.filter.kind")}
+					</span>
+					<OptionSelect
+						label={t("ui.write.filter.kind")}
+						value={kind === "" ? ALL : kind}
+						onChange={(next) => setKind(next === ALL ? "" : (next as TextKind))}
+						options={[
+							{ value: ALL, label: t("ui.write.filter.all_kinds") },
+							...KINDS.map((k) => ({ value: k, label: t(`ui.write.kind.${k}`) })),
+						]}
+						className="min-w-44"
+					/>
 				</div>
 			</div>
 			{creating && (
@@ -277,19 +275,15 @@ function NewText({
 		>
 			<div className="grid gap-3 sm:grid-cols-3">
 				<div className="flex min-w-0 max-w-full flex-col gap-1">
-					<Label htmlFor="new-project">{t("ui.write.new_form.project")}</Label>
-					<select
-						id="new-project"
+					<span className="text-sm font-medium text-text">
+						{t("ui.write.new_form.project")}
+					</span>
+					<OptionSelect
+						label={t("ui.write.new_form.project")}
 						value={project}
-						onChange={(event) => setProject(event.target.value)}
-						className={FIELD}
-					>
-						{projects.map((p) => (
-							<option key={p.id} value={p.id}>
-								{p.name}
-							</option>
-						))}
-					</select>
+						onChange={setProject}
+						options={projects.map((p) => ({ value: p.id, label: p.name }))}
+					/>
 				</div>
 				<div className="flex min-w-0 max-w-full flex-col gap-1">
 					<Label htmlFor="new-title">{t("ui.write.new_form.name")}</Label>
@@ -302,19 +296,18 @@ function NewText({
 					/>
 				</div>
 				<div className="flex min-w-0 max-w-full flex-col gap-1">
-					<Label htmlFor="new-kind">{t("ui.write.new_form.kind")}</Label>
-					<select
-						id="new-kind"
+					<span className="text-sm font-medium text-text">
+						{t("ui.write.new_form.kind")}
+					</span>
+					<OptionSelect
+						label={t("ui.write.new_form.kind")}
 						value={kind}
-						onChange={(event) => setKind(event.target.value as TextKind)}
-						className={FIELD}
-					>
-						{KINDS.map((k) => (
-							<option key={k} value={k}>
-								{t(`ui.write.kind.${k}`)}
-							</option>
-						))}
-					</select>
+						onChange={(next) => setKind(next as TextKind)}
+						options={KINDS.map((k) => ({
+							value: k,
+							label: t(`ui.write.kind.${k}`),
+						}))}
+					/>
 				</div>
 			</div>
 			<FailureNote failure={failure} />
