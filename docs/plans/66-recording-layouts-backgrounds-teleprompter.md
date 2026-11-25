@@ -59,7 +59,7 @@ The teleprompter reads scripts with existing writing operations and adds no writ
 - [x] 2. Layout presets for 9:16, 1:1, 16:9 and 4:5. Verify: `go test ./core/...` passes.
 - [x] 3. Backgrounds. Verify: `go test ./core/...` and the export golden test pass.
 - [x] 4. The teleprompter window and its exclusion from capture. Verify: a real capture test on Windows shows no teleprompter pixels, or the limit is documented.
-- [ ] 5. The layout picker and teleprompter controls. Verify: `bun run typecheck`, `bun run check:thin-client`, `bun run check:i18n` and `task test:web` pass.
+- [x] 5. The layout picker and teleprompter controls. Verify: `bun run typecheck`, `bun run check:thin-client`, `bun run check:i18n` and `task test:web` pass.
 
 ## Test strategy
 

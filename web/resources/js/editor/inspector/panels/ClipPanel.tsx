@@ -18,6 +18,7 @@ import {
 	ItemVisual,
 } from "./ItemSections";
 import OutlineSection from "./OutlineSection";
+import RecordingLayoutSection from "./RecordingLayoutSection";
 import ScreenTakeSection from "./ScreenTakeSection";
 import ShadowSection from "./ShadowSection";
 import SilencesSection from "./SilencesSection";
@@ -81,6 +82,7 @@ export default function ClipPanel({ itemId }: { itemId: string }): ReactNode {
 							<ColorSection itemId={itemId} />
 							<FiltersSection itemId={itemId} />
 							<BlurRegionSection itemId={itemId} />
+							<RecordingLayoutSection itemId={itemId} />
 							<ScreenTakeSection itemId={itemId} />
 							<ChromaKeySection itemId={itemId} />
 							<EffectsSection itemId={itemId} />

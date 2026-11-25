@@ -10,6 +10,7 @@ import {
 import { useT } from "@/lib/i18n";
 import type { ApiClient } from "../api/client";
 import RecordPanel from "./RecordPanel";
+import RecordTeleprompter from "./RecordTeleprompter";
 import { useRecordFlow } from "./useRecordFlow";
 
 // The record dialog (SDD-025 section 12): the source picker, the visible state of the recording with its stop
@@ -38,6 +39,7 @@ export default function RecordDialog({
 					</DialogDescription>
 				</DialogHeader>
 				<RecordPanel flow={flow} onClose={() => onOpenChange(false)} />
+				<RecordTeleprompter projectId={projectId} />
 			</DialogContent>
 		</Dialog>
 	);

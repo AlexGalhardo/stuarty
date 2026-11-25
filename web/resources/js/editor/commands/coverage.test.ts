@@ -6,6 +6,7 @@ import {
 	addClipOperations,
 	audioOperations,
 	autoZoomOperations,
+	backgroundOperations,
 	blendOperations,
 	blurOperations,
 	blurRegionOperations,
@@ -46,6 +47,7 @@ import {
 	keyframeFallbackOperations,
 	keyframeRemoveOperations,
 	keyframeSetOperations,
+	layoutOperations,
 	linkOperations,
 	markBeatsOperations,
 	markerAddOperations,
@@ -566,6 +568,14 @@ describe("command coverage (SDD-012 section 9.3)", () => {
 				height: 0.1,
 				start: "1s",
 				radius: 40,
+			}).map((o) => o.op),
+			"inspector.recording_layout": layoutOperations("itm_a", {
+				layout: "pip",
+				cameraItemId: "itm_b",
+			}).map((o) => o.op),
+			"inspector.recording_background": backgroundOperations("itm_a", {
+				kind: "color",
+				color: "#112233",
 			}).map((o) => o.op),
 			"inspector.screen_zoom": autoZoomOperations("itm_a", { level: 1.8 }).map(
 				(o) => o.op,

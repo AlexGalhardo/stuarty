@@ -2235,3 +2235,76 @@ export function clickHighlightOperations(
 		},
 	];
 }
+
+// The layout and the background of a screen take and a webcam take (SDD-002 C.96 and C.97, SDD-025 section 20): one
+// operation each. The core places the clips and checks the options; the padding is typed as a percentage of the
+// shorter side of the frame and sent as the fraction the command takes.
+export const LAYOUTS = ["screen_only", "pip", "split", "camera_focus"] as const;
+export type Layout = (typeof LAYOUTS)[number];
+export const CORNERS = [
+	"top_left",
+	"top_right",
+	"bottom_left",
+	"bottom_right",
+] as const;
+export type Corner = (typeof CORNERS)[number];
+export const CAMERA_SHAPES = ["circle", "rect"] as const;
+export type CameraShape = (typeof CAMERA_SHAPES)[number];
+export const BACKGROUND_KINDS = ["none", "color", "image"] as const;
+export type BackgroundKind = (typeof BACKGROUND_KINDS)[number];
+
+export function layoutOperations(
+	screenItemId: string,
+	options: {
+		layout: Layout;
+		cameraItemId?: string;
+		corner?: Corner;
+		cameraShape?: CameraShape;
+		paddingPercent?: number;
+	},
+): Operations {
+	const withCamera = options.layout !== "screen_only";
+	const corner = options.layout === "pip" || options.layout === "camera_focus";
+	return [
+		{
+			op: "recording.apply_layout",
+			args: {
+				layout: options.layout,
+				screen_item_id: screenItemId,
+				...(withCamera && options.cameraItemId !== undefined
+					? { camera_item_id: options.cameraItemId }
+					: {}),
+				...(corner && options.corner !== undefined
+					? { corner: options.corner }
+					: {}),
+				...(options.layout === "pip" && options.cameraShape !== undefined
+					? { camera_shape: options.cameraShape }
+					: {}),
+				...(options.paddingPercent === undefined
+					? {}
+					: { padding: options.paddingPercent / 100 }),
+			},
+		},
+	];
+}
+
+export function backgroundOperations(
+	screenItemId: string,
+	options: { kind: BackgroundKind; color?: string; assetId?: string },
+): Operations {
+	return [
+		{
+			op: "recording.set_background",
+			args: {
+				item_id: screenItemId,
+				kind: options.kind,
+				...(options.kind === "color" && options.color !== undefined
+					? { color: options.color }
+					: {}),
+				...(options.kind === "image" && options.assetId !== undefined
+					? { asset_id: options.assetId }
+					: {}),
+			},
+		},
+	];
+}

@@ -16,6 +16,10 @@ export interface DesktopBridge {
 	revealAsset?: (path: string) => Promise<unknown>;
 	getBackground?: () => Promise<unknown>;
 	setBackground?: (settings: BackgroundSettings) => Promise<unknown>;
+	// Opens and closes the teleprompter window of a project (SDD-025 section 20.3): the shell takes only the id of a
+	// project and builds the address itself, and keeps the window out of a screen capture where the system allows it.
+	openTeleprompter?: (project: string) => Promise<unknown>;
+	closeTeleprompter?: () => Promise<unknown>;
 	// The native menu calls an action id of the editor menu (SDD-012 section 6.4).
 	onMenuAction?: (callback: (action: string) => void) => Unsubscribe;
 }
@@ -59,6 +63,10 @@ export function canMenuAction(bridge: DesktopBridge | null): boolean {
 
 export function canShowInFolder(bridge: DesktopBridge | null): boolean {
 	return typeof bridge?.showInFolder === "function";
+}
+
+export function canOpenTeleprompter(bridge: DesktopBridge | null): boolean {
+	return typeof bridge?.openTeleprompter === "function";
 }
 
 export function canRevealAsset(bridge: DesktopBridge | null): boolean {
