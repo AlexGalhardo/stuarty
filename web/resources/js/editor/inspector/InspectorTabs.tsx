@@ -66,14 +66,14 @@ export default function InspectorTabs({
 				ref={strip}
 				variant="line"
 				aria-label={t("ui.editor.inspector.tabs")}
-				className="h-9 w-full justify-start overflow-x-auto border-b border-border p-0"
+				className="h-9 w-full justify-start gap-3 overflow-x-auto border-b border-border p-0"
 			>
 				{tabs.map((tab) => (
 					<TabsTrigger
 						key={tab.id}
 						value={tab.id}
 						data-inspector-tab={tab.id}
-						className="h-9 flex-none px-3 whitespace-nowrap text-muted-foreground after:bg-ring group-data-horizontal/tabs:after:bottom-0 data-active:text-foreground"
+						className="h-9 flex-none rounded-none border-transparent px-1.5 text-[13px] whitespace-nowrap text-muted-foreground after:h-0.5 after:bg-ring data-active:border-transparent data-active:bg-transparent group-data-horizontal/tabs:after:bottom-0 data-active:text-foreground"
 					>
 						{t(`ui.editor.inspector.tab.${tab.id}`)}
 					</TabsTrigger>

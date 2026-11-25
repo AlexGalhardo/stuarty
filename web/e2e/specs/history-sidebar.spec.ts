@@ -35,17 +35,17 @@ test.describe("history sidebar", () => {
 			name: "History sidebar",
 		});
 		const list = sidebar.getByRole("region", { name: "History" });
+		const toggle = page.locator("[data-history-toggle]");
 
-		// Collapsed at first: a rail with the button, no list.
-		await expect(sidebar).toBeVisible();
+		// Collapsed at first: no sidebar, and the button is the last icon of the library rail.
+		await expect(sidebar).toHaveCount(0);
 		await expect(list).toHaveCount(0);
-		expect((await sidebar.boundingBox())?.width).toBeCloseTo(40, 0);
 
 		// The button opens it, right beside the library.
-		await sidebar.getByRole("button", { name: "Show history" }).click();
+		await toggle.click();
 		await expect(list).toBeVisible();
 		await expect(
-			sidebar.getByRole("button", { name: "Hide history" }),
+			page.getByRole("button", { name: "Hide history" }),
 		).toHaveAttribute("aria-expanded", "true");
 		const library = await page
 			.locator("aside[data-landmark='2']")
@@ -84,12 +84,12 @@ test.describe("history sidebar", () => {
 		// Alt+3 collapses it, and the choice survives a reload.
 		await page.keyboard.press("Alt+3");
 		await expect(list).toHaveCount(0);
-		expect((await sidebar.boundingBox())?.width).toBeCloseTo(40, 0);
+		await expect(sidebar).toHaveCount(0);
 		await page.reload();
-		await expect(sidebar).toBeVisible();
+		await expect(toggle).toBeVisible();
 		await expect(list).toHaveCount(0);
 
-		await sidebar.getByRole("button", { name: "Show history" }).click();
+		await page.getByRole("button", { name: "Show history" }).click();
 		await page.reload();
 		await expect(list).toBeVisible();
 	});
@@ -103,6 +103,7 @@ test.describe("history sidebar", () => {
 		const sidebar = page.getByRole("complementary", {
 			name: "History sidebar",
 		});
+		await page.getByRole("button", { name: "Show history" }).click();
 		await expect(sidebar).toBeVisible();
 
 		const library = page.locator("aside[data-landmark='2']");
@@ -117,13 +118,13 @@ test.describe("history sidebar", () => {
 		await expect(page.locator("main[data-landmark='3']")).toBeFocused();
 
 		await page.keyboard.press("Alt+3");
+		await expect(sidebar).toHaveCount(0);
+		await page.keyboard.press("Alt+3");
 		const row = sidebar.locator("[data-revision] button").first();
 		await expect(row).toBeFocused();
 		await page.keyboard.press("Alt+3");
 		await expect(row).toHaveCount(0);
-		await expect(
-			sidebar.getByRole("button", { name: "Show history" }),
-		).toBeFocused();
+		await expect(page.locator("[data-history-toggle]")).toBeFocused();
 	});
 
 	test("at the narrowest width both sidebars keep a usable width", async ({
@@ -136,7 +137,7 @@ test.describe("history sidebar", () => {
 		const sidebar = page.getByRole("complementary", {
 			name: "History sidebar",
 		});
-		await sidebar.getByRole("button", { name: "Show history" }).click();
+		await page.getByRole("button", { name: "Show history" }).click();
 		await expect(
 			sidebar.getByRole("region", { name: "History" }),
 		).toBeVisible();

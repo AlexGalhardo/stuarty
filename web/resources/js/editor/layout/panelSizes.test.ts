@@ -3,15 +3,19 @@ import { describe, expect, test } from "vitest";
 import { panelSizes } from "./EditorShell";
 
 describe("panelSizes", () => {
-	test("the library is twice its former width from 1280 px up", () => {
-		expect(panelSizes(1600).library).toBe(640);
-		expect(panelSizes(1920).library).toBe(640);
-		expect(panelSizes(1280).library).toBe(480);
-		expect(panelSizes(1440).library).toBe(480);
+	test("the rail and the panel are 44 and 240 px and the inspector 340 px from 1280 px up (final design 05)", () => {
+		for (const width of [1280, 1440, 1600, 1920]) {
+			expect(panelSizes(width).library).toBe(284);
+			expect(panelSizes(width).inspector).toBe(340);
+		}
 	});
 
-	test("the history sidebar is a rail collapsed and 320 px open", () => {
-		expect(panelSizes(1600).history).toBe(40);
+	test("the edit by text screen gives the transcript the room the preview and the inspector spare", () => {
+		expect(panelSizes(1440, false, true).library).toBe(740);
+	});
+
+	test("the history sidebar takes no room collapsed and 320 px open", () => {
+		expect(panelSizes(1600).history).toBe(0);
 		expect(panelSizes(1600, true).history).toBe(320);
 	});
 

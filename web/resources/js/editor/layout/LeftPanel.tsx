@@ -1,4 +1,7 @@
+import { History } from "lucide-react";
 import type { ReactNode } from "react";
+
+import { Button } from "@/components/ui/button";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -16,10 +19,10 @@ import type { LeftTab } from "../state/uiStore";
 import { useAssetDrag } from "../timeline/gestures/dragAsset";
 import { LIBRARY_TABS } from "./libraryTabs";
 
-// The material region of SDD-012 sections 6.1 and 6.4: a vertical rail of 40 px
+// The material region of SDD-012 sections 6.1 and 6.4: a vertical rail of 44 px
 // with one icon tab per panel, and the panel of the selected tab beside it.
 // Alt+1 hides the panel and keeps the rail (docs/design-system.md 3.4.4). The
-// history is a sidebar of its own beside this region (HistorySidebar).
+// history button is the last icon of the rail; its panel is a sidebar of its own (HistorySidebar).
 export default function LeftPanel(): ReactNode {
 	const t = useT();
 	const runtime = useRuntime();
@@ -34,6 +37,13 @@ export default function LeftPanel(): ReactNode {
 	// The edit by text screen puts the transcript where the panel of the tab is.
 	const transcript = useUiState((s) => s.stage?.kind === "transcript");
 	const cuts = useUiState((s) => s.stage?.kind === "cuts");
+	const voice = useUiState((s) => s.stage?.kind === "voice");
+	const historyOpen = useUiState((s) => s.panels.history);
+	const historyLabel = t(
+		historyOpen ? "ui.editor.history.hide" : "ui.editor.history.show",
+	);
+	// The icon lit on the rail is the tool the screen is for (final design 26, 27, 30), not the panel it replaced.
+	const lit = transcript ? "audio" : cuts ? "text" : voice ? "audio" : tab;
 	return (
 		<aside
 			aria-label={t(active?.labelKey ?? "ui.editor.panels.library")}
@@ -42,7 +52,7 @@ export default function LeftPanel(): ReactNode {
 		>
 			<Tabs
 				orientation="vertical"
-				value={open ? tab : ""}
+				value={open || transcript || cuts || voice ? lit : ""}
 				onValueChange={(value) =>
 					runtime.uiWriter.showLeftTab(value as LeftTab)
 				}
@@ -50,7 +60,7 @@ export default function LeftPanel(): ReactNode {
 			>
 				<TabsList
 					aria-label={t("ui.editor.library.rail")}
-					className="w-10 shrink-0 justify-start group-data-vertical/tabs:h-full gap-1 rounded-none border-r border-border bg-transparent p-1"
+					className="w-11 shrink-0 justify-start group-data-vertical/tabs:h-full gap-1 rounded-none border-r border-border bg-transparent p-1"
 				>
 					{tabs.map((def) => (
 						<Tooltip key={def.id}>
@@ -67,6 +77,23 @@ export default function LeftPanel(): ReactNode {
 							<TooltipContent side="right">{t(def.labelKey)}</TooltipContent>
 						</Tooltip>
 					))}
+					<Tooltip>
+						<TooltipTrigger asChild>
+							<Button
+								type="button"
+								size="icon-sm"
+								variant={historyOpen ? "secondary" : "ghost"}
+								aria-label={historyLabel}
+								aria-expanded={historyOpen}
+								data-history-toggle=""
+								className="mt-auto size-8"
+								onClick={() => runtime.uiWriter.toggleHistory()}
+							>
+								<History aria-hidden="true" />
+							</Button>
+						</TooltipTrigger>
+						<TooltipContent side="right">{historyLabel}</TooltipContent>
+					</Tooltip>
 				</TabsList>
 				{transcript && <TranscriptStage />}
 				{cuts && <CutsSource />}
