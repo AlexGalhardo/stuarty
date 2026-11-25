@@ -67,6 +67,14 @@ func (s TargetState) Waiting() bool {
 	return s == TargetWaitingApproval || s == TargetApproved || s == TargetScheduled
 }
 
+// Approved says whether the yes was given and the post has not gone yet.
+func (s TargetState) Approved() bool { return s == TargetApproved || s == TargetScheduled }
+
+// CanReschedule says whether a caller may give a target a new time (D-145): an agent, the local token and a key
+// never move a post that was approved, since that withdraws the yes; only a person in the app does. A target that
+// still waits, failed or was missed is asked for again whoever reschedules it.
+func CanReschedule(s TargetState, person bool) bool { return person || !s.Approved() }
+
 // Editable says whether the fields of a target may change.
 func (s TargetState) Editable() bool {
 	return s != TargetPublishing && s != TargetPublished && s != TargetSentAsDraft
