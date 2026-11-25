@@ -114,8 +114,10 @@ The scripted run of the same flow is `bash scripts/first-flow.sh` (CLI and MCP c
 **How to run it.** The services behind Stuarty are the fakes of `internal/tools/firstflowfake`, started by hand on loopback:
 
 1. `go run ./internal/tools/firstflowfake -media-root <workspace>` prints `ready provider=<url> social=<url>`. The fake network accepts an upload only for a file inside `-media-root` (by default the system temporary folder).
-2. `stuarty serve` with `APP_ENV=test`, `STUARTY_TEST_SOCIAL_URL=<social>`, `STUARTY_TEST_TRANSCRIBER=stub`, `STUARTY_LAUNCHER_SECRET=<secret>`, `STUARTY_HOME=<workspace>` and `STUARTY_ADDR=127.0.0.1:<port>` (never the default port of a person's own Stuarty).
+2. `stuarty serve` with `APP_ENV=test`, `STUARTY_TEST_SOCIAL_URL=<social>`, `STUARTY_TEST_TRANSCRIBER=stub`, `STUARTY_HOME=<workspace>` and `STUARTY_ADDR=127.0.0.1:<port>` (never the default port of a person's own Stuarty).
 3. In that workspace: `connection:add --kind openai --endpoint <provider> --accepts text` for the fake provider, a price for the model `fake-small`, and the fake account connected (`social:connect --network fake`, then the consent redirect completed by a person).
-4. `STUARTY_HARNESS=1 ANTHROPIC_API_KEY=... go run ./internal/tools/agentharness --scenario first-flow --runs 5 --max-turns 60 --bin <stuarty> --clip <clip.mp4> --flow-base http://127.0.0.1:<port> --flow-home <workspace> --flow-launcher-secret <secret> --flow-social <social> --model <small model> --out <folder>`.
+4. `STUARTY_HARNESS=1 ANTHROPIC_API_KEY=... go run ./internal/tools/agentharness --scenario first-flow --runs 5 --max-turns 60 --bin <stuarty> --clip <clip.mp4> --flow-base http://127.0.0.1:<port> --flow-home <workspace> --flow-account-password <password> --flow-social <social> --model <small model> --out <folder>`.
+
+The harness person signs in the way the product makes a person session (SDD-007 section 3.9, ADR-0052): a launch code is never a privileged session, so it cannot decide in the approval queue. On a workspace with no account the harness opens a launch session with the local token, creates the local account (user `harness`) with `--flow-account-password`, then signs in with that password; on a workspace that has the account it only signs in, so the password must be the one the account was created with. A password that is not accepted (too weak, or not the account's) makes the approval step fail, and the run with it.
 
 Results of the runs are added here, as measurements, when the author has approved the budget.

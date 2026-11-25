@@ -63,7 +63,7 @@ type options struct {
 	apiKey, systemPrompt string
 	// The first-flow scenario runs against services the operator started on loopback.
 	skillsDir                                  string
-	flowBase, flowHome, flowSecret, flowSocial string
+	flowBase, flowHome, flowPassword, flowSocial string
 	flowEnv                                    *flowEnv
 }
 
@@ -84,7 +84,12 @@ func parseOptions(argv []string, getenv func(string) string, stderr io.Writer) (
 	)
 	fs.StringVar(&o.flowBase, "flow-base", "", "first-flow: the address of the Stuarty server on loopback")
 	fs.StringVar(&o.flowHome, "flow-home", "", "first-flow: the workspace of that server (STUARTY_HOME)")
-	fs.StringVar(&o.flowSecret, "flow-launcher-secret", "", "first-flow: the STUARTY_LAUNCHER_SECRET of that server")
+	fs.StringVar(
+		&o.flowPassword,
+		"flow-account-password",
+		"",
+		"first-flow: the password of the local account the harness person creates and signs in with",
+	)
 	fs.StringVar(&o.flowSocial, "flow-social", "", "first-flow: the address of the fake social network")
 	fs.StringVar(&o.skill, "skill", "web/app/agentdocs/out/SKILL.md", "the SKILL.md given to the agent")
 	fs.StringVar(&o.bin, "bin", "stuarty", "the stuarty binary the agent drives")
@@ -124,10 +129,10 @@ func parseOptions(argv []string, getenv func(string) string, stderr io.Writer) (
 
 	// The estimate is shown to the author before anything is started, so it needs none of the services.
 	if o.scenario == firstFlow.Name && !o.estimateOnly &&
-		(o.flowBase == "" || o.flowHome == "" || o.flowSecret == "" || o.flowSocial == "") {
+		(o.flowBase == "" || o.flowHome == "" || o.flowPassword == "" || o.flowSocial == "") {
 		fmt.Fprintln(
 			stderr,
-			"agentharness: first-flow needs --flow-base, --flow-home, --flow-launcher-secret and --flow-social",
+			"agentharness: first-flow needs --flow-base, --flow-home, --flow-account-password and --flow-social",
 		)
 
 		return o, 2
@@ -223,7 +228,7 @@ func run(
 
 	if o.scenario == firstFlow.Name {
 		o.flowEnv = &flowEnv{
-			person:  newLivePerson(o.flowBase, o.flowSecret, o.flowHome),
+			person:  newLivePerson(o.flowBase, o.flowPassword, o.flowHome),
 			network: newLiveNetwork(o.flowSocial),
 			wait:    3 * time.Minute, poll: 2 * time.Second,
 		}

@@ -2,11 +2,13 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -391,20 +393,43 @@ func TestBuiltinSkillsAreAllGivenInOrder(t *testing.T) {
 	}
 }
 
-// The live person signs in with the launcher secret, then approves what the queue lists.
-func TestLivePersonSignsInAndApproves(t *testing.T) {
-	t.Parallel()
+// fakeAccountServer models the rules of the product that matter to the harness person (SDD-007 section 3.9):
+// a launch code gives a session that may create the account and may not decide; only the password makes the
+// person session that decides in the queue.
+type fakeAccountServer struct {
+	mu       sync.Mutex
+	hasAcct  bool
+	created  int
+	decided  int
+	password string
+}
 
-	home := t.TempDir()
-	if err := os.WriteFile(filepath.Join(home, "token"), []byte("vvl_tok\n"), 0o600); err != nil {
-		t.Fatal(err)
+func newFakeAccountServer(t *testing.T, existing string) (*httptest.Server, *fakeAccountServer) {
+	t.Helper()
+
+	f := &fakeAccountServer{password: existing, hasAcct: existing != ""}
+	mux := http.NewServeMux()
+	session := func(r *http.Request) string {
+		if c, err := r.Cookie("stuarty_session"); err == nil {
+			return c.Value
+		}
+
+		return ""
 	}
 
-	var decided atomic.Int32
+	mux.HandleFunc("GET /auth/account", func(w http.ResponseWriter, _ *http.Request) {
+		f.mu.Lock()
+		defer f.mu.Unlock()
 
-	mux := http.NewServeMux()
+		state := "none"
+		if f.hasAcct {
+			state = "locked"
+		}
+
+		_, _ = w.Write([]byte(`{"state":"` + state + `"}`))
+	})
 	mux.HandleFunc("POST /api/v1/system/launch", func(w http.ResponseWriter, r *http.Request) {
-		if r.Header.Get("Authorization") != "Bearer vvl_tok" || r.Header.Get("Stuarty-Launcher") != "secret" {
+		if r.Header.Get("Authorization") != "Bearer vvl_tok" {
 			http.Error(w, "no", http.StatusForbidden)
 
 			return
@@ -413,11 +438,45 @@ func TestLivePersonSignsInAndApproves(t *testing.T) {
 		_, _ = w.Write([]byte(`{"url":"http://` + r.Host + `/auth/launch?code=c1"}`))
 	})
 	mux.HandleFunc("GET /auth/launch", func(w http.ResponseWriter, _ *http.Request) {
-		http.SetCookie(w, &http.Cookie{Name: "stuarty_session", Value: "s1", Path: "/"})
+		http.SetCookie(w, &http.Cookie{Name: "stuarty_session", Value: "launch", Path: "/"})
 		w.WriteHeader(http.StatusSeeOther)
 	})
+	mux.HandleFunc("POST /auth/account/create", func(w http.ResponseWriter, r *http.Request) {
+		var in struct{ Password, Confirmation string }
+
+		f.mu.Lock()
+		defer f.mu.Unlock()
+
+		if session(r) != "launch" || r.Header.Get("Origin") == "" || f.hasAcct ||
+			json.NewDecoder(r.Body).Decode(&in) != nil || in.Password == "" || in.Password != in.Confirmation {
+			http.Error(w, "no", http.StatusForbidden)
+
+			return
+		}
+
+		f.hasAcct, f.password = true, in.Password
+		f.created++
+
+		_, _ = w.Write([]byte(`{"recovery_key":"k"}`))
+	})
+	mux.HandleFunc("POST /auth/account/login", func(w http.ResponseWriter, r *http.Request) {
+		var in struct{ Identity, Password string }
+
+		f.mu.Lock()
+		defer f.mu.Unlock()
+
+		if r.Header.Get("Origin") == "" || json.NewDecoder(r.Body).Decode(&in) != nil || !f.hasAcct ||
+			in.Password != f.password {
+			http.Error(w, "no", http.StatusUnauthorized)
+
+			return
+		}
+
+		http.SetCookie(w, &http.Cookie{Name: "stuarty_session", Value: "person", Path: "/"})
+		_, _ = w.Write([]byte(`{}`))
+	})
 	mux.HandleFunc("GET /api/v1/approvals", func(w http.ResponseWriter, r *http.Request) {
-		if _, err := r.Cookie("stuarty_session"); err != nil {
+		if session(r) == "" {
 			http.Error(w, "no session", http.StatusUnauthorized)
 
 			return
@@ -426,13 +485,16 @@ func TestLivePersonSignsInAndApproves(t *testing.T) {
 		_, _ = w.Write([]byte(`{"requests":[{"id":"apr_1"},{"id":"apr_2"}]}`))
 	})
 	mux.HandleFunc("POST /api/v1/approvals/{id}/decide", func(w http.ResponseWriter, r *http.Request) {
-		if r.Header.Get("Origin") == "" {
-			http.Error(w, "no origin", http.StatusForbidden)
+		if session(r) != "person" {
+			http.Error(w, `{"code":"E_PRIVILEGED_SESSION"}`, http.StatusForbidden)
 
 			return
 		}
 
-		decided.Add(1)
+		f.mu.Lock()
+		f.decided++
+		f.mu.Unlock()
+
 		_, _ = w.Write([]byte(`{}`))
 	})
 
@@ -440,13 +502,47 @@ func TestLivePersonSignsInAndApproves(t *testing.T) {
 
 	t.Cleanup(srv.Close)
 
-	n, err := newLivePerson(srv.URL, "secret", home).ApprovePending(context.Background())
-	if err != nil || n != 2 || decided.Load() != 2 {
-		t.Errorf("approved %d (%d decided): %v", n, decided.Load(), err)
+	return srv, f
+}
+
+func writeToken(t *testing.T) string {
+	t.Helper()
+
+	home := t.TempDir()
+	if err := os.WriteFile(filepath.Join(home, "token"), []byte("vvl_tok\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	return home
+}
+
+// VV-423: on a workspace with no account the live person creates it from a launch session, signs in with the
+// password (a launch code is never a privileged session) and approves what the queue lists.
+func TestLivePersonCreatesTheAccountSignsInAndApproves(t *testing.T) {
+	t.Parallel()
+
+	srv, fake := newFakeAccountServer(t, "")
+
+	n, err := newLivePerson(srv.URL, "Harness-pass-1", writeToken(t)).ApprovePending(context.Background())
+	if err != nil || n != 2 || fake.decided != 2 || fake.created != 1 {
+		t.Errorf("approved %d (%d decided, %d accounts created): %v", n, fake.decided, fake.created, err)
+	}
+}
+
+// A second run of the series finds the account and only signs in; a wrong password does not.
+func TestLivePersonSignsInToAnExistingAccount(t *testing.T) {
+	t.Parallel()
+
+	srv, fake := newFakeAccountServer(t, "Harness-pass-1")
+	home := writeToken(t)
+
+	n, err := newLivePerson(srv.URL, "Harness-pass-1", home).ApprovePending(context.Background())
+	if err != nil || n != 2 || fake.decided != 2 || fake.created != 0 {
+		t.Errorf("approved %d (%d decided, %d accounts created): %v", n, fake.decided, fake.created, err)
 	}
 
 	if _, err := newLivePerson(srv.URL, "wrong", home).ApprovePending(context.Background()); err == nil {
-		t.Error("a wrong launcher secret signed in")
+		t.Error("a wrong password signed in")
 	}
 }
 

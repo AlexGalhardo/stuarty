@@ -19,12 +19,19 @@ import (
 // loopback (the steps are in docs/agent-benchmark.md): a Stuarty server with a
 // fake AI provider and a fake social network behind it. The harness only reaches them, as a person.
 
-// livePerson signs in the way the desktop app does, with the launcher secret the server was given, and
-// decides in the approval queue.
+// livePerson is the person of the scenario. It signs in the way the product makes a person session (SDD-007
+// section 3.9, ADR-0052): only a password sign-in does, a launch code never does. On a workspace with no
+// account it first creates one from a launch session, the way a person's own browser does, then signs in with
+// the password; and it decides in the approval queue.
 type livePerson struct {
-	base, secret, home string
-	client             *http.Client //nolint:forbidigo // loopback only: the client of outbound.LocalServer
+	base, password, home string
+	client               *http.Client //nolint:forbidigo // loopback only: the client of outbound.LocalServer
 }
+
+const (
+	liveUsername = "harness"
+	liveEmail    = "agent-harness@example.com"
+)
 
 // statusErr is the error of a request that failed or answered a status that is not success.
 func statusErr(what string, code int, err error) error {
@@ -35,12 +42,12 @@ func statusErr(what string, code int, err error) error {
 	return fmt.Errorf("%s: status %d", what, code) //nolint:err113 // a status, not a sentinel
 }
 
-func newLivePerson(base, secret, home string) *livePerson {
+func newLivePerson(base, password, home string) *livePerson {
 	jar, _ := cookiejar.New(nil)
 	c := outbound.LocalServer(30 * time.Second)
 	c.Jar = jar
 
-	return &livePerson{base: strings.TrimRight(base, "/"), secret: secret, home: home, client: c}
+	return &livePerson{base: strings.TrimRight(base, "/"), password: password, home: home, client: c}
 }
 
 func (p *livePerson) do(ctx context.Context, method, path, body string, header map[string]string) ([]byte, int, error) {
@@ -71,18 +78,19 @@ func (p *livePerson) do(ctx context.Context, method, path, body string, header m
 	return data, res.StatusCode, err
 }
 
-func (p *livePerson) signIn(ctx context.Context) error {
+// createAccount makes the local account of an empty workspace from a launch session (a launch code is the
+// person's own browser, which is the only caller that may create it).
+func (p *livePerson) createAccount(ctx context.Context) error {
 	token, err := os.ReadFile(filepath.Join(p.home, "token"))
 	if err != nil {
 		return fmt.Errorf("read the local token: %w", err)
 	}
 
 	data, code, err := p.do(ctx, http.MethodPost, "/api/v1/system/launch", "", map[string]string{
-		"Authorization":    "Bearer " + strings.TrimSpace(string(token)),
-		"Stuarty-Launcher": p.secret,
+		"Authorization": "Bearer " + strings.TrimSpace(string(token)),
 	})
 	if err != nil || code != http.StatusOK {
-		return statusErr("launch a person session", code, err)
+		return statusErr("open a launch session", code, err)
 	}
 
 	var launch struct {
@@ -95,6 +103,55 @@ func (p *livePerson) signIn(ctx context.Context) error {
 	_, code, err = p.do(ctx, http.MethodGet, strings.TrimPrefix(launch.URL, p.base), "", nil)
 	if err != nil || code >= http.StatusBadRequest {
 		return statusErr("redeem the launch code", code, err)
+	}
+
+	body, err := json.Marshal(map[string]string{
+		"username": liveUsername, "email": liveEmail, "password": p.password, "confirmation": p.password,
+	})
+	if err != nil {
+		return err
+	}
+
+	if _, code, err = p.do(ctx, http.MethodPost, "/auth/account/create", string(body), nil); err != nil ||
+		code != http.StatusOK {
+		return statusErr("create the local account", code, err)
+	}
+
+	// The launch session ends here: the person session is the one the password makes.
+	jar, _ := cookiejar.New(nil)
+	p.client.Jar = jar
+
+	return nil
+}
+
+// signIn leaves the cookie jar with a person session made by the password.
+func (p *livePerson) signIn(ctx context.Context) error {
+	data, code, err := p.do(ctx, http.MethodGet, "/auth/account", "", nil)
+	if err != nil || code != http.StatusOK {
+		return statusErr("read the account state", code, err)
+	}
+
+	var state struct {
+		State string `json:"state"`
+	}
+	if err := json.Unmarshal(data, &state); err != nil {
+		return fmt.Errorf("read the account state: %w", err)
+	}
+
+	if state.State == "none" {
+		if err := p.createAccount(ctx); err != nil {
+			return err
+		}
+	}
+
+	body, err := json.Marshal(map[string]string{"identity": liveUsername, "password": p.password})
+	if err != nil {
+		return err
+	}
+
+	if _, code, err = p.do(ctx, http.MethodPost, "/auth/account/login", string(body), nil); err != nil ||
+		code != http.StatusOK {
+		return statusErr("sign in with the password", code, err)
 	}
 
 	return nil
