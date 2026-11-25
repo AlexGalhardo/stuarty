@@ -41,7 +41,7 @@ type Endpoint struct {
 	// Uncounted but does work on a cache miss (ViewFrame renders a frame).
 	MaxInFlight int
 	// MaxBody replaces the body limit of the router for this route, in bytes: a route that takes a file or a
-	// chunk of one raises it (the recording upload, SDD-025 section 17.3). Zero keeps the router's limit.
+	// chunk of one raises it (the recording upload, SDD-025 section 18.3). Zero keeps the router's limit.
 	MaxBody int64
 }
 

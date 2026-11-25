@@ -2,7 +2,7 @@ import type { ApiClient } from "../api/client";
 import { ApiError } from "../api/errors";
 import type { RecordingUploadKind } from "../api/types";
 
-// The sending side of a recording a browser captures (SDD-025 sections 17.3 and 17.4). Chunks are sent in order,
+// The sending side of a recording a browser captures (SDD-025 sections 18.3 and 18.4). Chunks are sent in order,
 // one at a time, each with its SHA-256; the server accepts a chunk only at the index the track waits for, and a
 // chunk sent twice only once, so a request that failed is simply sent again. This file keeps the chunks that the
 // server has not acknowledged and finds out, after a failure, where the server is. It decides no rule: the order,

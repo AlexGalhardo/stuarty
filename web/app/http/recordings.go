@@ -133,7 +133,7 @@ func (h *apiHandler) recordingPlace(c *web.Ctx, in recordingPlaceIn) (service.Ed
 	return deref(res), err
 }
 
-// The upload of a recording a browser captured (SDD-025 section 17). The routes carry no rule: the Service decides
+// The upload of a recording a browser captured (SDD-025 section 18). The routes carry no rule: the Service decides
 // who may upload, in what order, how much and what the bytes become; the chunk route only raises the body limit
 // for itself and hands the body on.
 

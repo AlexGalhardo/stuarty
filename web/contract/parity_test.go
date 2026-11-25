@@ -257,7 +257,7 @@ var parity = []row{
 	{method: "RecordingConfirm", command: "recording:confirm", route: "POST /recordings/{}/confirm"},
 	{method: "RecordingDismiss", command: "recording:dismiss", route: "POST /recordings/{}/dismiss"},
 	{method: "RecordingPlace", command: "recording:place", route: "POST /recordings/{}/place"},
-	// A capture of a browser cannot be driven from outside (SDD-025 section 17.3).
+	// A capture of a browser cannot be driven from outside (SDD-025 section 18.3).
 	{method: "RecordingUploadBegin", route: "POST /recordings/upload", httpOnly: true},
 	{method: "RecordingUploadChunk", route: "PUT /recordings/{}/upload/{}/{}", httpOnly: true},
 	{method: "RecordingUploadFinish", route: "POST /recordings/{}/finish", httpOnly: true},

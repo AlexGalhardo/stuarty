@@ -395,7 +395,7 @@ export interface ApiClient {
 	// browser session; any other caller gets E_PRIVILEGED_SESSION.
 	recordingSources(): Promise<RecordingSourcesResult>;
 	startRecording(request: RecordingStartRequest): Promise<Recording>;
-	// A recording a browser captures and uploads (SDD-025 section 17), for a person in a browser session. A chunk is
+	// A recording a browser captures and uploads (SDD-025 section 18), for a person in a browser session. A chunk is
 	// the whole body of a PUT: `sha256` is its digest in lowercase hexadecimal, and the server accepts it only at the
 	// index the track waits for (a chunk sent twice is accepted once).
 	beginRecordingUpload(

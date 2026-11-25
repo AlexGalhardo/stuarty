@@ -182,7 +182,7 @@ type Recording struct {
 	Pauses      []RecordingPause `json:"pauses"`
 	EventsCount int64            `json:"events_count"`
 	Levels      *RecordingLevels `json:"levels,omitempty"`
-	// Upload is where a browser recording is, while it receives chunks (SDD-025 section 17.3).
+	// Upload is where a browser recording is, while it receives chunks (SDD-025 section 18.3).
 	Upload    *RecordingUpload `json:"upload,omitempty"`
 	Actor     string           `json:"actor"`
 	CreatedAt time.Time        `json:"created_at"`
@@ -422,7 +422,7 @@ func (s *svc) RecordingStart(ctx context.Context, req RecordingStartRequest) (*R
 			return err
 		}
 
-		// A recording a browser uploads uses no helper and has its own limits (SDD-025 section 17.4).
+		// A recording a browser uploads uses no helper and has its own limits (SDD-025 section 18.4).
 		open = slices.DeleteFunc(open, func(o recordings.Row) bool { return o.SourceKind == recording.SourceBrowser })
 
 		if len(open) > 0 {

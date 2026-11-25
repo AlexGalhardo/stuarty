@@ -10,7 +10,7 @@ import {
 	type UploaderState,
 } from "./chunkUploader";
 
-// The recorder of a recording a browser captures (SDD-025 section 17). It asks the browser for the screen, the
+// The recorder of a recording a browser captures (SDD-025 section 18). It asks the browser for the screen, the
 // microphone and the camera on a gesture of the person (the permission prompts are the browser's and are never
 // answered here), slices what MediaRecorder writes into chunks of about a second, and hands them to the uploader.
 // It computes no edit and no limit: what the person reads after a stop is what the server answered.
