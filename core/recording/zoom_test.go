@@ -225,6 +225,15 @@ func TestZoomSpans(t *testing.T) {
 		}
 	})
 
+	t.Run("a hold of three keyframes is one zoom up to the keyframe after the hold", func(t *testing.T) {
+		got := ZoomSpans([]timeline.Keyframe{kf(0, 1), kf(10, 1.6), kf(25, 1.6), kf(40, 1.6), kf(60, 1)}, 1)
+		want := []ZoomSpan{{StartFrame: 0, FullFrame: 10, ReleaseFrame: 40, EndFrame: 60}}
+
+		if !reflect.DeepEqual(got, want) {
+			t.Fatalf("got %+v, want %+v", got, want)
+		}
+	})
+
 	t.Run("no zoom at rest", func(t *testing.T) {
 		if got := ZoomSpans([]timeline.Keyframe{kf(0, 1), kf(50, 1)}, 1); len(got) != 0 {
 			t.Fatalf("got %+v, want none", got)

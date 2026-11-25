@@ -32,22 +32,25 @@ func ZoomSpans(scale []timeline.Keyframe, rest float64) []ZoomSpan {
 			continue
 		}
 
-		span := ZoomSpan{StartFrame: a.T, FullFrame: a.T, ReleaseFrame: b.T, EndFrame: b.T}
+		// The hold runs to its last keyframe at that scale: a hold of three keyframes is one zoom, not two, and it is
+		// released at its last keyframe.
+		last := i + 1
+		for last+1 < len(scale) && math.Abs(scale[last+1].Value-b.Value) <= scaleRest {
+			last++
+		}
+
+		span := ZoomSpan{StartFrame: a.T, FullFrame: a.T, ReleaseFrame: scale[last].T, EndFrame: scale[last].T}
 		if i > 0 && scale[i-1].Value < a.Value-scaleRest {
 			span.StartFrame = scale[i-1].T
 		}
 
-		if i+2 < len(scale) && scale[i+2].Value < b.Value-scaleRest {
-			span.EndFrame = scale[i+2].T
+		if last+1 < len(scale) && scale[last+1].Value < b.Value-scaleRest {
+			span.EndFrame = scale[last+1].T
 		}
 
 		spans = append(spans, span)
-		// The release keyframe belongs to this zoom; a hold of three keyframes is one zoom, not two.
-		for i+2 < len(scale) && math.Abs(scale[i+2].Value-b.Value) <= scaleRest {
-			i++
-		}
-
-		i++
+		// The release keyframe belongs to this zoom; the next one can start at it only as the start of a pan.
+		i = last
 	}
 
 	return spans
