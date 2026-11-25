@@ -21,6 +21,19 @@
 		{"call": "BriefingAnswer", "args": {"project_id": "prj_8m3n0y5r2c", "answers": {"product": "a pen"}}, "expect_error": {"code": "E_VALIDATION"}},
 		{"call": "BriefingAnswer", "args": {"project_id": "prj_8m3n0y5r2c", "kind": "commercial", "answers": {"product": "a pen", "audience": "writers", "problem": "smudges", "offer": "10% off", "call_to_action": "buy now", "platform": "tiktok", "format": "vertical-9x16", "duration": "30"}}},
 		{"call": "BriefingQuestions", "args": {"project_id": "prj_8m3n0y5r2c", "kind": "commercial"}},
-		{"call": "ProjectDescribe", "args": {"project_id": "prj_7k2m9x4q1b"}}
+		{"call": "ProjectDescribe", "args": {"project_id": "prj_7k2m9x4q1b"}},
+		{"call": "ProjectCreate", "args": {"id": "prj_9n4p1z6s3d", "kind": "text", "name": "Launch post", "description": "A blog post made for tests: it says what the product does, in the words of the people who use it, and it is written for the people who follow the channel.", "goal": {"specific": "Publish one post that explains the idea", "measurable": "At least one hundred readers in the first week", "achievable": "The notes and the outline already exist", "relevant": "It brings the first audience to the channel", "time_bound": "Write on Monday and publish on Tuesday", "due": "2999-12-31"}}},
+		{"call": "BriefingQuestions", "args": {"project_id": "prj_9n4p1z6s3d"}},
+		{"call": "BriefingAnswer", "args": {"project_id": "prj_9n4p1z6s3d", "answers": {"audience": "indie developers", "goal": "get sign-ups", "platform": "youtube-shorts", "format": "vertical-9x16", "duration": "30"}}, "expect_error": {"code": "E_VALIDATION"}},
+		{"call": "BriefingAnswer", "args": {"project_id": "prj_9n4p1z6s3d", "answers": {"audience": "indie developers", "tone": "warm", "call_to_action": "reply to this email", "channel": "newsletter", "length": "3"}}, "expect_error": {"code": "E_VALIDATION"}},
+		{"call": "BriefingAnswer", "args": {"project_id": "prj_9n4p1z6s3d", "answers": {"audience": "indie developers", "tone": "warm", "call_to_action": "reply to this email", "channel": "newsletter", "length": "400", "deadline": "2026-12-01"}}},
+		{"call": "BriefingQuestions", "args": {"project_id": "prj_9n4p1z6s3d"}},
+		{"call": "BriefingAnswer", "args": {"project_id": "prj_9n4p1z6s3d", "answers": {"audience": "makers", "tone": "plain", "call_to_action": "sign up", "channel": "blog", "length": "800"}}},
+		{"call": "BriefingQuestions", "args": {"project_id": "prj_9n4p1z6s3d", "kind": "short"}},
+		{"call": "ProjectCreate", "args": {"id": "prj_0p5q2a7t4e", "kind": "image", "name": "Launch cover", "description": "A cover image made for tests: it shows the product in one picture, in the colours of the channel, and it is made for the people who follow the channel.", "goal": {"specific": "Publish one cover that shows the product", "measurable": "At least one hundred views in the first week", "achievable": "The product photos already exist", "relevant": "It brings the first audience to the channel", "time_bound": "Make it on Monday and publish on Tuesday", "due": "2999-12-31"}}},
+		{"call": "BriefingQuestions", "args": {"project_id": "prj_0p5q2a7t4e"}},
+		{"call": "BriefingAnswer", "args": {"project_id": "prj_0p5q2a7t4e", "answers": {"audience": "followers", "format": "portrait-5x7", "style": "flat colours", "channel": "instagram-feed"}}, "expect_error": {"code": "E_VALIDATION"}},
+		{"call": "BriefingAnswer", "args": {"project_id": "prj_0p5q2a7t4e", "answers": {"audience": "followers", "format": "portrait-4x5", "size": "1080x1350", "style": "flat colours", "channel": "instagram-feed"}}},
+		{"call": "BriefingQuestions", "args": {"project_id": "prj_0p5q2a7t4e"}}
 	]
 }
