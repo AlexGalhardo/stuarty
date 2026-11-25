@@ -15,6 +15,49 @@ function api() {
 	return createClient(new HttpTransport("/api/v1"));
 }
 
+// The ceiling per day that applies to a line of today's spending, or null when none is set: the bar only draws the
+// service's two figures against each other.
+function dayCeiling(
+	summary: CostSummary,
+	line: { project_id?: string | null; currency: string },
+): number | null {
+	const found = summary.ceilings.find(
+		(c) =>
+			c.currency === line.currency &&
+			(c.project_id ?? null) === (line.project_id ?? null),
+	);
+	return found?.per_day_micros ?? null;
+}
+
+// A thin bar of what was spent against the day ceiling; with no ceiling there is no bar.
+function SpendBar({
+	spent,
+	ceiling,
+	label,
+}: {
+	spent: number;
+	ceiling: number | null;
+	label: string;
+}): ReactNode {
+	if (ceiling === null || ceiling <= 0) return null;
+	const percent = Math.min(100, Math.round((spent / ceiling) * 100));
+	return (
+		<span
+			role="progressbar"
+			aria-label={label}
+			aria-valuemin={0}
+			aria-valuemax={100}
+			aria-valuenow={percent}
+			className="mt-1 block h-2 w-full overflow-hidden rounded-full bg-surface-sunken"
+		>
+			<span
+				className={`block h-full ${percent >= 90 ? "bg-danger-text" : "bg-accent"}`}
+				style={{ width: `${percent}%` }}
+			/>
+		</span>
+	);
+}
+
 // What was spent today and the ceilings, as the service computed them (SDD-015 section 6), with
 // the form to set a ceiling. The page adds nothing: every figure is the service's.
 export default function CostPanel({
@@ -95,6 +138,11 @@ export default function CostPanel({
 											{ micros: line.micros, currency: line.currency },
 											locale,
 										)}
+										<SpendBar
+											spent={line.micros}
+											ceiling={dayCeiling(summary, line)}
+											label={t("ui.approvals.spent_bar")}
+										/>
 									</li>
 								))}
 							</ul>
@@ -143,73 +191,82 @@ export default function CostPanel({
 					</div>
 				</div>
 			)}
-			<form
-				onSubmit={(event) => void save(event)}
-				className="mt-4 flex flex-col gap-4 border-t border-border pt-4"
+			<details
+				className="mt-4 border-t border-border pt-4"
+				data-testid="ceiling-details"
 			>
-				<h3 className="font-medium">{t("ui.approvals.set_ceiling")}</h3>
-				<div className="grid grid-cols-1 gap-4">
-					<div className="flex flex-col gap-2">
-						<Label htmlFor="ceiling-currency">
-							{t("ui.approvals.currency")}
-						</Label>
-						<Input
-							id="ceiling-currency"
-							autoComplete="off"
-							maxLength={3}
-							value={currency}
-							onChange={(event) => setCurrency(event.target.value)}
-						/>
+				<summary className="w-fit cursor-pointer text-base font-medium">
+					{t("ui.approvals.set_ceiling")}
+				</summary>
+				<form
+					onSubmit={(event) => void save(event)}
+					className="mt-4 flex flex-col gap-4"
+				>
+					<div className="grid grid-cols-1 gap-4">
+						<div className="flex flex-col gap-2">
+							<Label htmlFor="ceiling-currency">
+								{t("ui.approvals.currency")}
+							</Label>
+							<Input
+								id="ceiling-currency"
+								autoComplete="off"
+								maxLength={3}
+								value={currency}
+								onChange={(event) => setCurrency(event.target.value)}
+							/>
+						</div>
+						<div className="flex flex-col gap-2">
+							<Label htmlFor="ceiling-project">
+								{t("ui.approvals.rules.project")}
+							</Label>
+							<Input
+								id="ceiling-project"
+								autoComplete="off"
+								placeholder={t("ui.approvals.scope_workspace")}
+								value={project}
+								onChange={(event) => setProject(event.target.value)}
+							/>
+						</div>
+						<div className="flex flex-col gap-2">
+							<Label htmlFor="ceiling-per-item">
+								{t("ui.approvals.per_item")}
+							</Label>
+							<Input
+								id="ceiling-per-item"
+								inputMode="decimal"
+								autoComplete="off"
+								value={perItem}
+								onChange={(event) => setPerItem(event.target.value)}
+							/>
+						</div>
+						<div className="flex flex-col gap-2">
+							<Label htmlFor="ceiling-per-day">
+								{t("ui.approvals.per_day")}
+							</Label>
+							<Input
+								id="ceiling-per-day"
+								inputMode="decimal"
+								autoComplete="off"
+								value={perDay}
+								onChange={(event) => setPerDay(event.target.value)}
+							/>
+						</div>
 					</div>
-					<div className="flex flex-col gap-2">
-						<Label htmlFor="ceiling-project">
-							{t("ui.approvals.rules.project")}
-						</Label>
-						<Input
-							id="ceiling-project"
-							autoComplete="off"
-							placeholder={t("ui.approvals.scope_workspace")}
-							value={project}
-							onChange={(event) => setProject(event.target.value)}
-						/>
+					<p className="text-xs text-muted-foreground">
+						{t("ui.approvals.ceiling_note")}
+					</p>
+					<PersonOnlyNote id="cost-person-only" />
+					<div>
+						<Button
+							type="submit"
+							disabled={!privileged}
+							aria-describedby={privileged ? undefined : "cost-person-only"}
+						>
+							{t("ui.approvals.save_ceiling")}
+						</Button>
 					</div>
-					<div className="flex flex-col gap-2">
-						<Label htmlFor="ceiling-per-item">
-							{t("ui.approvals.per_item")}
-						</Label>
-						<Input
-							id="ceiling-per-item"
-							inputMode="decimal"
-							autoComplete="off"
-							value={perItem}
-							onChange={(event) => setPerItem(event.target.value)}
-						/>
-					</div>
-					<div className="flex flex-col gap-2">
-						<Label htmlFor="ceiling-per-day">{t("ui.approvals.per_day")}</Label>
-						<Input
-							id="ceiling-per-day"
-							inputMode="decimal"
-							autoComplete="off"
-							value={perDay}
-							onChange={(event) => setPerDay(event.target.value)}
-						/>
-					</div>
-				</div>
-				<p className="text-xs text-muted-foreground">
-					{t("ui.approvals.ceiling_note")}
-				</p>
-				<PersonOnlyNote id="cost-person-only" />
-				<div>
-					<Button
-						type="submit"
-						disabled={!privileged}
-						aria-describedby={privileged ? undefined : "cost-person-only"}
-					>
-						{t("ui.approvals.save_ceiling")}
-					</Button>
-				</div>
-			</form>
+				</form>
+			</details>
 		</section>
 	);
 }

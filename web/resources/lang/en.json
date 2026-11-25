@@ -4173,6 +4173,7 @@
       "cost_title": "Cost limit",
       "cost_intro": "A ceiling on spending, whoever approves.",
       "spent_today": "Spent today",
+      "spent_bar": "Spent today against the day ceiling",
       "nothing_spent": "Nothing spent today.",
       "scope_workspace": "Whole workspace",
       "ceilings": "Ceilings",

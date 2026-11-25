@@ -192,6 +192,8 @@ test.describe("approval queue", () => {
 		const other = await context.newPage();
 		await openQueue(other);
 		const there = other.locator(`[data-approval-id="${id}"]`);
+		// The reason is asked when a person starts to reject: the first press opens the field, the second sends.
+		await there.getByRole("button", { name: "Reject" }).click();
 		await there.getByLabel("Reason").fill("wrong channel");
 		await there.getByRole("button", { name: "Reject" }).click();
 		await expect(there).toHaveCount(0);
@@ -302,6 +304,7 @@ test.describe("approval queue", () => {
 		await rule.getByRole("button", { name: "Remove" }).click();
 		await expect(rule).toHaveCount(0);
 
+		await ceiling.getByText("Set a ceiling").click();
 		await ceiling.getByLabel("Most per day").fill("9");
 		await page.getByRole("button", { name: "Save ceiling" }).click();
 		await expect(page.getByTestId("cost-ceilings")).toContainText("$9.00");
@@ -330,11 +333,12 @@ test.describe("approval queue", () => {
 			page.getByRole("heading", { name: "Aprovações", level: 1 }),
 		).toBeVisible();
 		const row = page.locator(`[data-approval-id="${id}"]`);
-		await expect(row).toContainText("Aprovar");
-		await expect(row).toContainText("Rejeitar");
+		await expect(row).toContainText("Permitir");
+		await expect(row).toContainText("Recusar");
 		await expect(row).toContainText("Custo estimado");
 		await expect(page.getByTestId("approval-live")).toContainText("Ao vivo");
-		await row.getByRole("button", { name: "Rejeitar" }).click();
+		await row.getByRole("button", { name: "Recusar" }).click();
+		await row.getByRole("button", { name: "Recusar" }).click();
 		await expect(row).toHaveCount(0);
 	});
 });

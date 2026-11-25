@@ -94,6 +94,12 @@ function markup(
 }
 
 describe("the approval queue shows what will go out, where, what it costs and who asked", () => {
+	test("the reason is not asked until a person starts to reject", () => {
+		const html = markup([request()]);
+		expect(html).not.toContain('id="reason-');
+		expect(html).toContain("Reject");
+	});
+
 	test("shows the summary, the destination, the cost and the actor", () => {
 		const html = markup([request()]);
 		expect(html).toContain("Post the launch video");
