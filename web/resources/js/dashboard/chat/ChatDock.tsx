@@ -1,6 +1,7 @@
-import { Settings2, X } from "lucide-react";
+import { Bot, Settings2, X } from "lucide-react";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 
+import { LoadingState } from "@/components/LoadingState";
 import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n";
 import { useShell } from "../../shell/ShellContext";
@@ -69,12 +70,20 @@ export default function ChatDock(): ReactNode {
 			onKeyDown={(event) => {
 				if (event.key === "Escape") close();
 			}}
-			className="flex h-dvh w-full flex-col gap-3 border-s bg-background p-3 z-50 max-md:fixed max-md:inset-0 md:sticky md:top-0 md:w-96"
+			className="flex h-dvh w-full flex-col gap-3 border-s border-border bg-surface p-4 z-50 max-md:fixed max-md:inset-0 md:sticky md:top-0 md:w-[26rem]"
 		>
-			<header className="flex items-center justify-between gap-2">
-				<h2 ref={heading} tabIndex={-1} className="text-base font-semibold">
-					{t("ui.chat.title")}
-				</h2>
+			<header className="flex items-center justify-between gap-2 border-b border-border pb-3">
+				<div className="flex items-center gap-2">
+					<span
+						aria-hidden="true"
+						className="flex size-8 items-center justify-center rounded-md bg-agent-soft text-agent-text"
+					>
+						<Bot className="size-4" />
+					</span>
+					<h2 ref={heading} tabIndex={-1} className="text-lg font-semibold">
+						{t("ui.chat.title")}
+					</h2>
+				</div>
 				<div className="flex items-center gap-1">
 					{ready && connected && (
 						<Button
@@ -102,9 +111,7 @@ export default function ChatDock(): ReactNode {
 				</div>
 			</header>
 			{!ready ? (
-				<p role="status" className="text-sm text-muted-foreground">
-					{t("ui.chat.loading")}
-				</p>
+				<LoadingState message={t("ui.chat.loading")} />
 			) : showSetup ? (
 				<section
 					aria-label={t("ui.chat.manage")}
