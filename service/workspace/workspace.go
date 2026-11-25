@@ -59,7 +59,7 @@ func Resolve(getenv func(string) string) (Dir, error) {
 	// Before anything is created, adopted or migrated: a build that is not a release never touches the
 	// workspace of the installed application (VV-421).
 	if homeErr == nil {
-		if err := guardDefaultHome(getenv, abs, filepath.Join(home, defaultDir)); err != nil {
+		if err := guardDefaultHome(getenv, abs, home); err != nil {
 			return "", err
 		}
 	}

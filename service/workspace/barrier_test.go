@@ -3,7 +3,9 @@ package workspace
 import (
 	"errors"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -84,6 +86,83 @@ func TestResolveRefusesAnExplicitHomeThatIsTheDefault(t *testing.T) {
 	})
 	if err == nil {
 		t.Fatal("Resolve opened the default home through an explicit path")
+	}
+}
+
+// linkTo makes link name the folder target: a junction on Windows, which needs no privilege, and a
+// symbolic link elsewhere.
+func linkTo(t *testing.T, target, link string) {
+	t.Helper()
+
+	if runtime.GOOS == "windows" {
+		if out, err := exec.Command("cmd", "/c", "mklink", "/J", link, target).CombinedOutput(); err != nil {
+			t.Fatalf("mklink /J: %v: %s", err, out)
+		}
+
+		return
+	}
+
+	if err := os.Symlink(target, link); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func homeAt(path string) func(string) string {
+	return func(k string) string {
+		if k == EnvHome {
+			return path
+		}
+
+		return ""
+	}
+}
+
+// TestResolveRefusesTheDefaultHomeUnderAnotherName: the barrier compares folders, not strings, so another
+// spelling of the default workspace, a link to it or a link to the folder that holds it is refused too.
+func TestResolveRefusesTheDefaultHomeUnderAnotherName(t *testing.T) {
+	home := tempHome(t)
+	asBuild(t, "")
+
+	def := filepath.Join(home, defaultDir)
+	parentLink := filepath.Join(t.TempDir(), "home-link")
+	linkTo(t, home, parentLink)
+
+	// The default does not exist yet: only the folder that holds it can be compared.
+	for _, p := range []string{def + string(filepath.Separator), filepath.Join(parentLink, defaultDir)} {
+		if _, err := Resolve(homeAt(p)); err == nil {
+			t.Errorf("STUARTY_HOME=%s opened the default home before it existed", p)
+		}
+	}
+
+	if err := os.Mkdir(def, 0o700); err != nil {
+		t.Fatal(err)
+	}
+
+	link := filepath.Join(t.TempDir(), "ws-link")
+	linkTo(t, def, link)
+	t.Chdir(home) // for the relative name
+
+	names := []string{link, filepath.Join(parentLink, defaultDir), "." + string(filepath.Separator) + defaultDir}
+	if runtime.GOOS == "windows" {
+		names = append(names, strings.ToUpper(def), def+".")
+	}
+
+	for _, p := range names {
+		if _, err := Resolve(homeAt(p)); err == nil {
+			t.Errorf("STUARTY_HOME=%s opened the default home", p)
+		}
+	}
+}
+
+// TestResolveRefusesTheFormerFolderNamedExplicitly: the folder of the former name is the workspace of an
+// installed Vukem Video; a build that is not a release does not migrate it through STUARTY_HOME either.
+func TestResolveRefusesTheFormerFolderNamedExplicitly(t *testing.T) {
+	home := tempHome(t)
+	asBuild(t, "")
+	former := makeFormer(t, home)
+
+	if _, err := Resolve(homeAt(former)); err == nil {
+		t.Fatal("STUARTY_HOME naming the former folder opened it")
 	}
 }
 
