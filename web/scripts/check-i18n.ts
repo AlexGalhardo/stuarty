@@ -365,6 +365,8 @@ const SAME_IN_PORTUGUESE: ReadonlySet<string> = new Set([
 	"ui.nav.section.skills",
 	"ui.nav.section.prompts",
 	"ui.nav.section.webhooks",
+	// A sentence that is only a placeholder and a full stop reads the same in both languages.
+	"ui.dashboard.home.summary.only",
 	// Names of networks and placements are brand names: they are not translated (VV-260).
 	"ui.projects.briefing.option.platform.youtube-shorts",
 	"ui.projects.briefing.option.platform.tiktok",

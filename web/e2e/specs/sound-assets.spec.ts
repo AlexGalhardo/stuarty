@@ -27,9 +27,7 @@ test.describe("Sound Assets", () => {
 		await expect(
 			page.getByRole("heading", { name: "Sounds", level: 1 }),
 		).toBeVisible();
-		await expect(
-			page.getByRole("link", { name: "Sounds" }),
-		).toBeVisible();
+		await expect(page.getByRole("link", { name: "Sounds" })).toBeVisible();
 
 		const form = page.getByTestId("sound-import");
 		await form.getByLabel("Project").selectOption({

@@ -8,6 +8,7 @@
     },
     "workflow": {
       "label": "Path to publication",
+      "stage": "Stage {number} of {total}: {step}",
       "not_reported": "Not reported",
       "optional": "Optional",
       "who": "Who does it",
@@ -45,11 +46,11 @@
           "hint": "The text itself."
         },
         "recording": {
-          "title": "Recording",
+          "title": "Footage",
           "hint": "Record or import the footage."
         },
         "editing": {
-          "title": "Editing",
+          "title": "Edit",
           "hint": "Cut, arrange and style the media."
         },
         "finishing": {
@@ -65,7 +66,7 @@
           "hint": "You approve what is about to go out."
         },
         "publication": {
-          "title": "Publication",
+          "title": "Publishing",
           "hint": "Send it to the place you connected."
         }
       },
@@ -312,31 +313,86 @@
             "description": "Each step says who does it, with which tool and what it costs."
           }
         },
+        "greeting": {
+          "morning": "Good morning.",
+          "morning_named": "Good morning, {name}.",
+          "afternoon": "Good afternoon.",
+          "afternoon_named": "Good afternoon, {name}.",
+          "evening": "Good evening.",
+          "evening_named": "Good evening, {name}."
+        },
+        "summary": {
+          "progress": {
+            "one": "One production in progress",
+            "other": "{count} productions in progress"
+          },
+          "requests": {
+            "one": "{count} request waiting for your yes",
+            "other": "{count} requests waiting for your yes"
+          },
+          "both": "{progress} and {requests}.",
+          "only": "{part}."
+        },
         "progress": {
-          "title": "Continue where you stopped",
+          "title": "In progress",
+          "at": "You are at {step}. {hint}",
           "next": "Next step: {step}",
           "no_next": "No open step. Open the project to see where it stands.",
           "no_workflow": "The path of this project could not be read now.",
-          "open": "Open the project",
-          "open_named": "Open {name}"
+          "open": "Open project"
+        },
+        "continue": {
+          "briefing": "Continue the briefing",
+          "choice": "Choose what to make",
+          "script": "Continue the script",
+          "writing": "Continue writing",
+          "recording": "Continue with the footage",
+          "editing": "Continue editing",
+          "finishing": "Continue finishing",
+          "review": "Continue the review",
+          "approval": "Go to approvals",
+          "publication": "Go to publishing"
+        },
+        "studio": {
+          "title": "Your studio",
+          "projects": {
+            "title": "Projects",
+            "body": "Brief, texts, media and pieces."
+          },
+          "writing": {
+            "title": "Writing",
+            "body": "Scripts, captions and blog."
+          },
+          "assets": {
+            "title": "Assets",
+            "body": "Videos, images, sounds and brand."
+          },
+          "agent": {
+            "title": "Agent",
+            "body": "Skills, prompts and memory."
+          },
+          "publish": {
+            "title": "Publish",
+            "body": "Calendar and approvals."
+          },
+          "connections": {
+            "title": "Connections",
+            "body": "Networks and AI, with your key."
+          }
         },
         "waiting": {
           "title": "Waiting for you",
-          "approvals": {
-            "one": "{count} approval waits for your decision.",
-            "other": "{count} approvals wait for your decision."
+          "badge": "Waiting for you",
+          "open_queue": "Open queue",
+          "more": {
+            "one": "And {count} more request in the queue.",
+            "other": "And {count} more requests in the queue."
           },
-          "review": "Review in the approval queue",
-          "step": "The step {step} waits for you.",
+          "promise": "Nothing leaves without your yes.",
           "nothing": "Nothing waits for you now."
         },
         "recent": {
-          "title": "Your projects",
-          "all": "See all projects"
-        },
-        "sections": {
-          "title": "Sections",
-          "description": "Everything Stuarty can do, one section at a time."
+          "title": "Other projects"
         }
       },
       "empty": {
@@ -1131,7 +1187,7 @@
         "dismiss": "Dismiss the error"
       },
       "index": {
-        "title": "Edit Image",
+        "title": "Image editor",
         "new": "New image",
         "name": "Name",
         "name_placeholder": "Untitled",

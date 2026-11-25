@@ -244,7 +244,7 @@ test.describe("asset-library", () => {
 		await page.addInitScript(() => localStorage.setItem("vv.lang", "pt-BR"));
 		await page.goto("/visual-assets");
 		await expect(
-			page.getByRole("heading", { name: "Recursos Visuais", level: 1 }),
+			page.getByRole("heading", { name: "Visuais", level: 1 }),
 		).toBeVisible();
 		await expect(page.getByLabel("Buscar")).toBeVisible();
 		await expect(page.getByLabel("Só reutilizáveis")).toBeVisible();

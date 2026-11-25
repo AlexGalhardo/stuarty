@@ -6,18 +6,19 @@ import { createClient } from "../../editor/api/client";
 import { HttpTransport } from "../../editor/api/http";
 import type { Workflow } from "../../workflow/types";
 
-// What the home draws. The service says every part of it: the projects, the workflow of the one in progress and
-// how many approvals wait for a person. Nothing here decides which step is next.
+// How many projects get their workflow read: the one the home continues and the ones it lists beside it.
+export const DESCRIBED = 6;
+
+// What the home draws. The service says every part of it: the projects and the workflow of each one the home
+// shows. Nothing here decides which step is next; what waits for a person is the inbox the shell already holds.
 export type HomeState =
 	| { state: "loading" }
 	| { state: "failed"; failure: Failure }
 	| {
 			state: "ready";
 			projects: ProjectSummary[];
-			// The first project the service lists, with its workflow; null when the workflow could not be read.
-			workflow: Workflow | null;
-			// Approvals waiting for a person; null when the queue could not be read.
-			approvals: number | null;
+			// The workflow of each of the first projects the service lists, by project id; null when it could not be read.
+			workflows: Record<string, Workflow | null>;
 	  };
 
 export function useHome(): HomeState {
@@ -28,23 +29,20 @@ export function useHome(): HomeState {
 		const api = createClient(new HttpTransport("/api/v1"));
 		(async () => {
 			const list = await api.listProjects();
-			const first = list.projects[0];
-			const [described, queue] = await Promise.allSettled([
-				first === undefined
-					? Promise.resolve(null)
-					: api.describeProject(first.id),
-				api.listApprovals("pending"),
-			]);
+			const shown = list.projects.slice(0, DESCRIBED);
+			const described = await Promise.allSettled(
+				shown.map((p) => api.describeProject(p.id)),
+			);
 			if (!live) return;
-			setHome({
-				state: "ready",
-				projects: list.projects,
-				workflow:
-					described.status === "fulfilled"
-						? (described.value?.workflow ?? null)
-						: null,
-				approvals: queue.status === "fulfilled" ? queue.value.total : null,
+			const workflows: Record<string, Workflow | null> = {};
+			shown.forEach((project, index) => {
+				const result = described[index];
+				workflows[project.id] =
+					result?.status === "fulfilled"
+						? (result.value.workflow ?? null)
+						: null;
 			});
+			setHome({ state: "ready", projects: list.projects, workflows });
 		})().catch((error: unknown) => {
 			if (live) setHome({ state: "failed", failure: failureOf(error) });
 		});

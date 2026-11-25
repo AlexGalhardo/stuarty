@@ -1,4 +1,5 @@
 import type { Page } from "@playwright/test";
+import { seedApprovals } from "../support/approvals";
 import { caller, expect, projectBody, test } from "./helpers";
 
 // Epic 79: the home says what to do next. With no project it teaches the first step and names no single format;
@@ -62,7 +63,7 @@ test.describe("home trail", () => {
 
 		const progress = page.getByTestId("home-progress");
 		await expect(progress).toBeVisible();
-		await expect(progress).toContainText("Text");
+		await expect(progress.locator('[data-kind="text"]')).toBeVisible();
 		const steps = progress.getByRole("list", { name: "Path to publication" });
 		await expect(steps.getByRole("listitem")).toHaveCount(5);
 		for (const title of [
@@ -70,17 +71,51 @@ test.describe("home trail", () => {
 			"Writing",
 			"Review",
 			"Approval",
-			"Publication",
+			"Publishing",
 		]) {
 			await expect(steps).toContainText(title);
 		}
 		await expect(steps).not.toContainText("Script");
-		await expect(steps).not.toContainText("Editing");
-		await expect(page.getByTestId("home-next")).toContainText("Next step:");
+		await expect(steps).not.toContainText("Edit");
+		await expect(page.getByTestId("home-at")).toContainText("You are at");
 		await expect(page.getByTestId("home-waiting")).toBeVisible();
 
-		await progress.getByRole("link", { name: /Open the project/ }).click();
+		await progress.getByRole("link", { name: /Open project/ }).click();
 		await expect(page).toHaveURL(new RegExp(`/projects/${id}$`));
+	});
+
+	test("the home greets the person by name in the morning and lists what waits as rows", async ({
+		page,
+	}) => {
+		const stamp = Date.now();
+		seedApprovals([
+			`Publish the first post ${stamp}`,
+			`Publish the second post ${stamp}`,
+		]);
+		await page.clock.setFixedTime(new Date(2026, 10, 24, 9, 30));
+		await page.goto("/");
+
+		await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+			"Good morning, Stuart.",
+		);
+		const waiting = page.getByTestId("home-waiting");
+		await expect(waiting.getByTestId("home-waiting-row").first()).toBeVisible();
+		await expect(waiting).toContainText(`Publish the second post ${stamp}`);
+		await expect(waiting).toContainText(`Publish the first post ${stamp}`);
+		await expect(
+			waiting.getByRole("link", { name: "Open queue" }),
+		).toHaveAttribute("href", "/approvals");
+		await expect(page.getByTestId("home-studio")).toContainText("Your studio");
+		for (const area of [
+			"projects",
+			"writing",
+			"assets",
+			"agent",
+			"publish",
+			"connections",
+		]) {
+			await expect(page.getByTestId(`home-area-${area}`)).toBeVisible();
+		}
 	});
 
 	test("a video project shows the steps of a video", async ({
@@ -99,7 +134,7 @@ test.describe("home trail", () => {
 		const steps = page
 			.getByTestId("home-progress")
 			.getByRole("list", { name: "Path to publication" });
-		for (const title of ["Script", "Recording", "Editing", "Finishing"]) {
+		for (const title of ["Script", "Footage", "Edit", "Finishing"]) {
 			await expect(steps).toContainText(title);
 		}
 	});

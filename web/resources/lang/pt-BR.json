@@ -8,6 +8,7 @@
     },
     "workflow": {
       "label": "Caminho até a publicação",
+      "stage": "Etapa {number} de {total}: {step}",
       "not_reported": "Não informado",
       "optional": "Opcional",
       "who": "Quem faz",
@@ -53,7 +54,7 @@
           "hint": "Corte, organize e estilize a mídia."
         },
         "finishing": {
-          "title": "Finalização",
+          "title": "Acabamento",
           "hint": "Exporte o resultado."
         },
         "review": {
@@ -312,31 +313,86 @@
             "description": "Cada etapa diz quem faz, com qual ferramenta e quanto custa."
           }
         },
+        "greeting": {
+          "morning": "Bom dia.",
+          "morning_named": "Bom dia, {name}.",
+          "afternoon": "Boa tarde.",
+          "afternoon_named": "Boa tarde, {name}.",
+          "evening": "Boa noite.",
+          "evening_named": "Boa noite, {name}."
+        },
+        "summary": {
+          "progress": {
+            "one": "Uma produção em andamento",
+            "other": "{count} produções em andamento"
+          },
+          "requests": {
+            "one": "{count} pedido esperando o seu sim",
+            "other": "{count} pedidos esperando o seu sim"
+          },
+          "both": "{progress} e {requests}.",
+          "only": "{part}."
+        },
         "progress": {
-          "title": "Continue de onde parou",
+          "title": "Em andamento",
+          "at": "Você está em {step}. {hint}",
           "next": "Próxima etapa: {step}",
           "no_next": "Nenhuma etapa aberta. Abra o projeto para ver em que ponto ele está.",
           "no_workflow": "Não foi possível ler agora o caminho deste projeto.",
-          "open": "Abrir o projeto",
-          "open_named": "Abrir {name}"
+          "open": "Abrir projeto"
+        },
+        "continue": {
+          "briefing": "Continuar o briefing",
+          "choice": "Escolher o que criar",
+          "script": "Continuar o roteiro",
+          "writing": "Continuar a escrita",
+          "recording": "Continuar a gravação",
+          "editing": "Continuar a edição",
+          "finishing": "Continuar o acabamento",
+          "review": "Continuar a revisão",
+          "approval": "Ir para as aprovações",
+          "publication": "Ir para a publicação"
+        },
+        "studio": {
+          "title": "Seu estúdio",
+          "projects": {
+            "title": "Projetos",
+            "body": "Briefing, textos, mídia e peças."
+          },
+          "writing": {
+            "title": "Escrita",
+            "body": "Roteiros, legendas e blog."
+          },
+          "assets": {
+            "title": "Recursos",
+            "body": "Vídeos, imagens, sons e marca."
+          },
+          "agent": {
+            "title": "Agente",
+            "body": "Skills, prompts e memória."
+          },
+          "publish": {
+            "title": "Publicar",
+            "body": "Calendário e aprovações."
+          },
+          "connections": {
+            "title": "Conexões",
+            "body": "Redes e IA, com a sua chave."
+          }
         },
         "waiting": {
-          "title": "Esperando você",
-          "approvals": {
-            "one": "{count} aprovação espera a sua decisão.",
-            "other": "{count} aprovações esperam a sua decisão."
+          "title": "Esperando por você",
+          "badge": "Espera você",
+          "open_queue": "Abrir fila",
+          "more": {
+            "one": "E mais {count} pedido na fila.",
+            "other": "E mais {count} pedidos na fila."
           },
-          "review": "Revisar na fila de aprovação",
-          "step": "A etapa {step} espera por você.",
+          "promise": "Nada sai sem o seu sim.",
           "nothing": "Nada espera por você agora."
         },
         "recent": {
-          "title": "Seus projetos",
-          "all": "Ver todos os projetos"
-        },
-        "sections": {
-          "title": "Seções",
-          "description": "Tudo o que o Stuarty faz, uma seção por vez."
+          "title": "Outros projetos"
         }
       },
       "empty": {
@@ -1131,7 +1187,7 @@
         "dismiss": "Dispensar o erro"
       },
       "index": {
-        "title": "Editar imagem",
+        "title": "Editor de imagem",
         "new": "Nova imagem",
         "name": "Nome",
         "name_placeholder": "Sem título",
