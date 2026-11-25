@@ -31,6 +31,54 @@ export default function TranscriptReview(): ReactNode {
 					{state.problem}
 				</p>
 			)}
+			<div className="flex flex-col gap-2 border-b border-border pb-3">
+				<p
+					className="flex items-center justify-between text-sm"
+					aria-live="polite"
+				>
+					<span className="text-muted-foreground">
+						{t("ui.editor.transcript_review.selected")}
+					</span>
+					<span className="font-medium tabular-nums">
+						{t("ui.editor.transcript.selected", {
+							count: state.selectedCount,
+						})}
+					</span>
+				</p>
+				<Button
+					type="button"
+					variant="outline"
+					disabled={!state.canEdit || state.busy || state.selectedCount === 0}
+					onClick={() => void state.deleteSelected()}
+				>
+					<Scissors aria-hidden="true" />
+					{t("ui.editor.transcript.delete_selected")}
+				</Button>
+				<span className="flex items-center gap-2 text-xs">
+					<Checkbox
+						id={state.snapId}
+						checked={state.snap}
+						onCheckedChange={(on) => state.setSnap(on === true)}
+					/>
+					<label htmlFor={state.snapId}>{t("ui.editor.transcript.snap")}</label>
+				</span>
+				{state.snapped !== null &&
+					state.snapped.revision === state.revision && (
+						<p
+							className="text-xs text-muted-foreground"
+							data-snap-result
+							aria-live="polite"
+						>
+							{state.snapped.summary.missing
+								? t("ui.editor.transcript.snap_missing")
+								: t("ui.editor.transcript.snap_result", {
+										moved: state.snapped.summary.moved,
+										inside: state.snapped.summary.inside,
+										none: state.snapped.summary.none,
+									})}
+						</p>
+					)}
+			</div>
 			{fillers === null ? (
 				<Button
 					type="button"
@@ -55,11 +103,11 @@ export default function TranscriptReview(): ReactNode {
 						</p>
 					) : (
 						<>
-							<ul className="flex flex-col gap-2">
+							<ul className="flex flex-col">
 								{fillers.suggestions.map((suggestion, i) => (
 									<li
 										key={`${suggestion.from_word}-${suggestion.to_word}`}
-										className="flex items-center gap-2 text-sm"
+										className="grid min-h-11 grid-cols-[20px_1fr_auto_24px] items-center gap-2 border-b border-border text-[15px] last:border-b-0"
 									>
 										<Checkbox
 											checked={state.checked.has(i)}
@@ -84,6 +132,9 @@ export default function TranscriptReview(): ReactNode {
 										>
 											<UntrustedText>{suggestion.text}</UntrustedText>
 										</span>
+										<span className="text-end font-mono text-xs text-muted-foreground">
+											{suggestion.to_word - suggestion.from_word + 1}
+										</span>
 									</li>
 								))}
 							</ul>
@@ -100,6 +151,7 @@ export default function TranscriptReview(): ReactNode {
 							</p>
 							<Button
 								type="button"
+								className="min-h-10"
 								disabled={
 									!state.canEdit || state.busy || state.checked.size === 0
 								}

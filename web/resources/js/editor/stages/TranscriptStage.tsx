@@ -1,9 +1,8 @@
-import { FileText, Scissors, X } from "lucide-react";
-import { type ReactNode, useState } from "react";
+import { FileText, X } from "lucide-react";
+import { Fragment, type ReactNode, useState } from "react";
 
 import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { useT } from "@/lib/i18n";
 import { formatTime, fpsOf } from "../commands/units";
 import { isSelected } from "../inspector/panels/transcriptPanelModel";
@@ -91,7 +90,7 @@ export default function TranscriptStage(): ReactNode {
 						<p className="sr-only">{t("ui.editor.transcript.hint")}</p>
 						<fieldset
 							dir="auto"
-							className="m-0 flex min-w-0 flex-col gap-3 border-0 p-0 text-sm"
+							className="m-0 flex min-w-0 flex-col gap-3 border-0 p-0 text-[13px]"
 						>
 							<legend className="sr-only">
 								{t("ui.editor.transcript.words")}
@@ -101,27 +100,29 @@ export default function TranscriptStage(): ReactNode {
 									<span className="w-12 shrink-0 pt-1 font-mono text-xs text-muted-foreground tabular-nums">
 										{formatTime(line.start, fps, "timecode").slice(0, 5)}
 									</span>
-									<div className="flex min-w-0 flex-wrap gap-x-1 gap-y-1.5 leading-7">
+									<div className="min-w-0 text-[13px] leading-7">
 										{line.words.map((word) => {
 											const cut = word.ranges.length === 0;
 											const on = isSelected(state.selection, word.index);
 											const mark = marks.get(word.index);
 											const boxed = mark !== undefined && kinds[mark];
 											return (
-												<button
-													key={word.index}
-													type="button"
-													data-word-index={word.index}
-													data-cut={cut ? "true" : undefined}
-													data-mark={boxed ? mark : undefined}
-													aria-pressed={on}
-													className={`rounded-md border px-1 hover:bg-surface-hover ${boxed ? KIND_CLASS[mark] : "border-transparent"} ${on ? "bg-surface-selected text-foreground" : ""} ${cut ? "text-muted-foreground line-through" : ""}`}
-													onClick={(event) =>
-														state.selectWord(word.index, event.shiftKey)
-													}
-												>
-													<UntrustedText>{word.text}</UntrustedText>
-												</button>
+												<Fragment key={word.index}>
+													{" "}
+													<button
+														type="button"
+														data-word-index={word.index}
+														data-cut={cut ? "true" : undefined}
+														data-mark={boxed ? mark : undefined}
+														aria-pressed={on}
+														className={`inline rounded-md border px-0.5 hover:bg-surface-hover ${boxed ? KIND_CLASS[mark] : "border-transparent"} ${on ? "bg-surface-selected text-foreground" : ""} ${cut ? "text-muted-foreground line-through" : ""}`}
+														onClick={(event) =>
+															state.selectWord(word.index, event.shiftKey)
+														}
+													>
+														<UntrustedText>{word.text}</UntrustedText>
+													</button>
+												</Fragment>
 											);
 										})}
 									</div>
@@ -130,50 +131,6 @@ export default function TranscriptStage(): ReactNode {
 						</fieldset>
 					</>
 				)}
-			</div>
-			<div className="flex shrink-0 flex-col gap-2 border-t border-border px-3 py-2">
-				<div className="flex flex-wrap items-center gap-2">
-					<Button
-						type="button"
-						size="sm"
-						disabled={!state.canEdit || state.busy || state.selectedCount === 0}
-						onClick={() => void state.deleteSelected()}
-					>
-						<Scissors aria-hidden="true" />
-						{t("ui.editor.transcript.delete_selected")}
-					</Button>
-					<span className="text-xs text-muted-foreground" aria-live="polite">
-						{t("ui.editor.transcript.selected", {
-							count: state.selectedCount,
-						})}
-					</span>
-					<span className="ml-auto flex items-center gap-2 text-xs">
-						<Checkbox
-							id={state.snapId}
-							checked={state.snap}
-							onCheckedChange={(on) => state.setSnap(on === true)}
-						/>
-						<label htmlFor={state.snapId}>
-							{t("ui.editor.transcript.snap")}
-						</label>
-					</span>
-				</div>
-				{state.snapped !== null &&
-					state.snapped.revision === state.revision && (
-						<p
-							className="text-xs text-muted-foreground"
-							data-snap-result
-							aria-live="polite"
-						>
-							{state.snapped.summary.missing
-								? t("ui.editor.transcript.snap_missing")
-								: t("ui.editor.transcript.snap_result", {
-										moved: state.snapped.summary.moved,
-										inside: state.snapped.summary.inside,
-										none: state.snapped.summary.none,
-									})}
-						</p>
-					)}
 			</div>
 		</section>
 	);

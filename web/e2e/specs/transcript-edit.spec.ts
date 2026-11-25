@@ -102,14 +102,14 @@ test.describe("edit by text @chromium-only", () => {
 		// "new world" is the sentence: select its two words and delete them.
 		await words.nth(2).click();
 		await words.nth(3).click({ modifiers: ["Shift"] });
-		await expect(panel.getByText("2 words selected")).toBeVisible();
-		await panel.getByRole("button", { name: "Delete selected words" }).click();
+		await expect(review.getByText("2 words selected")).toBeVisible();
+		await review.getByRole("button", { name: "Delete selected words" }).click();
 		await expect(words.nth(2)).toHaveAttribute("data-cut", "true");
 		await expect(words.nth(3)).toHaveAttribute("data-cut", "true");
 		await expect(words.nth(1)).not.toHaveAttribute("data-cut", "true");
 
 		// Epic 89: the panel says where the edges of the cut went, as the service reported it.
-		await expect(panel.locator("[data-snap-result]")).toContainText(
+		await expect(review.locator("[data-snap-result]")).toContainText(
 			"Cut edges:",
 		);
 
