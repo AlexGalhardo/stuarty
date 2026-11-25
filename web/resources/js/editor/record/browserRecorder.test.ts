@@ -385,16 +385,24 @@ describe("a recording the browser makes", () => {
 	});
 
 	test("the clock moves while recording and stops at the stop", async () => {
-		const w = world();
-		const r = await startBrowserRecording(
-			setup(w, choice({ microphone: false })),
-		);
-		await new Promise((resolve) => setTimeout(resolve, 60));
-		expect(r.state().elapsedMs).toBeGreaterThan(0);
-		const end = await r.stop();
-		const at = end.elapsedMs;
-		await new Promise((resolve) => setTimeout(resolve, 40));
-		expect(r.state().elapsedMs).toBe(at);
+		// the timers and the performance clock are the test's, so no real time passes
+		vi.useFakeTimers({
+			toFake: ["setInterval", "clearInterval", "performance"],
+		});
+		try {
+			const w = world();
+			const r = await startBrowserRecording(
+				setup(w, choice({ microphone: false })),
+			);
+			await vi.advanceTimersByTimeAsync(2_000);
+			expect(r.state().elapsedMs).toBeGreaterThanOrEqual(1_750);
+			const end = await r.stop();
+			const at = end.elapsedMs;
+			await vi.advanceTimersByTimeAsync(5_000);
+			expect(r.state().elapsedMs).toBe(at);
+		} finally {
+			vi.useRealTimers();
+		}
 	});
 
 	test("stopping twice is one stop", async () => {
