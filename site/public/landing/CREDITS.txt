@@ -1,5 +1,5 @@
-Screenshots of Stuarty, captured on 2026-11-24 with a headless Chromium from a local `stuarty serve` of the repository
-(release branch v0.55.0, whose build reports v0.54.0 in the sidebar), on a throwaway demo workspace made for the capture.
+Screenshots of Stuarty, captured on 2026-11-25 with a headless Chromium from a local `stuarty serve` of the repository
+(release branch v0.56.0, whose build reports v0.55.0 in the sidebar), on a throwaway demo workspace made for the capture.
 Every image below is made again by site/scripts/capture-landing.ts, which seeds the demo with the CLI and the HTTP API
 of the product, takes the screens in both themes and encodes them (epic 95); the landing page and its alternative pages
 use the same files.
@@ -18,23 +18,23 @@ holds no logo, testimonial or metric. The agent profiles and the home folder sho
 captured them; no account, key or token of any user appears.
 
 Image                Screen                              Route                                    Captured
-dashboard            Home, a project in progress         /                                        2026-11-24
-projects             Projects                            /projects                                2026-11-24
-project-brief        Briefing of a new project           /projects, New project, video, Continue  2026-11-24
-writing              Write, a script selected            /write                                   2026-11-24
-video-editor         Video editor, a clip selected       /editor/<project>                        2026-11-24
-image-editor         Image editor, a layer selected      /edit-image/<image>                      2026-11-24
-publish-calendar     Publish, month calendar with posts  /publish                                 2026-11-24
-agent-chat           Agent chat panel on a project       /projects/<project>, Open chat           2026-11-24
-visual-assets        Visual Assets                       /visual-assets                           2026-11-24
-video-assets         Video Assets                        /video-assets                            2026-11-24
-skills               Skills, one selected                /skills                                  2026-11-24
-prompts              Prompts, one selected               /prompts                                 2026-11-24
-memory               Memory, one note selected           /memory                                  2026-11-24
-connections          Connections                         /connections                             2026-11-24
-approvals            Approvals, requests waiting         /approvals                               2026-11-24
-project-trail        Path of a video project             /projects/<project>                      2026-11-24
-text-trail           Path of a text project              /projects/<project>                      2026-11-24
-home-mobile          Home at 390 px wide                 /                                        2026-11-24
+dashboard            Home, a project in progress         /                                        2026-11-25
+projects             Projects                            /projects                                2026-11-25
+project-brief        Briefing of a new project           /projects, New project, video, Continue  2026-11-25
+writing              Writing, a script selected          /write                                   2026-11-25
+video-editor         Video editor, a clip selected       /editor/<project>                        2026-11-25
+image-editor         Image editor, a layer selected      /edit-image/<image>                      2026-11-25
+publish-calendar     Publish, month calendar with posts  /publish                                 2026-11-25
+agent-chat           Agent chat panel on a project       /projects/<project>, Open chat           2026-11-25
+visual-assets        Images                              /visual-assets                           2026-11-25
+video-assets         Videos                              /video-assets                            2026-11-25
+skills               Skills, one selected                /skills                                  2026-11-25
+prompts              Prompts, one selected               /prompts                                 2026-11-25
+memory               Memory, one note selected           /memory                                  2026-11-25
+connections          Connections                         /connections                             2026-11-25
+approvals            Approvals, requests waiting         /approvals                               2026-11-25
+project-trail        Path of a video project             /projects/<project>                      2026-11-25
+text-trail           Path of a text project              /projects/<project>                      2026-11-25
+home-mobile          Home at 390 px wide                 /                                        2026-11-25
 
 Nothing from outside the repository is used by the landing page: no external fonts, images, scripts or trackers.

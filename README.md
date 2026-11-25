@@ -83,7 +83,7 @@ Scripts, copy, captions and blog posts. Every save is a revision you can compare
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="site/public/landing/writing-960.webp">
-    <img src="site/public/landing/writing-light-960.webp" alt="The Write section: a voice-over script in Markdown, with its revision and its estimated reading time." width="860">
+    <img src="site/public/landing/writing-light-960.webp" alt="The Writing section: a voice-over script in Markdown, with its revision and its estimated reading time." width="860">
   </picture>
 </p>
 
@@ -96,7 +96,7 @@ Import footage, music and voice-overs once and reuse them in any project. The li
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="site/public/landing/video-assets-960.webp">
-    <img src="site/public/landing/video-assets-light-960.webp" alt="Video Assets: the footage, music and voice-overs of the workspace, ready to reuse in any project." width="860">
+    <img src="site/public/landing/video-assets-light-960.webp" alt="Videos: the footage, music and voice-overs of the workspace, ready to reuse in any project." width="860">
   </picture>
 </p>
 

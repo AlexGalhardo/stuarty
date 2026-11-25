@@ -99,13 +99,13 @@ export const screens = {
 	},
 	writing: {
 		src: "/landing/writing",
-		alt: "The Write section: the script of the video project open, with its words, its reading time, its revision and the path of the project.",
+		alt: "The Writing section: the script of the video project open, with its words, its reading time, its revision and the path of the project.",
 		width: 1600,
 		height: 1000,
 	},
 	videoAssets: {
 		src: "/landing/video-assets",
-		alt: "Video Assets: the footage of the workspace, with where each file came from, its tags and when it was added.",
+		alt: "Videos: the footage of the workspace, with where each file came from, its tags and when it was added.",
 		width: 1600,
 		height: 1000,
 	},
