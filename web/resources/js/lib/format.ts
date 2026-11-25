@@ -33,7 +33,8 @@ export function formatAgo(
 		numeric: "always",
 		style: "narrow",
 	});
-	if (seconds < 60) return rtf.format(0, "minute");
+	// -0 reads "0m ago": a plain 0 would read "in 0m".
+	if (seconds < 60) return rtf.format(-0, "minute");
 	const minutes = Math.floor(seconds / 60);
 	if (minutes < 60) return rtf.format(-minutes, "minute");
 	const hours = Math.floor(minutes / 60);
