@@ -9,12 +9,15 @@
 // 960 px with the pinned LGPL FFmpeg. Nothing is drawn: every picture is a screenshot of the UI. The invented content
 // names no real person, brand or number. Playwright is the one of web/ (run `bun install` there first).
 //
-// Environment: STUARTY_FFMPEG and STUARTY_FFPROBE name the FFmpeg of the demo media and of the encoding;
-// STUARTY_MASTER_KEY_FILE keeps the vault key of the throwaway workspace out of the user's home.
+// Environment: STUARTY_FFMPEG and STUARTY_FFPROBE name the FFmpeg of the demo media and of the encoding. Every other
+// STUARTY_* and VUKEM_VIDEO_* variable of the caller is dropped, so the CLI can never reach the user's own workspace or
+// server (STUARTY_URL, STUARTY_KEY, STUARTY_PROJECT), and the vault key of the throwaway workspace is a file inside
+// --work instead of an item of the operating system keychain.
 import { type ChildProcess, execFileSync, spawn } from "node:child_process";
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
-import { dirname, join, resolve } from "node:path";
+import { homedir } from "node:os";
+import { dirname, join, parse, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -41,7 +44,35 @@ const home = join(work, "ws");
 const media = join(work, "media");
 const shots = join(work, "shots");
 const base = `http://127.0.0.1:${port}`;
-const env = { ...process.env, STUARTY_HOME: home, STUARTY_ADDR: `127.0.0.1:${port}`, STUARTY_MIN_FREE_BYTES: "1" };
+
+// --work is emptied by the seed phase, so it must be a folder of its own: never a root, the home folder, the
+// repository, a workspace of the product or a folder that holds one, and never a folder with files this script did not
+// make.
+const MARKER = ".capture-landing";
+function checkWork(): void {
+	const inside = (child: string, parent: string): boolean => {
+		const r = relative(parent, child);
+		return r === "" || (!r.startsWith("..") && !parse(r).root);
+	};
+	const repo = resolve(here, "../..");
+	const workspaces = [join(homedir(), ".stuarty"), join(homedir(), ".vukem-video")];
+	if (work === parse(work).root || work === resolve(homedir()) || inside(repo, work) || workspaces.some((w) => inside(w, work) || inside(work, w))) {
+		throw new Error(`--work ${work} is not a throwaway folder: name an empty folder of its own`);
+	}
+	if (existsSync(work) && readdirSync(work).length > 0 && !existsSync(join(work, MARKER))) {
+		throw new Error(`--work ${work} holds files this script did not make: name an empty folder`);
+	}
+}
+
+const env: Record<string, string | undefined> = Object.fromEntries(
+	Object.entries(process.env).filter(([k]) => !/^(STUARTY|VUKEM_VIDEO)_/i.test(k) || k === "STUARTY_FFMPEG" || k === "STUARTY_FFPROBE"),
+);
+Object.assign(env, {
+	STUARTY_HOME: home,
+	STUARTY_ADDR: `127.0.0.1:${port}`,
+	STUARTY_MIN_FREE_BYTES: "1",
+	STUARTY_MASTER_KEY_FILE: join(work, "master.key"),
+});
 const PASSWORD = "Demo-Password-1!";
 const JSON_HEADERS = { "Content-Type": "application/json" };
 // A person decides and prices from the page, so the product expects what a browser sends from its own origin.
@@ -264,7 +295,7 @@ async function shoot(browser: import("@playwright/test").Browser, ids: { video: 
 		for (const shot of SHOTS) {
 			const mobile = shot.viewport !== undefined;
 			const context = await browser.newContext({ viewport: shot.viewport ?? { width: 1600, height: 1000 }, deviceScaleFactor: mobile ? 1600 / 390 : 1, baseURL: base, timezoneId: "UTC" });
-			await context.addInitScript((t) => localStorage.setItem("theme", t), theme);
+			await context.addInitScript((t: string) => localStorage.setItem("theme", t), theme);
 			const login = await context.request.post("/auth/account/login", { headers: JSON_HEADERS, data: { identity: "alex", password: PASSWORD } });
 			if (!login.ok()) throw new Error(`login: ${await login.text()}`);
 			const page = await context.newPage();
@@ -290,12 +321,14 @@ function encode(): void {
 }
 
 async function main(): Promise<void> {
+	checkWork();
 	const browser = await chromium.launch();
 	try {
 		const ids = join(work, "ids.json");
 		if (phase === "all" || phase === "seed") {
 			rmSync(work, { recursive: true, force: true });
 			mkdirSync(work, { recursive: true });
+			writeFileSync(join(work, MARKER), "A throwaway folder of site/scripts/capture-landing.ts; the seed phase empties it.\n");
 			makeMedia();
 			await startServer();
 			const context = await browser.newContext({ baseURL: base });
