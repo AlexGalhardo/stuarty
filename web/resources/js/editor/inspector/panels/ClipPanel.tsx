@@ -47,12 +47,13 @@ export default function ClipPanel({ itemId }: { itemId: string }): ReactNode {
 					id: "video",
 					content: (
 						<>
-							<ItemBasics itemId={itemId} />
+							<ItemBasics itemId={itemId} part="timing" />
 							<ItemVisual itemId={itemId} />
 							<FramingSection itemId={itemId} />
 							<ShadowSection itemId={itemId} />
 							<OutlineSection itemId={itemId} />
 							<ItemKeyframes itemId={itemId} />
+							<ItemBasics itemId={itemId} part="name" />
 						</>
 					),
 				},

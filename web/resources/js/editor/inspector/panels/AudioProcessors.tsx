@@ -98,7 +98,7 @@ function ProcessorCard({
 	const KindIcon = KIND_ICON[processor.kind] ?? AudioLines;
 	return (
 		<li
-			className="flex flex-col gap-2 rounded-lg border p-2"
+			className="flex flex-col gap-2 border-b border-border pb-3 last:border-b-0"
 			data-processor-index={index}
 			data-processor-kind={processor.kind}
 		>

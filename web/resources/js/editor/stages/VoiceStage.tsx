@@ -26,18 +26,18 @@ function Wave({
 			role="img"
 			aria-label={label}
 			data-wave={bars === null ? "empty" : "drawn"}
-			className={`flex h-16 items-center justify-center gap-[3px] ${className}`}
+			className={`mx-auto flex h-8 w-full max-w-[290px] items-center justify-center gap-px ${className}`}
 		>
 			{Array.from({ length: WAVE_COLUMNS }, (_, c) => {
 				const lo = bars?.[c * 2] ?? 0;
 				const hi = bars?.[c * 2 + 1] ?? 0;
-				const share = Math.max(0.06, Math.min(1, Math.max(hi, -lo)));
+				const share = Math.max(0.12, Math.min(1, Math.max(hi, -lo)));
 				return (
 					<span
 						// biome-ignore lint/suspicious/noArrayIndexKey: a fixed row of columns, never reordered
 						key={c}
 						aria-hidden="true"
-						className="w-[3px] rounded-full bg-current"
+						className="w-[2px] shrink-0 rounded-full bg-current"
 						style={{ height: `${share * 100}%` }}
 					/>
 				);
@@ -193,7 +193,7 @@ export default function VoiceStage({
 					</p>
 				)}
 			</div>
-			<p className="flex items-center gap-2 text-sm text-muted-foreground">
+			<p className="flex items-center gap-2 text-[13px] text-muted-foreground">
 				<Undo2 aria-hidden="true" className="size-4" />
 				{t("ui.editor.voice_stage.note")}
 			</p>
