@@ -97,7 +97,7 @@ describe("CenterBody", () => {
 		expect(html).toContain('data-kind="approval"');
 		expect(html).toContain("Publish this item to Instagram da Marina");
 		expect(html).toMatch(
-			/data-testid="notification-destination"[^>]*>[^<]*<span[^>]*>Instagram da Marina \/ Lancamento do curso</,
+			/data-testid="notification-destination"[^>]*>[^<]*<span[^>]*>Instagram da Marina</,
 		);
 		expect(html).toMatch(/data-testid="notification-cost"[^>]*>\$1\.50</);
 		expect(html).not.toMatch(/con_|prj_|publish\.upload/);

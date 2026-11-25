@@ -104,7 +104,7 @@ function Row({
 	onNavigate,
 }: {
 	item: Notification;
-	// where an approval goes, as the names the person gave; "" when the list does not hold them
+	// the connection an approval goes to, by the name the person gave; "" when the list does not hold it
 	place: string;
 	// the name of the project of the request (untrusted text), when the project list holds it
 	project: string | null;
@@ -319,7 +319,7 @@ export function CenterBody({
 							key={item.id}
 							item={item}
 							project={projectName(item.project_id)}
-							place={placeOf(item.destination, connectionName, projectName)}
+							place={placeOf(item.destination, connectionName, () => null)}
 							busy={busyId !== null}
 							disabledBy={privileged ? undefined : personOnlyId}
 							onAnswer={onAnswer}
