@@ -557,11 +557,11 @@ Scopes: `read`, `edit`, `media`, `render`, `admin` (SDD-000 §4). They are indep
 | `RecordingUploadBegin` | `POST /recordings/upload` | - | - | R | - | - | A privileged browser session only, checked before anything else (T-137); one open upload per actor and four on the workspace; audited |
 | `RecordingUploadChunk` | `PUT /recordings/{id}/upload/{track}/{index}` | - | - | R | - | - | A privileged browser session only, checked before anything else (T-137); the body is at most 16 MiB (route limit), in order, with a matching SHA-256, under the byte, disk and duration limits of SDD-025 section 18.4; the name of the stored part is made of the track and the index |
 | `RecordingUploadFinish` | `POST /recordings/{id}/finish` | - | - | R | - | - | A privileged browser session only (T-137); the file is assembled by FFmpeg under the policy of section 6 and checked like an import; audited |
-| `RecordingPrepare` | `POST /recordings/prepare` | - | - | R | - | - | Any caller with `media`; writes a row in `prepared` and never starts a helper (T-138); at most 20 per project |
-| `RecordingMark` | `POST /recordings/{id}/marks` | - | R | - | - | - | Any caller with `edit`; writes only the row of the recording (T-139); at most 500 marks |
-| `RecordingProposeCuts` | `POST /recordings/{id}/proposals` | - | R | - | - | - | Any caller with `edit`; changes no timeline (T-139); at most 5 pending proposals and 200 ranges |
-| `RecordingProposalDecide` | `POST /recordings/{id}/proposals/{proposal_id}/decide` | - | R | - | - | - | A privileged browser session only, checked before anything else (T-139); one batch of existing commands; audited |
-| `GET /api/v1/system/capture` | (route of the desktop shell) | - | - | - | - | R | The indicator of a running capture helper; `admin`, local mode only (T-140) |
+| `RecordingPrepare` | `POST /recordings/prepare` | - | - | R | - | - | Any caller with `media`; writes a row in `prepared` and never starts a helper (T-165); at most 20 per project |
+| `RecordingMark` | `POST /recordings/{id}/marks` | - | R | - | - | - | Any caller with `edit`; writes only the row of the recording (T-166); at most 500 marks |
+| `RecordingProposeCuts` | `POST /recordings/{id}/proposals` | - | R | - | - | - | Any caller with `edit`; changes no timeline (T-166); at most 5 pending proposals and 200 ranges |
+| `RecordingProposalDecide` | `POST /recordings/{id}/proposals/{proposal_id}/decide` | - | R | - | - | - | A privileged browser session only, checked before anything else (T-166); one batch of existing commands; audited |
+| `GET /api/v1/system/capture` | (route of the desktop shell) | - | - | - | - | R | The indicator of a running capture helper; `admin`, local mode only (T-167) |
 | `RecordingPlace` | `POST /recordings/{id}/place` | - | R | - | - | - | A recording that a person added only; one batch |
 | `CostSummary` | `GET /cost` | R | - | - | - | - | Numbers only; refused for a project-limited key |
 | `CostCeilingSet` | `PUT /cost/ceilings` | - | - | - | - | R | A privileged browser session only (T-50); audited |
@@ -852,7 +852,7 @@ The shipped third-party components, against their licence, pin and notice (NFR-0
 1. **Only a person starts it.** The service refuses `RecordingStart` with `E_PRIVILEGED_SESSION` before the host is called, so no process exists for an agent (ADR-0051, T-118).
 2. **The argv is a constant** (empty). Everything else travels on standard input as a bounded JSON line (SDD-025 section 6): the encoder is one of a closed list, the output path is absolute and ends in `.mp4`, the FFmpeg path is the one the server discovered. The helper builds the FFmpeg argument list from a template per encoder, so no user text reaches an FFmpeg argument, and starts FFmpeg with an empty environment.
 3. **No network.** The helper has no code that opens a connection and its dependencies are the approved list of ADR-0049; `cargo deny` runs on `capture/`.
-4. **The indicator.** The capture border of Windows is never turned off, and the host never starts the helper without the recording row in `prepared`, so the recording is always visible to the UI (T-121). The host also keeps a count of its live helper processes (`capturehost.Indicator`) that the desktop shell draws in the tray whether its window is open or not (SDD-025 section 19.4, T-140).
+4. **The indicator.** The capture border of Windows is never turned off, and the host never starts the helper without the recording row in `prepared`, so the recording is always visible to the UI (T-121). The host also keeps a count of its live helper processes (`capturehost.Indicator`) that the desktop shell draws in the tray whether its window is open or not (SDD-025 section 19.4, T-167).
 5. **A failure discards the child**: a malformed or oversized line, a missing `ready` or `started`, a silent child or an exit with no `finished`. Nothing is retried.
 6. **The file is fragmented MP4**, so a kill leaves a readable file, and the recovery at start-up settles every recording left open (T-121).
 

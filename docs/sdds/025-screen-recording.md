@@ -183,9 +183,9 @@ The threats of this domain, with their tests, are rows T-118 to T-122 of SDD-007
 | T-121 | A capture that nobody sees or stops, or a disk filled by it |
 | T-122 | Window titles in clear text in `db.sqlite` |
 | T-137 | A recording uploaded from a browser: who sends it, how much, in what order, under what name, and what it becomes (section 18) |
-| T-138 | An agent starts or resumes a capture by any path, through a prepared recording or through an approval rule (section 19.3) |
-| T-139 | An agent applies a cut, or a proposal changes a timeline before a person decides (section 19.5) |
-| T-140 | A capture that is on and cannot be seen (section 19.4) |
+| T-165 | An agent starts or resumes a capture by any path, through a prepared recording or through an approval rule (section 19.3) |
+| T-166 | An agent applies a cut, or a proposal changes a timeline before a person decides (section 19.5) |
+| T-167 | A capture that is on and cannot be seen (section 19.4) |
 
 ## 14. Measures
 
@@ -446,4 +446,4 @@ The table `recordings` gets three columns (SDD-005 section 5.18): `plan`, `marks
 
 ### 19.7 Tests
 
-`core/recording` tests the plan, the marks, the ranges and the batch planner. The service tests cover every operation and limit, the unchanged revision after a proposal, one batch and one undo after a decision, and a revision conflict. The security tests (T-138 to T-140 of SDD-007) cover: no sequence of agent operations over any surface starts the helper; each start-or-resume path (the five operations of 19.3) is refused for an agent; no rule shape authorizes a capture; an agent never decides a proposal; and the indicator follows a fake helper's process. The tray drawing is checked by hand (19.4).
+`core/recording` tests the plan, the marks, the ranges and the batch planner. The service tests cover every operation and limit, the unchanged revision after a proposal, one batch and one undo after a decision, and a revision conflict. The security tests (T-165 to T-167 of SDD-007) cover: no sequence of agent operations over any surface starts the helper; each start-or-resume path (the five operations of 19.3) is refused for an agent; no rule shape authorizes a capture; an agent never decides a proposal; and the indicator follows a fake helper's process. The tray drawing is checked by hand (19.4).
