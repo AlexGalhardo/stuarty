@@ -47,8 +47,19 @@ import TimelineTable from "./TimelineTable";
 
 // A text button keeps its label from the 2xl breakpoint up and collapses to its
 // icon below it; the name stays for assistive technology (design system 4.3.1).
-function Label({ children }: { children: ReactNode }): ReactNode {
-	return <span className="max-2xl:sr-only">{children}</span>;
+// The buttons the final design draws as text (trim, freeze, caption and the modes) keep it from `xl` (1280 px).
+function Label({
+	children,
+	from = "2xl",
+}: {
+	children: ReactNode;
+	from?: "xl" | "2xl";
+}): ReactNode {
+	return (
+		<span className={from === "xl" ? "max-xl:sr-only" : "max-2xl:sr-only"}>
+			{children}
+		</span>
+	);
 }
 
 // The timeline toolbar of SDD-012 section 6.4: the edit tools at the left, the
@@ -141,8 +152,8 @@ export default function TimelineToolbar({
 					title={tip(t("ui.editor.edit.trim_start"), "trim_start")}
 					onClick={() => void actions.trimToPlayhead("start")}
 				>
-					<StepForward aria-hidden="true" />
-					<Label>{t("ui.editor.edit.trim_start")}</Label>
+					<StepForward aria-hidden="true" className="xl:hidden" />
+					<Label from="xl">{t("ui.editor.edit.trim_start")}</Label>
 				</Button>
 				<Button
 					type="button"
@@ -152,8 +163,8 @@ export default function TimelineToolbar({
 					title={tip(t("ui.editor.edit.trim_end"), "trim_end")}
 					onClick={() => void actions.trimToPlayhead("end")}
 				>
-					<StepBack aria-hidden="true" />
-					<Label>{t("ui.editor.edit.trim_end")}</Label>
+					<StepBack aria-hidden="true" className="xl:hidden" />
+					<Label from="xl">{t("ui.editor.edit.trim_end")}</Label>
 				</Button>
 				<Button
 					type="button"
@@ -162,8 +173,8 @@ export default function TimelineToolbar({
 					disabled={!canCut}
 					onClick={() => void actions.freezeFrame()}
 				>
-					<Snowflake aria-hidden="true" />
-					<Label>{t("ui.editor.edit.freeze_frame")}</Label>
+					<Snowflake aria-hidden="true" className="xl:hidden" />
+					<Label from="xl">{t("ui.editor.edit.freeze_frame")}</Label>
 				</Button>
 				<Button
 					type="button"
@@ -185,7 +196,7 @@ export default function TimelineToolbar({
 					onClick={onAddCaption}
 				>
 					<Captions aria-hidden="true" />
-					<Label>{t("ui.editor.edit.caption")}</Label>
+					<Label from="xl">{t("ui.editor.edit.caption")}</Label>
 				</Button>
 				<span className="ml-2 font-mono text-xs text-muted-foreground tabular-nums">
 					{formatTime(playhead, fps, readTimeDisplay())}
@@ -206,7 +217,7 @@ export default function TimelineToolbar({
 					onClick={runtime.uiWriter.toggleSnap}
 				>
 					<Magnet aria-hidden="true" />
-					<Label>{t("ui.editor.timeline.snap")}</Label>
+					<Label from="xl">{t("ui.editor.timeline.snap")}</Label>
 				</Button>
 				<Button
 					type="button"
@@ -218,7 +229,7 @@ export default function TimelineToolbar({
 					onClick={() => void actions.toggleMagnet()}
 				>
 					<AlignHorizontalJustifyStart aria-hidden="true" />
-					<Label>{t("ui.editor.timeline.magnet")}</Label>
+					<Label from="xl">{t("ui.editor.timeline.magnet")}</Label>
 				</Button>
 				<Button
 					type="button"
@@ -230,7 +241,7 @@ export default function TimelineToolbar({
 					onClick={() => void actions.toggleLink()}
 				>
 					<Link aria-hidden="true" />
-					<Label>{t("ui.editor.timeline.link")}</Label>
+					<Label from="xl">{t("ui.editor.timeline.link")}</Label>
 				</Button>
 				<TimelineTable />
 				<Button
@@ -270,7 +281,7 @@ export default function TimelineToolbar({
 					onClick={onFit}
 				>
 					<Maximize2 aria-hidden="true" />
-					<Label>{t("ui.editor.timeline.fit")}</Label>
+					<Label from="xl">{t("ui.editor.timeline.fit")}</Label>
 				</Button>
 			</div>
 		</div>
