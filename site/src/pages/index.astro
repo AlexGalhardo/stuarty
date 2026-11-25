@@ -83,8 +83,10 @@ const stepSizes = "(min-width: 64rem) 45rem, 100vw";
 					{
 						transparency.points.map((p) => (
 							<li class="l-note-item" data-reveal>
-								<Icon name={p.icon} size={24} class="l-icon-accent" />
-								<h3 class="l-h3">{p.title}</h3>
+								<div class="l-note-head">
+									<Icon name={p.icon} size={24} class="l-icon-accent" />
+									<h3 class="l-h3">{p.title}</h3>
+								</div>
 								<p class="l-body">{p.text}</p>
 							</li>
 						))
@@ -172,8 +174,10 @@ const stepSizes = "(min-width: 64rem) 45rem, 100vw";
 					{
 						privacy.points.map((p) => (
 							<li class="l-note-item" data-reveal>
-								<Icon name={p.icon} size={24} class="l-icon-accent" />
-								<h3 class="l-h3">{p.title}</h3>
+								<div class="l-note-head">
+									<Icon name={p.icon} size={24} class="l-icon-accent" />
+									<h3 class="l-h3">{p.title}</h3>
+								</div>
 								<p class="l-body">{p.text}</p>
 							</li>
 						))

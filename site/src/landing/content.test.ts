@@ -180,6 +180,6 @@ describe("the design", () => {
 		expect(privacy.subtitle).toBe("No subscriptions. No pay once. Open Source.");
 		expect(areas.items).toHaveLength(11);
 		expect(roadmap.items).toHaveLength(6);
-		expect(roadmap.title).toBe("Planned. Not available yet.");
+		expect(roadmap.title).toBe("More of the studio, in the same place.");
 	});
 });

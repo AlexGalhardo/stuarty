@@ -406,6 +406,15 @@ html:not(.dark) .shot-zoom .shot-light {
 	align-items: flex-start;
 	gap: 8px;
 }
+/* The icon sits on the line of the title, to its left (author change after the review of epic 95). */
+.l-note-head {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+.l-note-head > svg {
+	flex: none;
+}
 
 /* Cards: an icon tile, a title and a sentence. */
 .l-cards {
