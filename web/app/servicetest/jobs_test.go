@@ -782,7 +782,9 @@ func TestDurableQueueRunsAnExportWithAWorker(t *testing.T) {
 	begin := time.Now()
 
 	job, err := m.startExport(project)
-	if err != nil || job.State != service.JobQueued {
+	// The worker is already running, so under load the job may have moved past
+	// queued before this call returns (VV-418): only a failure is wrong here.
+	if err != nil || job.State == service.JobFailed || job.State == service.JobCancelled {
 		t.Fatalf("job = %+v, %v", job, err)
 	}
 
