@@ -28,7 +28,7 @@ export const CAPTION_STYLES: readonly CaptionStyleEntry[] =
 	applyStyle?.properties?.style?.["x-vv-caption-styles"] ?? [];
 
 // The height of the sample text in the gallery, in CSS pixels.
-const SAMPLE_PX = 22;
+const SAMPLE_PX = 15;
 
 // A sample of a style for a tile: the colours, the edge, the shadow and the box of the style at a size that
 // fits the tile, so that every length keeps its proportion to the text. It draws what the core stores; the
