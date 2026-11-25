@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"net"
 	"net/http"
 	"os"
 	"os/exec"
@@ -96,21 +95,6 @@ type procEnv struct {
 	e               *testenv.Env
 }
 
-func freePort(t *testing.T) string {
-	t.Helper()
-
-	l, err := net.Listen("tcp", "127.0.0.1:0")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	defer func() { _ = l.Close() }()
-
-	_, port, _ := net.SplitHostPort(l.Addr().String())
-
-	return port
-}
-
 // tools are the FFmpeg and ffprobe of a test: the pinned LGPL build when there is
 // one (STUARTY_TEST_FFMPEG_DIR, or the install of scripts/install-ffmpeg.sh
 // under the temporary directory), else the ones on the PATH. With pinnedOnly a
@@ -199,7 +183,7 @@ func startProc(t *testing.T, ffmpeg, ffprobe string, extraEnv ...string) *procEn
 	}
 
 	clean := append(os.Environ(), workspace.EnvHome+"="+home, workspace.EnvURL+"=", "APP_KEY=", "APP_ENV=",
-		"STUARTY_FFMPEG="+ffmpeg, "STUARTY_FFPROBE="+ffprobe)
+		"STUARTY_ADDR=", "STUARTY_FFMPEG="+ffmpeg, "STUARTY_FFPROBE="+ffprobe)
 	if !filepath.IsAbs(ffmpeg) {
 		// A tool found on the PATH is left for the server to discover.
 		clean = append(clean, "STUARTY_FFMPEG=", "STUARTY_FFPROBE=")
@@ -207,7 +191,10 @@ func startProc(t *testing.T, ffmpeg, ffprobe string, extraEnv ...string) *procEn
 
 	ctx, cancel := context.WithCancel(context.Background())
 	cmd := exec.CommandContext(ctx, bin, "serve")
-	serveEnv := []string{"HOST=127.0.0.1", "PORT=" + freePort(t), "STUARTY_MIN_FREE_BYTES=1"}
+	// Port 0: the server binds a port the system gives it and announces the real address in runtime.json,
+	// which is where the harness reads it. A port picked here and closed before the server binds it could be
+	// taken in between by any other process, and the server would exit at start (VV-388, "serve exited").
+	serveEnv := []string{"HOST=127.0.0.1", "PORT=0", "STUARTY_MIN_FREE_BYTES=1"}
 	cmd.Env = slices.Concat(clean, serveEnv, extraEnv)
 
 	var out bytes.Buffer
