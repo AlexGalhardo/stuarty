@@ -3659,6 +3659,7 @@
       "remove": "Remove",
       "deliveries": "Deliveries",
       "no_deliveries": "No delivery yet.",
+      "pick": "Choose a webhook on the left to see its events and deliveries, or add a new one.",
       "no_delivery": "No delivery yet",
       "last_delivery": "Last delivery: {state}, {date}",
       "redeliver": "Send again",

@@ -85,11 +85,15 @@ test.describe("webhooks", () => {
 				page.getByText("Nothing leaves this computer until you register one."),
 			).toBeVisible();
 
+			await page.getByTestId("webhook-new").click();
 			await page.getByLabel("Name", { exact: true }).fill(name);
 			await page.getByLabel("Address", { exact: true }).fill(target.url);
 			await page.getByLabel(/An export is ready/).check();
 			await page.getByLabel(/A job failed/).check();
-			await page.getByRole("button", { name: "Add webhook" }).click();
+			await page
+				.locator("#webhooks-new")
+				.getByRole("button", { name: "Add webhook" })
+				.click();
 
 			const note = page.locator("[data-webhook-secret-note]");
 			await expect(note).toContainText("Signing secret of");
@@ -109,7 +113,6 @@ test.describe("webhooks", () => {
 			expect(verifies(secret, target.got[0])).toBe(true);
 			expect(verifies(`${secret}x`, target.got[0])).toBe(false);
 
-			await row.getByRole("button", { name: "Deliveries" }).click();
 			const delivery = row.locator("[data-delivery-id]");
 			await expect(delivery).toHaveCount(1);
 			await expect(delivery).toContainText("webhook.test");
@@ -185,12 +188,16 @@ test.describe("webhooks", () => {
 		page,
 	}) => {
 		await page.goto("/webhooks");
+		await page.getByTestId("webhook-new").click();
 		await page.getByLabel("Name", { exact: true }).fill("internal");
 		await page
 			.getByLabel("Address", { exact: true })
 			.fill("https://10.0.0.5/hook");
 		await page.getByLabel(/A job failed/).check();
-		await page.getByRole("button", { name: "Add webhook" }).click();
+		await page
+			.locator("#webhooks-new")
+			.getByRole("button", { name: "Add webhook" })
+			.click();
 		await expect(page.getByRole("alert")).toContainText("private or internal");
 		await expect(page.locator("[data-webhook-secret-note]")).toHaveCount(0);
 	});
