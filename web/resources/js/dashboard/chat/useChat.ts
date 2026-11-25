@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { type Failure, failureOf } from "@/components/Failure";
 import type { ProjectSummary } from "@/types";
 import { createClient } from "../../editor/api/client";
+import { ApiError } from "../../editor/api/errors";
 import { HttpTransport } from "../../editor/api/http";
 import type {
 	AgentProfileListResult,
@@ -14,6 +15,7 @@ import {
 	activityStamp,
 	applyChatEvent,
 	applySnapshot,
+	chooseProject,
 	stateOf,
 } from "./chatState";
 
@@ -76,6 +78,8 @@ export function useChat(
 ): ChatPanelState {
 	const [profiles, setProfiles] = useState<AgentProfileListResult | null>(null);
 	const [projects, setProjects] = useState<ProjectSummary[]>([]);
+	const projectsRef = useRef(projects);
+	projectsRef.current = projects;
 	const [projectId, setProjectId] = useState<string | null>(initialProject);
 	// The layout outlives a page: a visit to the page of another project makes the chat talk about that one,
 	// or the scene bar would show (and answer) the session of the project left behind.
@@ -126,16 +130,43 @@ export function useChat(
 		[],
 	);
 
+	// The layout outlives a page, so a project that was trashed or deleted (by the person or by the agent) while
+	// the panel held its id is still here when a read of it answers "not found" (VV-427). The list of projects is
+	// read again and a project that exists is picked, instead of an error under a select that names another one.
+	const projectGone = useCallback(
+		async (gone: string): Promise<void> => {
+			try {
+				const res = await api().listProjects();
+				setProjects(res.projects);
+				setProjectId((was) =>
+					was !== gone
+						? was
+						: chooseProject(
+								res.projects.filter((p) => p.id !== gone),
+								null,
+								window.localStorage.getItem(STORED_PROJECT),
+							),
+				);
+			} catch (error) {
+				setFailure(failureOf(error));
+			}
+		},
+		[api],
+	);
+
 	const refreshSession = useCallback(
 		async (id: string): Promise<void> => {
 			try {
 				const res = await api().listChatSessions(id);
 				setSession(res.sessions[0] ?? null);
 			} catch (error) {
-				setFailure(failureOf(error));
+				if (error instanceof ApiError && error.status === 404) {
+					setSession(null);
+					await projectGone(id);
+				} else setFailure(failureOf(error));
 			}
 		},
-		[api],
+		[api, projectGone],
 	);
 
 	const open = useCallback(
@@ -181,15 +212,13 @@ export function useChat(
 			.then((res) => {
 				if (!alive) return;
 				setProjects(res.projects);
-				setProjectId((was) => {
-					if (was !== null && res.projects.some((p) => p.id === was))
-						return was;
-					const stored = window.localStorage.getItem(STORED_PROJECT);
-					if (stored !== null && res.projects.some((p) => p.id === stored)) {
-						return stored;
-					}
-					return res.projects[0]?.id ?? null;
-				});
+				setProjectId((was) =>
+					chooseProject(
+						res.projects,
+						was,
+						window.localStorage.getItem(STORED_PROJECT),
+					),
+				);
 			})
 			.catch((error: unknown) => alive && setFailure(failureOf(error)));
 		return () => {
@@ -218,6 +247,13 @@ export function useChat(
 			.listChatSessions(projectId)
 			.then((res) => {
 				if (!alive || actions.current !== seen) return;
+				// a project made after the list was read (the agent can make one) is not in it yet
+				if (!projectsRef.current.some((p) => p.id === projectId)) {
+					void api()
+						.listProjects()
+						.then((all) => alive && setProjects(all.projects))
+						.catch(() => undefined);
+				}
 				const latest = res.sessions[0] ?? null;
 				setSession(latest);
 				if (latest === null) {
@@ -227,11 +263,18 @@ export function useChat(
 					open(latest);
 				}
 			})
-			.catch((error: unknown) => alive && setFailure(failureOf(error)));
+			.catch((error: unknown) => {
+				if (!alive) return;
+				if (error instanceof ApiError && error.status === 404) {
+					void projectGone(projectId);
+					return;
+				}
+				setFailure(failureOf(error));
+			});
 		return () => {
 			alive = false;
 		};
-	}, [active, projectId, api, open, closeStream]);
+	}, [active, projectId, api, open, closeStream, projectGone]);
 
 	// The activity is the service's read model: it is asked again when an event may have changed it (a skill was
 	// read, a tool call began or moved on), with no polling, and a short wait gathers a burst of events into one read.

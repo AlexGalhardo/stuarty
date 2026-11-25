@@ -6,6 +6,7 @@ import {
 	applyChatEvent,
 	applySnapshot,
 	canSend,
+	chooseProject,
 	isBusy,
 	isVisible,
 	openRequests,
@@ -149,5 +150,23 @@ describe("activityStamp", () => {
 		expect(activityStamp([message(1, "a")])).toBe(
 			activityStamp([message(1, "a"), message(2, "b")]),
 		);
+	});
+});
+
+describe("chooseProject", () => {
+	const list = [{ id: "prj_a" }, { id: "prj_b" }];
+
+	it("keeps the current project when the service lists it", () => {
+		expect(chooseProject(list, "prj_b", "prj_a")).toBe("prj_b");
+	});
+
+	it("drops a current project the service does not list, for the stored one, then the first", () => {
+		expect(chooseProject(list, "prj_gone", "prj_b")).toBe("prj_b");
+		expect(chooseProject(list, "prj_gone", "prj_also_gone")).toBe("prj_a");
+		expect(chooseProject(list, null, null)).toBe("prj_a");
+	});
+
+	it("is null when there is no project", () => {
+		expect(chooseProject([], "prj_gone", "prj_a")).toBeNull();
 	});
 });
