@@ -2,16 +2,22 @@ import type { ReactNode } from "react";
 
 import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
-import { formatInZone } from "@/lib/format";
+import { formatDateTime, formatInZone } from "@/lib/format";
 import { useLocale, useT } from "@/lib/i18n";
 import { linkOf } from "./publicationState";
 import { TargetStateBadge } from "./TargetStateBadge";
 import type { Publication, Target } from "./types";
 
-// What a target came to: the address when it is published, the error and what to do about it when it failed.
+// What a target came to: the address when it is published, the error and what to do about it when it failed,
+// or a plain status outcome when none of those exist yet (screen 14c).
 export function TargetResult({ target }: { target: Target }): ReactNode {
 	const t = useT();
+	const locale = useLocale();
 	const link = linkOf(target.url);
+	const hasExplicit =
+		target.url !== undefined ||
+		target.state === "sent_as_draft" ||
+		target.error !== undefined;
 	return (
 		<>
 			{target.url !== undefined &&
@@ -47,6 +53,33 @@ export function TargetResult({ target }: { target: Target }): ReactNode {
 					)}
 				</span>
 			)}
+			{!hasExplicit && target.state === "waiting_approval" && (
+				<span className="text-xs text-warning-text">
+					{t("ui.publish.detail.result_waiting")}
+				</span>
+			)}
+			{!hasExplicit &&
+				(target.state === "scheduled" || target.state === "approved") && (
+					<span className="text-xs text-text-muted">
+						{t("ui.publish.detail.result_queued")}
+					</span>
+				)}
+			{!hasExplicit &&
+				target.state === "draft" &&
+				target.scheduled_at === null && (
+					<span className="text-xs text-text-muted">
+						{t("ui.publish.detail.result_needs_time")}
+					</span>
+				)}
+			{!hasExplicit &&
+				target.state === "published" &&
+				target.published_at !== undefined && (
+					<span className="text-xs text-text-muted">
+						{t("ui.publish.detail.result_published_at", {
+							time: formatDateTime(target.published_at, locale),
+						})}
+					</span>
+				)}
 		</>
 	);
 }
@@ -56,12 +89,14 @@ export function ListView({
 	publications,
 	accounts = {},
 	onOpen,
+	onInspect,
 }: {
 	// the name the person gave to each connection, by id: the list shows it, not the kind of the connection
 	accounts?: Readonly<Record<string, string>>;
 	// null while the first read has not answered or failed: a list not read is not an empty list
 	publications: readonly Publication[] | null;
 	onOpen(publicationId: string, targetId: string): void;
+	onInspect?(publicationId: string, targetId: string): void;
 }): ReactNode {
 	const t = useT();
 	const locale = useLocale();
@@ -139,13 +174,26 @@ export function ListView({
 								<TargetResult target={target} />
 							</td>
 							<td className="px-3 py-2 text-right">
-								<Button
-									variant="outline"
-									size="sm"
-									onClick={() => onOpen(publication.id, target.id)}
-								>
-									{t("ui.publish.open")}
-								</Button>
+								<div className="inline-flex items-center justify-end gap-1.5">
+									{onInspect !== undefined && (
+										<Button
+											type="button"
+											variant="ghost"
+											size="sm"
+											data-testid="publish-details"
+											onClick={() => onInspect(publication.id, target.id)}
+										>
+											{t("ui.publish.details")}
+										</Button>
+									)}
+									<Button
+										variant="outline"
+										size="sm"
+										onClick={() => onOpen(publication.id, target.id)}
+									>
+										{t("ui.publish.open")}
+									</Button>
+								</div>
 							</td>
 						</tr>
 					))}

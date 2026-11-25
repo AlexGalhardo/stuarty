@@ -1,4 +1,5 @@
 import { Link } from "@inertiajs/react";
+import { Ban, Film, Globe, Info, ShieldCheck } from "lucide-react";
 import { type ReactNode, useEffect, useMemo, useState } from "react";
 
 import {
@@ -7,6 +8,7 @@ import {
 	failureIsAbout,
 	failureOf,
 } from "@/components/Failure";
+import { StatusBadge } from "@/components/StatusBadge";
 import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,6 +21,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/cn";
 import { formatDateTime } from "@/lib/format";
 import { useLocale, useT } from "@/lib/i18n";
 import type { ProjectSummary } from "@/types";
@@ -262,6 +265,165 @@ function Preview({
 	);
 }
 
+// Visual two-column destination chooser (screen 33f): usable destinations on the left, unavailable ones
+// on the right with a plain reason from the service's own capability list, plus a hint for text posts.
+export function DestinationChooser({
+	contentKind,
+	destinations,
+	selected,
+	disabled,
+	reasonOf,
+	onSelect,
+}: {
+	contentKind: ContentKind;
+	destinations: readonly Destination[];
+	selected: string;
+	disabled: boolean;
+	reasonOf(d: Destination): string;
+	onSelect(id: string): void;
+}): ReactNode {
+	const t = useT();
+	const isPost = contentKind === "text";
+	const usable = destinations.filter((d) => d.usable);
+	const unavailable = destinations.filter((d) => !d.usable);
+	if (destinations.length === 0) return null;
+	return (
+		<div
+			className="grid gap-4 lg:grid-cols-2"
+			data-testid="destination-chooser"
+		>
+			<div className="flex flex-col gap-2" data-testid="destinations-available">
+				<div className="flex flex-wrap items-baseline gap-2">
+					<h4 className="text-sm font-semibold text-text">
+						{t(
+							isPost
+								? "ui.publish.editor.text_destinations"
+								: "ui.publish.editor.video_destinations",
+						)}
+					</h4>
+					<span className="text-xs text-text-muted">
+						{t("ui.publish.editor.available_count", { count: usable.length })}
+					</span>
+				</div>
+				{usable.length === 0 ? (
+					<p className="rounded-lg border border-dashed p-3 text-xs text-text-muted">
+						{t("ui.publish.editor.no_targets")}
+					</p>
+				) : (
+					<ul className="flex flex-col gap-2">
+						{usable.map((d) => {
+							const chosen = selected === d.id;
+							return (
+								<li key={d.id}>
+									<button
+										type="button"
+										disabled={disabled}
+										aria-pressed={chosen}
+										data-testid="destination-card"
+										data-destination-id={d.id}
+										onClick={() => onSelect(d.id)}
+										className={cn(
+											"flex w-full items-center justify-between gap-3 rounded-lg border p-3 text-left transition-colors focus-visible:outline-2 focus-visible:outline-ring",
+											chosen
+												? "border-accent bg-accent-soft"
+												: "border-border bg-surface hover:bg-surface-hover",
+										)}
+									>
+										<span className="flex min-w-0 items-center gap-2.5">
+											{isPost ? (
+												<Globe
+													aria-hidden="true"
+													className="size-4 shrink-0 text-text-muted"
+												/>
+											) : (
+												<Film
+													aria-hidden="true"
+													className="size-4 shrink-0 text-text-muted"
+												/>
+											)}
+											<span className="min-w-0">
+												<span className="block truncate text-sm font-medium text-text">
+													<UntrustedText>{d.label}</UntrustedText>
+												</span>
+												<span className="block truncate text-xs text-text-muted">
+													{d.network}
+												</span>
+											</span>
+										</span>
+										<StatusBadge status={chosen ? "info" : "success"}>
+											{t(
+												chosen
+													? "ui.publish.editor.chosen"
+													: "ui.publish.editor.available",
+											)}
+										</StatusBadge>
+									</button>
+								</li>
+							);
+						})}
+					</ul>
+				)}
+			</div>
+			{unavailable.length > 0 && (
+				<div
+					className="flex flex-col gap-2"
+					data-testid="destinations-unavailable"
+				>
+					<div className="flex flex-wrap items-baseline gap-2">
+						<h4 className="text-sm font-semibold text-text">
+							{t(
+								isPost
+									? "ui.publish.editor.require_video"
+									: "ui.publish.editor.for_text",
+							)}
+						</h4>
+						<span className="text-xs text-text-muted">
+							{t("ui.publish.editor.unavailable")}
+						</span>
+					</div>
+					<ul className="flex flex-col gap-2">
+						{unavailable.map((d) => (
+							<li
+								key={d.id}
+								data-destination-unavailable={d.id}
+								className="flex items-center justify-between gap-3 rounded-lg border border-border bg-surface-sunken/60 p-3 opacity-80"
+							>
+								<span className="flex min-w-0 items-center gap-2.5">
+									<Ban
+										aria-hidden="true"
+										className="size-4 shrink-0 text-text-subtle"
+									/>
+									<span className="min-w-0">
+										<span className="block truncate text-sm font-medium text-text-muted">
+											<UntrustedText>{d.label}</UntrustedText>
+										</span>
+										<span className="block text-xs text-text-subtle">
+											{reasonOf(d)}
+										</span>
+									</span>
+								</span>
+								<StatusBadge status="neutral">
+									{t(
+										isPost
+											? "ui.publish.editor.requires_video"
+											: "ui.publish.editor.unavailable",
+									)}
+								</StatusBadge>
+							</li>
+						))}
+					</ul>
+					{isPost && (
+						<p className="flex items-start gap-1.5 text-xs text-text-muted">
+							<Info aria-hidden="true" className="mt-0.5 size-3.5 shrink-0" />
+							{t("ui.publish.editor.add_video_unlocks")}
+						</p>
+					)}
+				</div>
+			)}
+		</div>
+	);
+}
+
 // The editor of a publication (SDD-020 section 30): what it publishes, and one panel for each account with its
 // time, its fields, a preview, its state and what it came to. It sends what the person typed and shows what the
 // service answers; every rule of a time, a post and an approval is the service's.
@@ -493,9 +655,17 @@ export function PublicationEditor({
 			>
 				<DialogHeader>
 					<DialogTitle>
-						{isNew ? t("ui.publish.editor.new") : t("ui.publish.editor.edit")}
+						{isNew && isPost
+							? t("ui.publish.editor.where_post_goes")
+							: isNew
+								? t("ui.publish.editor.new")
+								: t("ui.publish.editor.edit")}
 					</DialogTitle>
-					<DialogDescription>{t("ui.publish.editor.intro")}</DialogDescription>
+					<DialogDescription>
+						{isPost
+							? t("ui.publish.editor.post_intro")
+							: t("ui.publish.editor.intro")}
+					</DialogDescription>
 				</DialogHeader>
 				<form
 					className="flex flex-col gap-4"
@@ -513,7 +683,10 @@ export function PublicationEditor({
 								disabled={!isNew}
 								value={project}
 								onChange={(event) => {
-									setProject(event.target.value);
+									const next = event.target.value;
+									setProject(next);
+									const chosenProject = projects.find((p) => p.id === next);
+									if (isNew && chosenProject?.kind === "text") setIsPost(true);
 									setVideo("");
 									setStill("");
 									setPost("");
@@ -674,6 +847,14 @@ export function PublicationEditor({
 										<TargetStateBadge state={d.state} />
 									)}
 								</legend>
+								<DestinationChooser
+									contentKind={contentKind}
+									destinations={destinations}
+									selected={d.connection}
+									disabled={!editable}
+									reasonOf={reasonOf}
+									onSelect={(id) => patch(d.key, { connection: id })}
+								/>
 								<div className="grid gap-3 sm:grid-cols-2">
 									<div className="flex flex-col gap-1">
 										<Label htmlFor={`${d.key}-account`}>
@@ -741,66 +922,94 @@ export function PublicationEditor({
 													))}
 										</select>
 									</div>
-									<div className="flex flex-col gap-1">
-										<Label htmlFor={`${d.key}-at`}>
-											{t("ui.publish.editor.at")}
-										</Label>
-										<Input
-											id={`${d.key}-at`}
-											type="datetime-local"
-											value={d.at}
-											onChange={(event) =>
-												patch(d.key, { at: event.target.value })
-											}
-										/>
-									</div>
-									<div className="flex flex-col gap-1">
-										<Label htmlFor={`${d.key}-zone`}>
-											{t("ui.publish.editor.zone")}
-										</Label>
-										<Input
-											id={`${d.key}-zone`}
-											list="publish-zones"
-											autoComplete="off"
-											value={d.zone}
-											onChange={(event) =>
-												patch(d.key, { zone: event.target.value })
-											}
-										/>
-									</div>
-									<div className="flex flex-col gap-1">
-										<Label htmlFor={`${d.key}-late`}>
-											{t("ui.publish.editor.late")}
-										</Label>
-										<Input
-											id={`${d.key}-late`}
-											type="number"
-											min={0}
-											max={1440}
-											value={d.late}
-											onChange={(event) =>
-												patch(d.key, { late: event.target.value })
-											}
-										/>
-										<p className="text-xs text-muted-foreground">
-											{t("ui.publish.editor.late_help")}
-										</p>
-									</div>
-									{!isPost && (
+								</div>
+								<div
+									data-testid="target-when"
+									className="flex flex-col gap-3 rounded-lg border border-border bg-surface-sunken/40 p-3"
+								>
+									<h4 className="text-sm font-semibold text-text">
+										{t("ui.publish.editor.when")}
+									</h4>
+									<div className="grid gap-3 sm:grid-cols-2">
 										<div className="flex flex-col gap-1">
-											<Label htmlFor={`${d.key}-title`}>
-												{t("ui.publish.editor.target_title")}
+											<Label htmlFor={`${d.key}-at`}>
+												{t("ui.publish.editor.at")}
 											</Label>
 											<Input
-												id={`${d.key}-title`}
-												autoComplete="off"
-												value={d.title}
+												id={`${d.key}-at`}
+												type="datetime-local"
+												value={d.at}
 												onChange={(event) =>
-													patch(d.key, { title: event.target.value })
+													patch(d.key, { at: event.target.value })
 												}
 											/>
 										</div>
-									)}
+										<div className="flex flex-col gap-1">
+											<Label htmlFor={`${d.key}-zone`}>
+												{t("ui.publish.editor.zone")}
+											</Label>
+											<Input
+												id={`${d.key}-zone`}
+												list="publish-zones"
+												autoComplete="off"
+												value={d.zone}
+												onChange={(event) =>
+													patch(d.key, { zone: event.target.value })
+												}
+											/>
+										</div>
+										<div className="flex flex-col gap-1">
+											<Label htmlFor={`${d.key}-late`}>
+												{t("ui.publish.editor.late")}
+											</Label>
+											<Input
+												id={`${d.key}-late`}
+												type="number"
+												min={0}
+												max={1440}
+												value={d.late}
+												onChange={(event) =>
+													patch(d.key, { late: event.target.value })
+												}
+											/>
+											<p className="text-xs text-muted-foreground">
+												{t("ui.publish.editor.late_help")}
+											</p>
+										</div>
+										{isPost ? (
+											<div className="flex flex-col justify-between gap-2 text-xs">
+												<div className="flex items-center justify-between border-t border-border pt-2">
+													<span className="text-text-muted">
+														{t("ui.publish.editor.cost")}
+													</span>
+													<span className="font-medium text-text">
+														{t("ui.publish.editor.free")}
+													</span>
+												</div>
+												<p className="flex items-start gap-1.5 text-text-muted">
+													<ShieldCheck
+														aria-hidden="true"
+														className="mt-0.5 size-3.5 shrink-0"
+													/>
+													{t("ui.publish.editor.approval_note")}
+												</p>
+											</div>
+										) : (
+											<div className="flex flex-col gap-1">
+												<Label htmlFor={`${d.key}-title`}>
+													{t("ui.publish.editor.target_title")}
+												</Label>
+												<Input
+													id={`${d.key}-title`}
+													autoComplete="off"
+													value={d.title}
+													onChange={(event) =>
+														patch(d.key, { title: event.target.value })
+													}
+												/>
+											</div>
+										)}
+									</div>
 								</div>
 								{!isPost && (
 									<>

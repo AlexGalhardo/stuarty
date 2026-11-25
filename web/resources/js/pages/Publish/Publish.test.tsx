@@ -2,8 +2,13 @@ import { renderToString } from "react-dom/server";
 import { describe, expect, test } from "vitest";
 
 import { I18nProvider } from "@/lib/i18n";
+import { drawForTest as draw } from "../../workflow/drawForTest";
+import type { Workflow } from "../../workflow/types";
 import { CalendarView } from "./CalendarView";
 import { ListView } from "./ListView";
+import { PublicationDetailPanel } from "./PublicationDetail";
+import { DestinationChooser } from "./PublicationEditor";
+import { latestPublishedPost, PublishedPostState } from "./PublishedPostState";
 import { actionsOf, applyPublicationEvent, linkOf } from "./publicationState";
 import type { Publication, Target, TargetState } from "./types";
 import { TARGET_STATES } from "./types";
@@ -279,5 +284,163 @@ describe("an address a network gave", () => {
 		expect(linkOf("javascript:alert(1)")).toBeNull();
 		expect(linkOf("not a url")).toBeNull();
 		expect(linkOf(undefined)).toBeNull();
+	});
+});
+
+describe("PublicationDetailPanel", () => {
+	test("shows destination, status, times, published URL and failure reason safely", () => {
+		const pub = publication(
+			[
+				target({
+					state: "published",
+					url: "https://blog.example/posts/natural-light",
+					published_at: "2026-11-27T12:00:00Z",
+				}),
+			],
+			"Natural light <b>at home</b>",
+		);
+		const html = draw(
+			<PublicationDetailPanel
+				publication={pub}
+				target={pub.targets[0] as Target}
+				accounts={{ con_1: "Blog da Marina" }}
+				onEdit={() => undefined}
+				onClose={() => undefined}
+			/>,
+		);
+		expect(html).toContain('data-testid="publication-detail"');
+		expect(html).toContain("Natural light &lt;b&gt;at home&lt;/b&gt;");
+		expect(html).not.toContain("<b>at home</b>");
+		expect(html).toContain("Blog da Marina");
+		expect(html).toContain('href="https://blog.example/posts/natural-light"');
+		expect(html).toContain('data-testid="detail-published-at"');
+		expect(html).toContain('data-testid="publication-detail-open-post"');
+
+		const failedPub = publication([
+			target({
+				state: "failed",
+				error: {
+					code: "E_PUBLISH",
+					message: "HTTP 502",
+					hint: "Try again later.",
+					retryable: true,
+				},
+			}),
+		]);
+		const failedHtml = draw(
+			<PublicationDetailPanel
+				publication={failedPub}
+				target={failedPub.targets[0] as Target}
+				accounts={{ con_1: "WordPress" }}
+				onEdit={() => undefined}
+				onClose={() => undefined}
+			/>,
+		);
+		expect(failedHtml).toContain("HTTP 502");
+		expect(failedHtml).toContain("Try again later.");
+		expect(failedHtml).not.toContain("publication-detail-open-post");
+	});
+});
+
+describe("DestinationChooser (screen 33f)", () => {
+	test("lists available text destinations and unavailable video destinations with plain reasons", () => {
+		const html = draw(
+			<DestinationChooser
+				contentKind="text"
+				destinations={[
+					{
+						id: "con_wp",
+						label: "WordPress",
+						network: "blog_wordpress",
+						takes: ["text", "image"],
+						usable: true,
+					},
+					{
+						id: "con_yt",
+						label: "YouTube",
+						network: "youtube",
+						takes: ["video"],
+						usable: false,
+						blocked: "takes",
+					},
+				]}
+				selected="con_wp"
+				disabled={false}
+				reasonOf={(d) => (d.usable ? "" : "takes video, not text")}
+				onSelect={() => undefined}
+			/>,
+		);
+		expect(html).toContain('data-testid="destinations-available"');
+		expect(html).toContain('data-testid="destinations-unavailable"');
+		expect(html).toContain("Text destinations");
+		expect(html).toContain("1 available");
+		expect(html).toContain("WordPress");
+		expect(html).toContain("Chosen");
+		expect(html).toContain("Require video");
+		expect(html).toContain("YouTube");
+		expect(html).toContain("takes video, not text");
+		expect(html).toContain("If you add a video to this project");
+	});
+});
+
+describe("PublishedPostState (screen 33h)", () => {
+	const DONE_WORKFLOW: Workflow = {
+		kind: "text",
+		steps: [
+			{ id: "briefing", state: "done", optional: false, actor: "person" },
+			{ id: "writing", state: "done", optional: false, actor: "agent" },
+			{ id: "review", state: "done", optional: false, actor: "person" },
+			{ id: "approval", state: "done", optional: false, actor: "person" },
+			{ id: "publication", state: "done", optional: false, actor: "person" },
+		],
+	};
+
+	test("renders published completion banner, completed trail and add-video action in en and pt-BR", () => {
+		const en = draw(
+			<PublishedPostState
+				title="Natural light at home"
+				destination="WordPress"
+				publishedAt="2026-11-27T12:00:00Z"
+				zone="America/Sao_Paulo"
+				url="https://blog.example/natural-light"
+				workflow={DONE_WORKFLOW}
+				addVideoAction={<button type="button">Add a video</button>}
+			/>,
+			"en",
+		);
+		expect(en).toContain("Your post is published");
+		expect(en).toContain('data-testid="completed-trail"');
+		expect(en).toContain("Completed trail");
+		expect(en).toContain("Add a video");
+		expect(en).toContain('href="https://blog.example/natural-light"');
+
+		const pt = draw(
+			<PublishedPostState
+				title="Luz natural em casa"
+				destination="WordPress"
+				publishedAt="2026-11-27T12:00:00Z"
+				zone="America/Sao_Paulo"
+				workflow={DONE_WORKFLOW}
+				addVideoAction={<button type="button">Adicionar um vídeo</button>}
+			/>,
+			"pt-BR",
+		);
+		expect(pt).toContain("Seu post foi publicado");
+		expect(pt).toContain("Trilha concluída");
+		expect(pt).toContain("Adicionar um vídeo");
+		expect(pt).not.toContain("published-open-post");
+	});
+
+	test("latestPublishedPost selects only published blog posts", () => {
+		const videoPub = publication([target({ state: "published" })], "Video");
+		const postPub: Publication = {
+			...publication([target({ state: "published" })], "Blog post"),
+			id: "pub_post",
+			post: "pit_1",
+		};
+		expect(latestPublishedPost([videoPub])).toBeNull();
+		expect(latestPublishedPost([videoPub, postPub])?.publication.id).toBe(
+			"pub_post",
+		);
 	});
 });
