@@ -227,6 +227,162 @@ describe("the copy of the phone layout", () => {
 	}
 });
 
+// The changes the author asked for after the review of epic 95 (2026-11-24).
+describe("the layout the author asked for", () => {
+	for (const width of [390, 700, 1024, 1440, 1920]) {
+		test(`at ${width} px the content lines up with the navbar`, async () => {
+			const { context, page } = await open("dark", width);
+			const edges = await page.evaluate(() => {
+				const row = document.querySelector("header[data-variant='landing'] .site-container") as HTMLElement;
+				const kids = [...row.children].map((c) => c.getBoundingClientRect()).filter((r) => r.width > 0);
+				const box = (document.querySelector("#path .l-container") as HTMLElement).getBoundingClientRect();
+				return { left: Math.min(...kids.map((r) => r.left)), right: Math.max(...kids.map((r) => r.right)), cLeft: box.left, cRight: box.right };
+			});
+			expect(Math.abs(edges.left - edges.cLeft)).toBeLessThanOrEqual(1);
+			expect(Math.abs(edges.right - edges.cRight)).toBeLessThanOrEqual(1);
+			await context.close();
+		});
+	}
+
+	test("the navbar of the landing shows no release badge, and the page no alpha note", async () => {
+		const { context, page } = await open("light");
+		expect(await page.locator("header [data-release-badge]").isVisible()).toBe(false);
+		expect(await page.locator("main, footer").allInnerTexts()).not.toContain("rough edges");
+		expect((await page.locator("main").innerText()).toLowerCase()).not.toContain("rough edges");
+		expect(await page.locator(".l-hero .l-eyebrow").count()).toBe(0);
+		await context.close();
+	});
+
+	for (const width of [1440, 390]) {
+		test(`at ${width} px the headings, the hero and the footer notes are centred, the cards are not`, async () => {
+			const { context, page } = await open("dark", width);
+			const result = await page.evaluate(() => {
+				const centred = (el: Element): boolean => {
+					const r = el.getBoundingClientRect();
+					const box = (el.closest(".l-container") as HTMLElement).getBoundingClientRect();
+					return getComputedStyle(el).textAlign === "center" && Math.abs(r.left + r.width / 2 - (box.left + box.width / 2)) <= 1.5;
+				};
+				const heads = [...document.querySelectorAll("main h1, main h2, main .l-head .l-eyebrow, main .l-head .l-lead, main .l-hero-head .l-lead, main .l-subtitle, .l-footer-notes p")].filter((e) => (e as HTMLElement).offsetParent !== null);
+				const actions = [...document.querySelectorAll(".l-hero-head .l-actions, .l-hero-head .l-note")].map((e) => {
+					const kids = [...e.children].map((k) => k.getBoundingClientRect()).filter((r) => r.width > 0);
+					const box = (e.closest(".l-container") as HTMLElement).getBoundingClientRect();
+					const mid = (Math.min(...kids.map((k) => k.left)) + Math.max(...kids.map((k) => k.right))) / 2;
+					return Math.abs(mid - (box.left + box.width / 2));
+				});
+				return {
+					notCentred: heads.filter((h) => !centred(h)).map((h) => h.textContent?.slice(0, 40)),
+					actions,
+					cards: [...document.querySelectorAll(".l-card .l-h3, .l-card .l-small")].map((e) => getComputedStyle(e).textAlign),
+				};
+			});
+			expect(result.notCentred).toEqual([]);
+			for (const off of result.actions) expect(off).toBeLessThanOrEqual(1.5);
+			expect(result.cards.every((a) => a === "start" || a === "left")).toBe(true);
+			await context.close();
+		});
+	}
+
+	for (const width of [1440, 390]) {
+		test(`at ${width} px the hero holds the five download cards in place of the two buttons, with valid links`, async () => {
+			const { context, page } = await open("light", width);
+			const hero = page.locator(".l-hero");
+			expect(await hero.getByRole("link", { name: /get started|read the docs/i }).count()).toBe(0);
+			const read = (scope: string) =>
+				page.locator(`${scope} a.l-download`).evaluateAll((as) => as.map((a) => ({ id: (a as HTMLElement).dataset.download, href: (a as HTMLAnchorElement).href, text: (a as HTMLElement).innerText.replace(/\s+/g, " ").trim(), shown: a.getBoundingClientRect().width > 0 })));
+			const top = await read(".l-hero");
+			expect(top.map((c) => c.id)).toEqual(["windows", "macos", "linux", "docker-local", "docker-vps"]);
+			expect(top.every((c) => c.shown)).toBe(true);
+			expect(await read("#download")).toEqual(top);
+			for (const c of top) {
+				const link = new URL(c.href);
+				if (link.origin === new URL(url).origin) expect((await page.request.get(c.href)).status(), c.href).toBe(200);
+				else expect(link.protocol).toBe("https:");
+			}
+			const note = await hero.locator(".l-note").innerText();
+			expect(note.trim()).toBe("Free and open source. No subscriptions.");
+			expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+			await context.close();
+		});
+	}
+
+	test("the coloured words of the hero title are text and keep 4.5:1 in both themes", async () => {
+		for (const theme of ["dark", "light"] as const) {
+			const { context, page } = await open(theme);
+			const found = await page.evaluate(() => {
+				const focus = document.querySelector(".l-hero-focus") as HTMLElement;
+				const style = getComputedStyle(focus);
+				let bgEl: Element | null = focus;
+				let bg = "rgba(0, 0, 0, 0)";
+				while (bgEl && /rgba\(0, 0, 0, 0\)|transparent/.test(bg)) {
+					bg = getComputedStyle(bgEl).backgroundColor;
+					bgEl = bgEl.parentElement;
+				}
+				return { text: focus.textContent, image: style.backgroundImage, clip: style.backgroundClip || style.getPropertyValue("-webkit-background-clip"), bg };
+			});
+			expect(found.text).toBe("Create, edit, manage and publish");
+			expect(found.clip).toBe("text");
+			const rgb = (s: string): number[] => (s.match(/\d+(\.\d+)?/g) ?? []).slice(0, 3).map(Number);
+			const stops = [...found.image.matchAll(/rgb\([^)]+\)/g)].map((m) => rgb(m[0]));
+			expect(stops.length).toBe(4);
+			expect(new Set(stops.map((s) => s.join())).size).toBe(4);
+			const lum = (c: number[]): number => {
+				const [r, g, b] = c.map((v) => {
+					const x = v / 255;
+					return x <= 0.04045 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4;
+				});
+				return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+			};
+			const bg = rgb(found.bg);
+			const ratio = (c: number[]): number => {
+				const [a, b] = [lum(c), lum(bg)].sort((x, y) => y - x);
+				return (a + 0.05) / (b + 0.05);
+			};
+			for (let i = 0; i < stops.length - 1; i++) {
+				for (let t = 0; t <= 1; t += 0.05) {
+					const c = stops[i].map((v, k) => v + (stops[i + 1][k] - v) * t);
+					expect(ratio(c), `${theme}: ${c.map(Math.round).join(",")} on ${bg.join(",")}`).toBeGreaterThanOrEqual(4.5);
+				}
+			}
+			await context.close();
+		}
+	});
+});
+
+describe("the entrance of the sections as the page scrolls", () => {
+	const below = "#download .l-head";
+	const opacity = (page: Page, selector: string): Promise<number> => page.locator(selector).first().evaluate((e) => Number(getComputedStyle(e).opacity));
+
+	test("with motion allowed a section below the window fades in as it is scrolled into view", async () => {
+		const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, reducedMotion: "no-preference" });
+		const page = await context.newPage();
+		await page.goto(url, { waitUntil: "load" });
+		expect(await opacity(page, below)).toBeLessThan(0.5);
+		const box = await page.locator(below).boundingBox();
+		await page.locator(below).evaluate((e) => e.scrollIntoView({ block: "center" }));
+		await page.waitForFunction((s) => Number(getComputedStyle(document.querySelector(s) as Element).opacity) === 1, below);
+		const after = await page.locator(below).evaluate((e) => e.getBoundingClientRect().height);
+		expect(after).toBe(box?.height);
+		await context.close();
+	});
+
+	test("with reduced motion every section is shown at once, with no animation", async () => {
+		const { context, page } = await open("dark");
+		const hidden = await page.evaluate(() => [...document.querySelectorAll<HTMLElement>("[data-reveal]")].filter((e) => getComputedStyle(e).opacity !== "1" || getComputedStyle(e).animationName !== "none").length);
+		expect(hidden).toBe(0);
+		await context.close();
+	});
+
+	test("without JavaScript nothing waits for a script to be shown", async () => {
+		const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, reducedMotion: "no-preference", javaScriptEnabled: false });
+		const page = await context.newPage();
+		await page.goto(url, { waitUntil: "load" });
+		expect(await page.locator(".l-reveal-out").count()).toBe(0);
+		await page.locator(below).evaluate((e) => e.scrollIntoView({ block: "center" }));
+		await page.waitForFunction((s) => Number(getComputedStyle(document.querySelector(s) as Element).opacity) === 1, below);
+		await context.close();
+	});
+});
+
 describe("the page itself", () => {
 	for (const width of [1440, 390]) {
 		for (const theme of ["dark", "light"] as const) {

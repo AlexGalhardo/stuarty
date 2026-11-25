@@ -1,0 +1,41 @@
+---
+// The five download and setup cards of the landing (epic 95): Windows, macOS and Linux go to the files of the latest
+// release, Docker Local and Docker VPS to their setup guides. The author asked for them in the hero as well as in the
+// closing section (2026-11-24), so both places draw this one list.
+import { latestRelease } from "@/lib/releases";
+import { withBase } from "@/lib/site";
+import Icon from "./Icon.astro";
+
+interface Props {
+	/** Names the list for assistive technology, since the page holds it twice. */
+	label: string;
+}
+
+const { label } = Astro.props;
+const release = await latestRelease();
+const alpha = release.confirmed ? `Alpha v${release.version}` : "Alpha";
+const cards = [
+	{ id: "windows", title: "Windows", sub: alpha, icon: "monitor", href: release.downloads.find((d) => d.os === "windows")?.href ?? release.url, external: true },
+	{ id: "macos", title: "macOS", sub: alpha, icon: "laptop", href: release.downloads.find((d) => d.os === "macos")?.href ?? release.url, external: true },
+	{ id: "linux", title: "Linux", sub: alpha, icon: "terminal", href: release.downloads.find((d) => d.os === "linux")?.href ?? release.url, external: true },
+	{ id: "docker-local", title: "Docker Local", sub: "Setup guide", icon: "container", href: withBase("/docs/self-hosting/docker/"), external: false },
+	{ id: "docker-vps", title: "Docker VPS", sub: "Setup guide", icon: "server", href: withBase("/docs/self-hosting/vps/"), external: false },
+] as const;
+---
+
+<ul class="l-downloads" aria-label={label}>
+	{
+		cards.map((c) => (
+			<li data-reveal>
+				<a class="l-download" href={c.href} rel={c.external ? "noreferrer" : undefined} data-download={c.id}>
+					<Icon name={c.icon} size={20} class="l-icon-muted" />
+					<span class="l-download-text">
+						<span class="l-download-title">{c.title}</span>
+						<span class="l-download-sub">{c.sub}</span>
+					</span>
+					<Icon name="download" size={16} class="l-icon-muted" />
+				</a>
+			</li>
+		))
+	}
+</ul>
