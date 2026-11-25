@@ -70,6 +70,7 @@ The site's build and checks, the landing claims test, browser tests for the them
 
 1. **Given** the page and the frames at 1440 and 390 px in both themes, **when** compared side by side, **then** the sections, their order, the copy, the type scale and the layout match; any difference left is listed in the hand-off with its reason (only an unreleased feature moved to "On the roadmap").
 2. **Given** a product image, **when** traced, **then** it is a capture of the released UI; the home capture says "Good morning, Alex."
+   - Author decision of 2026-11-24, after this epic was written: the greeting moves to epic 96, which aligns the product UI with the final design and then recaptures, so here the criterion is met when every product image is a real capture of the released UI.
 3. **Given** the dark or the light theme, **when** the page is shown, **then** every product image is the capture of that theme.
 4. **Given** a product image, **when** hovered, **then** the cursor is a magnifier; **when** clicked or activated with Enter or Space, **then** it opens enlarged in a modal dialog with the page behind blurred, and Escape, a click outside or the close button closes it and returns focus.
 5. **Given** the page, **when** read, **then** it contains no testimonial, customer logo, invented number or award, and the landing claims test passes.
