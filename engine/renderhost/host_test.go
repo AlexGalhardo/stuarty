@@ -374,7 +374,7 @@ func TestRenderReasons(t *testing.T) {
 	}
 
 	dst := image.NewRGBA(image.Rect(0, 0, 4, 4))
-	render := func(text string) error { return h.renderText(ctx, []byte(text), dst, 0, 4) }
+	render := func(text string) error { return h.renderText(ctx, []byte(text), dst, 4) }
 
 	wantReason(t, render(strings.Replace(onePixelPlan, `"opacity":1`, `"opacity":1,"blurry":1`, 1)), InvalidPlan)
 	wantReason(t, render(strings.Replace(onePixelPlan, `"version":1`, `"version":2`, 1)), UnsupportedVersion)

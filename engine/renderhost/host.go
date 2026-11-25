@@ -431,9 +431,9 @@ func (h *Host) Render(ctx context.Context, in RenderInput, dst *image.RGBA) erro
 	return h.renderRows(ctx, text, dst, w, y1-y0, 0, y1-y0, x0, x1)
 }
 
-// renderText runs vr_render on an encoded render input and copies rows [y0, y1) of the frame into dst.
-func (h *Host) renderText(ctx context.Context, text []byte, dst *image.RGBA, y0, y1 int) error {
-	return h.renderRows(ctx, text, dst, dst.Rect.Dx(), dst.Rect.Dy(), y0, y1, 0, dst.Rect.Dx())
+// renderText runs vr_render on an encoded render input and copies rows [0, y1) of the frame into dst.
+func (h *Host) renderText(ctx context.Context, text []byte, dst *image.RGBA, y1 int) error {
+	return h.renderRows(ctx, text, dst, dst.Rect.Dx(), dst.Rect.Dy(), 0, y1, 0, dst.Rect.Dx())
 }
 
 // renderRows runs vr_render into a block of w by ht pixels and copies its rows [y0, y1) into dst.Pix at the same

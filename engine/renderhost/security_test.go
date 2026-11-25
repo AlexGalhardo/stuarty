@@ -148,7 +148,7 @@ func renderHostile(tb testing.TB, h *Host, input []byte) {
 	ctx := context.Background()
 	dst := image.NewRGBA(image.Rect(0, 0, 16, 12))
 
-	err := h.renderText(ctx, input, dst, 0, 12)
+	err := h.renderText(ctx, input, dst, 12)
 	if err == nil {
 		return
 	}
@@ -180,7 +180,7 @@ func TestSecurity_T36_RenderHostSurvivesHostileInput(t *testing.T) {
 		input := mutate(rng, hostileCorpus[rng.IntN(len(hostileCorpus))])
 
 		dst := image.NewRGBA(image.Rect(0, 0, 16, 12))
-		if err := h.renderText(context.Background(), input, dst, 0, 12); err == nil {
+		if err := h.renderText(context.Background(), input, dst, 12); err == nil {
 			drawn++
 		} else {
 			refused++
@@ -319,7 +319,7 @@ func TestSecurity_T36_MemoryExhaustionIsContained(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := h2.renderText(ctx, []byte(onePixelPlan), image.NewRGBA(image.Rect(0, 0, 4, 4)), 0, 4); err != nil {
+	if err := h2.renderText(ctx, []byte(onePixelPlan), image.NewRGBA(image.Rect(0, 0, 4, 4)), 4); err != nil {
 		t.Fatal(err)
 	}
 }
