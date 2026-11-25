@@ -1057,11 +1057,6 @@ html:has(.zoom-dialog[open]) {
 	}
 }
 
-/* The landing hides the release badge of the shared navbar (author change after the review of epic 95); the docs keep it. */
-html:has(main[data-page="home"]) header[data-variant="landing"] [data-release-badge] {
-	display: none;
-}
-
 /* The first words of the hero title flow from orange to purple, left to right, like one gradient (author choice). Every stop, and every colour between two stops, is at least 4.5:1 on the page in its theme (checked by the
    browser test). The text stays text: where background-clip does not apply, or in forced colours, it is plain. */
 @supports ((background-clip: text) or (-webkit-background-clip: text)) {
@@ -1090,14 +1085,74 @@ html:has(main[data-page="home"]) header[data-variant="landing"] [data-release-ba
 @keyframes l-reveal {
 	from {
 		opacity: 0;
-		translate: 0 24px;
+		translate: 0 56px;
+		scale: 0.96;
+		filter: blur(6px);
 	}
 	to {
 		opacity: 1;
 		translate: 0 0;
+		scale: 1;
+		filter: none;
+	}
+}
+/* The path steps: the text comes from its side and the screenshot from the other (author change after the review). */
+@keyframes l-reveal-from-left {
+	from {
+		opacity: 0;
+		translate: -80px 0;
+		filter: blur(6px);
+	}
+	to {
+		opacity: 1;
+		translate: 0 0;
+		filter: none;
+	}
+}
+@keyframes l-reveal-from-right {
+	from {
+		opacity: 0;
+		translate: 80px 0;
+		filter: blur(6px);
+	}
+	to {
+		opacity: 1;
+		translate: 0 0;
+		filter: none;
+	}
+}
+/* The hero enters once, as the page opens: the title, the lead, the downloads and the screenshot one after another. */
+@keyframes l-hero-in {
+	from {
+		opacity: 0;
+		translate: 0 32px;
+		filter: blur(8px);
+	}
+	to {
+		opacity: 1;
+		translate: 0 0;
+		filter: none;
 	}
 }
 @media (prefers-reduced-motion: no-preference) {
+	html:not([data-motion="paused"]) main[data-page="home"] .l-hero-head > *,
+	html:not([data-motion="paused"]) main[data-page="home"] .l-shot-hero {
+		animation: l-hero-in 760ms cubic-bezier(0.2, 0, 0, 1) both;
+	}
+	html:not([data-motion="paused"]) main[data-page="home"] .l-hero-head > :nth-child(2) {
+		animation-delay: 120ms;
+	}
+	html:not([data-motion="paused"]) main[data-page="home"] .l-hero-head > :nth-child(3) {
+		animation-delay: 240ms;
+	}
+	html:not([data-motion="paused"]) main[data-page="home"] .l-hero-head > :nth-child(4) {
+		animation-delay: 320ms;
+	}
+	html:not([data-motion="paused"]) main[data-page="home"] .l-shot-hero {
+		animation-delay: 420ms;
+		animation-duration: 1000ms;
+	}
+
 	@supports (animation-timeline: view()) {
 		html:not([data-motion="paused"]) main[data-page="home"] [data-reveal] {
 			animation: l-reveal linear both;
@@ -1105,16 +1160,53 @@ html:has(main[data-page="home"]) header[data-variant="landing"] [data-release-ba
 		/* A rule of its own: the CSS minifier folds the timeline into the shorthand, which Chromium then refuses. */
 		html:not([data-motion="paused"]) main[data-page="home"] [data-reveal][data-reveal] {
 			animation-timeline: view();
-			animation-range: entry 0% entry 60%;
+			animation-range: entry 5% cover 35%;
+		}
+		/* Cards of a row arrive one after another. */
+		html:not([data-motion="paused"]) main[data-page="home"] .l-card[data-reveal]:nth-child(3n + 2),
+		html:not([data-motion="paused"]) main[data-page="home"] .l-note-item[data-reveal]:nth-child(3n + 2) {
+			animation-range: entry 15% cover 40%;
+		}
+		html:not([data-motion="paused"]) main[data-page="home"] .l-card[data-reveal]:nth-child(3n),
+		html:not([data-motion="paused"]) main[data-page="home"] .l-note-item[data-reveal]:nth-child(3n) {
+			animation-range: entry 25% cover 45%;
+		}
+		/* A path step does not move as a block: its text and its screenshot slide in from their own sides. */
+		html:not([data-motion="paused"]) main[data-page="home"] .l-step[data-reveal][data-reveal] {
+			animation: none;
+		}
+		html:not([data-motion="paused"]) main[data-page="home"] .l-step:nth-child(odd) .l-step-text,
+		html:not([data-motion="paused"]) main[data-page="home"] .l-step:nth-child(even) .l-shot {
+			animation: l-reveal-from-left linear both;
+		}
+		html:not([data-motion="paused"]) main[data-page="home"] .l-step:nth-child(odd) .l-shot,
+		html:not([data-motion="paused"]) main[data-page="home"] .l-step:nth-child(even) .l-step-text {
+			animation: l-reveal-from-right linear both;
+		}
+		html:not([data-motion="paused"]) main[data-page="home"] .l-step .l-step-text.l-step-text,
+		html:not([data-motion="paused"]) main[data-page="home"] .l-step .l-shot.l-shot {
+			animation-timeline: view();
+			animation-range: entry 5% cover 40%;
+		}
+		/* On a narrow screen a side slide would push past the edge: the steps rise like the rest. */
+		@media (max-width: 900px) {
+			html:not([data-motion="paused"]) main[data-page="home"] .l-step .l-step-text.l-step-text,
+			html:not([data-motion="paused"]) main[data-page="home"] .l-step .l-shot.l-shot {
+				animation-name: l-reveal;
+			}
 		}
 	}
 	html:not([data-motion="paused"]) main[data-page="home"] [data-reveal] {
 		transition:
-			opacity 480ms cubic-bezier(0.2, 0, 0, 1),
-			translate 480ms cubic-bezier(0.2, 0, 0, 1);
+			opacity 700ms cubic-bezier(0.2, 0, 0, 1),
+			translate 700ms cubic-bezier(0.2, 0, 0, 1),
+			scale 700ms cubic-bezier(0.2, 0, 0, 1),
+			filter 700ms cubic-bezier(0.2, 0, 0, 1);
 	}
 	html:not([data-motion="paused"]) main[data-page="home"] .l-reveal-out {
 		opacity: 0;
-		translate: 0 24px;
+		translate: 0 56px;
+		scale: 0.96;
+		filter: blur(6px);
 	}
 }
