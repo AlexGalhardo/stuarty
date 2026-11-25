@@ -75,13 +75,14 @@ async function shownCaptures(page: Page): Promise<{ shown: number; files: string
 }
 
 describe("the product images follow the theme", () => {
-	// Seven images on a wide window (the hero shows the home), and the same seven on a phone (the hero shows the phone home).
+	// Fifteen images on a wide window (the hero, the twelve steps of the path, the trail of a video project and of a text
+	// project), and the same fifteen on a phone, where the hero shows the phone home.
 	for (const width of [1440, 390]) {
 		for (const theme of ["dark", "light"] as const) {
 			test(`${theme} at ${width} px: each shown image is its ${theme} capture`, async () => {
 				const { context, page } = await open(theme, width);
 				const { shown, files, pictures } = await shownCaptures(page);
-				expect(shown).toBe(7);
+				expect(shown).toBe(15);
 				expect(pictures.every((n) => n === 1)).toBe(true);
 				for (const file of files) expect(file.includes("-light")).toBe(theme === "light");
 				await context.close();
@@ -205,6 +206,51 @@ describe("the zoom of a product image", () => {
 		await page.goto(url);
 		expect(await page.evaluate(() => getComputedStyle(document.querySelector("dialog[data-zoom-dialog]") as Element).transitionDuration)).not.toBe("0s");
 		await context.close();
+	});
+});
+
+describe("the path of a project", () => {
+	test("twelve numbered steps, each with its own capture in both themes, lazy and sized", async () => {
+		const { context, page } = await open("dark");
+		const steps = await page.locator("#path .l-step").evaluateAll((items) =>
+			items.map((li) => ({
+				n: li.querySelector(".l-step-n")?.textContent,
+				title: li.querySelector(".l-step-title")?.textContent,
+				align: getComputedStyle(li.querySelector(".l-step-text p.l-lead") as Element).textAlign,
+				pictures: [...li.querySelectorAll("picture img")].map((img) => ({ src: (img as HTMLImageElement).getAttribute("src"), loading: (img as HTMLImageElement).loading, w: img.getAttribute("width"), h: img.getAttribute("height"), srcset: (img as HTMLImageElement).srcset })),
+			})),
+		);
+		expect(steps.length).toBe(12);
+		expect(steps.map((s) => s.n)).toEqual(steps.map((_, i) => String(i + 1)));
+		expect(new Set(steps.map((s) => s.pictures[0].src)).size).toBe(12);
+		for (const s of steps) {
+			expect(s.align === "start" || s.align === "left").toBe(true);
+			expect(s.pictures.map((p) => p.src?.includes("-light"))).toEqual([false, true]);
+			for (const p of s.pictures) {
+				expect(p.loading).toBe("lazy");
+				expect(p.w && p.h).toBeTruthy();
+				expect(p.srcset).toContain("-960.webp 960w");
+				expect((await page.request.get(new URL(p.src ?? "", url).href)).status(), p.src ?? "").toBe(200);
+			}
+		}
+		await context.close();
+	});
+
+	test("the image of the last step opens enlarged in the theme of the page", async () => {
+		for (const theme of ["dark", "light"] as const) {
+			const { context, page } = await open(theme);
+			const shot = page.locator("#path .l-step").last().locator(".shot-zoom");
+			await shot.scrollIntoViewIfNeeded();
+			await shot.click();
+			const dialog = page.locator("dialog[data-zoom-dialog]");
+			expect(await dialog.evaluate((d: HTMLDialogElement) => d.open)).toBe(true);
+			const src = (await dialog.locator("img").getAttribute("src")) ?? "";
+			expect(src).toContain("connections");
+			expect(src.includes("-light")).toBe(theme === "light");
+			await page.keyboard.press("Escape");
+			expect(await shot.evaluate((e) => e === document.activeElement)).toBe(true);
+			await context.close();
+		}
 	});
 });
 
@@ -378,7 +424,13 @@ describe("the entrance of the sections as the page scrolls", () => {
 		await page.goto(url, { waitUntil: "load" });
 		expect(await page.locator(".l-reveal-out").count()).toBe(0);
 		await page.locator(below).evaluate((e) => e.scrollIntoView({ block: "center" }));
-		await page.waitForFunction((s) => Number(getComputedStyle(document.querySelector(s) as Element).opacity) === 1, below);
+		// waitForFunction polls on animation frames, which a page without JavaScript does not run: poll from here instead.
+		let shown = 0;
+		for (let i = 0; i < 50 && shown !== 1; i++) {
+			shown = await opacity(page, below);
+			if (shown !== 1) await page.waitForTimeout(100);
+		}
+		expect(shown).toBe(1);
 		await context.close();
 	});
 });

@@ -171,7 +171,11 @@ describe("the design", () => {
 		expect(hero.title).toBe("Create, edit, manage and publish your audiovisual and text content in one place");
 		expect(hero.title.startsWith(hero.titleFocus)).toBe(true);
 		expect(hero.note).toBe("Free and open source. No subscriptions.");
-		expect(path.steps.map((s) => s.title)).toEqual(["Plan it", "Make it", "Approve it", "Publish it"]);
+		expect(path.steps.map((s) => s.title)).toEqual([
+			"Open the home", "Start a project", "Answer the brief", "Write the script", "Bring in your media", "Cut and caption",
+			"Make the thumbnail", "Work with your agent", "Teach it how you work", "Approve", "Publish", "Connect only what you choose",
+		]);
+		expect(new Set(path.steps.map((s) => s.screen)).size).toBe(path.steps.length);
 		expect(privacy.title).toBe("On your machine. On your terms.");
 		expect(privacy.subtitle).toBe("No subscriptions. No pay once. Open Source.");
 		expect(areas.items).toHaveLength(11);
