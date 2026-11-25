@@ -16,7 +16,7 @@ import (
 // from media analysis (SDD-002 section A.9): the silences of
 // clip.remove_silences and the words of caption.from_transcript and
 // caption.retime_from_clip, the speech of audio.duck and the beats of
-// audio.mark_beats. It reads artifacts and starts nothing: when the
+// audio.mark_beats, and the pointer events of the three commands that finish a screen take. It reads artifacts and starts nothing: when the
 // artifact is missing the batch fails with E_INVALID_STATE and a hint that
 // names the job to run. The stored operation carries `resolved`, so replaying
 // the log gives the same document. A caller of the service may not supply `resolved`
@@ -24,6 +24,7 @@ import (
 func (s *svc) resolveOps(
 	ctx context.Context,
 	tx Tx,
+	projectID string,
 	doc *timeline.Document,
 	ops []command.Operation,
 ) ([]command.Operation, error) {
@@ -44,6 +45,8 @@ func (s *svc) resolveOps(
 			resolved, rerr = s.resolveWords(ctx, tx, s.viewFor(doc, ops, out, i), &ops[i], i)
 		case "clip.face_frame":
 			resolved, rerr = s.resolveFaces(ctx, tx, s.viewFor(doc, ops, out, i), &ops[i], i)
+		case "recording.auto_zoom", "recording.set_cursor", "recording.set_click_highlight":
+			resolved, rerr = s.resolvePointer(ctx, tx, projectID, s.viewFor(doc, ops, out, i), &ops[i], i)
 		case "audio.duck":
 			resolved, rerr = s.resolveSpeech(ctx, tx, s.viewFor(doc, ops, out, i), &ops[i], i)
 		case "audio.mark_beats":
@@ -136,6 +139,8 @@ type opArgs struct {
 	AssetID       string          `json:"asset_id"`
 	SpeechItemIDs []string        `json:"speech_item_ids"`
 	ThresholdDB   *int            `json:"threshold_db"`
+	Visible       *bool           `json:"visible"`
+	Style         string          `json:"style"`
 	Resolved      json.RawMessage `json:"resolved"`
 }
 

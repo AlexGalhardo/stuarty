@@ -115,7 +115,7 @@ func (s *svc) edit(ctx context.Context, req EditRequest, allowInternal bool) (*E
 
 		// The analysis the commands need is read here and stored with the
 		// operation, so a replay of the log gives the same document.
-		resolvedOps, rerr := s.resolveOps(ctx, tx, doc, req.Operations)
+		resolvedOps, rerr := s.resolveOps(ctx, tx, row.ID, doc, req.Operations)
 		if rerr != nil {
 			return rerr
 		}
@@ -758,6 +758,10 @@ var analysisOps = map[string]bool{
 	"transcript.delete_range":  true,
 	"audio.duck":               true,
 	"audio.mark_beats":         true,
+
+	"recording.auto_zoom":           true,
+	"recording.set_cursor":          true,
+	"recording.set_click_highlight": true,
 }
 
 // callerSuppliedResolved reports whether the arguments carry the internal `resolved` member.
