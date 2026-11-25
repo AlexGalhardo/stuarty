@@ -1024,6 +1024,40 @@ jobs:
           if-no-files-found: ignore
           retention-days: 30
 
+  # Epic 93: the module built on Windows is the one built on Linux. Both runners check the digest
+  # pinned in engine/renderhost, so a build that is not the same on the two systems fails here
+  # instead of being found by a person. Off Linux the script builds internal/tools/rustchost, which
+  # needs Go (the host of the runner reported to cargo, see scripts/build-renderer.sh).
+  renderer-windows:
+    name: Renderer (windows-latest)
+    runs-on: windows-latest
+    timeout-minutes: 40
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: go.sum
+      - name: Install the pinned toolchain
+        run: rustup show active-toolchain
+      - name: The WebAssembly module is reproducible and is the embedded one
+        run: bash scripts/build-renderer.sh check
+      - name: Upload the module this runner built
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: renderer-wasm-windows
+          path: |
+            renderer/dist/stuarty_renderer.wasm
+            renderer/dist/stuarty_renderer.wasm.sha256
+          if-no-files-found: warn
+          retention-days: 30
+
   # SDD-007 section 10.2 item 3 (check 25): the real binary and the pinned FFmpeg run a
   # reference session under strace; any socket address that is not loopback fails.
   no-egress:
