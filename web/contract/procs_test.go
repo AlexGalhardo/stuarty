@@ -180,6 +180,12 @@ func exe(tool string) string {
 	return tool
 }
 
+// serveAnnounceDeadline is how long a started server may take to write runtime.json. Measured on the
+// author's Windows machine (VV-388): 1.6 to 8 s idle, up to 28 s with other agents compiling and testing
+// at once, which a 30 s limit missed. Four times the worst measure leaves room for a heavier load; a
+// server that exits is still seen at once, so only a hung one waits the whole time.
+const serveAnnounceDeadline = 2 * time.Minute
+
 func startProc(t *testing.T, ffmpeg, ffprobe string, extraEnv ...string) *procEnv {
 	t.Helper()
 
@@ -223,10 +229,13 @@ func startProc(t *testing.T, ffmpeg, ffprobe string, extraEnv ...string) *procEn
 		<-done
 	})
 
-	deadline := time.Now().Add(30 * time.Second)
+	began := time.Now()
+	deadline := began.Add(serveAnnounceDeadline)
 
 	for {
 		if rt, err := workspace.Dir(home).ReadRuntime(); err == nil && rt.PID == cmd.Process.Pid {
+			t.Logf("serve announced itself after %v", time.Since(began).Round(time.Millisecond))
+
 			break
 		}
 
