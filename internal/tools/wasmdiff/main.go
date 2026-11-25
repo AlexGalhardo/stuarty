@@ -341,6 +341,9 @@ func describe(w io.Writer, kind string, a, b []byte, sa, sb section, parse func(
 			d++
 		}
 		fmt.Fprintf(w, "first: %s %d, byte %d inside it (file byte %d in A, %d in B)\n", kind, i, d, ea[i].start+d, eb[i].start+d)
+		if text {
+			fmt.Fprintf(w, "around it\n  A: %s\n  B: %s\n", printable(window(ea[i].data, d)), printable(window(eb[i].data, d)))
+		}
 	}
 	if len(ea) == len(eb) && len(differing) > 0 && setOf(ea) == setOf(eb) {
 		fmt.Fprintf(w, "the %ss are the same set in a different order\n", kind)
@@ -355,6 +358,12 @@ func describe(w io.Writer, kind string, a, b []byte, sa, sb section, parse func(
 		}
 		fmt.Fprintf(w, "segment %d\n  A: %s\n  B: %s\n", i, printable(ea[i].data), printable(eb[i].data))
 	}
+}
+
+// window is the 200 bytes before and 200 after position at of data.
+func window(data []byte, at int) []byte {
+	lo, hi := max(at-200, 0), min(at+200, len(data))
+	return data[lo:hi]
 }
 
 func setOf(es []entry) string {
