@@ -1,13 +1,23 @@
 import { Head, Link, usePage } from "@inertiajs/react";
-import { Palette } from "lucide-react";
-import { useEffect, useState, useSyncExternalStore } from "react";
+import {
+	Captions,
+	Info,
+	type LucideIcon,
+	Palette,
+	Power,
+	SlidersHorizontal,
+	UserRound,
+} from "lucide-react";
+import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 
 import { DataList, DataRow } from "@/components/DataRow";
 import LocaleSwitcher from "@/components/LocaleSwitcher";
+import { ErrorState } from "@/components/ErrorState";
+import { LoadingState } from "@/components/LoadingState";
+import { OptionSelect } from "@/components/OptionSelect";
 import { PageHeader } from "@/components/PageHeader";
 import ThemeToggle from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import {
 	canBackground,
 	getDesktopBridge,
@@ -24,7 +34,7 @@ import {
 } from "../../editor/state/prefs";
 import AccountSettings from "./Account";
 import Background from "./Background";
-import { SELECT_CLASS, SettingsSection } from "./SettingsSection";
+import { SettingsSection } from "./SettingsSection";
 import Transcription from "./Transcription";
 
 type Loaded =
@@ -49,8 +59,8 @@ export default function SettingsIndex() {
 	const [system, setSystem] = useState<Loaded>({ state: "loading" });
 	const [unit, setUnit] = useState<TimeUnit>("s");
 
-	useEffect(() => {
-		setUnit(readTimeUnit());
+	const loadSystem = useCallback((): (() => void) => {
+		setSystem({ state: "loading" });
 		let live = true;
 		createClient(new HttpTransport("/api/v1"))
 			.getSystem()
@@ -70,24 +80,41 @@ export default function SettingsIndex() {
 		};
 	}, []);
 
-	const sections = [
-		{ id: "settings-about", label: t("ui.settings.about") },
-		{ id: "settings-preferences", label: t("ui.settings.preferences") },
-		{ id: "settings-brand", label: t("ui.brand.title") },
+	useEffect(() => {
+		setUnit(readTimeUnit());
+		return loadSystem();
+	}, [loadSystem]);
+
+	const sections: { id: string; label: string; icon: LucideIcon }[] = [
+		{ id: "settings-about", label: t("ui.settings.about"), icon: Info },
+		{
+			id: "settings-preferences",
+			label: t("ui.settings.preferences"),
+			icon: SlidersHorizontal,
+		},
+		{ id: "settings-brand", label: t("ui.brand.title"), icon: Palette },
 		...(account?.state === "unlocked"
-			? [{ id: "settings-account", label: t("ui.account.settings.title") }]
+			? [
+					{
+						id: "settings-account",
+						label: t("ui.account.settings.title"),
+						icon: UserRound,
+					},
+				]
 			: []),
 		...(canBackground(bridge)
 			? [
 					{
 						id: "settings-background",
 						label: t("ui.settings.background.title"),
+						icon: Power,
 					},
 				]
 			: []),
 		{
 			id: "settings-transcription",
 			label: t("ui.settings.transcription.title"),
+			icon: Captions,
 		},
 	];
 
@@ -108,8 +135,9 @@ export default function SettingsIndex() {
 							<a
 								key={section.id}
 								href={`#${section.id}`}
-								className="rounded-lg px-3 py-2 text-sm font-medium whitespace-nowrap text-text-muted hover:bg-surface-hover hover:text-text max-md:py-3"
+								className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium whitespace-nowrap text-text-muted hover:bg-surface-hover hover:text-text max-md:py-3"
 							>
+								<section.icon aria-hidden="true" className="size-4 shrink-0" />
 								{section.label}
 							</a>
 						))}
@@ -117,14 +145,14 @@ export default function SettingsIndex() {
 					<div className="flex min-w-0 flex-col gap-4">
 						<SettingsSection id="settings-about" title={t("ui.settings.about")}>
 							{system.state === "loading" && (
-								<p className="text-sm text-text-muted">
-									{t("ui.settings.loading")}
-								</p>
+								<LoadingState message={t("ui.settings.loading")} />
 							)}
 							{system.state === "failed" && (
-								<p role="alert" className="text-sm text-danger-text">
-									{t("ui.settings.unavailable")}
-								</p>
+								<ErrorState
+									level={3}
+									title={t("ui.settings.unavailable")}
+									onRetry={() => void loadSystem()}
+								/>
 							)}
 							{system.state === "ready" && (
 								<DataList>
@@ -163,26 +191,22 @@ export default function SettingsIndex() {
 							</div>
 							<div className="flex flex-col gap-1">
 								<div className="flex flex-wrap items-center justify-between gap-4">
-									<Label htmlFor="settings-time-unit">
+									<span className="text-sm font-medium">
 										{t("ui.settings.time_unit")}
-									</Label>
-									<select
-										id="settings-time-unit"
+									</span>
+									<OptionSelect
+										label={t("ui.settings.time_unit")}
 										value={unit}
-										className={SELECT_CLASS}
-										onChange={(event) => {
-											const next = event.target.value === "f" ? "f" : "s";
+										options={[
+											{ value: "s", label: t("ui.settings.time_unit_seconds") },
+											{ value: "f", label: t("ui.settings.time_unit_frames") },
+										]}
+										onChange={(value) => {
+											const next = value === "f" ? "f" : "s";
 											writeTimeUnit(next);
 											setUnit(next);
 										}}
-									>
-										<option value="s">
-											{t("ui.settings.time_unit_seconds")}
-										</option>
-										<option value="f">
-											{t("ui.settings.time_unit_frames")}
-										</option>
-									</select>
+									/>
 								</div>
 								<p className="text-sm text-text-subtle">
 									{t("ui.settings.time_unit_hint")}
