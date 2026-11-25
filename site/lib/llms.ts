@@ -4,7 +4,7 @@ import { mdxToMarkdown } from "@/lib/text";
 import { withTrailingSlash } from "@/lib/trailing-slash";
 
 const SUMMARY =
-	"Stuarty is a minimalist, open source video editor operated by AI agents (MCP, CLI, HTTP API) and by people in a browser UI.";
+	"Stuarty is an open source (MIT), self-hosted studio to create, edit, manage and publish video, image and text content in one place, on the web and the desktop. People use its UI; AI agents do the same through MCP, the CLI and the HTTP API, and nothing is published until a person approves it.";
 
 const url = (path: string) => `${site.url}${withTrailingSlash(path)}`;
 
