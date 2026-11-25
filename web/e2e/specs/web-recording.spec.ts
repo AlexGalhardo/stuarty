@@ -1,4 +1,5 @@
 import { readFile } from "node:fs/promises";
+import { createServer, type Server } from "node:net";
 import { join } from "node:path";
 import type { Page } from "@playwright/test";
 
@@ -14,8 +15,9 @@ import { test as base, caller, expect, home, seedProject } from "./helpers";
 // answers a prompt. A browser whose build has no screen capture for a page at all (the WebKit of Playwright on
 // Windows has no navigator.mediaDevices) cannot record: there the test checks what SDD-025 section 18.1 promises
 // that person, the sentence that says the browser cannot capture the screen and the Start button off, in place of
-// the recording. The tests run one after the other: one browser upload may be open at a time for a person
-// (SDD-025 section 18.4), and every test here is that person.
+// the recording. One browser upload may be open at a time for a person (SDD-025 section 18.4), and every test here,
+// in every browser, is that person on the same server: the tests of a browser run one after the other, and a test
+// holds the recording lock below for as long as it lasts, so the browsers of a local run never record at once.
 // The permissions option of Chromium and the launch options of each engine are set per browser: Firefox does not
 // know the permission names microphone and camera ("Unknown permission"), and Chromium ignores the preferences.
 const test = base.extend({
@@ -47,6 +49,36 @@ const test = base.extend({
 test.describe.configure({ timeout: 240_000, mode: "serial" });
 
 test.use({ viewport: { width: 1440, height: 900 } });
+
+// The recording lock: a port of the run's block (the last one, after the account server), listened on by the test
+// that holds it. A local run starts the projects at once, each in its own worker process, so the lock has to hold
+// across processes; the system lets the port go when its worker dies, so a killed run leaves no lock behind.
+const RECORDING_LOCK_PORT = Number(process.env.STUARTY_E2E_PORT ?? 3101) + 9;
+// The longest a test waits for the lock: the tests of the other browsers that hold it, one after the other.
+const LOCK_WAIT_MS = 300_000;
+
+async function holdRecordingLock(): Promise<Server> {
+	const server = createServer();
+	const tryListen = (): Promise<boolean> =>
+		new Promise((resolve, reject) => {
+			const failed = (error: NodeJS.ErrnoException): void => {
+				if (error.code === "EADDRINUSE") resolve(false);
+				else reject(error);
+			};
+			server.once("error", failed);
+			server.listen(
+				{ port: RECORDING_LOCK_PORT, host: "127.0.0.1", exclusive: true },
+				() => {
+					server.off("error", failed);
+					resolve(true);
+				},
+			);
+		});
+	await expect
+		.poll(tryListen, { timeout: LOCK_WAIT_MS, intervals: [500] })
+		.toBe(true);
+	return server;
+}
 
 interface RecordingView {
 	recording_id: string;
@@ -87,13 +119,24 @@ async function openDialog(page: Page, project: string): Promise<void> {
 
 // A browser that cannot capture the screen for a page says so in the dialog and leaves Start off. Returns true when
 // this browser is one of them, after checking that sentence, so the test that needed a recording ends there.
+// Whether it is one is read from the browser itself, not from the dialog: a dialog that blocks a browser that can
+// capture fails the test, and Chromium and Firefox, which have their fake devices here, must always be able to.
 async function endsAsBlocked(page: Page, project: string): Promise<boolean> {
-	// the dialog shows either the form of this browser or the reason it has none
+	const browserName = page.context().browser()?.browserType().name();
+	const canCapture = await page.evaluate(
+		() => typeof navigator.mediaDevices?.getDisplayMedia === "function",
+	);
+	if (browserName === "chromium" || browserName === "firefox") {
+		expect(canCapture, `${browserName} offers screen capture to a page`).toBe(
+			true,
+		);
+	}
 	const blocked = page.locator("[data-record-browser-blocked]");
-	await expect(
-		page.locator("[data-record-browser-blocked], [data-record-browser-codec]"),
-	).toBeVisible();
-	if ((await blocked.count()) === 0) return false;
+	if (canCapture) {
+		await expect(page.locator("[data-record-browser-codec]")).toBeVisible();
+		await expect(blocked).toHaveCount(0);
+		return false;
+	}
 	await expect(blocked).toHaveAttribute(
 		"data-record-browser-blocked",
 		"no_display_capture",
@@ -105,7 +148,19 @@ async function endsAsBlocked(page: Page, project: string): Promise<boolean> {
 }
 
 test.describe("recording in the browser", () => {
-	test("a person records 30 seconds, the take lands in the project and goes on the timeline ", async ({
+	let lock: Server | undefined;
+	test.beforeEach(async () => {
+		// the wait for the lock is added to the time of the test, so a test is never failed by the length of another
+		test.setTimeout(test.info().timeout + LOCK_WAIT_MS);
+		lock = await holdRecordingLock();
+	});
+	test.afterEach(async () => {
+		const held = lock;
+		lock = undefined;
+		if (held) await new Promise<void>((resolve) => held.close(() => resolve()));
+	});
+
+	test("a person records 30 seconds, the take lands in the project and goes on the timeline", async ({
 		page,
 		request,
 	}) => {
@@ -301,9 +356,10 @@ test.describe("recording in the browser", () => {
 	});
 
 	// Chromium only: the test plays the Stop sharing of the browser by dispatching an `ended` event on the track of
-	// the screen. In the Firefox of Playwright a listener added with addEventListener on a MediaStreamTrack never
-	// receives an event that a page dispatches itself (only `onended` does; a plain EventTarget works), and Firefox
-	// has no way to end a fake screen capture from outside, so the path cannot be exercised there. In WebKit the
+	// the screen. In Firefox a listener added with addEventListener on a MediaStreamTrack never receives an untrusted
+	// event, one that a page dispatches itself (only `onended` does), and Firefox has no way to end a fake screen
+	// capture from outside, so the path cannot be exercised there. The `ended` that Firefox fires when a person
+	// presses its own Stop sharing is trusted and reaches the listener of the recorder. In WebKit the
 	// browser has no capture to stop. The unit tests of the recorder cover the handler itself.
 	test("Stop sharing in the browser ends the take and the dialog moves on to the review @chromium-only", async ({
 		page,
