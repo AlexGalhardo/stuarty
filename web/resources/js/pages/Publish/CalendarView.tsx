@@ -36,6 +36,7 @@ export function CalendarView({
 	zone,
 	publications,
 	marks,
+	accountNames,
 	onOpen,
 	onOpenDay,
 	onMove,
@@ -47,6 +48,8 @@ export function CalendarView({
 	publications: readonly Publication[];
 	// the days of the range that hold a note, a theme or a mark, by date
 	marks?: ReadonlyMap<string, CalendarDay>;
+	// the name the person gave to each connection, by id; the chip shows it, not the kind of the connection
+	accountNames?: Readonly<Record<string, string>>;
 	onOpen(publicationId: string, targetId: string): void;
 	onOpenDay?(date: string): void;
 	onMove(publicationId: string, targetId: string, local: string): void;
@@ -103,7 +106,7 @@ export function CalendarView({
 							: undefined
 					}
 					className={cn(
-						"flex w-full flex-col items-start gap-1 rounded-md border border-s-4 bg-card px-2 py-1 text-left text-xs hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring",
+						"flex w-full min-w-0 flex-col items-start gap-1 overflow-hidden rounded-md border border-s-4 bg-card px-2 py-1 text-left text-xs hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring",
 						stateEdge(target.state),
 						picked && "ring-2 ring-ring",
 					)}
@@ -121,7 +124,7 @@ export function CalendarView({
 						{picked ? moving.local.slice(11) : wall.local.slice(11)}
 						<span className="font-normal text-muted-foreground">
 							{" "}
-							{target.network}
+							{accountNames?.[target.connection_id] ?? target.network}
 						</span>
 					</span>
 					<span className="max-w-full truncate">
