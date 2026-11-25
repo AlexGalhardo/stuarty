@@ -316,7 +316,7 @@ func noEncoderError(det *EncoderDetection) *Error {
 		Code:    CodeNoEncoder,
 		Reason:  "no_encoder",
 		Message: "No H.264 encoder works on this machine. Tried: " + tried + ".",
-		Hint:    "Use the FFmpeg that ships with Stuarty, which includes OpenH264, or point " + EnvFFmpeg + " at an FFmpeg that has libx264 and set STUARTY_ALLOW_USER_X264=true.",
+		Hint:    "Software H.264 needs OpenH264 installed by you (run \"" + OpenH264InstallCommand + "\"; the FFmpeg that comes with Stuarty never includes it), or use a hardware encoder, or point " + EnvFFmpeg + " at an FFmpeg that has libx264 and set STUARTY_ALLOW_USER_X264=true.",
 		Details: map[string]any{"candidates": details, "forced": det.Forced},
 	}
 	for _, c := range det.Candidates {
