@@ -7,6 +7,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.58.0] - 2026-11-25
+
+### Added
+
+- **web:** Review view compares the newest revisions at once and the path reads in one column ([9c16121](https://github.com/AlexGalhardo/stuarty/commit/9c161217f6063cd8db5d98b3bd1ad31c0b225ffd))
+- **web:** Approvals and notifications say human words, not ids ([fd57eb1](https://github.com/AlexGalhardo/stuarty/commit/fd57eb1421053fe1fc6c789a2b9b9341410e37a7))
+- **web:** Webhooks as a list and a detail panel ([a4bdeb7](https://github.com/AlexGalhardo/stuarty/commit/a4bdeb72892242e23b96f5e1b8fcab5df6f415cb))
+- **web:** Approvals ask the reason on reject, show a spend bar and say Permitir and Recusar ([6758604](https://github.com/AlexGalhardo/stuarty/commit/67586046a7ea1b60f76333333cb6d37256b6af82))
+- **web:** Notifications let a person allow or refuse an approval and group the answered ones ([e01a771](https://github.com/AlexGalhardo/stuarty/commit/e01a7719fa36ce3db9ff4b9898cef4aa163d8c5d))
+- **web:** Publish page keeps the grid in view, colours posts by state and shows the week by hours ([ae0e2c4](https://github.com/AlexGalhardo/stuarty/commit/ae0e2c45909b6bb59862d15bbeb53203d17a9257))
+- **web:** Connections as a card grid with the forms behind their cards ([87615a3](https://github.com/AlexGalhardo/stuarty/commit/87615a3c07ed07e7948e3c7bf2a553c387a5d586))
+- **web:** Settings navigation has icons and the about card loads and fails with the shared states ([4a09741](https://github.com/AlexGalhardo/stuarty/commit/4a097418dd4d4a6f121e23dc8aa1d7615aead8a9))
+- **web:** Text approval shows the post in a side panel ([532eb31](https://github.com/AlexGalhardo/stuarty/commit/532eb312049747b7fc6c08f785fc8c86e38e0a8e))
+- **web:** Chat panel on the surface of the design with the agent mark and the shared loading state ([91de6fd](https://github.com/AlexGalhardo/stuarty/commit/91de6fd0f6f4ced22d55f8175e99e9c6f6431b07))
+- **command:** Add recording.apply_layout, ready layouts for a screen and a webcam clip ([fe7e86e](https://github.com/AlexGalhardo/stuarty/commit/fe7e86eda5d8c74a70d687279d4322455f1efc16))
+- **command:** Add recording.set_background, a colour or image behind a screen clip ([eebe866](https://github.com/AlexGalhardo/stuarty/commit/eebe8662e9b15912017f698f9f6a22ba61823653))
+- **desktop:** Add the teleprompter window, kept out of a screen capture ([1bb0d74](https://github.com/AlexGalhardo/stuarty/commit/1bb0d742cc6f022efb0bf3c322a4d5bbe019549e))
+- **web:** Add the layout picker and the teleprompter controls to the editor ([5513e04](https://github.com/AlexGalhardo/stuarty/commit/5513e04aca88a75e1671c76f699773a2bc777f7a))
+- **ffmpeg:** Accept the stuarty and vukem markers and set both OpenH264 variables ([3222729](https://github.com/AlexGalhardo/stuarty/commit/3222729e48cb3e53c1ac0975c595de5965c08aa2))
+- **desktop:** Carry the own FFmpeg and its licences in the Windows installer ([3b91077](https://github.com/AlexGalhardo/stuarty/commit/3b9107792a5e202d2315de5fb2031d580ac8217f))
+- **ui:** Editor top bar with revision and live badges, bell, Chat and Export ([38c1990](https://github.com/AlexGalhardo/stuarty/commit/38c19907222ba037950692b7ec762b7ccc9f8482))
+- **ui:** Timeline toolbar keeps the text of trim, freeze, caption and modes from 1280 px ([56d30df](https://github.com/AlexGalhardo/stuarty/commit/56d30df1aebda2a5353c1b3270662d539b94c7d4))
+- **ui:** Inspector header with icon and track, switch toggles, tool lines and panel icons ([c613ee8](https://github.com/AlexGalhardo/stuarty/commit/c613ee86ca27688547fea24abfd9f75d975fa802))
+- **ui:** Cursor and clicks in effects, caption style grid, blur, voice chain and review panels ([5dc4663](https://github.com/AlexGalhardo/stuarty/commit/5dc466305bc05029138e448eaac23030e46c29b4))
+
+### Fixed
+
+- **web:** Publication list shows dates in the person's zone and the account name ([d8bbe57](https://github.com/AlexGalhardo/stuarty/commit/d8bbe571103120ae0e97239a44b2c81f8ea426ec))
+- **web:** Webhook event descriptions are translated ([4f95ff6](https://github.com/AlexGalhardo/stuarty/commit/4f95ff68d1b8c0aed546dab2fc62687820e09430))
+- **web:** Notification row keeps the original request text behind a disclosure ([0d53011](https://github.com/AlexGalhardo/stuarty/commit/0d53011298ae1834b08f35049eb0aa8dafd5dfe0))
+- **web:** Notification rows say the connection under Where and the project under Item ([29d39c4](https://github.com/AlexGalhardo/stuarty/commit/29d39c4263d7d682e9d6f2c1f3a563a8453cbe79))
+- **web:** Calendar chips show the account name and the approval facts sit beside the post ([5f6bc9e](https://github.com/AlexGalhardo/stuarty/commit/5f6bc9e87e58e448806f5a513773be80598e135f))
+- **command:** Recording.apply_layout refuses a clip whose rotation has keyframes ([a7ceeb3](https://github.com/AlexGalhardo/stuarty/commit/a7ceeb3fee41651b791d932aa30bb6aecf344eb5))
+- **command:** The item.slip summary says again that it takes an audio item ([a4a50a6](https://github.com/AlexGalhardo/stuarty/commit/a4a50a66c2d4dfe5c5d59324130c0cef0afbbf63))
+- **desktop:** The navigation guard of the teleprompter window runs ([221a568](https://github.com/AlexGalhardo/stuarty/commit/221a568bd6e7a176e59eddff65cc9e7f1061bed0))
+- **ui:** Keep the editor bar inside 1280 px and tell the specs, the guide and the tests ([8d81f1c](https://github.com/AlexGalhardo/stuarty/commit/8d81f1cd8c3bc162e318ccbb008f3edb64c07523))
+- **web:** The sound import message no longer tells the person to press Apply ([ccf911e](https://github.com/AlexGalhardo/stuarty/commit/ccf911e906535c49df3f056312c0add4b8369d38))
+- **site:** Date the landing demo from the capture day and open image history ([be3bf47](https://github.com/AlexGalhardo/stuarty/commit/be3bf47712e91d6258faac9c50f4ea42321663bd))
+
 ## [0.57.0] - 2026-11-25
 
 ### Added
@@ -2786,7 +2825,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **security:** Count retries in the rolling render quota ([1bc8114](https://github.com/AlexGalhardo/vukem-studio/commit/1bc81140afc4efcc346d68dd16bd7e91abbc15f4))
 - **security:** Add a global rolling daily model budget ([7d3afc4](https://github.com/AlexGalhardo/vukem-studio/commit/7d3afc46c8da935e36ad5bcd179ea12a474d0423))
 
-[Unreleased]: https://github.com/AlexGalhardo/stuarty/compare/v0.57.0...HEAD
+[Unreleased]: https://github.com/AlexGalhardo/stuarty/compare/v0.58.0...HEAD
+[0.58.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.57.0...v0.58.0
 [0.57.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.56.0...v0.57.0
 [0.56.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.55.0...v0.56.0
 [0.55.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.54.0...v0.55.0
