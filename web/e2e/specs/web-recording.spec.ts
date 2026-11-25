@@ -113,6 +113,7 @@ async function signInAsPerson(page: Page): Promise<void> {
 async function openDialog(page: Page, project: string): Promise<void> {
 	await signInAsPerson(page);
 	await page.goto(`/editor/${project}`);
+	await page.locator("[data-import-open]").click();
 	await page.locator("[data-record-open]").click();
 	await expect(page.locator("[data-record-step]")).toBeVisible();
 }

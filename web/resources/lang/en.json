@@ -1826,6 +1826,7 @@
         "empty": "No media yet",
         "choose": "Choose files",
         "path_why": "The editor imports by path: the server reads the file from its own disk, and a browser page cannot send or see file contents. Give the path of a file on the machine where the server runs. Shift+Enter adds a line for another path.",
+        "import_open": "Import",
         "drop": "A browser page cannot see the path of a file. Paste the path into the field.",
         "add": "Add to timeline",
         "choose_track": "Choose the track for {name}",

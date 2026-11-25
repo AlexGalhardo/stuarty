@@ -1,3 +1,4 @@
+import { OPEN_IMPORT_EVENT } from "../library/importPaths";
 import type { EditorRuntime } from "../state/runtime";
 
 // Mod+I and the menu: shows the library and goes to its import control, the
@@ -5,8 +6,13 @@ import type { EditorRuntime } from "../state/runtime";
 export function openImport(runtime: EditorRuntime): void {
 	runtime.uiWriter.showLeftTab("library");
 	requestAnimationFrame(() => {
-		const choose = document.querySelector<HTMLElement>("[data-import-choose]");
-		if (choose !== null) choose.click();
-		else document.querySelector<HTMLElement>("[data-import-path]")?.focus();
+		window.dispatchEvent(new Event(OPEN_IMPORT_EVENT));
+		requestAnimationFrame(focusImport);
 	});
+}
+
+function focusImport(): void {
+	const choose = document.querySelector<HTMLElement>("[data-import-choose]");
+	if (choose !== null) choose.click();
+	else document.querySelector<HTMLElement>("[data-import-path]")?.focus();
 }

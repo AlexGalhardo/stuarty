@@ -87,40 +87,41 @@ export default function AssetCard({
 						onDragStart?.(event, entry);
 					}}
 				>
-					<div className="flex gap-2">
-						<div className="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded bg-muted">
-							{hasThumbnail(entry) ? (
-								<img
-									src={thumbnailUrl(runtime.projectId, entry.asset_id, 160)}
-									alt=""
-									draggable={false}
-									className="size-full object-cover"
-								/>
-							) : entry.kind === "audio" ? (
-								<Music
-									aria-hidden="true"
-									className="size-5 text-muted-foreground"
-								/>
-							) : (
-								<ImageOff
-									aria-hidden="true"
-									className="size-4 text-muted-foreground"
-								/>
-							)}
-						</div>
-						<div className="min-w-0 flex-1 text-xs">
-							<p className="truncate font-medium">
-								<UntrustedText>{entry.name}</UntrustedText>
-							</p>
-							<p className="text-muted-foreground [font-variant-numeric:tabular-nums]">
-								{entry.duration_seconds !== null &&
-									`${formatSeconds(entry.duration_seconds, readTimeDisplay())} · `}
-								{entry.width !== undefined &&
-									entry.height !== undefined &&
-									`${entry.width}×${entry.height} · `}
-								{t(`ui.editor.library.state.${entry.state}`)}
-							</p>
-						</div>
+					<div className="relative flex aspect-video w-full items-center justify-center overflow-hidden rounded bg-muted">
+						{hasThumbnail(entry) ? (
+							<img
+								src={thumbnailUrl(runtime.projectId, entry.asset_id, 320)}
+								alt=""
+								draggable={false}
+								className="size-full object-cover"
+							/>
+						) : entry.kind === "audio" ? (
+							<Music
+								aria-hidden="true"
+								className="size-5 text-muted-foreground"
+							/>
+						) : (
+							<ImageOff
+								aria-hidden="true"
+								className="size-4 text-muted-foreground"
+							/>
+						)}
+						{entry.duration_seconds !== null && (
+							<span className="absolute bottom-2 left-2 rounded bg-black/70 px-1.5 py-0.5 font-mono text-xs text-white [font-variant-numeric:tabular-nums]">
+								{formatSeconds(entry.duration_seconds, readTimeDisplay())}
+							</span>
+						)}
+					</div>
+					<div className="min-w-0 text-xs">
+						<p className="truncate font-medium" title={entry.name}>
+							<UntrustedText>{entry.name}</UntrustedText>
+						</p>
+						<p className="text-muted-foreground [font-variant-numeric:tabular-nums]">
+							{entry.width !== undefined &&
+								entry.height !== undefined &&
+								`${entry.width}×${entry.height} · `}
+							{t(`ui.editor.library.state.${entry.state}`)}
+						</p>
 					</div>
 					{entry.state === "ingesting" && (
 						<div
@@ -173,10 +174,11 @@ export default function AssetCard({
 								variant="outline"
 								className="flex-1"
 								disabled={!canPlace}
+								aria-label={t("ui.editor.library.add")}
+								title={t("ui.editor.library.add")}
 								onClick={() => void actions.addToTimeline(entry.asset_id)}
 							>
 								<Plus aria-hidden="true" />
-								{t("ui.editor.library.add")}
 							</Button>
 						)}
 						{!trashed && (

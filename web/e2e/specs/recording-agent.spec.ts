@@ -49,6 +49,7 @@ async function openDialog(page: Page, project: string): Promise<void> {
 	await ensureAccount(page.request, home);
 	await signInWithPassword(page.request);
 	await page.goto(`/editor/${project}`);
+	await page.locator("[data-import-open]").click();
 	await page.locator("[data-record-open]").click();
 	await expect(page.locator("[data-record-step]")).toBeVisible();
 }
@@ -173,6 +174,7 @@ test.describe("an agent proposes cuts and a person decides", () => {
 
 		// the person sees both ranges with their reasons, keeps the second one and applies
 		await page.reload();
+		await page.locator("[data-import-open]").click();
 		await page.locator("[data-record-open]").click();
 		const card = page.locator(
 			`[data-record-proposal="${proposal?.proposal_id}"]`,

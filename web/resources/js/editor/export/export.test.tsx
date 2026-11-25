@@ -115,7 +115,7 @@ describe("Library", () => {
 		expect(html).toContain('aria-valuenow="40"');
 		expect(html).toContain("clip.mp4");
 		expect(html).toMatch(
-			/<button[^>]*disabled[^>]*>[^<]*(<svg.*?<\/svg>)?Add to timeline/,
+			/<button[^>]*disabled[^>]*aria-label="Add to timeline"/,
 		);
 	});
 });
