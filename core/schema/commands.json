@@ -74,7 +74,7 @@
     "internal": false,
     "name": "animation.apply_preset",
     "scope": "edit",
-    "summary": "Animates the start or end of a visual item with a preset: fade, slide, scale, pop, push in or pull out."
+    "summary": "Animates the start or end of a visual item with a motion preset."
   },
   {
     "args_schema": {
@@ -3371,7 +3371,7 @@
     "internal": false,
     "name": "clip.set_color",
     "scope": "edit",
-    "summary": "Grades a clip: brightness, contrast, saturation, temperature, tint, hue, LUT, HSL, wheels, curves."
+    "summary": "Grades a clip: basic colour, LUT, HSL, wheels and curves."
   },
   {
     "args_schema": {
@@ -4024,7 +4024,7 @@
     "internal": false,
     "name": "clip.set_speed",
     "scope": "edit",
-    "summary": "Changes the speed of a clip or audio item, constant or along a curve, or plays it backwards."
+    "summary": "Changes the speed of a clip or audio item, constant or on a curve, or reverses it."
   },
   {
     "args_schema": {
@@ -4085,7 +4085,7 @@
     "internal": false,
     "name": "composition.create_from_selection",
     "scope": "edit",
-    "summary": "Moves the selected items into a new timeline and puts one composition clip in their place."
+    "summary": "Moves the selected items into a new timeline, leaving one composition clip."
   },
   {
     "args_schema": {
@@ -4271,7 +4271,7 @@
     "internal": false,
     "name": "item.crossfade",
     "scope": "edit",
-    "summary": "Sets a matching fade-out and fade-in on two overlapping visual items of different tracks."
+    "summary": "Sets a matching fade-out and fade-in on two overlapping visual items."
   },
   {
     "args_schema": {
@@ -4418,7 +4418,7 @@
     "internal": false,
     "name": "item.extract_audio",
     "scope": "edit",
-    "summary": "Creates an audio item from the audio of a video clip, linked to it, and mutes the clip."
+    "summary": "Makes a linked audio item from a video clip's audio and mutes the clip."
   },
   {
     "args_schema": {
@@ -4476,7 +4476,7 @@
     "internal": false,
     "name": "item.freeze_frame",
     "scope": "edit",
-    "summary": "Holds one frame of a clip: splits the clip at a frame and inserts a still of that frame."
+    "summary": "Holds one frame of a clip: splits it there and inserts a still."
   },
   {
     "args_schema": {
@@ -5723,7 +5723,7 @@
     "internal": false,
     "name": "recording.auto_zoom",
     "scope": "edit",
-    "summary": "Zooms a screen recording in on its clicks."
+    "summary": "Zooms a screen take on its clicks."
   },
   {
     "args_schema": {
@@ -5784,7 +5784,7 @@
     "internal": false,
     "name": "recording.set_click_highlight",
     "scope": "edit",
-    "summary": "Highlights every click of a screen recording."
+    "summary": "Highlights the clicks of a screen take."
   },
   {
     "args_schema": {
@@ -5853,7 +5853,7 @@
     "internal": false,
     "name": "recording.set_cursor",
     "scope": "edit",
-    "summary": "Draws a smooth cursor on a screen recording."
+    "summary": "Draws a smooth cursor on a screen take."
   },
   {
     "args_schema": {
@@ -5897,7 +5897,7 @@
     "internal": false,
     "name": "settings.reframe",
     "scope": "edit",
-    "summary": "Re-targets the project to another aspect ratio and refits the items to the new frame."
+    "summary": "Changes the project aspect ratio and refits the items."
   },
   {
     "args_schema": {
@@ -7315,6 +7315,6 @@
     "internal": false,
     "name": "transcript.delete_range",
     "scope": "edit",
-    "summary": "Removes the media of a range of transcript words from the timeline and closes the gap."
+    "summary": "Removes the media of transcript words and closes the gap."
   }
 ]

@@ -11,7 +11,7 @@ import (
 func init() {
 	Register(Define(Spec{
 		Name:    "recording.set_click_highlight",
-		Summary: "Highlights every click of a screen recording.",
+		Summary: "Highlights the clicks of a screen take.",
 		Description: "Marks each click of the recording of the clip's asset with a short effect, a shape item on a Click " +
 			"highlight track above the clip: style ring (a ring that fades), wave (a ring that grows while it fades) " +
 			"or pulse (a disc that shrinks while it fades); none removes the highlights. Each lasts duration_ms and is " +

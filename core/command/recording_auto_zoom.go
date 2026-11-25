@@ -11,7 +11,7 @@ import (
 func init() {
 	Register(Define(Spec{
 		Name:    "recording.auto_zoom",
-		Summary: "Zooms a screen recording in on its clicks.",
+		Summary: "Zooms a screen take on its clicks.",
 		Description: "Plans zooms from the clicks of the recording of the clip's asset and writes them as keyframes of x, y " +
 			"and scale of the clip, in one undoable step; any x, y and scale keyframes the clip already has are replaced. " +
 			"Clicks close in time and in space make one zoom, the view eases in before the first click, is held after " +

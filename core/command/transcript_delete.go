@@ -12,7 +12,7 @@ import (
 func init() {
 	Register(Define(Spec{
 		Name:    "transcript.delete_range",
-		Summary: "Removes the media of a range of transcript words from the timeline and closes the gap.",
+		Summary: "Removes the media of transcript words and closes the gap.",
 		Description: "Cuts the source range of the words from_word to to_word (inclusive indices into the transcript of the " +
 			"asset) out of every clip and audio item that shows the asset, so the video clip and its linked sound are cut " +
 			"together. The pieces close up from the start of each item and the later items of the same track move " +

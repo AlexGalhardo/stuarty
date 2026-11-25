@@ -10,7 +10,7 @@ import (
 func init() {
 	Register(Define(Spec{
 		Name:    "recording.set_cursor",
-		Summary: "Draws a smooth cursor on a screen recording.",
+		Summary: "Draws a smooth cursor on a screen take.",
 		Description: "Draws the pointer of the recording of the clip's asset, smoothed, as shape items on a Cursor track " +
 			"above the clip: the capture never contains the cursor. The path is the pointer events through a filter of " +
 			"time constant smoothing_ms (0 follows the raw path), sampled every keyframe_ms and mapped through the zoom " +
