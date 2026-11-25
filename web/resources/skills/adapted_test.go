@@ -16,6 +16,8 @@ var wantSkills = []string{
 	"recall-learnings", "production-retro", "fetch-clip", "write-a-hook", "short-script", "caption-per-network",
 	"motion-with-an-external-engine",
 	"product-commercial", "commercial-copy", "long-talking-video", "chapter-titles",
+	// epic 64: the agent flow of a screen recording (SDD-025 section 19)
+	"record-with-a-person",
 }
 
 func TestTheSetIsComplete(t *testing.T) {

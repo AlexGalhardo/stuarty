@@ -64,7 +64,7 @@ Names are proposals until task 1 writes them to SDD-000.
 - [x] 4. The host-driven indicator on Windows. Verify: a test with a fake helper that the indicator signal starts and ends with the process, and a manual check recorded in the hand-off.
 - [x] 5. HTTP, CLI and MCP within the budget. Verify: `go test ./web/...` and `go run ./internal/tools/surfacebudget` pass.
 - [ ] 6. The UI: prepared card, proposal review with accept and reject per range. Verify: `bun run typecheck`, `bun run check:thin-client`, `bun run check:i18n`, `task test:web` and `bun run e2e` pass.
-- [ ] 7. A curated skill for the flow. Verify: the skill lint of the repository passes through `task lint`.
+- [x] 7. A curated skill for the flow. Verify: the skill lint of the repository passes through `task lint`.
 
 ## Test strategy
 
