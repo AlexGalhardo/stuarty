@@ -240,4 +240,38 @@ test.describe("vertical cuts", () => {
 		]);
 		expect(edits[0]?.body.base_revision).toBe(1);
 	});
+
+	// VV-422: a platform the catalogue has no face helper for.
+	test("a platform with no face set shows the refusal instead of waiting", async ({
+		page,
+		request,
+	}) => {
+		const seeded = await seedProject(request, { tracks: 1, perTrack: 1 });
+		await page.route("**/api/v1/system/tools", (route) =>
+			json(route, { ...status(false), offers: [] }),
+		);
+		await page.route("**/api/v1/projects/*/jobs**", (route) =>
+			route.request().method() === "POST"
+				? json(
+						route,
+						{
+							code: "E_TRANSCRIBE_UNAVAILABLE",
+							message: "Face tracking is not available on this platform.",
+							details: { tool: "face", model: "yunet" },
+						},
+						422,
+					)
+				: route.fallback(),
+		);
+		await openClip(page, seeded.id);
+
+		await page.getByRole("button", { name: "Find vertical cuts" }).click();
+		await expect(page.getByRole("alert")).toContainText(
+			"not available on this platform",
+		);
+		await expect(
+			page.getByRole("button", { name: "Find vertical cuts" }),
+		).toBeEnabled();
+		await expect(page.getByRole("dialog")).toHaveCount(0);
+	});
 });
