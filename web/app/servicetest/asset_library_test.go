@@ -197,6 +197,11 @@ func TestAssetLibrarySetInfoTagAndSearch(t *testing.T) {
 		t.Fatalf("set info = %+v, %v", got, err)
 	}
 
+	inUse, err := m.svc.AssetList(ctx, service.AssetListRequest{})
+	if err != nil || !slices.Equal(inUse.TagsInUse, []asset.TagCount{{Tag: "b-roll", Count: 1}, {Tag: "nature", Count: 1}}) {
+		t.Fatalf("tags in use = %+v, %v", inUse.TagsInUse, err)
+	}
+
 	for _, text := range []string{"ocean", "nature", "dusk", "wav", "OCEAN dusk"} {
 		res, err := m.svc.AssetList(ctx, service.AssetListRequest{Text: text})
 		if err != nil || !slices.Equal(assetIDs(res), []string{hash}) {
