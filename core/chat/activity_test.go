@@ -275,3 +275,16 @@ func TestSkillLoadedIsAKindAndRendersInMarkdown(t *testing.T) {
 		t.Fatalf("markdown = %q", md)
 	}
 }
+
+func TestActivityHasLoaded(t *testing.T) {
+	t.Parallel()
+
+	a := chat.Activity{SkillsLoaded: []chat.LoadedSkill{{Name: "captions"}}}
+	if !a.HasLoaded("captions") || a.HasLoaded("hooks") {
+		t.Fatal("HasLoaded must tell the skills the session read")
+	}
+
+	if (&chat.Activity{}).HasLoaded("captions") {
+		t.Fatal("a session that read nothing has loaded nothing")
+	}
+}

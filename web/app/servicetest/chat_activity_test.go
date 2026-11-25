@@ -369,3 +369,55 @@ func TestSecurity_T06_ChatActivityOfAnotherMembersSessionIsNotFound(t *testing.T
 		t.Errorf("a key without the read scope = %v", err)
 	}
 }
+
+// The skills list marks the skills a session read as loaded: by the session a person names, and for an agent by
+// the session its own token is bound to (SDD-018 section 7, epic 99).
+func TestSkillListMarksTheSkillsASessionLoaded(t *testing.T) {
+	t.Parallel()
+
+	w := newActivityWorld(t)
+	project := w.newProject("Launch video")
+	w.profile(t, "echo", "echo")
+	w.reviewedSkill(t, "captions")
+	w.reviewedSkill(t, "hooks")
+
+	s := w.start(t, project, "echo")
+
+	if _, err := w.svc.SkillGet(
+		w.tokenCtx(t, s.ID, project), service.LibraryRef{Name: "captions", AgentView: true},
+	); err != nil {
+		t.Fatal(err)
+	}
+
+	loaded := func(ctx context.Context, req service.SkillListRequest) map[string]bool {
+		t.Helper()
+
+		res, err := w.svc.SkillList(ctx, req)
+		if err != nil {
+			t.Fatalf("SkillList = %v", err)
+		}
+
+		out := map[string]bool{}
+		for _, e := range res.Entries {
+			out[e.Name] = e.Loaded
+		}
+
+		return out
+	}
+
+	if got := loaded(person(), service.SkillListRequest{SessionID: s.ID}); !got["captions"] || got["hooks"] {
+		t.Errorf("a named session = %v, want captions loaded and hooks not", got)
+	}
+
+	if got := loaded(person(), service.SkillListRequest{}); got["captions"] || got["hooks"] {
+		t.Errorf("no session marks nothing, got %v", got)
+	}
+
+	if got := loaded(w.tokenCtx(t, s.ID, project), service.SkillListRequest{AgentView: true}); !got["captions"] || got["hooks"] {
+		t.Errorf("an agent's own session = %v", got)
+	}
+
+	if _, err := w.svc.SkillList(person(), service.SkillListRequest{SessionID: "ses_0000000000"}); err == nil {
+		t.Error("a session that does not exist must be refused")
+	}
+}

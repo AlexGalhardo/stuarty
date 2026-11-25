@@ -42,6 +42,7 @@ type skillListIn struct {
 	Origin            string `json:"origin,omitempty"             doc:"built-in, user or imported."`
 	IncludeUnreviewed bool   `json:"include_unreviewed,omitempty" doc:"Also the skills no person has reviewed."`
 	AgentView         bool   `json:"agent_view,omitempty"`
+	SessionID         string `json:"session_id,omitempty"         doc:"An agent session: the skills it has read come back with loaded true."`
 }
 
 type skillWriteIn struct {
@@ -139,7 +140,7 @@ func (h *apiHandler) memoryRemove(c *web.Ctx, in libraryNameIn) (service.Library
 
 func (h *apiHandler) skillList(c *web.Ctx, in skillListIn) (service.LibraryListResult, error) {
 	res, err := h.Service.SkillList(c.Context(), service.SkillListRequest{
-		Origin: in.Origin, IncludeUnreviewed: in.IncludeUnreviewed, AgentView: in.AgentView,
+		Origin: in.Origin, IncludeUnreviewed: in.IncludeUnreviewed, AgentView: in.AgentView, SessionID: in.SessionID,
 	})
 
 	return deref(res), err
