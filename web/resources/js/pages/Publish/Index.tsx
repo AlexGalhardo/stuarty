@@ -258,15 +258,37 @@ export default function Publish(): ReactNode {
 					title={t("ui.publish.title")}
 					description={t("ui.publish.intro")}
 					actions={
-						<Button
-							type="button"
-							size="lg"
-							onClick={() => setEditing({ id: null })}
-							data-testid="publish-new"
-						>
-							<Plus aria-hidden="true" />
-							{t("ui.publish.new")}
-						</Button>
+						<>
+							<Button
+								type="button"
+								variant="outline"
+								size="lg"
+								onClick={() => setSlotsOpen(true)}
+								data-testid="publish-slots"
+							>
+								<CalendarClock aria-hidden="true" />
+								{t("ui.publish.slots.open")}
+							</Button>
+							<Button asChild variant="outline" size="lg">
+								<a
+									href={exportHref({ ...dateRange(days), zone })}
+									download
+									data-testid="publish-export"
+								>
+									<Download aria-hidden="true" />
+									{t("ui.publish.export")}
+								</a>
+							</Button>
+							<Button
+								type="button"
+								size="lg"
+								onClick={() => setEditing({ id: null })}
+								data-testid="publish-new"
+							>
+								<Plus aria-hidden="true" />
+								{t("ui.publish.new")}
+							</Button>
+						</>
 					}
 				/>
 
@@ -374,7 +396,7 @@ export default function Publish(): ReactNode {
 						<span className="text-xs text-muted-foreground" aria-live="polite">
 							{feed.live ? t("ui.publish.live") : ""}
 						</span>
-				</div>
+					</div>
 					<MiniMonth
 						month={mini}
 						selected={anchor}
