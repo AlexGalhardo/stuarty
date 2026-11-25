@@ -111,14 +111,18 @@ const (
 	ChunkRetry ChunkVerdict = "retry"
 	// ChunkOutOfOrder is a gap: an index above the one the track waits for.
 	ChunkOutOfOrder ChunkVerdict = "out_of_order"
-	// ChunkTooMany is an index at or above MaxChunksPerTrack, or a negative one.
+	// ChunkTooMany is an index at or above MaxChunksPerTrack.
 	ChunkTooMany ChunkVerdict = "too_many"
+	// ChunkMalformed is a negative index, which no chunk has (SDD-025 section 17.4 item 2).
+	ChunkMalformed ChunkVerdict = "malformed"
 )
 
 // JudgeChunk decides what the index of a chunk means when the track has stored chunks 0 to next-1.
 func JudgeChunk(next, index int) ChunkVerdict {
 	switch {
-	case index < 0 || index >= MaxChunksPerTrack:
+	case index < 0:
+		return ChunkMalformed
+	case index >= MaxChunksPerTrack:
 		return ChunkTooMany
 	case index < next:
 		return ChunkRetry
