@@ -110,7 +110,23 @@ STUARTY_FFMPEG="$(native "$FFMPEG")"
 STUARTY_FFPROBE="$(native "$FFPROBE")"
 export STUARTY_TEST_SOCIAL_URL="$SOCIAL_URL"
 export STUARTY_TEST_TRANSCRIBER=stub
-unset VUKEM_VIDEO_HOME STUARTY_PROJECT
+# Nothing of the caller's environment may lead the server, the CLI or the MCP server to another workspace or
+# server: a remote server and its key, a former name of the workspace, an inline master key that would win over
+# the file above, a launcher secret, a mode.
+unset VUKEM_VIDEO_HOME STUARTY_PROJECT VUKEM_VIDEO_PROJECT STUARTY_URL STUARTY_KEY VUKEM_VIDEO_URL VUKEM_VIDEO_KEY \
+	STUARTY_MASTER_KEY STUARTY_LAUNCHER_SECRET VUKEM_VIDEO_LAUNCHER_SECRET STUARTY_MODE VUKEM_VIDEO_MODE
+
+# The script runs only on its own workspace, never on the default one of the person (VV-421).
+own_home() {
+	[ -n "$STUARTY_HOME" ] && [ -d "$HOME_DIR" ] || return 1
+	case "$WORK" in /*) ;; *) return 1 ;; esac
+	local default
+	for default in "${HOME:-}/.stuarty" "${HOME:-}/.vukem-video" "${USERPROFILE:-}\\.stuarty" "${USERPROFILE:-}\\.vukem-video"; do
+		case "$HOME_DIR" in "$default" | "$default"/*) return 1 ;; esac
+		case "$STUARTY_HOME" in "$default" | "$default"[/\\]*) return 1 ;; esac
+	done
+}
+own_home || die "the workspace $STUARTY_HOME is not a folder of its own under $WORK; refusing to run"
 
 PORT="${FIRST_FLOW_PORT:-$((40000 + RANDOM % 20000))}"
 case "$PORT" in 7878 | 7979) die "port $PORT belongs to a person's own Stuarty" ;; esac
@@ -126,6 +142,14 @@ for _ in $(seq 1 150); do
 	sleep 0.2
 done
 curl -sf "$BASE/up" >/dev/null 2>&1 || die "the server did not answer: $(tail -n 5 "$WORK/serve.log")"
+# What answered is this script's server only if it announced itself in this workspace at that address: another
+# process on the port would answer /up too, and the CLI below finds its server through this file.
+for _ in $(seq 1 50); do
+	grep -q "\"addr\":\"127.0.0.1:$PORT\"" "$HOME_DIR/runtime.json" 2>/dev/null && break
+	sleep 0.2
+done
+grep -q "\"addr\":\"127.0.0.1:$PORT\"" "$HOME_DIR/runtime.json" 2>/dev/null ||
+	die "the server on $BASE is not the one of the workspace $STUARTY_HOME"
 
 # ---- helpers ------------------------------------------------------------------------------------------------
 
