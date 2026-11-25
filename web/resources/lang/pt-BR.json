@@ -2465,7 +2465,7 @@
       },
       "screen_take": {
         "title": "Gravação de tela",
-        "hint": "Para uma gravação feita com eventos do ponteiro: dá zoom nos cliques, desenha um cursor suave e marca cada clique. Cada botão cria itens na linha do tempo que você pode alterar ou apagar. Rode de novo depois de mudar o zoom ou mover o clipe.",
+        "hint": "Para uma gravação feita com eventos do ponteiro: dá zoom nos cliques, desenha um cursor suave e marca cada clique. Cada botão cria keyframes ou itens na linha do tempo que você pode alterar ou apagar; Dar zoom nos cliques substitui os keyframes de posição e escala do clipe. O cursor e os destaques não acompanham mudanças posteriores: desenhe-os de novo depois de mudar o zoom à mão ou mover o clipe.",
         "default": "Padrão",
         "zoom_level": "Nível do zoom",
         "zoom_apply": "Dar zoom nos cliques",
