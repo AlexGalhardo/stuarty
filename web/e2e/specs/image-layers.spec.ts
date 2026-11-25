@@ -7,6 +7,7 @@ import {
 	imageState,
 	layerByName,
 	newImage,
+	openMoreTools,
 	test,
 } from "./image-support";
 
@@ -209,12 +210,16 @@ test.describe("image layers", () => {
 		const { id, names } = await seed(request);
 		await page.goto(`/edit-image/${id}`);
 		await row(page, "Middle").click();
+		await openMoreTools(page);
 		await page.getByTestId("image-forward").click();
 		await expect.poll(names).toEqual(["Back", "Top", "Middle"]);
+		await openMoreTools(page);
 		await page.getByTestId("image-back").click();
 		await expect.poll(names).toEqual(["Back", "Middle", "Top"]);
+		await openMoreTools(page);
 		await page.getByTestId("image-duplicate").click();
 		await expect.poll(async () => (await names()).length).toBe(4);
+		await openMoreTools(page);
 		await page.getByTestId("image-remove").click();
 		await expect.poll(async () => (await names()).length).toBe(3);
 	});

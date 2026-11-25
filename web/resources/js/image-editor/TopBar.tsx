@@ -18,7 +18,9 @@ import { useShell } from "../shell/ShellContext";
 import type { ImageDocument } from "./api/types";
 import { ExportTool } from "./export/ExportDialog";
 import { paletteHint } from "./palette/CommandPalette";
+import { OperationTools } from "./toolbar/OperationTools";
 import { useOperationDialogs } from "./toolbar/operations";
+import { Toolbar } from "./toolbar/Toolbar";
 
 // "Saved automatically: 14:32": the core stores every edit before its answer arrives, so the time is the
 // moment the open revision reached the screen. It says nothing until a document is on screen.
@@ -146,6 +148,13 @@ export default function TopBar({
 			)}
 			<SavedIndicator revision={doc?.revision ?? null} />
 			<span className="ml-auto" />
+			<Toolbar
+				label={t("ui.image.toolbar.history")}
+				testId="image-history-toolbar"
+				className="p-0"
+			>
+				<OperationTools group="history" />
+			</Toolbar>
 			<PaletteButton />
 			<NotificationBell />
 			<ChatButton />

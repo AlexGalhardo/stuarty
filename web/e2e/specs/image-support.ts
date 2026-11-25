@@ -2,7 +2,7 @@ import { execFileSync } from "node:child_process";
 import { mkdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { APIRequestContext } from "@playwright/test";
+import type { APIRequestContext, Page } from "@playwright/test";
 
 import { isCompletePng, makeOnce } from "../support/makeOnce";
 import {
@@ -165,4 +165,14 @@ export function layerByName(
 		if (inner) return inner;
 	}
 	return undefined;
+}
+
+// The operations the tool rail keeps behind its "more" control (group, order, duplicate, remove, the brand
+// logo): the menu is opened before one is chosen and closes when it is.
+export async function openMoreTools(page: Page): Promise<void> {
+	const menu = page.getByRole("menu", { name: "More tools" });
+	// A menu that was just used is still leaving: wait for it, then open it again.
+	await menu.waitFor({ state: "hidden" });
+	await page.getByTestId("image-more-tools").click();
+	await menu.waitFor({ state: "visible" });
 }

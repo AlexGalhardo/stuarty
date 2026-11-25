@@ -7,6 +7,7 @@ import {
 	imageState,
 	layerByName,
 	newImage,
+	openMoreTools,
 	seedPhoto,
 	test,
 } from "./image-support";
@@ -144,7 +145,10 @@ test.describe("a11y image editor", () => {
 		// focus of its language control raises a CSP violation that is not this editor's (VV-249).
 		await page.getByRole("link", { name: "Back to Image editor" }).focus();
 		// the toolbar is one tab stop and the arrows walk it: add a text with Enter
-		await tabTo(page, (el) => el.hasAttribute("data-tool"));
+		await tabTo(
+			page,
+			(el) => el.closest('[data-testid="image-toolbar"]') !== null,
+		);
 		await tabTo(
 			page,
 			(el) => el.getAttribute("data-testid") === "image-add-text",
@@ -237,16 +241,24 @@ test.describe("a11y image editor", () => {
 			"image-add-rect",
 			"image-add-fill",
 			"image-add-image",
+			"image-more-tools",
+			"image-export-open",
+		]) {
+			expect(await present(testId), testId).toBe(true);
+		}
+		// group, ungroup, duplicate, remove, forward and back are behind the "more" control
+		await openMoreTools(page);
+		for (const testId of [
 			"image-group",
 			"image-ungroup",
 			"image-duplicate",
 			"image-remove",
 			"image-forward",
 			"image-back",
-			"image-export-open",
 		]) {
 			expect(await present(testId), testId).toBe(true);
 		}
+		await page.keyboard.press("Escape");
 		await row(page, "Photo").click();
 		for (const testId of [
 			"image-align-left",

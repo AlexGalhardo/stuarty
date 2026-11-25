@@ -29,9 +29,9 @@ import { createImageStore } from "./state/store";
 import TopBar from "./TopBar";
 import { AddImageProvider, useAddImage } from "./toolbar/addImage";
 import { OperationDialogs } from "./toolbar/OperationDialogs";
-import { OperationTools } from "./toolbar/OperationTools";
 import { OperationsProvider } from "./toolbar/operations";
 import { Toolbar, ViewTools } from "./toolbar/Toolbar";
+import { ToolRail } from "./toolbar/ToolRail";
 
 // The editor takes the room the frame of the page leaves (FullLayout): the window less the top bar of the
 // editor and the scene bar. The floor keeps a short window from crushing the canvas.
@@ -162,12 +162,7 @@ function Shell({ live }: { live: boolean }): ReactNode {
 			<ModelJobStrip />
 			{!failed && <ErrorBar />}
 			<div className="flex min-h-0 flex-1">
-				<Toolbar label={t("ui.image.toolbar.label")} orientation="vertical">
-					<OperationTools group="history" />
-					<OperationTools group="add" />
-					<OperationTools group="arrange" />
-					<OperationTools group="model" />
-				</Toolbar>
+				<ToolRail />
 				<aside
 					aria-label={t("ui.image.layers.title")}
 					className="flex w-56 shrink-0 flex-col border-r border-border bg-ed-panel xl:w-60"
