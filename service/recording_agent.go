@@ -607,8 +607,14 @@ func recordingAgentView(v *Recording, r recordings.Row) {
 
 	if p, ok := planOf(r); ok && recording.IsPrepared(recording.State(r.State), r.Plan) {
 		v.Plan = &RecordingPlan{
-			SourceID: p.SourceID, FPS: p.FPS, Microphone: p.Microphone, SystemAudio: p.SystemAudio, Camera: p.Camera, Events: p.Events,
-			ScriptID: p.ScriptID, Notes: p.Notes,
+			SourceID:    p.SourceID,
+			FPS:         p.FPS,
+			Microphone:  p.Microphone,
+			SystemAudio: p.SystemAudio,
+			Camera:      p.Camera,
+			Events:      p.Events,
+			ScriptID:    p.ScriptID,
+			Notes:       p.Notes,
 		}
 	}
 
