@@ -37,10 +37,10 @@ cd desktop/shell/app && go build -ldflags "-X main.version=0.9.0" .
 cd desktop/shell/app && CGO_ENABLED=0 go build -tags purego .   # Linux and macOS with no cgo
 ```
 
-A build without a release version (`-X main.version` unset, `dev`, or ending in `-dev`) does not open the default
+A build without a release version (`-X main.version` unset, or a version with `dev` in it) does not open the default
 workspace `~/.stuarty`: it stops with `E_INVALID_STATE` until `STUARTY_HOME` names another folder, so a development
 run never migrates the workspace of the installed application (SDD-007 section 3.10). `STUARTY_ALLOW_DEFAULT_HOME=1`
-opens the default one on purpose.
+opens the default one on purpose; only a release shell passes that allowance to the server it starts.
 
 On Windows the window uses WebView2 (the runtime ships with Windows 11). On Linux
 and macOS the `purego` tag builds with no C toolchain and no WebKitGTK headers;
