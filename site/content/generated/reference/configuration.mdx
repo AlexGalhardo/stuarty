@@ -47,6 +47,7 @@ All variables are optional.
 | `STUARTY_ADMIN_EMAIL`, `STUARTY_ADMIN_PASSWORD` | none | network mode: create the first administrator at start-up when no user exists |
 | `STUARTY_URL`, `STUARTY_KEY` | none | client side: make the CLI and the stdio MCP server talk to a remote server with an API key |
 | `STUARTY_PROJECT` | none | client side: the default project of CLI commands that take one |
+| `STUARTY_HARNESS`, `STUARTY_HARNESS_PASSWORD` | none | release tooling only (`internal/tools/agentharness`, never in a shipped binary): `STUARTY_HARNESS=1` allows the paid agent harness to run; `STUARTY_HARNESS_PASSWORD` is the password of its local account in the first-flow scenario, read from the environment so it is not on the command line; the harness gives the `stuarty` process it runs only an allow-list of variables, never a provider key |
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | none | turns on OpenTelemetry (ADR-0026) |
 
 ## Variables of the server and of the server package
