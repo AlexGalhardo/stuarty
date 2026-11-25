@@ -105,7 +105,7 @@ The order, the critical path and the groups are in `docs/planning/screen-recordi
 | Epic | Title | Size | Depends on | Status |
 | --- | --- | --- | --- | --- |
 | [61](61-recording-foundation-windows-capture.md) | Recording foundation and Windows screen capture | XL | 57, the redesign choice (its spike needs neither) | IN PROGRESS (merged 2026-11-24, `ddb10a3f6`..`2af563b39`; AC6, the NFR-067 budget, waits for a run on an idle machine) |
-| [62](62-windows-recording-audio-webcam-events.md) | Windows recording: audio, webcam, pause, cursor and click events | L | 61 | TODO |
+| [62](62-windows-recording-audio-webcam-events.md) | Windows recording: audio, webcam, pause, cursor and click events | L | 61 | DONE (2026-11-24, `1deedb84c`..`4385b96bf`; the 10-minute drift fixture ran 100 s and real devices are untested, D-144) |
 | [63](63-basic-web-recording.md) | Basic web recording | M | 61 | TODO |
 | [64](64-agent-operation-of-recording.md) | Agents in the recording flow | L | 61, 62 | TODO |
 | [65](65-auto-zoom-smooth-cursor-click-highlight.md) | Automatic zoom, smooth cursor and click highlight | L | 62 | TODO |
