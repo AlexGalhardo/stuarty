@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 
 // The top of a page: its one h1, a sentence under it and the page actions on
@@ -35,5 +36,21 @@ export function PageHeader({
 				<div className="flex flex-wrap items-center gap-2">{actions}</div>
 			) : null}
 		</header>
+	);
+}
+
+// The one primary action of a page, in the header: 40 px high, with an icon when it has one (design-system section
+// 4.2). It is a Button of the size `lg` and takes what a Button takes, so a link is `asChild`.
+export function PageHeaderAction({
+	className,
+	...props
+}: React.ComponentProps<typeof Button>): ReactNode {
+	return (
+		<Button
+			size="lg"
+			data-slot="page-header-action"
+			className={className}
+			{...props}
+		/>
 	);
 }

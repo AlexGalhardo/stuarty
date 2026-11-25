@@ -100,6 +100,32 @@
     "unsaved": {
       "leave": "Você tem texto que ainda não foi salvo. Se sair, ele será perdido. Sair mesmo assim?"
     },
+    "state": {
+      "retry": "Tentar de novo",
+      "how_to_fix": "Como resolver",
+      "empty_steps": "Primeiros passos",
+      "error": {
+        "network": {
+          "title": "Não consegui falar com o Stuarty",
+          "body": "O servidor local não respondeu. Seus arquivos continuam no seu computador.",
+          "step1": "Confira se o Stuarty ainda está aberto.",
+          "step2": "Se o endereço mudou, abra o Stuarty de novo pelo atalho.",
+          "step3": "Toque em Tentar de novo."
+        },
+        "locked": {
+          "title": "O Stuarty está bloqueado",
+          "body": "Entre com a sua senha para continuar.",
+          "step1": "Abra a tela de entrada.",
+          "step2": "Digite a senha da sua conta local."
+        },
+        "generic": {
+          "title": "Não foi possível carregar esta página",
+          "body": "Algo deu errado do lado do Stuarty. Nada foi perdido.",
+          "step1": "Toque em Tentar de novo.",
+          "step2": "Se continuar, recarregue a página."
+        }
+      }
+    },
     "nav": {
       "label": "Navegação principal",
       "skip": "Ir para o conteúdo principal",
@@ -408,6 +434,11 @@
           "more": {
             "one": "E mais {count} pedido na fila.",
             "other": "E mais {count} pedidos na fila."
+          },
+          "action": {
+            "publish": "Publicar",
+            "generate": "Gerar com IA",
+            "approval": "Pedido de aprovação"
           },
           "promise": "Nada sai sem o seu sim.",
           "nothing": "Nada espera por você agora."
