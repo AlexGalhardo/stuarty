@@ -2279,6 +2279,9 @@
           "apply_layout": {
             "title": "Lay out a screen and a webcam recording"
           },
+          "set_background": {
+            "title": "Put a background behind a screen recording"
+          },
           "auto_zoom": {
             "title": "Zoom a screen recording on its clicks"
           },

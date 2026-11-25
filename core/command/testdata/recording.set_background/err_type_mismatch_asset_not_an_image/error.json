@@ -1,0 +1,7 @@
+{
+  "code": "E_TYPE_MISMATCH",
+  "message": "Asset ast_s5c6r7e8e9 is a video asset; a background image needs an image.",
+  "hint": "Use an asset of kind image.",
+  "retryable": false,
+  "path": "args.asset_id"
+}

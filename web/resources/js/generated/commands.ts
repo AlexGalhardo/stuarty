@@ -2375,6 +2375,29 @@ export interface RecordingAutoZoomArgs {
   ramp_ms?: number;
 }
 
+export interface RecordingSetBackgroundArgs {
+  /**
+   * For image: an image asset.
+   */
+  asset_id?: string;
+  /**
+   * For color: a colour. Default #0F172A.
+   */
+  color?: string;
+  /**
+   * The screen clip.
+   */
+  item_id: string;
+  /**
+   * color, image or none (removes the background and the shadow).
+   */
+  kind: "color" | "image" | "none";
+  /**
+   * Draw a drop shadow under the clip. Default true.
+   */
+  shadow?: boolean;
+}
+
 export interface RecordingSetClickHighlightArgs {
   /**
    * A colour; default #FFC400.
@@ -2896,7 +2919,7 @@ export interface TranscriptDeleteRangeArgs {
   to_word: number;
 }
 
-export type CommandName = "animation.apply_preset" | "animation.list_presets" | "asset.add" | "asset.remove" | "audio.add" | "audio.apply_preset" | "audio.apply_voice_preset" | "audio.duck" | "audio.mark_beats" | "audio.processor_add" | "audio.processor_move" | "audio.processor_remove" | "audio.processor_set" | "caption.add" | "caption.apply_style" | "caption.edit_word" | "caption.from_transcript" | "caption.import_subtitles" | "caption.list_styles" | "caption.merge" | "caption.retime_from_clip" | "caption.set_breaks" | "caption.set_style" | "caption.set_words" | "caption.split" | "clip.add" | "clip.add_composition" | "clip.blur_region" | "clip.face_frame" | "clip.remove_silences" | "clip.replace_media" | "clip.set_blend" | "clip.set_blur" | "clip.set_chroma_key" | "clip.set_color" | "clip.set_effects" | "clip.set_filter" | "clip.set_flip" | "clip.set_framing" | "clip.set_mask" | "clip.set_outline" | "clip.set_shadow" | "clip.set_speed" | "composition.create_from_selection" | "composition.expand" | "font.add" | "font.remove" | "item.crossfade" | "item.delete" | "item.duplicate" | "item.extract_audio" | "item.freeze_frame" | "item.link" | "item.move" | "item.paste_attributes" | "item.rename" | "item.repeat" | "item.set_audio" | "item.set_enabled" | "item.set_transform" | "item.set_transition" | "item.slip" | "item.split" | "item.trim" | "item.unlink" | "keyframe.clear" | "keyframe.remove" | "keyframe.set" | "keyframe.set_easing" | "marker.add" | "marker.remove" | "marker.set" | "project.rename" | "recording.apply_layout" | "recording.auto_zoom" | "recording.set_click_highlight" | "recording.set_cursor" | "settings.reframe" | "settings.set" | "settings.set_fps" | "shape.add" | "shape.set" | "slot.fill" | "slot.mark" | "slot.unmark" | "template.set_info" | "text.add" | "text.apply_preset" | "text.set" | "timeline.close_gap" | "track.add" | "track.move" | "track.remove" | "track.set_caption_style" | "track.update" | "transcript.delete_range";
+export type CommandName = "animation.apply_preset" | "animation.list_presets" | "asset.add" | "asset.remove" | "audio.add" | "audio.apply_preset" | "audio.apply_voice_preset" | "audio.duck" | "audio.mark_beats" | "audio.processor_add" | "audio.processor_move" | "audio.processor_remove" | "audio.processor_set" | "caption.add" | "caption.apply_style" | "caption.edit_word" | "caption.from_transcript" | "caption.import_subtitles" | "caption.list_styles" | "caption.merge" | "caption.retime_from_clip" | "caption.set_breaks" | "caption.set_style" | "caption.set_words" | "caption.split" | "clip.add" | "clip.add_composition" | "clip.blur_region" | "clip.face_frame" | "clip.remove_silences" | "clip.replace_media" | "clip.set_blend" | "clip.set_blur" | "clip.set_chroma_key" | "clip.set_color" | "clip.set_effects" | "clip.set_filter" | "clip.set_flip" | "clip.set_framing" | "clip.set_mask" | "clip.set_outline" | "clip.set_shadow" | "clip.set_speed" | "composition.create_from_selection" | "composition.expand" | "font.add" | "font.remove" | "item.crossfade" | "item.delete" | "item.duplicate" | "item.extract_audio" | "item.freeze_frame" | "item.link" | "item.move" | "item.paste_attributes" | "item.rename" | "item.repeat" | "item.set_audio" | "item.set_enabled" | "item.set_transform" | "item.set_transition" | "item.slip" | "item.split" | "item.trim" | "item.unlink" | "keyframe.clear" | "keyframe.remove" | "keyframe.set" | "keyframe.set_easing" | "marker.add" | "marker.remove" | "marker.set" | "project.rename" | "recording.apply_layout" | "recording.auto_zoom" | "recording.set_background" | "recording.set_click_highlight" | "recording.set_cursor" | "settings.reframe" | "settings.set" | "settings.set_fps" | "shape.add" | "shape.set" | "slot.fill" | "slot.mark" | "slot.unmark" | "template.set_info" | "text.add" | "text.apply_preset" | "text.set" | "timeline.close_gap" | "track.add" | "track.move" | "track.remove" | "track.set_caption_style" | "track.update" | "transcript.delete_range";
 
 export interface CommandArgsMap {
 	"animation.apply_preset": AnimationApplyPresetArgs;
@@ -2974,6 +2997,7 @@ export interface CommandArgsMap {
 	"project.rename": ProjectRenameArgs;
 	"recording.apply_layout": RecordingApplyLayoutArgs;
 	"recording.auto_zoom": RecordingAutoZoomArgs;
+	"recording.set_background": RecordingSetBackgroundArgs;
 	"recording.set_click_highlight": RecordingSetClickHighlightArgs;
 	"recording.set_cursor": RecordingSetCursorArgs;
 	"settings.reframe": SettingsReframeArgs;
@@ -3075,6 +3099,7 @@ export const COMMANDS: Record<CommandName, { summary: string; scope: "edit" | "m
 	"project.rename": { summary: "Sets the project name.", scope: "edit", internal: false, errors: ["E_VALIDATION"] },
 	"recording.apply_layout": { summary: "Frames a screen and a webcam clip in a layout.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE"] },
 	"recording.auto_zoom": { summary: "Zooms a screen take on its clicks.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE"] },
+	"recording.set_background": { summary: "Sets a colour or image behind a screen clip.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_LIMIT"] },
 	"recording.set_click_highlight": { summary: "Highlights the clicks of a screen take.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE","E_LIMIT"] },
 	"recording.set_cursor": { summary: "Draws a smooth cursor on a screen take.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE","E_LIMIT"] },
 	"settings.reframe": { summary: "Changes the project aspect ratio and refits the items.", scope: "edit", internal: false, errors: ["E_VALIDATION"] },

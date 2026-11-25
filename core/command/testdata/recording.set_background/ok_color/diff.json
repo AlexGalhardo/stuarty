@@ -1,0 +1,57 @@
+[
+  {
+    "kind": "track.added",
+    "id": "trk_n3w7r4ck0e",
+    "object": {
+      "id": "trk_n3w7r4ck0e",
+      "kind": "visual",
+      "name": "Background",
+      "order": "n"
+    }
+  },
+  {
+    "kind": "item.added",
+    "id": "itm_b9g1t3m5k7",
+    "object": {
+      "contrast": 1,
+      "duration": 300,
+      "fill": "#1E293B",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
+      "height": 1080,
+      "id": "itm_b9g1t3m5k7",
+      "name": "Background itm_m1n2p3q4r5",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "shape": "rect",
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
+      "start": 0,
+      "stroke_color": "#000000",
+      "track": "trk_n3w7r4ck0e",
+      "type": "shape",
+      "volume": 1,
+      "width": 1920
+    }
+  },
+  {
+    "kind": "item.updated",
+    "id": "itm_m1n2p3q4r5",
+    "changes": {
+      "shadow": [
+        null,
+        {
+          "blur": 32.4,
+          "color": "#000000",
+          "dx": 0,
+          "dy": 12.96,
+          "opacity": 0.5
+        }
+      ]
+    }
+  }
+]

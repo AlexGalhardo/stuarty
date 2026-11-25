@@ -5805,6 +5805,63 @@
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "additionalProperties": false,
       "properties": {
+        "asset_id": {
+          "description": "For image: an image asset.",
+          "pattern": "^ast_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+          "type": "string"
+        },
+        "color": {
+          "description": "For color: a colour. Default #0F172A.",
+          "type": "string"
+        },
+        "item_id": {
+          "description": "The screen clip.",
+          "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+          "type": "string"
+        },
+        "kind": {
+          "description": "color, image or none (removes the background and the shadow).",
+          "enum": [
+            "color",
+            "image",
+            "none"
+          ],
+          "type": "string"
+        },
+        "shadow": {
+          "description": "Draw a drop shadow under the clip. Default true.",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "item_id",
+        "kind"
+      ],
+      "type": "object"
+    },
+    "description": "Puts a colour or an image asset behind a screen clip, on a visual track named Background at the bottom of the stack, for the time the clip plays, and gives the clip a drop shadow (shadow, default true; false removes it). kind none removes the background and the shadow. Each run replaces the items of the clip's background. Use recording.apply_layout first: its padding leaves the room the background shows in. There is no gradient and no rounded corner: make a gradient as an image and use kind image.",
+    "domain": "video",
+    "errors": [
+      "E_VALIDATION",
+      "E_NOT_FOUND",
+      "E_TYPE_MISMATCH",
+      "E_LIMIT"
+    ],
+    "example": {
+      "color": "#1E293B",
+      "item_id": "itm_m1n2p3q4r5",
+      "kind": "color"
+    },
+    "internal": false,
+    "name": "recording.set_background",
+    "scope": "edit",
+    "summary": "Sets a colour or image behind a screen clip."
+  },
+  {
+    "args_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
         "color": {
           "description": "A colour; default #FFC400.",
           "type": "string"

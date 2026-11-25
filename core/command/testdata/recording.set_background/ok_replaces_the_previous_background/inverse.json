@@ -1,0 +1,38 @@
+[
+  {
+    "type": "remove",
+    "collection": "items",
+    "id": "itm_b9g1t3m5k7"
+  },
+  {
+    "type": "patch",
+    "collection": "items",
+    "id": "itm_m1n2p3q4r5",
+    "set": {
+      "shadow": {
+        "blur": 32,
+        "color": "#000000",
+        "dx": 0,
+        "dy": 13,
+        "opacity": 0.5
+      }
+    }
+  },
+  {
+    "type": "put",
+    "collection": "items",
+    "id": "itm_p1d3b5g7m9",
+    "object": {
+      "duration": 300,
+      "fill": "#FF0000",
+      "height": 1080,
+      "id": "itm_p1d3b5g7m9",
+      "name": "Background itm_m1n2p3q4r5",
+      "shape": "rect",
+      "start": 0,
+      "track": "trk_b4g5r6d7t8",
+      "type": "shape",
+      "width": 1920
+    }
+  }
+]

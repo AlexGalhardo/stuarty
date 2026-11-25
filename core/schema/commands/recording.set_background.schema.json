@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "asset_id": {
+      "description": "For image: an image asset.",
+      "pattern": "^ast_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+      "type": "string"
+    },
+    "color": {
+      "description": "For color: a colour. Default #0F172A.",
+      "type": "string"
+    },
+    "item_id": {
+      "description": "The screen clip.",
+      "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+      "type": "string"
+    },
+    "kind": {
+      "description": "color, image or none (removes the background and the shadow).",
+      "enum": [
+        "color",
+        "image",
+        "none"
+      ],
+      "type": "string"
+    },
+    "shadow": {
+      "description": "Draw a drop shadow under the clip. Default true.",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "item_id",
+    "kind"
+  ],
+  "type": "object"
+}

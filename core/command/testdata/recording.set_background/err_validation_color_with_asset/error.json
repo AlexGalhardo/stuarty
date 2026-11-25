@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.asset_id applies to kind image, not color.",
+  "hint": "Remove asset_id, or use kind image.",
+  "retryable": false,
+  "path": "args.asset_id"
+}
