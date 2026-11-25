@@ -100,8 +100,9 @@ test.describe("home trail", () => {
 		);
 		const waiting = page.getByTestId("home-waiting");
 		await expect(waiting.getByTestId("home-waiting-row").first()).toBeVisible();
-		await expect(waiting).toContainText(`Publish the second post ${stamp}`);
-		await expect(waiting).toContainText(`Publish the first post ${stamp}`);
+		// An approval is worded by its kind: the English summary the server wrote is not the title of the row.
+		await expect(waiting).toContainText("Publish");
+		await expect(waiting).not.toContainText(`Publish the second post ${stamp}`);
 		await expect(
 			waiting.getByRole("link", { name: "Open queue" }),
 		).toHaveAttribute("href", "/approvals");

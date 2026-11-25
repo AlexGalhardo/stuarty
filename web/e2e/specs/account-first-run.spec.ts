@@ -30,9 +30,13 @@ async function open(page: Page): Promise<void> {
 }
 
 async function signIn(page: Page, password: string): Promise<void> {
-	await page.getByLabel("Username or e-mail").fill("stuart");
+	// A studio that already has an account names it and asks only for the password; a browser with no account
+	// known asks for the username too.
+	const identity = page.getByLabel("Username or e-mail");
+	if ((await identity.count()) > 0) await identity.fill("stuart");
 	await page.getByLabel("Password", { exact: true }).fill(password);
-	await page.getByRole("button", { name: "Sign in" }).click();
+	// A locked studio names its button "Unlock"; an open one, "Sign in".
+	await page.getByRole("button", { name: /^(Sign in|Unlock)$/ }).click();
 }
 
 // Epic 84: the page on the screen in both themes at 1440, 1280 and 390 px. axe finds nothing at WCAG 2.2 AA,
@@ -72,7 +76,7 @@ test("a new workspace shows the page that creates the account before anything el
 	await open(page);
 	await expect(page).toHaveURL(/\/account\/create$/);
 	await expect(
-		page.getByRole("heading", { name: "Create your account" }),
+		page.getByRole("heading", { name: "Create your local account" }),
 	).toBeVisible();
 	await looksRight(page, "create");
 	await page.goto("/projects");
@@ -236,7 +240,8 @@ test("Logout locks the studio: the pages and the API answer with the sign-in and
 
 	await page.getByTestId("account-logout").click();
 	await expect(page).toHaveURL(/\/account\/signin$/);
-	await expect(page.getByText(/locked until you sign in/)).toBeVisible();
+	await expect(page.getByText(/Locked for inactivity/)).toBeVisible();
+	await expect(page.getByTestId("signin-account")).toContainText("stuart");
 	await looksRight(page, "unlock");
 
 	await page.goto("/projects");
