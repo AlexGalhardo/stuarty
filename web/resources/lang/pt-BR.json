@@ -951,7 +951,7 @@
         "size": "{w} × {h} px",
         "revision": "revisão {revision}",
         "saved_auto": "Salvo às {time}",
-        "rev_short": "Rev {revision}"
+        "rev_short": "Rev. {revision}"
       },
       "canvas": {
         "label": "Tela da imagem",
