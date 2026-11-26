@@ -36,8 +36,7 @@ test.beforeAll(async () => {
 	running = await startFirstFlow(PORT, "first-flow-keyboard");
 });
 test.afterAll(() => {
-	running?.server.kill();
-	running?.fake.kill();
+	running?.stop();
 });
 
 // Activates a button or a link: Tab to it, then Enter.
@@ -172,6 +171,7 @@ test.describe("a11y-first-flow-keyboard @chromium-only", () => {
 
 		await test.step("import the footage, put it on the timeline and cut it to four seconds", async () => {
 			await page.goto(`/editor/${projectId}`);
+			await press(page, page.locator("[data-import-open]"));
 			await type(
 				page,
 				page.getByLabel("Path of a file to import"),

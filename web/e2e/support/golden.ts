@@ -143,7 +143,10 @@ export function markedGradient(spec: Fixture): string {
 	const box = Math.round(Math.min(spec.width, spec.height) / 5);
 	const at = (fx: number, fy: number): string =>
 		`x=${Math.round(spec.width * fx)}:y=${Math.round(spec.height * fy)}:w=${box}:h=${box}`;
-	return `gradients=size=${spec.width}x${spec.height}:rate=${spec.fps}:duration=${spec.seconds}:seed=7,hue=s=0,drawbox=${at(0.2, 0.2)}:color=red:t=fill,drawbox=${at(0.55, 0.62)}:color=blue:t=fill`;
+	// Pin endpoints, colour count, speed and seed explicitly: FFmpeg's gradients
+	// filter picks random colours/positions when omitted, making fixture frames
+	// vary across runners.
+	return `gradients=size=${spec.width}x${spec.height}:rate=${spec.fps}:duration=${spec.seconds}:c0=0x303030:c1=0xd0d0d0:x0=0:y0=0:x1=${spec.width}:y1=${spec.height}:nb_colors=2:speed=0.01:seed=7,drawbox=${at(0.2, 0.2)}:color=red:t=fill,drawbox=${at(0.55, 0.62)}:color=blue:t=fill`;
 }
 
 // The generated media of a case, with the arguments of engine/ingest/mediagen

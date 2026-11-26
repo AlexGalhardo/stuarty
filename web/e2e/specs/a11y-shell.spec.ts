@@ -32,21 +32,36 @@ test.describe("a11y-shell", () => {
 				const found: string[] = [];
 				const scan = async (what: string): Promise<void> => {
 					// A sheet still fading in has text halfway to its colour, which axe reads as low contrast:
-					// wait for the animations that end (the spinner of a working agent never does).
+					// wait for the finite animations (including pending ones on WebKit) and settle opacity.
+					await page.evaluate(
+						() =>
+							new Promise<void>((resolve) =>
+								requestAnimationFrame(() =>
+									requestAnimationFrame(() => resolve()),
+								),
+							),
+					);
 					await expect
 						.poll(() =>
-							page.evaluate(
-								() =>
-									document
-										.getAnimations()
-										.filter(
-											(a) =>
-												a.playState === "running" &&
-												a.effect?.getComputedTiming().iterations !== Infinity,
-										).length,
-							),
+							page.evaluate(() => {
+								const active = document
+									.getAnimations()
+									.filter(
+										(a) =>
+											(a.playState === "running" ||
+												a.playState === "pending") &&
+											a.effect?.getComputedTiming().iterations !== Infinity,
+									).length;
+								if (active > 0) return false;
+								const sheet = document.querySelector(
+									'[data-slot="sheet-content"]',
+								);
+								return (
+									sheet === null || Number(getComputedStyle(sheet).opacity) >= 1
+								);
+							}),
 						)
-						.toBe(0);
+						.toBe(true);
 					const { violations } = await new AxeBuilder({ page })
 						.withTags(TAGS)
 						.analyze();

@@ -21,6 +21,7 @@ export interface Running {
 	fake: ChildProcess;
 	providerUrl: string;
 	socialUrl: string;
+	stop: () => void;
 }
 
 function ffmpegEnv(): Record<string, string> {
@@ -124,6 +125,7 @@ export async function startFirstFlow(
 			...ffmpegEnv(),
 		},
 	});
+	const previousHome = home;
 	await waitUp(port);
 	pointAtServerHome(join(dir, "workspace"));
 	return {
@@ -132,6 +134,11 @@ export async function startFirstFlow(
 		fake: fake.process,
 		providerUrl: fake.providerUrl,
 		socialUrl: fake.socialUrl,
+		stop: () => {
+			server.kill();
+			fake.process.kill();
+			pointAtServerHome(previousHome);
+		},
 	};
 }
 
