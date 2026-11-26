@@ -129,7 +129,11 @@ func New(tb testing.TB, o Options) *Env {
 
 	e.Dir = dir
 
-	st, err := store.Open(context.Background(), dir, store.Options{SchemaVersion: timeline.CurrentSchemaVersion})
+	st, err := store.OpenTemplate(
+		context.Background(),
+		dir,
+		store.Options{SchemaVersion: timeline.CurrentSchemaVersion},
+	)
 	if err != nil {
 		tb.Fatal(err)
 	}

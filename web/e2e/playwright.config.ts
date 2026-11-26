@@ -122,6 +122,7 @@ const runs = (name: string): boolean =>
 	chosen.length === 0 || chosen.some((pattern) => pattern.test(name));
 const needsFailingEncoder = runs("failing-encoder");
 const needsPerson = runs("chromium-person");
+const needsAccount = runs("account");
 const needsDetect = runs("desktop-detect") || runs("desktop-detect-webkit");
 // Every other project (the browsers, perf, soak, and any added later) uses the
 // app and the network servers: a chosen pattern needs them unless it names only
@@ -129,6 +130,7 @@ const needsDetect = runs("desktop-detect") || runs("desktop-detect-webkit");
 const ownServer = [
 	"failing-encoder",
 	"chromium-person",
+	"account",
 	"desktop-detect",
 	"desktop-detect-webkit",
 ];
@@ -413,7 +415,9 @@ export default defineConfig({
 			},
 		},
 		{
-			command: `go run ./desktop/detect -addr 127.0.0.1:${detectPort} -results ${join(tmpdir(), "stuarty-e2e-detect-results")}`,
+			command: process.env.STUARTY_DETECT_BIN
+				? `"${process.env.STUARTY_DETECT_BIN}" -addr 127.0.0.1:${detectPort} -results ${join(tmpdir(), "stuarty-e2e-detect-results")}`
+				: `go run ./desktop/detect -addr 127.0.0.1:${detectPort} -results ${join(tmpdir(), "stuarty-e2e-detect-results")}`,
 			cwd: "../..",
 			url: `${detectUrl}/`,
 			reuseExistingServer: !process.env.CI,
@@ -425,6 +429,8 @@ export default defineConfig({
 		if (server.url === `http://127.0.0.1:${failPort}/up`)
 			return needsFailingEncoder;
 		if (server.url === `http://127.0.0.1:${personPort}/up`) return needsPerson;
+		if (server.url === `http://127.0.0.1:${accountPort}/up`)
+			return needsAccount;
 		return needsApp;
 	}),
 });
