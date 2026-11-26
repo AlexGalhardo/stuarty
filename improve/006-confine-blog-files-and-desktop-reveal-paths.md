@@ -165,13 +165,13 @@ func (b *bridge) revealAsset(win *application.WebviewWindow, req shell.BridgeReq
 
 ## Done criteria
 
-- [ ] `go test -race -count=1 ./service/publish/destinations/...` exits 0
-- [ ] `go test -race -count=1 ./desktop/shell/...` exits 0
-- [ ] `cd desktop/shell/app && go test -tags purego -count=1 ./...` exits 0
-- [ ] `go test -count=1 -run TestSecurity_ ./...` exits 0
-- [ ] `task lint:go && task lint:md && task vet` exits 0
-- [ ] No files outside the in-scope list are modified (`git status`)
-- [ ] `improve/README.md` status row updated
+- [x] `go test -race -count=1 ./service/publish/destinations/...` exits 0
+- [x] `go test -race -count=1 ./desktop/shell/...` exits 0
+- [x] `cd desktop/shell/app && go test -tags purego -count=1 ./...` exits 0
+- [x] `go test -count=1 -run TestSecurity_ ./...` exits 0
+- [x] `task lint:go && task lint:md && task vet` exits 0
+- [x] No files outside the in-scope list are modified (`git status`)
+- [x] `improve/README.md` status row updated
 
 ## STOP conditions
 

@@ -107,9 +107,11 @@ func run() error {
 	if err := wsErr; err != nil {
 		return failStartup(app, err)
 	}
-	// The only folder a library file may be revealed from: the shell checks every path against it itself.
+	// The only folders library and export files may be revealed from: the shell checks every path against them itself.
 	mediaRoot := shell.MediaRoot(string(ws))
 	br.mediaRoot.Store(&mediaRoot)
+	exportsRoot := shell.ExportsRoot(string(ws))
+	br.exportsRoot.Store(&exportsRoot)
 	srv, err := shell.Start(context.Background(), shell.Config{Binary: *binary, Workspace: ws})
 	if err != nil {
 		return failStartup(app, err)

@@ -83,13 +83,17 @@ func (f *files) Describe() Description {
 }
 
 func (f *files) ValidateConfig(secret []byte, _ string) error {
+	if f.cfg.NetworkMode {
+		return errors.New("blog_files is available in local mode only")
+	}
+
 	c, err := parseFilesConfig(secret)
 	if err != nil {
 		return err
 	}
 
-	if st, serr := os.Stat(c.Folder); serr != nil || !st.IsDir() {
-		return errors.New("the folder does not exist")
+	if _, _, rerr := f.resolveFolder(c.Folder); rerr != nil {
+		return rerr
 	}
 
 	return nil
@@ -105,20 +109,69 @@ func (f *files) Test(_ context.Context, c connections.Credential) (connections.T
 
 // problem says in a sentence what is wrong with the settings of a connection, or is empty.
 func (f *files) problem(secret []byte) string {
+	if f.cfg.NetworkMode {
+		return "blog_files is available in local mode only."
+	}
+
 	cfg, err := parseFilesConfig(secret)
 	if err != nil {
 		return "the settings of the connection are not valid."
 	}
 
-	if st, serr := os.Stat(cfg.Folder); serr != nil || !st.IsDir() {
-		return "the folder of the connection does not exist."
+	if _, reason, rerr := f.resolveFolder(cfg.Folder); rerr != nil {
+		if reason == "folder_missing" {
+			return "the folder of the connection does not exist."
+		}
+
+		return rerr.Error() + "."
 	}
 
 	return ""
 }
 
+// resolveFolder resolves symlinks on folder and refuses network mode, missing/non-directory targets,
+// and any path that equals, lies inside, or is an ancestor of the configured workspace.
+func (f *files) resolveFolder(folder string) (canonical, reason string, err error) {
+	if f.cfg.NetworkMode {
+		return "", "network_mode", errors.New("blog_files is available in local mode only")
+	}
+
+	st, serr := os.Stat(folder)
+	if serr != nil || !st.IsDir() {
+		return "", "folder_missing", errors.New("the folder does not exist")
+	}
+
+	realFolder, rerr := filepath.EvalSymlinks(folder)
+	if rerr != nil {
+		return "", "folder_missing", errors.New("the folder does not exist")
+	}
+
+	realFolder = filepath.Clean(realFolder)
+
+	if f.cfg.Workspace != "" {
+		realWS, werr := filepath.EvalSymlinks(f.cfg.Workspace)
+		if werr != nil {
+			realWS = filepath.Clean(f.cfg.Workspace)
+		} else {
+			realWS = filepath.Clean(realWS)
+		}
+
+		if realFolder == realWS || within(realWS, realFolder) || within(realFolder, realWS) {
+			return "", "workspace_folder",
+				errors.New("the folder cannot be the workspace, inside it, or an ancestor of it")
+		}
+	}
+
+	return realFolder, "", nil
+}
+
 // Send writes <folder>/<slug>/index.md and images/, or <folder>/<slug>.zip, replacing an earlier version.
 func (f *files) Send(ctx context.Context, in *SendInput) (Result, error) {
+	if f.cfg.NetworkMode {
+		return Result{}, fail(social.KindInvalid, KindFiles, "network_mode", 0,
+			errors.New("blog_files is available in local mode only"))
+	}
+
 	cfg, err := parseFilesConfig(in.Cred.Secret)
 	if err != nil {
 		return Result{}, fail(social.KindInvalid, KindFiles, "bad_settings", 0, err)
@@ -129,8 +182,9 @@ func (f *files) Send(ctx context.Context, in *SendInput) (Result, error) {
 		return Result{}, fail(social.KindInvalid, KindFiles, "bad_package", 0, cerr)
 	}
 
-	if st, serr := os.Stat(cfg.Folder); serr != nil || !st.IsDir() {
-		return Result{}, fail(social.KindInvalid, KindFiles, "folder_missing", 0, serr)
+	folder, reason, rerr := f.resolveFolder(cfg.Folder)
+	if rerr != nil {
+		return Result{}, fail(social.KindInvalid, KindFiles, reason, 0, rerr)
 	}
 
 	index, err := f.index(&cfg, p)
@@ -138,12 +192,15 @@ func (f *files) Send(ctx context.Context, in *SendInput) (Result, error) {
 		return Result{}, fail(social.KindInvalid, KindFiles, "bad_template", 0, err)
 	}
 
-	target := filepath.Join(cfg.Folder, p.Slug)
+	target := filepath.Join(folder, p.Slug)
+	resultURL := filepath.Join(filepath.Clean(cfg.Folder), p.Slug)
+
 	if cfg.Zip {
 		target += ".zip"
+		resultURL += ".zip"
 	}
 
-	if !within(cfg.Folder, target) {
+	if !within(folder, target) {
 		return Result{}, fail(social.KindInvalid, KindFiles, "outside_folder", 0, nil)
 	}
 
@@ -156,16 +213,16 @@ func (f *files) Send(ctx context.Context, in *SendInput) (Result, error) {
 	}
 
 	if cfg.Zip {
-		err = f.writeZip(cfg.Folder, target, index, in)
+		err = f.writeZip(folder, target, index, in)
 	} else {
-		err = f.writeTree(cfg.Folder, target, index, in)
+		err = f.writeTree(folder, target, index, in)
 	}
 
 	if err != nil {
 		return Result{}, fail(social.KindInvalid, KindFiles, "write_failed", 0, err)
 	}
 
-	return Result{RemoteID: p.Slug, URL: target, State: p.Status}, nil
+	return Result{RemoteID: p.Slug, URL: resultURL, State: p.Status}, nil
 }
 
 func (f *files) index(cfg *filesConfig, p *Package) ([]byte, error) {
@@ -256,6 +313,11 @@ func (f *files) writeTree(folder, target string, index []byte, in *SendInput) er
 	old := ""
 
 	if _, err := os.Lstat(target); err == nil {
+		idx, ierr := os.Lstat(filepath.Join(target, "index.md"))
+		if ierr != nil || !idx.Mode().IsRegular() {
+			return errors.New("the target folder is not a prior post (missing index.md)")
+		}
+
 		old = filepath.Join(folder, ".stuarty-old-"+randomSuffix())
 		if err := os.Rename(target, old); err != nil {
 			return err

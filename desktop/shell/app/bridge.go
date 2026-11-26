@@ -25,6 +25,8 @@ type bridge struct {
 	// file may be revealed from (SDD-011 section 14.10). Empty until the workspace is known, and then every
 	// reveal is refused.
 	mediaRoot atomic.Pointer[string]
+	// exportsRoot is the exports folder of the workspace: the only place an exported file may be revealed from.
+	exportsRoot atomic.Pointer[string]
 	// tele is the teleprompter window of epic 66, which the page opens and closes through the bridge.
 	tele teleprompter
 }
@@ -148,12 +150,18 @@ func (b *bridge) pickTemplate(win *application.WebviewWindow, id int64) {
 	win.ExecJS(shell.ResolveScript(id, paths, msg))
 }
 
-// showInFolder opens the file manager on the exported file. The page names the
-// path; the shell opens it only when it is an existing file, and answers with an
-// empty list or the reason it could not.
+// showInFolder opens the file manager on the exported file. The page is not trusted:
+// the shell checks by itself that the path is a regular file under the exports folder
+// of its own workspace before starting anything, and answers with an empty list or
+// the reason it could not.
 func (b *bridge) showInFolder(win *application.WebviewWindow, req shell.BridgeRequest) {
+	root := b.exportsRoot.Load()
+	if root == nil || *root == "" {
+		win.ExecJS(shell.ResolveScript(req.ID, nil, "the exports folder of the workspace is not known"))
+		return
+	}
 	msg := ""
-	if err := shell.CheckRevealPath(req.Path); err != nil {
+	if err := shell.CheckExportRevealUnder(*root, req.Path); err != nil {
 		msg = err.Error()
 	} else {
 		name, args := shell.RevealCommand(runtime.GOOS, req.Path)

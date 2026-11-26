@@ -63,6 +63,41 @@ func remoteOrDevice(path string) bool {
 // shell), so the folder name is here and a test keeps the two equal.
 func MediaRoot(workspace string) string { return filepath.Join(workspace, "store") }
 
+// ExportsRoot is the exports folder of a workspace: the only place an exported file may be revealed from via
+// OpShowInFolder.
+func ExportsRoot(workspace string) string { return filepath.Join(workspace, "exports") }
+
+// CheckExportRevealUnder checks that path is a regular file strictly inside exportsRoot once symlinks on both
+// sides are resolved. Out-of-root paths return a single generic refusal before touching disk so file existence
+// outside the exports folder is never leaked to the webview.
+func CheckExportRevealUnder(exportsRoot, path string) error {
+	if strings.ContainsRune(path, 0) || !filepath.IsAbs(path) {
+		return errors.New("the path is not absolute")
+	}
+	if runtime.GOOS == "windows" && remoteOrDevice(path) {
+		return errors.New("a network or device path is not opened")
+	}
+	realRoot, err := filepath.EvalSymlinks(exportsRoot)
+	if err != nil {
+		return errors.New("the exports folder of the workspace cannot be checked")
+	}
+	outside := errors.New("the file is outside the exports folder of the workspace")
+	if clean := filepath.Clean(path); !inside(filepath.Clean(exportsRoot), clean) && !inside(realRoot, clean) {
+		return outside
+	}
+	if err := CheckRevealPath(path); err != nil {
+		return err
+	}
+	target, err := filepath.EvalSymlinks(path)
+	if err != nil {
+		return errors.New("the file is reached through a link that cannot be checked")
+	}
+	if !inside(realRoot, target) {
+		return outside
+	}
+	return nil
+}
+
 // CheckRevealUnder is CheckRevealPath for a file of the library (SDD-011 section 14.10, SDD-012 section 13.1): the
 // path must also lie, with its symbolic links resolved, strictly inside root, the media folder of the workspace the
 // shell started the server on. The shell asks it by itself and never trusts the page, which can send any text; a link

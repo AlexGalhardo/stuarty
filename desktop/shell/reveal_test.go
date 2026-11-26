@@ -233,3 +233,56 @@ func TestCheckRevealPath(t *testing.T) {
 		}
 	}
 }
+
+func TestSecurity_CheckExportRevealUnder(t *testing.T) {
+	ws := t.TempDir()
+	root := ExportsRoot(ws)
+	exported := filepath.Join(root, "proj_1", "job_1.mp4")
+
+	if err := os.MkdirAll(filepath.Dir(exported), 0o700); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := os.WriteFile(exported, []byte("mp4"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := CheckExportRevealUnder(root, exported); err != nil {
+		t.Fatalf("valid export was refused: %v", err)
+	}
+
+	// Out-of-root existing vs non-existing files must return the exact same generic error (no existence oracle).
+	outsideDir := t.TempDir()
+	outsideExists := filepath.Join(outsideDir, "secret.txt")
+
+	if err := os.WriteFile(outsideExists, []byte("s"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	outsideMissing := filepath.Join(outsideDir, "does-not-exist.txt")
+
+	errExists := CheckExportRevealUnder(root, outsideExists)
+	errMissing := CheckExportRevealUnder(root, outsideMissing)
+
+	if errExists == nil || errMissing == nil {
+		t.Fatalf("out-of-root paths were accepted: exists=%v missing=%v", errExists, errMissing)
+	}
+
+	if errExists.Error() != errMissing.Error() {
+		t.Errorf("existence leak: exists=%q missing=%q", errExists.Error(), errMissing.Error())
+	}
+
+	// Dot-dot traversal out of exports root.
+	traversal := filepath.Join(root, "proj_1", "..", "..", "store", "secret")
+	if err := CheckExportRevealUnder(root, traversal); err == nil {
+		t.Error("dot-dot traversal was accepted")
+	}
+
+	// Symlink inside exports root pointing outside.
+	linkDir := filepath.Join(root, "escape")
+	testfs.LinkDir(t, linkDir, outsideDir)
+
+	if err := CheckExportRevealUnder(root, filepath.Join(linkDir, "secret.txt")); err == nil {
+		t.Error("symlink escaping exports root was accepted")
+	}
+}

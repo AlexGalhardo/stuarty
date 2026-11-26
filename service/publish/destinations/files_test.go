@@ -446,3 +446,108 @@ func TestSecurity_T99_FilesDestinationStaysInItsFolder(t *testing.T) {
 		t.Errorf("a symbolic link let the post out: %v", entries)
 	}
 }
+
+func TestSecurity_FilesDestinationConfinement(t *testing.T) {
+	t.Parallel()
+
+	p, data := testPost(t)
+
+	parent := t.TempDir()
+	ws := filepath.Join(parent, "workspace")
+	wsSub := filepath.Join(ws, "exports")
+
+	if err := os.MkdirAll(wsSub, 0o750); err != nil {
+		t.Fatal(err)
+	}
+
+	cfg := testConfig()
+	cfg.Workspace = ws
+	f := newFiles(cfg)
+
+	send := func(dest *files, folder string) error {
+		_, err := dest.Send(context.Background(), &SendInput{
+			Cred: cred("http://localhost", filesSecret(t, folder, nil), nil), Package: p, Open: opener(data),
+			Delivery: "tgt_0123456789",
+		})
+
+		return err
+	}
+
+	for name, badFolder := range map[string]string{
+		"workspace itself":   ws,
+		"inside workspace":   wsSub,
+		"workspace ancestor": parent,
+	} {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			secret := []byte(filesSecret(t, badFolder, nil))
+			if err := f.ValidateConfig(secret, "http://localhost"); err == nil {
+				t.Errorf("ValidateConfig accepted %s", name)
+			}
+
+			if err := send(f, badFolder); err == nil {
+				t.Errorf("Send accepted %s", name)
+			}
+		})
+	}
+
+	t.Run("symlink to workspace", func(t *testing.T) {
+		t.Parallel()
+
+		link := filepath.Join(t.TempDir(), "ws-link")
+		if err := os.Symlink(ws, link); err != nil {
+			// skip-env: symlink-privilege
+			t.Skipf("no symlink privilege: %v", err) // verify:env-skip symlink-privilege
+		}
+
+		if err := f.ValidateConfig([]byte(filesSecret(t, link, nil)), "http://localhost"); err == nil {
+			t.Error("ValidateConfig accepted symlink to workspace")
+		}
+
+		if err := send(f, link); err == nil {
+			t.Error("Send accepted symlink to workspace")
+		}
+	})
+
+	t.Run("network mode refused", func(t *testing.T) {
+		t.Parallel()
+
+		netCfg := testConfig()
+		netCfg.NetworkMode = true
+		netF := newFiles(netCfg)
+		outDir := t.TempDir()
+
+		if err := netF.ValidateConfig([]byte(filesSecret(t, outDir, nil)), "http://localhost"); err == nil {
+			t.Error("ValidateConfig accepted blog_files in network mode")
+		}
+
+		if err := send(netF, outDir); err == nil {
+			t.Error("Send accepted blog_files in network mode")
+		}
+	})
+
+	t.Run("refuses to overwrite non-post directory", func(t *testing.T) {
+		t.Parallel()
+
+		folder := t.TempDir()
+		existing := filepath.Join(folder, p.Slug)
+		keep := filepath.Join(existing, "important.txt")
+
+		if err := os.MkdirAll(existing, 0o750); err != nil {
+			t.Fatal(err)
+		}
+
+		if err := os.WriteFile(keep, []byte("keep"), 0o600); err != nil {
+			t.Fatal(err)
+		}
+
+		if err := send(newFiles(testConfig()), folder); err == nil {
+			t.Error("Send overwrote a directory without index.md")
+		}
+
+		if got := string(read(t, keep)); got != "keep" {
+			t.Errorf("existing file changed: %q", got)
+		}
+	})
+}

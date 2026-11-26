@@ -628,7 +628,10 @@ func New(o Options) (Service, error) {
 	}
 
 	if s.blog == nil {
-		s.blog = destinations.NewRegistry(destinations.Config{})
+		s.blog = destinations.NewRegistry(destinations.Config{
+			Workspace:   s.workspace,
+			NetworkMode: o.Doctor.Mode == "network",
+		})
 	}
 
 	s.blog.Bind(s.conns)
