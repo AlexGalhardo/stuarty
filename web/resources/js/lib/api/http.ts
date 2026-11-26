@@ -69,6 +69,9 @@ export class HttpTransport implements Transport {
 			try {
 				body = await response.json();
 			} catch {
+				if (controller.signal.aborted) {
+					throw new TransportError("network", "request aborted");
+				}
 				// An empty or non-JSON body (a proxy page) is reported as null.
 			}
 			// A locked studio (E_LOCKED, 423) has one way on: the sign-in page (ADR-0052).
