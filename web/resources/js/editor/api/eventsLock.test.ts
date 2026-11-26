@@ -214,4 +214,32 @@ describe("one event stream per project across tabs", () => {
 		await flush();
 		expect(b.inner.calls.open).toEqual([]);
 	});
+
+	test("closing before a granted lock callback runs releases the lock without opening the stream", async () => {
+		const env = browser();
+		const a = tab(env, { revision: 1 });
+		const callbacks: Array<() => Promise<void>> = [];
+		const manualLocks: LockManagerLike = {
+			request: (_name, _opts, cb) => {
+				callbacks.push(cb);
+				return new Promise<void>(() => undefined);
+			},
+		};
+		const shared = createSharedEventStream({
+			projectId: "prj_1",
+			stream: a.inner.stream,
+			getRevision: () => 1,
+			locks: manualLocks,
+			openChannel: () => ({
+				postMessage: () => undefined,
+				addEventListener: () => undefined,
+				close: () => undefined,
+			}),
+		});
+		shared.open(1);
+		shared.close();
+		// Callback fires after close() (lock was already granted before abort)
+		for (const cb of callbacks) await cb();
+		expect(a.inner.calls.open).toEqual([]);
+	});
 });

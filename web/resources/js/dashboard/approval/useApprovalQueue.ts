@@ -38,6 +38,7 @@ export function useApprovalQueue(active = true): ApprovalQueueState {
 	}
 
 	const started = useRef(false);
+	const decidedRef = useRef<Set<string>>(new Set());
 	useEffect(() => {
 		const http = transport.current;
 		if (http === null || !active) return;
@@ -45,12 +46,14 @@ export function useApprovalQueue(active = true): ApprovalQueueState {
 		if (started.current) setRequests(null);
 		started.current = true;
 		let alive = true;
+		const decided = new Set<string>();
+		decidedRef.current = decided;
 		createClient(http)
 			.listApprovals("pending")
 			.then((res) => {
-				// the stream may already have shown newer requests: keep both, once each
+				// the stream may already have shown newer requests or removed decided ones
 				if (alive) {
-					setRequests((was) => mergeList(was ?? [], res));
+					setRequests((was) => mergeList(was ?? [], res, decided));
 				}
 			})
 			.catch((error: unknown) => {
@@ -58,8 +61,21 @@ export function useApprovalQueue(active = true): ApprovalQueueState {
 			});
 		const stream = http.openStream(STREAM, {
 			onOpen: () => setLive(true),
-			onMessage: (name, data) =>
-				setRequests((was) => applyApprovalEvent(was ?? [], name, data)),
+			onMessage: (name, data) => {
+				if (name === "approval.decided" || name === "approval.expired") {
+					try {
+						const parsed = JSON.parse(data) as {
+							approval?: { id?: string };
+							id?: string;
+						};
+						const id = parsed.approval?.id ?? parsed.id;
+						if (typeof id === "string") decided.add(id);
+					} catch {
+						// ignore malformed payload; applyApprovalEvent handles it
+					}
+				}
+				setRequests((was) => applyApprovalEvent(was ?? [], name, data));
+			},
 			onError: () => setLive(false),
 		});
 		return () => {
@@ -81,6 +97,7 @@ export function useApprovalQueue(active = true): ApprovalQueueState {
 			setBusyId(id);
 			try {
 				await createClient(http).decideApproval(id, decision, reason);
+				decidedRef.current.add(id);
 				setRequests((was) => (was ?? []).filter((r) => r.id !== id));
 			} catch (error) {
 				setFailure(failureOf(error));
@@ -97,9 +114,11 @@ export function useApprovalQueue(active = true): ApprovalQueueState {
 function mergeList(
 	was: readonly ApprovalRequest[],
 	res: { requests: ApprovalRequest[] },
+	decided: ReadonlySet<string>,
 ): ApprovalRequest[] {
 	const seen = new Set(was.map((r) => r.id));
-	return [...was, ...res.requests.filter((r) => !seen.has(r.id))].sort(
-		newestFirst,
-	);
+	return [
+		...was,
+		...res.requests.filter((r) => !seen.has(r.id) && !decided.has(r.id)),
+	].sort(newestFirst);
 }

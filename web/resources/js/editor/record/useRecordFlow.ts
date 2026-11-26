@@ -80,6 +80,11 @@ export function useRecordFlow(
 		alive.current = true;
 		return () => {
 			alive.current = false;
+			if (browser.current !== null) {
+				const running = browser.current;
+				browser.current = null;
+				void running.stop().catch(() => undefined);
+			}
 		};
 	}, []);
 

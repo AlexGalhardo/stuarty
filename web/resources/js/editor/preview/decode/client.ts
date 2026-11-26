@@ -18,6 +18,8 @@ export function decoderPreference(search: string): DecoderPreference {
 export interface WorkerLike<F> {
 	postMessage(message: ToWorker): void;
 	onmessage: ((event: { data: FromWorker<F> }) => void) | null;
+	onerror?: ((event: unknown) => void) | null;
+	onmessageerror?: ((event: unknown) => void) | null;
 	terminate(): void;
 }
 
@@ -95,8 +97,28 @@ export class DecodeClient<F extends FrameLike> {
 		const worker = this.options.createWorker();
 		if (worker === null) return null;
 		worker.onmessage = (event) => this.receive(event.data);
+		const onCrash = (): void => this.failWorker();
+		worker.onerror = onCrash;
+		worker.onmessageerror = onCrash;
 		this.worker = worker;
 		return worker;
+	}
+
+	private failWorker(): void {
+		this.worker?.terminate();
+		this.worker = null;
+		let changed = false;
+		for (const [asset, state] of this.assets) {
+			if (state.status !== "fallback") {
+				this.fallbacks++;
+				state.status = "fallback";
+				state.inflight = null;
+				state.wanted = null;
+				this.cache.dropAsset(asset);
+				changed = true;
+			}
+		}
+		if (changed) this.options.onChange();
 	}
 
 	// The frame of `asset` at a source time. `exact` is false when it is the
@@ -226,7 +248,11 @@ export class DecodeClient<F extends FrameLike> {
 	sweep(): void {
 		const now = this.options.now();
 		for (const [asset, state] of this.assets) {
-			if (state.status === "fallback" || now - state.lastUsed < this.idleMs) {
+			if (
+				state.status === "fallback" ||
+				state.status === "opening" ||
+				now - state.lastUsed < this.idleMs
+			) {
 				continue;
 			}
 			this.worker?.postMessage({ type: "drop", asset });

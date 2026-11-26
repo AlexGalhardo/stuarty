@@ -26,6 +26,7 @@ const assets = new Map<
 	{ decoder: AssetDecoder<VideoFrame>; index: ChunkIndex }
 >();
 const opening = new Set<string>();
+const generation = new Map<string, number>();
 
 function open(): number {
 	let held = 0;
@@ -71,13 +72,18 @@ async function openAsset(
 	indexUrl: string,
 	proxyUrl: string,
 ): Promise<void> {
+	const gen = (generation.get(asset) ?? 0) + 1;
+	generation.set(asset, gen);
+	const stale = (): boolean => generation.get(asset) !== gen;
 	opening.add(asset);
 	try {
 		const response = await fetch(indexUrl);
+		if (stale()) return;
 		// 404: an asset ingested before the index existed, an audio or image
 		// asset, or one with an alpha proxy (SDD-013 section 6.4).
 		if (!response.ok) return fallback(asset, `index ${response.status}`);
 		const index = readIndex(await response.json());
+		if (stale()) return;
 		if (index === null) return fallback(asset, "invalid index");
 		const decoder = await AssetDecoder.open(
 			index,
@@ -85,13 +91,19 @@ async function openAsset(
 			async (config) =>
 				(await VideoDecoder.isConfigSupported(config)).supported === true,
 		);
+		if (stale()) {
+			decoder?.close();
+			return;
+		}
 		if (decoder === null) return fallback(asset, "config not supported");
 		assets.set(asset, { decoder, index });
 		post({ type: "opened", asset, open: open() });
 	} catch (e) {
-		fallback(asset, e instanceof Error ? e.message : "open failed");
+		if (!stale()) {
+			fallback(asset, e instanceof Error ? e.message : "open failed");
+		}
 	} finally {
-		opening.delete(asset);
+		if (!stale()) opening.delete(asset);
 	}
 }
 
@@ -144,6 +156,8 @@ scope.onmessage = (event: MessageEvent<ToWorker>): void => {
 			void serve(message);
 			break;
 		case "drop":
+			generation.set(message.asset, (generation.get(message.asset) ?? 0) + 1);
+			opening.delete(message.asset);
 			assets.get(message.asset)?.decoder.close();
 			assets.delete(message.asset);
 			break;

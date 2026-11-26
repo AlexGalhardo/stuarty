@@ -74,6 +74,7 @@ export function createSharedEventStream(deps: SharedStreamDeps): EventStream {
 	let owner = false;
 	let lastState: ConnectionState | null = null;
 	let detach: Unsubscribe[] = [];
+	let gen = 0;
 
 	function becomeOwner(since: number): Promise<void> {
 		owner = true;
@@ -124,8 +125,10 @@ export function createSharedEventStream(deps: SharedStreamDeps): EventStream {
 			});
 			channel.postMessage({ kind: "hello" });
 			pending = new AbortController();
+			const myGen = ++gen;
 			deps.locks
 				.request(lockName(projectId), { signal: pending.signal }, () => {
+					if (myGen !== gen || channel === null) return Promise.resolve();
 					// A tab that takes over opens with the revision it holds now, which is
 					// at least the one it was given.
 					return becomeOwner(Math.max(since, deps.getRevision()));
@@ -133,6 +136,7 @@ export function createSharedEventStream(deps: SharedStreamDeps): EventStream {
 				.catch(() => undefined);
 		},
 		close() {
+			gen++;
 			pending?.abort();
 			pending = null;
 			stopOwning();

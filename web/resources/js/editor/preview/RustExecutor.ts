@@ -108,6 +108,8 @@ export class RustExecutor implements PreviewExecutor {
 	private decodedUs = -1;
 	// What the worker holds for each item: the tag of the pixels uploaded.
 	private readonly uploaded = new Map<string, string>();
+	// Latest requested upload tag per item, used to discard stale async bitmaps.
+	private readonly wantedTag = new Map<string, string>();
 	// The short ids of what a group puts in the worker (render/groups.ts), the
 	// surfaces the worker holds, and the output scale of the frame of the layer
 	// being prepared (a group draws its layers at its own scale).
@@ -257,6 +259,7 @@ export class RustExecutor implements PreviewExecutor {
 		this.render = null;
 		this.bitmaps.clear();
 		this.uploaded.clear();
+		this.wantedTag.clear();
 		this.canvas?.remove();
 		this.canvas = null;
 		this.context2d = null;
@@ -505,7 +508,10 @@ export class RustExecutor implements PreviewExecutor {
 			...[...this.uploaded.keys()].filter((id) => !used.has(id)),
 			...[...this.surfaceIds].filter((id) => !kept.has(id)),
 		];
-		for (const id of gone) this.uploaded.delete(id);
+		for (const id of gone) {
+			this.uploaded.delete(id);
+			this.wantedTag.delete(id);
+		}
 		this.surfaceIds = kept;
 		render.release(gone);
 
@@ -576,6 +582,7 @@ export class RustExecutor implements PreviewExecutor {
 		console.debug("preview render failed", reason, detail);
 		this.drawnWhole = null;
 		this.uploaded.clear();
+		this.wantedTag.clear();
 		this.bitmaps.clear();
 		this.luts.clear();
 		this.canvas?.removeAttribute("data-drawn");
@@ -806,13 +813,18 @@ export class RustExecutor implements PreviewExecutor {
 		make: () => Promise<ImageBitmap>,
 		size: [number, number] | undefined,
 	): void {
+		this.wantedTag.set(item, tag);
 		const id = `tex:${item}:${tag}`;
 		if (this.making.has(id)) return;
 		this.making.add(id);
 		make()
 			.then((bitmap) => {
 				this.making.delete(id);
-				if (this.disposed || this.render === null) {
+				if (
+					this.disposed ||
+					this.render === null ||
+					this.wantedTag.get(item) !== tag
+				) {
 					bitmap.close();
 					return;
 				}

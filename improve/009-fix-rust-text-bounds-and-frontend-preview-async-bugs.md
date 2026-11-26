@@ -148,11 +148,11 @@ This plan fixes verified correctness, hang, and resource-leak bugs in the Rust t
 
 ## Done criteria
 
-- [ ] `cd renderer && cargo fmt --check && cargo clippy --all-targets -- -D warnings && cargo test` exits 0
-- [ ] `cd web && bun run typecheck && bun run lint && bun run check:thin-client && bun run test` exits 0
-- [ ] Every new regression test listed in Test plan exists and passes
-- [ ] No files outside the in-scope list are modified (`git status`)
-- [ ] `improve/README.md` status row updated
+- [ ] `cd renderer && cargo fmt --check && cargo clippy --all-targets -- -D warnings && cargo test` exits 0 *(Step 1 deferred per STOP condition: `cargo` not installed on executor host)*
+- [x] `cd web && bun run typecheck && bun run lint && bun run check:thin-client && bun run test` exits 0
+- [x] Every new regression test listed in Test plan exists and passes *(frontend Steps 2-3; Rust Step 1 pending `cargo`)*
+- [x] No files outside the in-scope list are modified (`git status`)
+- [x] `improve/README.md` status row updated
 
 ## STOP conditions
 

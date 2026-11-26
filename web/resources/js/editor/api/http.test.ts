@@ -133,6 +133,46 @@ describe("HttpTransport.send", () => {
 		await assertion;
 		vi.useRealTimers();
 	});
+
+	test("aborts immediately on pre-aborted signal and removes abort listener after completion", async () => {
+		const preAborted = new AbortController();
+		preAborted.abort();
+		let receivedAborted = false;
+		vi.stubGlobal(
+			"fetch",
+			vi.fn((_url: string, init?: { signal?: AbortSignal }) => {
+				receivedAborted = init?.signal?.aborted === true;
+				return Promise.reject(new DOMException("Aborted", "AbortError"));
+			}),
+		);
+		await expect(
+			new HttpTransport("/api/v1").send({
+				method: "GET",
+				path: "/x",
+				timeoutMs: 5_000,
+				signal: preAborted.signal,
+			}),
+		).rejects.toThrow();
+		expect(receivedAborted).toBe(true);
+
+		const live = new AbortController();
+		const removeSpy = vi.spyOn(live.signal, "removeEventListener");
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(() =>
+				Promise.resolve(
+					new Response(JSON.stringify({ ok: true }), { status: 200 }),
+				),
+			),
+		);
+		await new HttpTransport("/api/v1").send({
+			method: "GET",
+			path: "/ok",
+			timeoutMs: 5_000,
+			signal: live.signal,
+		});
+		expect(removeSpy).toHaveBeenCalledWith("abort", expect.any(Function));
+	});
 });
 
 class FakeEventSource {

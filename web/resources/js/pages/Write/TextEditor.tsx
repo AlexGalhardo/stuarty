@@ -4,6 +4,7 @@ import {
 	type ReactNode,
 	useCallback,
 	useEffect,
+	useRef,
 	useState,
 } from "react";
 import { createPortal } from "react-dom";
@@ -61,15 +62,20 @@ export default function TextEditor({
 	const [flow, setFlow] = useState<ProjectFlow | null>(null);
 	const [ended, setEnded] = useState<EndStatus | null>(null);
 
+	const loadSeqRef = useRef(0);
+
 	const load = useCallback(async (): Promise<void> => {
+		const seq = ++loadSeqRef.current;
 		try {
 			const got = await client.get(projectId, itemId);
+			if (seq !== loadSeqRef.current) return;
 			setLoaded(got);
 			setTitle(got.item.title);
 			setBody(got.body);
 			setConflict(null);
 			setFailure(null);
 		} catch (error) {
+			if (seq !== loadSeqRef.current) return;
 			setFailure(failureOf(error));
 		}
 	}, [client, projectId, itemId]);
@@ -80,6 +86,9 @@ export default function TextEditor({
 		setReviewed(false);
 		setEnded(null);
 		void load();
+		return () => {
+			loadSeqRef.current++;
+		};
 	}, [load]);
 
 	// The path of the project is read again when the text changes: a save can finish a step.

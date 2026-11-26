@@ -237,4 +237,17 @@ describe("DecodeClient", () => {
 		expect(worker.terminated).toBe(true);
 		if (reply.type === "frame") expect(reply.frame.closed).toBe(true);
 	});
+
+	it("transitions assets to fallback on worker.onerror and does not sweep opening assets", () => {
+		const { client, worker, tick } = setup();
+		client.request("a", 0, "seek");
+		tick(10_000);
+		client.sweep();
+		// Still opening, so sweep must not drop it while worker is opening it.
+		expect(worker.sent.some((m) => m.type === "drop")).toBe(false);
+
+		(worker as WorkerLike<FakeFrame>).onerror?.(new Event("error"));
+		expect(client.handles("a")).toBe(false);
+		expect(client.request("a", 0, "seek")).toEqual({ state: "fallback" });
+	});
 });
