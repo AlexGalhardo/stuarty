@@ -153,7 +153,8 @@ test.describe("keyboard-only-edit", () => {
 		);
 		expect(log.filter((text) => text !== "")).toHaveLength(1);
 
-		// F6 visits the regions in order: top bar, library, history, preview, timeline, inspector.
+		// F6 visits the regions in order: top bar, library, preview, timeline, inspector, and back to the top
+		// bar. The history sidebar is collapsed and takes no room: its button is on the library rail.
 		await page.locator("body").focus();
 		const visited: string[] = [];
 		for (let i = 0; i < 6; i++) {
@@ -165,13 +166,13 @@ test.describe("keyboard-only-edit", () => {
 				),
 			);
 		}
-		expect(visited.slice(0, 5)).toEqual([
+		expect(visited).toEqual([
 			"HEADER",
-			"ASIDE",
 			"ASIDE",
 			"MAIN",
 			"SECTION",
+			"ASIDE",
+			"HEADER",
 		]);
-		expect(visited[5]).toBe("ASIDE");
 	});
 });

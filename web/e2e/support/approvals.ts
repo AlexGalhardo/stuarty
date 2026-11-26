@@ -48,6 +48,6 @@ export function seedApprovals(summaries: string[]): string[] {
 // launch code no longer makes one. The approval queue refuses the local token an agent holds.
 export async function signInAsPerson(page: Page): Promise<void> {
 	await ensureAccount(page.request, home);
-	await signInWithPassword(page.request);
+	await signInWithPassword(page);
 	await page.goto("/");
 }

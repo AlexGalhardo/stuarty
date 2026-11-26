@@ -123,7 +123,7 @@ test.beforeAll(() => {
 // the launcher secret (SDD-007 section 3.4 item 7).
 async function signInAsPerson(page: Page): Promise<void> {
 	await ensureAccount(page.request, home);
-	await signInWithPassword(page.request);
+	await signInWithPassword(page);
 	await page.goto("/");
 }
 

@@ -58,25 +58,31 @@ export default function LeftPanel(): ReactNode {
 				}
 				className="min-h-0 min-w-0 flex-1 flex-row gap-0"
 			>
-				<TabsList
-					aria-label={t("ui.editor.library.rail")}
-					className="w-11 shrink-0 justify-start group-data-vertical/tabs:h-full gap-1 rounded-none border-r border-border bg-transparent p-1"
+				{/* A tablist owns only tabs (ARIA aria-required-children), so the history button sits below it in the rail, outside the list. */}
+				<div
+					data-rail=""
+					className="flex w-11 shrink-0 flex-col gap-1 border-r border-border p-1"
 				>
-					{tabs.map((def) => (
-						<Tooltip key={def.id}>
-							<TooltipTrigger asChild>
-								<TabsTrigger
-									value={def.id}
-									aria-label={t(def.labelKey)}
-									data-rail-tab={def.id}
-									className="size-8 flex-none px-0 group-data-vertical/tabs:w-8 group-data-vertical/tabs:justify-center data-active:bg-surface-selected data-active:shadow-none group-data-vertical/tabs:after:right-auto group-data-vertical/tabs:after:-left-1 after:bg-ring data-active:after:opacity-100 dark:data-active:bg-surface-selected"
-								>
-									<def.icon aria-hidden="true" />
-								</TabsTrigger>
-							</TooltipTrigger>
-							<TooltipContent side="right">{t(def.labelKey)}</TooltipContent>
-						</Tooltip>
-					))}
+					<TabsList
+						aria-label={t("ui.editor.library.rail")}
+						className="w-full justify-start gap-1 rounded-none bg-transparent p-0"
+					>
+						{tabs.map((def) => (
+							<Tooltip key={def.id}>
+								<TooltipTrigger asChild>
+									<TabsTrigger
+										value={def.id}
+										aria-label={t(def.labelKey)}
+										data-rail-tab={def.id}
+										className="size-8 flex-none px-0 group-data-vertical/tabs:w-8 group-data-vertical/tabs:justify-center data-active:bg-surface-selected data-active:shadow-none group-data-vertical/tabs:after:right-auto group-data-vertical/tabs:after:-left-1 after:bg-ring data-active:after:opacity-100 dark:data-active:bg-surface-selected"
+									>
+										<def.icon aria-hidden="true" />
+									</TabsTrigger>
+								</TooltipTrigger>
+								<TooltipContent side="right">{t(def.labelKey)}</TooltipContent>
+							</Tooltip>
+						))}
+					</TabsList>
 					<Tooltip>
 						<TooltipTrigger asChild>
 							<Button
@@ -94,7 +100,7 @@ export default function LeftPanel(): ReactNode {
 						</TooltipTrigger>
 						<TooltipContent side="right">{historyLabel}</TooltipContent>
 					</Tooltip>
-				</TabsList>
+				</div>
 				{transcript && <TranscriptStage />}
 				{cuts && <CutsSource />}
 				{!transcript &&

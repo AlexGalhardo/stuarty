@@ -107,7 +107,7 @@ async function recordingsOf(
 // person records in the browser, so the session of the page is made one before the dialog opens.
 async function signInAsPerson(page: Page): Promise<void> {
 	await ensureAccount(page.request, home);
-	await signInWithPassword(page.request);
+	await signInWithPassword(page);
 }
 
 async function openDialog(page: Page, project: string): Promise<void> {

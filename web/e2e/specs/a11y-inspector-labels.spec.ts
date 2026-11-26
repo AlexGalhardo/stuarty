@@ -109,6 +109,7 @@ test.describe("a11y-inspector-labels", () => {
 		const ids = await items.evaluateAll((els) =>
 			els.map((e) => e.getAttribute("data-item-id") ?? ""),
 		);
+		await page.locator("[data-import-open]").click();
 		await expect(page.getByLabel("Path of a file to import")).toBeVisible();
 		await check(page, seeded.itemIds[0] ?? "", /^Clip/);
 		const others = ids.filter((id) => id !== seeded.itemIds[0]);

@@ -18,7 +18,7 @@ function recordRequests(page: Page): Request[] {
 
 test.describe("polish", () => {
 	test.describe("reduced motion", () => {
-		test("the animated elements have a transition of 0s when reduced and 150 ms otherwise", async ({
+		test("the animated elements have a transition of 1 ms when reduced and 200 ms otherwise", async ({
 			page,
 			request,
 		}) => {
@@ -30,14 +30,16 @@ test.describe("polish", () => {
 			const splitter = page.locator("[data-splitter]").first();
 			await expect(item).toBeVisible();
 
+			// --duration-base and --duration-reduced (docs/design-system.md section 2.13): reduced motion is 1 ms,
+			// not 0, so that popup presence still gets its animationend.
 			await page.emulateMedia({ reducedMotion: "no-preference" });
 			for (const element of [item, row, header, splitter]) {
-				await expect(element).toHaveCSS("transition-duration", "0.15s");
+				await expect(element).toHaveCSS("transition-duration", "0.2s");
 			}
 
 			await page.emulateMedia({ reducedMotion: "reduce" });
 			for (const element of [item, row, header, splitter]) {
-				await expect(element).toHaveCSS("transition-duration", "0s");
+				await expect(element).toHaveCSS("transition-duration", "0.001s");
 			}
 		});
 	});

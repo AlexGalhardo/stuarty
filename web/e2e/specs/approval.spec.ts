@@ -80,7 +80,7 @@ async function connect(
 // A person decides, and a person is a session opened with the password (ADR-0052, SDD-007 section 3.9 item 5).
 async function signInAsPerson(page: Page): Promise<void> {
 	await ensureAccount(page.request, home);
-	await signInWithPassword(page.request);
+	await signInWithPassword(page);
 	await page.goto("/");
 }
 

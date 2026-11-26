@@ -47,7 +47,7 @@ async function recordingsOf(
 
 async function openDialog(page: Page, project: string): Promise<void> {
 	await ensureAccount(page.request, home);
-	await signInWithPassword(page.request);
+	await signInWithPassword(page);
 	await page.goto(`/editor/${project}`);
 	await page.locator("[data-import-open]").click();
 	await page.locator("[data-record-open]").click();

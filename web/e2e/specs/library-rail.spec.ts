@@ -3,8 +3,9 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, seedProject, solidClip, test } from "./helpers";
 
 // TASK-0285 (SDD-012 section 6.4): the material region has a vertical rail of
-// 40 px with one icon tab per panel; a tab is drawn only when its command is in
-// the registry, and Alt+1 hides the panel but keeps the rail.
+// 44 px with one icon tab per panel and a panel of 240 px beside it (final design
+// 05); a tab is drawn only when its command is in the registry, and Alt+1 hides
+// the panel but keeps the rail.
 test.describe("library tab rail", () => {
 	test.use({ viewport: { width: 1600, height: 900 } });
 
@@ -16,7 +17,9 @@ test.describe("library tab rail", () => {
 		await page.goto(`/editor/${seeded.id}`);
 		const rail = page.getByRole("tablist", { name: "Material panels" });
 		await expect(rail).toHaveAttribute("aria-orientation", "vertical");
-		expect((await rail.boundingBox())?.width).toBeCloseTo(40, 0);
+		expect(
+			(await page.locator("[data-rail]").boundingBox())?.width,
+		).toBeCloseTo(44, 0);
 		const tabs = rail.getByRole("tab");
 		await expect(tabs.first()).toHaveAccessibleName("Media");
 		await expect(tabs.first()).toHaveAttribute("aria-selected", "true");
@@ -48,11 +51,11 @@ test.describe("library tab rail", () => {
 		await page.goto(`/editor/${seeded.id}`);
 		const aside = page.locator("aside[data-landmark='2']");
 		await expect(aside).toBeVisible();
-		expect((await aside.boundingBox())?.width).toBeCloseTo(640, 0);
+		expect((await aside.boundingBox())?.width).toBeCloseTo(44 + 240, 0);
 		await page.keyboard.press("Alt+1");
 		await expect(page.getByRole("region", { name: "Media" })).toHaveCount(0);
 		await expect(page.getByRole("tab", { name: "Media" })).toBeVisible();
-		await expect.poll(async () => (await aside.boundingBox())?.width).toBe(40);
+		await expect.poll(async () => (await aside.boundingBox())?.width).toBe(44);
 		// A click on a tab brings the panel back.
 		await page.getByRole("tab", { name: "Templates" }).click();
 		await expect(page.getByRole("region", { name: "Templates" })).toBeVisible();
@@ -64,7 +67,7 @@ test.describe("library tab rail", () => {
 		await expect(page.getByRole("region", { name: "Templates" })).toBeVisible();
 	});
 
-	test("the wide library puts the cards side by side", async ({
+	test("the library panel stacks the cards, each as wide as the list", async ({
 		page,
 		request,
 	}) => {
@@ -79,10 +82,12 @@ test.describe("library tab rail", () => {
 			await cards.nth(0).boundingBox(),
 			await cards.nth(1).boundingBox(),
 		];
-		expect(second?.y).toBeCloseTo(first?.y ?? -1, 0);
-		expect(second?.x ?? 0).toBeGreaterThan(
-			(first?.x ?? 0) + (first?.width ?? 0) - 1,
+		// The panel is 240 px, narrower than two cards: one card per row.
+		expect(second?.x).toBeCloseTo(first?.x ?? -1, 0);
+		expect(second?.y ?? 0).toBeGreaterThan(
+			(first?.y ?? 0) + (first?.height ?? 0) - 1,
 		);
+		expect(first?.width ?? 0).toBeGreaterThan(200);
 	});
 
 	test("a tab whose command is not in the registry is not drawn", async ({

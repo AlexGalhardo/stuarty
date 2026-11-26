@@ -124,7 +124,7 @@ test.describe("the agent chat in the editor", () => {
 	}) => {
 		const seeded = await seedProject(request, { tracks: 1, perTrack: 1 });
 		await ensureAccount(page.request, home);
-		await signInWithPassword(page.request);
+		await signInWithPassword(page);
 		await clearProfiles(page);
 		await send(page, "PUT", "/agents/profiles/editorial", {
 			command: fakeAgent,
@@ -227,7 +227,7 @@ test.describe("the project of the chat panel", () => {
 		const gone = await seedProject(request, { tracks: 1, perTrack: 1 });
 		await seedProject(request, { tracks: 1, perTrack: 1 });
 		await ensureAccount(page.request, home);
-		await signInWithPassword(page.request);
+		await signInWithPassword(page);
 		await clearProfiles(page);
 		await send(page, "PUT", "/agents/profiles/editorial", {
 			command: fakeAgent,

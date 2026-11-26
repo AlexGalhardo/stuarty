@@ -39,7 +39,7 @@ async function seededFile(
 // The session of a person: the password sign-in of the account every server of the run has (ADR-0052).
 async function signInAsPerson(page: Page): Promise<void> {
 	await ensureAccount(page.request, home);
-	await signInWithPassword(page.request);
+	await signInWithPassword(page);
 }
 
 async function pathOf(page: Page, hash: string): Promise<string> {

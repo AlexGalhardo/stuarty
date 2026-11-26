@@ -1,6 +1,12 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { type APIRequestContext, expect } from "@playwright/test";
+import {
+	type APIRequestContext,
+	expect,
+	type Page,
+	test,
+} from "@playwright/test";
+import { accountTargets } from "./accountTargets";
 
 // The account the suite signs in with (ADR-0052): a throwaway, not a credential. Every local server of the
 // run has one made before the first spec (accountSetup.ts), since a workspace with none sends every page to
@@ -56,16 +62,42 @@ export function recoveryKeyPath(home: string): string {
 	return `${home}.recovery-key`;
 }
 
-// signInWithPassword unlocks the studio and puts the session of a person in the cookie jar of `request`.
+// signInWithPassword puts the session of a person in the cookie jar of `target` (a page, or the request context of
+// the global setup), unlocking the studio when no such session exists yet.
+//
+// A page reuses the session of the person that the global setup opened on its server (accountSetup.ts) instead
+// of signing in again: signing in can invalidate sessions and lock the studio while the unlock hooks run.
 export async function signInWithPassword(
-	request: APIRequestContext,
+	target: APIRequestContext | Page,
 ): Promise<void> {
-	const response = await request.post("/auth/account/login", {
+	if (isPage(target)) {
+		await restorePersonSession(target);
+		return;
+	}
+	const response = await target.post("/auth/account/login", {
 		headers: JSON_HEADERS,
 		data: {
 			identity: E2E_ACCOUNT.username,
 			password: E2E_ACCOUNT.password,
 		},
 	});
+	expect(response.ok(), await response.text()).toBe(true);
+}
+
+function isPage(target: APIRequestContext | Page): target is Page {
+	return typeof (target as Page).goto === "function";
+}
+
+// Restore only this project's server state. Account settings requires a person's session.
+async function restorePersonSession(page: Page): Promise<void> {
+	const baseURL = test.info().project.use.baseURL;
+	const target = accountTargets().find((entry) => entry.baseURL === baseURL);
+	if (!target) throw new Error(`No E2E account state for ${baseURL}`);
+
+	const state = JSON.parse(await readFile(target.statePath, "utf8")) as {
+		cookies: Parameters<ReturnType<Page["context"]>["addCookies"]>[0];
+	};
+	await page.context().addCookies(state.cookies);
+	const response = await page.request.get("/auth/account/settings");
 	expect(response.ok(), await response.text()).toBe(true);
 }
