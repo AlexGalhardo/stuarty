@@ -29,7 +29,7 @@ type Endpoint struct {
 	AlsoScope string
 	Service   string // the Service method that answers it, "" when it is not a service operation
 	Status    int
-	Summary string
+	Summary   string
 	// Uncounted marks a route the rate limiters never count: the event stream and
 	// the byte-serving routes that the editor calls many times a second (SDD-007
 	// section 4.4).
