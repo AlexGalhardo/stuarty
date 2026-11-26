@@ -88,6 +88,40 @@ func installFFmpegWithoutProbe(t *testing.T) string {
 	return dst
 }
 
+func TestOpenValidatesTheRendererWhenFFmpegIsAvailable(t *testing.T) {
+	ffmpegDir := os.Getenv("STUARTY_TEST_FFMPEG_DIR")
+	if ffmpegDir == "" {
+		t.Skip("verify:env-skip STUARTY_TEST_FFMPEG_DIR is not set")
+	}
+	ext := ""
+	if runtime.GOOS == "windows" {
+		ext = ".exe"
+	}
+	env := map[string]string{
+		workspace.EnvHome:         filepath.Join(t.TempDir(), "ws"),
+		"STUARTY_FFMPEG":          filepath.Join(ffmpegDir, "ffmpeg"+ext),
+		"STUARTY_FFPROBE":         filepath.Join(ffmpegDir, "ffprobe"+ext),
+		"STUARTY_EXPORT_RENDERER": "invalid",
+	}
+	cfg := Config{Getenv: envOf(env), Inline: true}
+	o, err := Open(t.Context(), cfg)
+	if o != nil {
+		_ = o.Close()
+	}
+	if err == nil || !strings.Contains(err.Error(), "STUARTY_EXPORT_RENDERER") {
+		t.Fatalf("Open with an invalid renderer = %v", err)
+	}
+	env["STUARTY_EXPORT_RENDERER"] = "rust"
+	o, err = Open(t.Context(), cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = o.Close() })
+	if o.Service == nil || o.webp == nil {
+		t.Fatal("media services were not configured after reopening the workspace")
+	}
+}
+
 // panicTrap records a recovered job panic. The service logs "job panicked" and
 // stores E_INTERNAL; the test must see neither.
 type panicTrap struct {

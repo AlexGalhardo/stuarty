@@ -11,6 +11,7 @@ import (
 
 	"github.com/AlexGalhardo/stuarty/core/command"
 	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/config"
 	"github.com/AlexGalhardo/stuarty/service/workspace"
 )
 
@@ -138,5 +139,38 @@ func TestOpenRefusesAWorkspacePathThatBreaksTheDatabaseURL(t *testing.T) {
 
 	if strings.Contains(se.Message+se.Hint, "ws#1") {
 		t.Errorf("answer shows the path: %q %q", se.Message, se.Hint)
+	}
+}
+
+func TestNetworkOwnerRequiresAValidatedOriginAndUsesRuntimeCredentials(t *testing.T) {
+	home := filepath.Join(t.TempDir(), "ws")
+	cfg := Config{
+		Getenv:   envOf(map[string]string{workspace.EnvHome: home}),
+		Resolved: config.Resolved{Mode: config.ModeNetwork, Addr: "127.0.0.1:7878", LoopbackHTTP: true},
+	}
+	o, err := Open(t.Context(), cfg)
+	if o != nil {
+		_ = o.Close()
+	}
+	if err == nil || !strings.Contains(err.Error(), "validates the configuration") {
+		t.Fatalf("Open without a validated origin = %v", err)
+	}
+
+	cfg.Resolved.AppURL = "http://127.0.0.1:7878"
+	o, err = Open(t.Context(), cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if o.Account != nil || o.Token != "" || o.netAuth == nil || o.accountApply() != nil {
+		_ = o.Close()
+		t.Fatal("the network owner did not use the network authentication mode")
+	}
+	secret, secretErr := o.Dir.LoadRuntimeSecret()
+	closeErr := o.Close()
+	if secretErr != nil || secret == "" || secret != o.runtimeSecret || closeErr != nil {
+		t.Fatalf("runtime credential was unavailable or failed to close: %v, %v", secretErr, closeErr)
+	}
+	if _, err := o.Dir.LoadRuntimeSecret(); err == nil {
+		t.Fatal("the runtime credential survived owner shutdown")
 	}
 }
