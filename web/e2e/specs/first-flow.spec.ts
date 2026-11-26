@@ -39,8 +39,7 @@ test.beforeAll(async () => {
 });
 
 test.afterAll(() => {
-	running?.server.kill();
-	running?.fake.kill();
+	running?.stop();
 });
 
 // @chromium-only: the spec owns one server on one port, and one engine is enough for a flow of the product.

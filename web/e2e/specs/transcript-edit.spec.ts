@@ -26,8 +26,7 @@ test.beforeAll(async () => {
 });
 
 test.afterAll(() => {
-	running?.server.kill();
-	running?.fake.kill();
+	running?.stop();
 });
 
 interface Document {

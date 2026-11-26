@@ -7,11 +7,14 @@ import { expect, seedProject, test } from "./helpers";
 test.describe.configure({ timeout: 120_000 });
 
 // Every request after this call, so a toggle that reaches the core or any
-// other endpoint shows. The long-lived event stream is not a request of a toggle.
+// other endpoint shows. The long-lived event stream and the periodic
+// recording banner status poll are not requests of a toggle.
 function recordRequests(page: Page): Request[] {
 	const seen: Request[] = [];
 	page.on("request", (r) => {
-		if (!r.url().endsWith("/events")) seen.push(r);
+		if (r.url().endsWith("/events")) return;
+		if (r.method() === "GET" && r.url().includes("/recordings")) return;
+		seen.push(r);
 	});
 	return seen;
 }

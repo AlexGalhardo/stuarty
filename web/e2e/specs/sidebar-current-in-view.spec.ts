@@ -13,14 +13,19 @@ test.describe("sidebar on a short window", () => {
 			.getByRole("navigation", { name: "Main navigation" })
 			.locator('[aria-current="page"]');
 		await expect(current).toBeVisible();
-		const inside = await page.evaluate(() => {
-			const nav = document.querySelector('nav[aria-label="Main navigation"]');
-			const link = nav?.querySelector('[aria-current="page"]');
-			if (!link || !nav) return false;
-			const a = link.getBoundingClientRect();
-			const b = nav.getBoundingClientRect();
-			return a.top >= b.top - 1 && a.bottom <= b.bottom + 1;
-		});
-		expect(inside).toBe(true);
+		await expect
+			.poll(() =>
+				page.evaluate(() => {
+					const nav = document.querySelector(
+						'nav[aria-label="Main navigation"]',
+					);
+					const link = nav?.querySelector('[aria-current="page"]');
+					if (!link || !nav) return false;
+					const a = link.getBoundingClientRect();
+					const b = nav.getBoundingClientRect();
+					return a.top >= b.top - 1 && a.bottom <= b.bottom + 1;
+				}),
+			)
+			.toBe(true);
 	});
 });
