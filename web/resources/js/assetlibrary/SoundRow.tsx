@@ -124,7 +124,7 @@ export function SoundRow({
 				aria-pressed={selected}
 				className="min-w-0 truncate text-left text-sm font-medium underline-offset-2 hover:underline focus-visible:outline-2"
 			>
-				<UntrustedText>{asset.name}</UntrustedText>
+				<UntrustedText className="block truncate">{asset.name}</UntrustedText>
 			</button>
 			<span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-text-muted">
 				{asset.duration_ms !== undefined && (

@@ -38,6 +38,12 @@ export class HttpTransport implements Transport {
 		} else {
 			request.signal?.addEventListener("abort", onAbort, { once: true });
 		}
+		// Abort in-flight requests on page navigation so WebKit does not report
+		// torn-down fetches as access-control page errors.
+		const hasWindow = typeof window !== "undefined";
+		if (hasWindow) {
+			window.addEventListener("pagehide", onAbort, { once: true });
+		}
 
 		try {
 			const response = await fetch(this.base + request.path, {
@@ -80,6 +86,9 @@ export class HttpTransport implements Transport {
 		} finally {
 			clearTimeout(timer);
 			request.signal?.removeEventListener("abort", onAbort);
+			if (hasWindow) {
+				window.removeEventListener("pagehide", onAbort);
+			}
 		}
 	}
 
@@ -102,6 +111,16 @@ export class HttpTransport implements Transport {
 		}
 		source.onerror = () =>
 			handlers.onError(source.readyState === EventSource.CLOSED);
-		return { close: () => source.close() };
+		const onHide = (): void => source.close();
+		const hasWindow = typeof window !== "undefined";
+		if (hasWindow) {
+			window.addEventListener("pagehide", onHide, { once: true });
+		}
+		return {
+			close: () => {
+				if (hasWindow) window.removeEventListener("pagehide", onHide);
+				source.close();
+			},
+		};
 	}
 }

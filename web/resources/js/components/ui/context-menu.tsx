@@ -21,6 +21,7 @@ function ContextMenuTrigger({
   className,
   children,
   disabled,
+  onKeyDown,
   ...props
 }: Omit<React.ComponentProps<typeof ContextMenuPrimitive.Trigger>, "children"> & {
   asChild?: boolean
@@ -29,11 +30,33 @@ function ContextMenuTrigger({
 }) {
   if (disabled) return <>{children}</>
   const render = childRender(asChild, children)
+  const handleKeyDown: React.ComponentProps<
+    typeof ContextMenuPrimitive.Trigger
+  >["onKeyDown"] = (event) => {
+    onKeyDown?.(event)
+    if (event.defaultPrevented) return
+    const isContextKey =
+      event.key === "ContextMenu" || (event.shiftKey && event.key === "F10")
+    if (!isContextKey) return
+    event.preventDefault()
+    const anchor =
+      event.target instanceof HTMLElement ? event.target : event.currentTarget
+    const rect = anchor.getBoundingClientRect()
+    event.currentTarget.dispatchEvent(
+      new MouseEvent("contextmenu", {
+        bubbles: true,
+        cancelable: true,
+        clientX: Math.round(rect.left + rect.width / 2),
+        clientY: Math.round(rect.top + rect.height / 2),
+      }),
+    )
+  }
   return (
     <ContextMenuPrimitive.Trigger
       data-slot="context-menu-trigger"
       className={cn("select-none", className)}
       render={render}
+      onKeyDown={handleKeyDown}
       {...props}
     >
       {render ? undefined : children}
