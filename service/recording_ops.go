@@ -1085,6 +1085,11 @@ func (s *svc) RecordingCancel(ctx context.Context, req RecordingRef) (*Recording
 	}
 
 	got, uerr := s.updateRecording(ctx, req.ID, func(x *recordings.Row) error {
+		if !recording.CanDelete(recording.State(x.State), recording.Review(x.Review)) {
+			return newError(command.CodeInvalidState, "the recording is %s and cannot be deleted.", x.State).
+				withHint("an added recording is a library asset: remove it as an asset")
+		}
+
 		x.State, x.Review = string(recording.Cancelled), ""
 
 		return nil

@@ -15,7 +15,7 @@ Execute in the order below unless dependencies say otherwise. Each executor: rea
 | [005](005-enforce-live-revocation-sse-and-hosted-agents.md) | Enforce live revocation on SSE `Revalidate` ticks and hosted agent sessions in network mode | security | P1 | M | LOW | — | DONE |
 | [006](006-confine-blog-files-and-desktop-reveal-paths.md) | Confine `blog_files` destination and desktop `showInFolder` paths against host escape | security | P1 | S | LOW | — | DONE |
 | [007](007-fix-approval-cost-ledger-and-publish-scheduler-bugs.md) | Fix approval cost-ledger, publish scheduler lease-loss, and OAuth refresh-rotation bugs | bug | P1 | M | LOW | — | DONE |
-| [008](008-fix-recording-agenthost-capture-and-cache-concurrency-bugs.md) | Fix recording, agenthost, capturehost, library, cache, audio-plan, and desktop-shell concurrency and correctness bugs | bug | P1 | M | LOW | 003 | TODO |
+| [008](008-fix-recording-agenthost-capture-and-cache-concurrency-bugs.md) | Fix recording, agenthost, capturehost, library, cache, audio-plan, and desktop-shell concurrency and correctness bugs | bug | P1 | M | LOW | 003 | DONE |
 | [009](009-fix-rust-text-bounds-and-frontend-preview-async-bugs.md) | Fix Rust text-rasterizer float bounds and frontend preview, Web Lock, SSE, and recorder leaks | bug | P1 | M | LOW | — | TODO |
 | [010](010-close-nfr061-image-export-budget-and-clipped-layer-perf.md) | Close NFR-061 image export budget (<2 s) and fix clipped-layer band/memory bottlenecks | perf | P2 | M | MED | — | TODO |
 | [011](011-eliminate-sqlite-n-plus-1-indexes-and-sse-rerenders.md) | Eliminate SQLite N+1 queries, add approval/cost indexes, and isolate SSE and editor re-renders | perf | P2 | M | LOW | — | TODO |

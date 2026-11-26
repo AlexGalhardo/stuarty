@@ -131,20 +131,25 @@ func sources(doc *timeline.Document) []*timeline.Item {
 	return out
 }
 
-// gainAt is the gain of an item at frame r inside it, which may be
-// fractional: volume or its keyframes times the linear fades.
-func gainAt(it *timeline.Item, r float64) float64 {
-	g := property(it, "volume", it.Volume, r)
+// fadeFactor is the combined linear fade-in / fade-out multiplier at frame r inside it.
+func fadeFactor(it *timeline.Item, r float64) float64 {
+	f := 1.0
 
 	if it.FadeIn > 0 && r < float64(it.FadeIn) {
-		g *= r / float64(it.FadeIn)
+		f *= r / float64(it.FadeIn)
 	}
 
 	if end := float64(it.Duration); it.FadeOut > 0 && r > end-float64(it.FadeOut) {
-		g *= (end - r) / float64(it.FadeOut)
+		f *= (end - r) / float64(it.FadeOut)
 	}
 
-	return max(g, 0)
+	return max(f, 0)
+}
+
+// gainAt is the gain of an item at frame r inside it, which may be
+// fractional: volume or its keyframes times the linear fades.
+func gainAt(it *timeline.Item, r float64) float64 {
+	return max(property(it, "volume", it.Volume, r)*fadeFactor(it, r), 0)
 }
 
 // Audio returns every audio source that sounds in frames [from, to), clipped
@@ -264,8 +269,11 @@ func curve(it *timeline.Item, fps timeline.Rational, a, b int, add func(int64, f
 	case "linear":
 		return
 	case "hold":
-		// The value stays until the next keyframe: one sample before it.
-		add(frameSample(fps, b+it.Start)-1, gainAt(it, float64(a)))
+		// Hold keeps the keyframe volume constant until frame b while preserving any linear fade ramp.
+		beforeB := max(property(it, "volume", it.Volume, float64(a))*fadeFactor(it, float64(b)), 0)
+		if round3(beforeB) != round3(gainAt(it, float64(b))) {
+			add(frameSample(fps, b+it.Start)-1, beforeB)
+		}
 
 		return
 	}

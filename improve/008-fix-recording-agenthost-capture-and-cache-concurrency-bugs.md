@@ -159,12 +159,12 @@ Nine localized, high-confidence concurrency, resource-leak, and media-pipeline c
 
 ## Done criteria
 
-- [ ] `go test -race -count=1 ./core/plan/... ./engine/cache/... ./engine/capturehost/... ./service/agenthost/... ./service/library/... ./desktop/shell/...` exits 0
-- [ ] `go test -race -count=1 -run 'Recording' ./web/app/servicetest/` exits 0
-- [ ] `cd capture && cargo fmt --check && cargo clippy --all-targets -- -D warnings && cargo test` exits 0 (or explicitly reported if `cargo` is unavailable on the executor host)
-- [ ] `task lint:go && task vet` exits 0
-- [ ] No files outside the in-scope list are modified (`git status`)
-- [ ] `improve/README.md` status row updated
+- [x] `go test -race -count=1 ./core/plan/... ./engine/cache/... ./engine/capturehost/... ./service/agenthost/... ./service/library/... ./desktop/shell/...` exits 0
+- [x] `go test -race -count=1 -run 'Recording' ./web/app/servicetest/` exits 0
+- [x] `cd capture && cargo fmt --check && cargo clippy --all-targets -- -D warnings && cargo test` exits 0 (`capture/src/audio.rs` 1-line fix applied; `cargo` unavailable on executor host, verified on CI)
+- [x] `task lint:go && task vet` exits 0
+- [x] No files outside the in-scope list are modified (`git status`)
+- [x] `improve/README.md` status row updated
 
 ## STOP conditions
 

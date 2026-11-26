@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"sync"
 	"testing"
 	"time"
 
@@ -182,5 +183,38 @@ func TestOpenIndexesOnlyTheCacheFolders(t *testing.T) {
 	}
 	if s.Size() != 0 {
 		t.Errorf("size = %d, want 0 after evicting both files under a 1-byte cap", s.Size())
+	}
+}
+
+func TestStorePutConcurrentSameKey(t *testing.T) {
+	s, err := Open(t.TempDir(), 1<<20)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	payload := bytes.Repeat([]byte("frame-bytes-"), 256)
+	const workers = 16
+
+	var wg sync.WaitGroup
+	errs := make(chan error, workers)
+
+	for range workers {
+		wg.Go(func() {
+			if perr := s.Put("frames/p/1/same.jpg", payload); perr != nil {
+				errs <- perr
+			}
+		})
+	}
+
+	wg.Wait()
+	close(errs)
+
+	for perr := range errs {
+		t.Errorf("concurrent Put failed: %v", perr)
+	}
+
+	got, ok := s.Get("frames/p/1/same.jpg")
+	if !ok || !bytes.Equal(got, payload) {
+		t.Fatalf("Get after concurrent Put: ok=%v len=%d want %d", ok, len(got), len(payload))
 	}
 }

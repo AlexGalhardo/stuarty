@@ -213,7 +213,7 @@ pub fn run(
 		}
 	}
 
-	if !out.lost && out.error.is_none() && !clock.paused() {
+	if !out.lost && out.error.is_none() {
 		let pad = w.timeline.pad_to(clock.active_ns());
 		if let Err(e) = w.silence(pad) {
 			out.error = Some(format!("the sound file could not be written: {}", e.kind()));
