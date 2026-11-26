@@ -1,5 +1,11 @@
 import { CircleHelp } from "lucide-react";
-import { type FormEvent, type ReactNode, useId, useState } from "react";
+import {
+	type FormEvent,
+	type ReactNode,
+	type Ref,
+	useId,
+	useState,
+} from "react";
 
 import { type Failure, FailureNote } from "@/components/Failure";
 import { Button } from "@/components/ui/button";
@@ -74,8 +80,10 @@ interface Props {
 	kind?: Choice;
 	// The word of the button that leaves the form; "Cancel" unless the caller goes back instead.
 	cancelLabel?: string;
-	// The first field takes the focus when the form opens, as in a dialog.
+	// The briefing page focuses the first field when it opens.
 	autoFocusFirst?: boolean;
+	// A dialog can manage focus itself and use the name field as its initial target.
+	nameRef?: Ref<HTMLInputElement>;
 	// The page layout of a new project: the idea in one card and the goal in a two-column grid in another.
 	page?: boolean;
 }
@@ -96,6 +104,7 @@ export default function ProjectContextForm({
 	kind,
 	cancelLabel,
 	autoFocusFirst = false,
+	nameRef,
 	page = false,
 }: Props) {
 	const t = useT();
@@ -191,7 +200,11 @@ export default function ProjectContextForm({
 				{field === "description" ? (
 					<Textarea rows={4} {...common} />
 				) : (
-					<Input type={field === "due" ? "date" : "text"} {...common} />
+					<Input
+						ref={field === "name" ? nameRef : undefined}
+						type={field === "due" ? "date" : "text"}
+						{...common}
+					/>
 				)}
 				{min !== undefined && max !== undefined && (
 					<p className="text-xs text-muted-foreground">

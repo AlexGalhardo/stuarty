@@ -53,6 +53,15 @@ const row = (page: Page, name: string) =>
 	page.getByRole("treeitem", { name: new RegExp(`^${name},`) });
 
 async function axeOf(page: Page, label: string): Promise<string[]> {
+	// Measure the final colors once the popup and theme animations have settled.
+	await page.evaluate(async () => {
+		const animations = document
+			.getAnimations()
+			.filter(
+				(animation) => animation.effect?.getTiming().iterations !== Infinity,
+			);
+		await Promise.allSettled(animations.map((animation) => animation.finished));
+	});
 	const { violations } = await new AxeBuilder({ page })
 		.withTags(TAGS)
 		.analyze();

@@ -1,6 +1,6 @@
 import { Head, Link, router, usePage } from "@inertiajs/react";
 import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp } from "lucide-react";
-import { type FormEvent, type ReactNode, useState } from "react";
+import { type FormEvent, type ReactNode, useRef, useState } from "react";
 
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -63,6 +63,7 @@ interface ShowProps {
 // opens with a notice that leads to the same form as an edit (ProjectUpdate).
 function ContextPanel({ project }: { project: ShowProps["project"] }) {
 	const t = useT();
+	const nameRef = useRef<HTMLInputElement>(null);
 	const [open, setOpen] = useState(false);
 	const [busy, setBusy] = useState(false);
 	// Kept here and shown in the form: a note on the page would sit behind the dialog.
@@ -140,7 +141,10 @@ function ContextPanel({ project }: { project: ShowProps["project"] }) {
 					setFailure(null);
 				}}
 			>
-				<DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
+				<DialogContent
+					initialFocus={nameRef}
+					className="max-h-[90vh] overflow-y-auto sm:max-w-2xl"
+				>
 					<DialogHeader>
 						<DialogTitle>
 							{project.complete
@@ -155,7 +159,7 @@ function ContextPanel({ project }: { project: ShowProps["project"] }) {
 							goal: project.goal,
 						}}
 						keepDue={project.goal.due}
-						autoFocusFirst
+						nameRef={nameRef}
 						submitLabel={t("ui.projects.edit.save")}
 						busy={busy}
 						failure={failure}

@@ -236,7 +236,7 @@ export function CommandPalette(): ReactNode {
 										</span>
 									)}
 									{keys !== undefined && (
-										<kbd className="rounded-sm border border-border px-1 font-sans text-xs text-muted-foreground">
+										<kbd className="rounded-sm border border-border px-1 font-sans text-xs text-text">
 											{keys}
 										</kbd>
 									)}
