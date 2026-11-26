@@ -27,7 +27,9 @@ pub fn open() -> Option<GpuRenderer> {
 		}
 	}
 	if std::env::var("CI").is_ok() {
-		panic!("no graphics adapter available on CI runner (install mesa-vulkan-drivers for lavapipe)");
+		panic!(
+			"no graphics adapter available on CI runner (install mesa-vulkan-drivers for lavapipe)"
+		);
 	}
 	eprintln!("SKIP: no graphics adapter on this machine");
 	None
