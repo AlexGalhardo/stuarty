@@ -118,9 +118,15 @@ jobs:
   #   export-K  every Nth test of engine/export by sorted name (N = export_n), no race
   #   engine    the rest of engine/
   #   rest      everything outside engine/, web/app/servicetest and web/contract
+  #   web-app   web/app, web/cmd and web/database without web/app/http, with -race
+  #   web-http-K every Nth test of web/app/http by sorted name (N = named_n), with -race
   #   service-K every Nth test of web/app/servicetest by sorted name (N = named_n), with -race
   #   contract-K every Nth test of web/contract by sorted name (N = named_n), with -race
   #             (`rest` ran past 20 minutes on all three systems: run 44880268307)
+  # `go test` runs one package per CPU in parallel, so the slowest package sets the
+  # wall time of its job: web/app/http alone took 801 s on ubuntu-latest and ran past
+  # 20 minutes on macOS and Windows (run 45844318920). It has three shards of its own
+  # now, and `web-app` keeps the packages that finish well inside the budget.
   # The layout differs per system on purpose. The pinned LGPL FFmpeg is installed on
   # Linux and Windows only while FFMPEG_SOURCE is "btbn". With FFMPEG_SOURCE="own" (D-017)
   # macOS installs the own build too, so its export tests run and macOS has three export
@@ -136,12 +142,20 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { os: ubuntu-latest, shard: export-1, export_n: 3 }
-          - { os: ubuntu-latest, shard: export-2, export_n: 3 }
-          - { os: ubuntu-latest, shard: export-3, export_n: 3 }
+          - { os: ubuntu-latest, shard: export-1, export_n: 5 }
+          - { os: ubuntu-latest, shard: export-2, export_n: 5 }
+          - { os: ubuntu-latest, shard: export-3, export_n: 5 }
+          - { os: ubuntu-latest, shard: export-4, export_n: 5 }
+          - { os: ubuntu-latest, shard: export-5, export_n: 5 }
           - { os: ubuntu-latest, shard: engine }
           - { os: ubuntu-latest, shard: web-app }
+          - { os: ubuntu-latest, shard: web-http-1, named_n: 3 }
+          - { os: ubuntu-latest, shard: web-http-2, named_n: 3 }
+          - { os: ubuntu-latest, shard: web-http-3, named_n: 3 }
           - { os: ubuntu-latest, shard: core-service }
+          - { os: ubuntu-latest, shard: core-cmd-1, named_n: 3 }
+          - { os: ubuntu-latest, shard: core-cmd-2, named_n: 3 }
+          - { os: ubuntu-latest, shard: core-cmd-3, named_n: 3 }
           - { os: ubuntu-latest, shard: service-1, named_n: 3 }
           - { os: ubuntu-latest, shard: service-2, named_n: 3 }
           - { os: ubuntu-latest, shard: service-3, named_n: 3 }
@@ -156,7 +170,13 @@ jobs:
           - { os: windows-latest, shard: export-5, export_n: 5 }
           - { os: windows-latest, shard: engine }
           - { os: windows-latest, shard: web-app }
+          - { os: windows-latest, shard: web-http-1, named_n: 3 }
+          - { os: windows-latest, shard: web-http-2, named_n: 3 }
+          - { os: windows-latest, shard: web-http-3, named_n: 3 }
           - { os: windows-latest, shard: core-service }
+          - { os: windows-latest, shard: core-cmd-1, named_n: 3 }
+          - { os: windows-latest, shard: core-cmd-2, named_n: 3 }
+          - { os: windows-latest, shard: core-cmd-3, named_n: 3 }
           - { os: windows-latest, shard: service-1, named_n: 4 }
           - { os: windows-latest, shard: service-2, named_n: 4 }
           - { os: windows-latest, shard: service-3, named_n: 4 }
@@ -171,7 +191,13 @@ jobs:
           - { os: macos-latest, shard: export-3, export_n: 3 }
           - { os: macos-latest, shard: engine }
           - { os: macos-latest, shard: web-app }
+          - { os: macos-latest, shard: web-http-1, named_n: 3 }
+          - { os: macos-latest, shard: web-http-2, named_n: 3 }
+          - { os: macos-latest, shard: web-http-3, named_n: 3 }
           - { os: macos-latest, shard: core-service }
+          - { os: macos-latest, shard: core-cmd-1, named_n: 3 }
+          - { os: macos-latest, shard: core-cmd-2, named_n: 3 }
+          - { os: macos-latest, shard: core-cmd-3, named_n: 3 }
           - { os: macos-latest, shard: service-1, named_n: 3 }
           - { os: macos-latest, shard: service-2, named_n: 3 }
           - { os: macos-latest, shard: service-3, named_n: 3 }
@@ -245,12 +271,15 @@ jobs:
               exit
               ;;
             engine) pkgs="$(go list ./engine/... | grep -vE '/engine/export$')" ;;
-            service-* | contract-*)
-              # The two packages that dominate `rest`: every test builds a store with every migration
-              # and web/contract starts real servers. Sharded by sorted name with -race.
+            service-* | contract-* | web-http-* | core-cmd-*)
+              # The four packages that dominate `rest` and `core-service`: every test builds a store with every migration,
+              # web/contract starts real servers, web/app/http took 801 s on ubuntu-latest (run 45844318920) and
+              # core/command ran past 17 min with -race on macos-latest (run 45856787504). Sharded by sorted name with -race.
               case "$SHARD" in
                 service-*) pkg=./web/app/servicetest/ ;;
                 contract-*) pkg=./web/contract/ ;;
+                web-http-*) pkg=./web/app/http/ ;;
+                core-cmd-*) pkg=./core/command/ ;;
               esac
               # Fuzz targets too: without -fuzz they run their seed corpus (FuzzBundleArchive, SDD-007 T-20).
               names="$(go test -list '^(Test|Fuzz|Example)' "$pkg" | grep -E '^(Test|Fuzz|Example)' | awk -v k="${SHARD##*-}" -v n="$NAMED_N" 'NR % n == k % n' | paste -sd'|' -)"
@@ -258,8 +287,8 @@ jobs:
               go test -race -count=1 -timeout=17m $cover_flags -run "^(${names})"'$' "$pkg"
               exit
               ;;
-            web-app) pkgs="$(go list ./web/app/... ./web/cmd/... ./web/database/... | grep -vE '/web/app/servicetest$')" ;;
-            core-service) pkgs="$(go list ./... | grep -vE '/engine(/|$)|/web/app(/|$)|/web/cmd(/|$)|/web/database(/|$)|/web/contract$')" ;;
+            web-app) pkgs="$(go list ./web/app/... ./web/cmd/... ./web/database/... | grep -vE '/web/app/servicetest$|/web/app/http$')" ;;
+            core-service) pkgs="$(go list ./... | grep -vE '/engine(/|$)|/core/command$|/web/app(/|$)|/web/cmd(/|$)|/web/database(/|$)|/web/contract$')" ;;
           esac
           # shellcheck disable=SC2086
           go test -race -count=1 -timeout=17m $cover_flags $pkgs
@@ -324,9 +353,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { os: ubuntu-latest, shards: 13 }
-          - { os: windows-latest, shards: 17 }
-          - { os: macos-latest, shards: 13 }
+          - { os: ubuntu-latest, shards: 21 }
+          - { os: windows-latest, shards: 23 }
+          - { os: macos-latest, shards: 19 }
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
@@ -487,12 +516,15 @@ jobs:
           mkdir -p dist
           go build -o dist/stuarty-e2e ./web/cmd/app
           go build -o dist/desktop-detect ./desktop/detect
+          go build -o dist/firstflowfake ./internal/tools/firstflowfake
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: e2e-binaries
+          include-hidden-files: true
           path: |
             dist/stuarty-e2e
             dist/desktop-detect
+            dist/firstflowfake
             web/resources/public/build
 
   # The Chromium specs grew to 786 tests; one job reached 533 of them in the 20 minute budget, and the heaviest specs are clustered in one part of the order
@@ -517,7 +549,7 @@ jobs:
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: e2e-binaries
-      - run: chmod +x dist/stuarty-e2e dist/desktop-detect
+      - run: chmod +x dist/stuarty-e2e dist/desktop-detect dist/firstflowfake
       - uses: actions/cache@a7833574556fa59680c1b7cb190c1735db73ebf0 # v5.0.0
         with:
           path: ~/.bun/install/cache
@@ -541,6 +573,7 @@ jobs:
           SHARD: ${{ matrix.shard }}
           STUARTY_E2E_BIN: ${{ github.workspace }}/dist/stuarty-e2e
           STUARTY_DETECT_BIN: ${{ github.workspace }}/dist/desktop-detect
+          STUARTY_FIRSTFLOWFAKE_BIN: ${{ github.workspace }}/dist/firstflowfake
       # Run the serial local-account first-run/lock/recovery project unsharded on shard 1.
       - name: Local account first-run E2E
         if: matrix.shard == 1
@@ -553,7 +586,11 @@ jobs:
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: playwright-traces-chromium-${{ matrix.shard }}
-          path: web/e2e/test-results/
+          # Playwright writes outputDir under the working directory of the run (web/),
+          # not next to the config file: the traces of the first runs were never uploaded.
+          path: |
+            web/test-results/
+            web/e2e/test-results/
           if-no-files-found: ignore
 
   # The required check of the ruleset keeps its name: it fails when a shard failed, was cancelled or
@@ -589,17 +626,17 @@ jobs:
   # WebKit, in parallel with the Chromium job (P3-REL-005). The browser is the one of the pinned
   # @playwright/test version, installed from the lockfile.
   browser-engines:
-    name: Browser tests (${{ matrix.browser }}, ${{ matrix.shard }}/6)
+    name: Browser tests (${{ matrix.browser }}, ${{ matrix.shard }}/8)
     needs: e2e-build
     runs-on: ubuntu-latest
     timeout-minutes: 20
     # Two shards were not enough: the second of each engine reached 188 and 213 of its 379 tests in the
-    # 20 minute budget (run 44880268307).
+    # 20 minute budget (run 44880268307); six shards still timed out on webkit 4/6 (run 45856787504).
     strategy:
       fail-fast: false
       matrix:
         browser: [firefox, webkit]
-        shard: [1, 2, 3, 4, 5, 6]
+        shard: [1, 2, 3, 4, 5, 6, 7, 8]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -610,7 +647,7 @@ jobs:
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: e2e-binaries
-      - run: chmod +x dist/stuarty-e2e dist/desktop-detect
+      - run: chmod +x dist/stuarty-e2e dist/desktop-detect dist/firstflowfake
       - uses: actions/cache@a7833574556fa59680c1b7cb190c1735db73ebf0 # v5.0.0
         with:
           path: ~/.bun/install/cache
@@ -634,9 +671,9 @@ jobs:
       # display has WebGL2 on Mesa (web/e2e/playwright.config.ts).
       - run: |
           if [ "$BROWSER" = firefox ]; then
-            STUARTY_FIREFOX_HEADED=1 xvfb-run -a bunx playwright test -c e2e/playwright.config.ts --project=firefox --shard="$SHARD"/6
+            STUARTY_FIREFOX_HEADED=1 xvfb-run -a bunx playwright test -c e2e/playwright.config.ts --project=firefox --shard="$SHARD"/8
           else
-            bunx playwright test -c e2e/playwright.config.ts --project="$BROWSER" --shard="$SHARD"/6
+            bunx playwright test -c e2e/playwright.config.ts --project="$BROWSER" --shard="$SHARD"/8
           fi
         working-directory: web
         env:
@@ -649,7 +686,11 @@ jobs:
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: playwright-traces-${{ matrix.browser }}-${{ matrix.shard }}
-          path: web/e2e/test-results/
+          # Playwright writes outputDir under the working directory of the run (web/),
+          # not next to the config file: the traces of the first runs were never uploaded.
+          path: |
+            web/test-results/
+            web/e2e/test-results/
           if-no-files-found: ignore
 
   # BETA exit criterion 5 (P3-REL-005): a project exported on one operating system opens on the other
