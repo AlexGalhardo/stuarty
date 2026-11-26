@@ -142,9 +142,10 @@ func SilenceDetect(db, minMS int) Filter {
 // ZScale converts colour with explicit input properties (SDD-011 4.3.1). Each argument is an
 // enumerated name that the checker validates.
 func ZScale(matrixIn, primariesIn, transferIn, rangeIn string) Filter {
+	// libzimg selects its own CPU tier. Disable its tier-dependent gamma approximation.
 	return Filter(
 		fmt.Sprintf(
-			"zscale=min=%s:pin=%s:tin=%s:rin=%s:m=709:p=709:t=709:r=limited:d=ordered",
+			"zscale=min=%s:pin=%s:tin=%s:rin=%s:m=709:p=709:t=709:r=limited:d=ordered:agamma=0",
 			matrixIn,
 			primariesIn,
 			transferIn,
