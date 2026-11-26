@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { cutRows, evenAround, whole } from "./pixels";
+import { cutRows, decodeVideoPlanes, evenAround, whole } from "./pixels";
 
 describe("pixels", () => {
 	it("rounds a crop to whole pixels and keeps it on the frame", () => {
@@ -43,5 +43,51 @@ describe("pixels", () => {
 		}
 		const cut = cutRows(px, outer, { x: 3, y: 1, w: 2, h: 1 });
 		expect([...cut]).toEqual([11, 0, 0, 0, 21, 0, 0, 0]);
+	});
+
+	it("decodes limited-range BT.709 I420 and NV12 planes for a cropped region", () => {
+		// 4 x 2 frame: left half blue (Y=32, U=240, V=118), right half green (Y=173, U=42, V=26).
+		const yPlane = new Uint8Array([32, 32, 173, 173, 32, 32, 173, 173]);
+		const uPlane = new Uint8Array([240, 42]);
+		const vPlane = new Uint8Array([118, 26]);
+		const i420 = new Uint8Array(yPlane.length + uPlane.length + vPlane.length);
+		i420.set(yPlane, 0);
+		i420.set(uPlane, 8);
+		i420.set(vPlane, 10);
+		const rgba = decodeVideoPlanes(
+			i420,
+			[
+				{ offset: 0, stride: 4 },
+				{ offset: 8, stride: 2 },
+				{ offset: 10, stride: 2 },
+			],
+			"I420",
+			{ matrix: "bt709", fullRange: false },
+			{ x: 1, y: 0, w: 2, h: 1 },
+		);
+		// Pixel 0 is blue (high B, low R/G); pixel 1 is green (high G, low R/B).
+		expect(rgba[0]).toBeLessThan(15);
+		expect(rgba[1]).toBeLessThan(15);
+		expect(rgba[2]).toBeGreaterThan(240);
+		expect(rgba[3]).toBe(255);
+		expect(rgba[4]).toBeLessThan(15);
+		expect(rgba[5]).toBeGreaterThan(240);
+		expect(rgba[6]).toBeLessThan(15);
+		expect(rgba[7]).toBe(255);
+
+		const nv12 = new Uint8Array(yPlane.length + 4);
+		nv12.set(yPlane, 0);
+		nv12.set([240, 118, 42, 26], 8);
+		const nv12Rgba = decodeVideoPlanes(
+			nv12,
+			[
+				{ offset: 0, stride: 4 },
+				{ offset: 8, stride: 4 },
+			],
+			"NV12",
+			{ matrix: "bt709", fullRange: false },
+			{ x: 1, y: 0, w: 2, h: 1 },
+		);
+		expect([...nv12Rgba]).toEqual([...rgba]);
 	});
 });
