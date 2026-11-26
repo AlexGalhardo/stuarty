@@ -92,7 +92,6 @@ export default function Timeline({
 	const endFrame = useDocumentState(selectEndFrame);
 	const fps: Fps = useDocumentState(selectFps) ?? DEFAULT_FPS;
 	const ppf = useUiState((s) => s.timeline.pxPerFrame);
-	const playhead = useUiState((s) => s.playheadFrame);
 	const range = useUiState((s) => s.range);
 	// A string so the selector returns a stable value; the list is parsed once
 	// per change of the markers.
@@ -354,7 +353,7 @@ export default function Timeline({
 	// The zoom lane is drawn when a clip holds zooms; the service reads them from the keyframes.
 	const zooms = useZooms(useAnimatedAssets());
 	const axisPx = extentPx(viewportWidth, endFrame, ppf);
-	const playheadX = frameToContentX(playhead, ppf);
+	// Playhead subscriptions are isolated in PlayheadRuler and PlayheadLine below.
 
 	return (
 		<section
@@ -406,12 +405,11 @@ export default function Timeline({
 					/>
 					{/* biome-ignore lint/a11y/useSemanticElements: see the row above. */}
 					<div role="columnheader" tabIndex={-1} className="min-h-0 min-w-0">
-						<Ruler
+						<PlayheadRuler
 							ppf={ppf}
 							fps={fps}
 							scrollLeft={scrollLeft}
 							viewportWidth={viewportWidth}
-							playheadFrame={playhead}
 							endFrame={endFrame}
 							markers={markerFrames}
 							range={range}
@@ -477,15 +475,30 @@ export default function Timeline({
 							/>
 							<GhostLayer />
 							<SnapLine ppf={ppf} />
-							<div
-								aria-hidden="true"
-								className="pointer-events-none absolute top-0 bottom-0 left-0 w-0 border-l-2 border-ed-playhead"
-								style={{ transform: `translateX(${playheadX}px)` }}
-							/>
+							<PlayheadLine ppf={ppf} />
 						</div>
 					</TimelineWindowContext.Provider>
 				</div>
 			</div>
 		</section>
+	);
+}
+
+function PlayheadRuler(
+	props: Omit<Parameters<typeof Ruler>[0], "playheadFrame">,
+): ReactNode {
+	const playhead = useUiState((s) => s.playheadFrame);
+	return <Ruler {...props} playheadFrame={playhead} />;
+}
+
+function PlayheadLine({ ppf }: { ppf: number }): ReactNode {
+	const playhead = useUiState((s) => s.playheadFrame);
+	const playheadX = frameToContentX(playhead, ppf);
+	return (
+		<div
+			aria-hidden="true"
+			className="pointer-events-none absolute top-0 bottom-0 left-0 w-0 border-l-2 border-ed-playhead"
+			style={{ transform: `translateX(${playheadX}px)` }}
+		/>
 	);
 }

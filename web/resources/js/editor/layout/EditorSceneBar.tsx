@@ -10,12 +10,14 @@ import {
 import { createPortal } from "react-dom";
 
 import ChatDock from "@/dashboard/chat/ChatDock";
-import { useChat } from "@/dashboard/chat/useChat";
 import { SessionProvider } from "@/lib/session";
 import SceneBar from "../../shell/SceneBar";
-import { ShellProvider, useShell } from "../../shell/ShellContext";
+import {
+	LiveShellProvider,
+	useShell,
+	useShellSelector,
+} from "../../shell/ShellContext";
 import { projectNameOf, sceneOf } from "../../shell/sceneState";
-import { useInbox } from "../../shell/useInbox";
 import { usePageVisible } from "../../shell/usePageVisible";
 
 // The chat panel over the editor (VV-427). It is drawn in the body, outside the stacking contexts of the editor
@@ -23,7 +25,7 @@ import { usePageVisible } from "../../shell/usePageVisible";
 // takes the right edge without moving anything of the editor. A key typed in it is the panel's: the shortcuts
 // of the editor listen on the window, and the panel stops the keys before they get there.
 function ChatOverlay(): ReactNode {
-	const { chatOpen } = useShell();
+	const chatOpen = useShellSelector((s) => s.chatOpen);
 	if (!chatOpen) return null;
 	return createPortal(
 		// biome-ignore lint/a11y/noStaticElementInteractions: the wrapper only keeps the keys of the panel from the shortcuts of the editor
@@ -51,7 +53,8 @@ export function useOpenEditorChat(): () => void {
 }
 
 function Frame({ children }: { children: ReactNode }): ReactNode {
-	const { chatOpen, openChat } = useShell();
+	const chatOpen = useShellSelector((s) => s.chatOpen);
+	const openChat = useShellSelector((s) => s.openChat);
 	const opener = useRef<HTMLElement | null>(null);
 	const was = useRef(false);
 	useEffect(() => {
@@ -87,14 +90,12 @@ export function EditorShellFrame({
 	children: ReactNode;
 }): ReactNode {
 	const visible = usePageVisible();
-	const chat = useChat(visible, projectId);
-	const inbox = useInbox(visible);
 	const session = useMemo(() => ({ privileged, mode }), [privileged, mode]);
 	return (
 		<SessionProvider session={session}>
-			<ShellProvider chat={chat} inbox={inbox}>
+			<LiveShellProvider visible={visible} projectId={projectId}>
 				<Frame>{children}</Frame>
-			</ShellProvider>
+			</LiveShellProvider>
 		</SessionProvider>
 	);
 }

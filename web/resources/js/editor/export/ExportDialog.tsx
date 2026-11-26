@@ -192,8 +192,8 @@ export default function ExportDialog({
 	const job = useStore(runtime.jobs, (s) =>
 		s.exportJobId === null ? undefined : s.jobs[s.exportJobId],
 	);
-	const range = useStore(runtime.ui, (s) => s.range);
-	const playhead = useStore(runtime.ui, (s) => s.playheadFrame);
+	const range = useStore(runtime.ui, (s) => (open ? s.range : undefined));
+	const playhead = useStore(runtime.ui, (s) => (open ? s.playheadFrame : -1));
 	const lastEventAt = useStore(runtime.jobs, (s) => s.lastEventAt);
 	const [checking, setChecking] = useState(false);
 	const [findings, setFindings] = useState<readonly LintFinding[]>([]);

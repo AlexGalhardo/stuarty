@@ -90,15 +90,9 @@ func (s *svc) libraryScan(ctx context.Context, c Caller) (map[string]*libraryEnt
 
 			// A file still importing is a pending row of its timeline: it is in the library, with no size yet
 			// (SDD-011 section 14.9).
-			var rows []ProjectAssetRow
-
-			for _, state := range []ProjectAssetState{ProjectAssetActive, ProjectAssetPending} {
-				part, perr := s.store.Assets().ListProjectAssets(ctx, items[i].ID, state)
-				if perr != nil {
-					return nil, asError(perr)
-				}
-
-				rows = append(rows, part...)
+			rows, perr := s.store.Assets().ListProjectAssets(ctx, items[i].ID, ProjectAssetActive, ProjectAssetPending)
+			if perr != nil {
+				return nil, asError(perr)
 			}
 
 			for j := range rows {
@@ -145,22 +139,20 @@ func (s *svc) libraryScanProjectsWithNoTimeline(
 				continue
 			}
 
-			for _, state := range []ProjectAssetState{ProjectAssetActive, ProjectAssetPending} {
-				rows, perr := s.store.Assets().ListProjectAssets(ctx, heads[i].ID, state)
-				if perr != nil {
-					return nil, asError(perr)
+			rows, perr := s.store.Assets().ListProjectAssets(ctx, heads[i].ID, ProjectAssetActive, ProjectAssetPending)
+			if perr != nil {
+				return nil, asError(perr)
+			}
+
+			for j := range rows {
+				e, ok := byHash[rows[j].AssetHash]
+				if !ok {
+					e = &libraryEntry{name: rows[j].Name}
+					byHash[rows[j].AssetHash] = e
 				}
 
-				for j := range rows {
-					e, ok := byHash[rows[j].AssetHash]
-					if !ok {
-						e = &libraryEntry{name: rows[j].Name}
-						byHash[rows[j].AssetHash] = e
-					}
-
-					e.projects++
-					e.holdings = append(e.holdings, asset.Holding{TimelineID: heads[i].ID, AssetID: rows[j].AssetID})
-				}
+				e.projects++
+				e.holdings = append(e.holdings, asset.Holding{TimelineID: heads[i].ID, AssetID: rows[j].AssetID})
 			}
 		}
 

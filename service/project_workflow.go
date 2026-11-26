@@ -4,19 +4,14 @@ import (
 	"context"
 	"errors"
 	"slices"
-	"strings"
 	"time"
 
 	core "github.com/AlexGalhardo/stuarty/core/library"
 	"github.com/AlexGalhardo/stuarty/core/project"
 	"github.com/AlexGalhardo/stuarty/core/writing"
-	"github.com/AlexGalhardo/stuarty/service/approval"
 	"github.com/AlexGalhardo/stuarty/service/library"
 	"github.com/AlexGalhardo/stuarty/service/textview"
 )
-
-// approvalPage is how many requests of a project one read of its cost takes.
-const approvalPage = 200
 
 // effectiveKind is the kind a surface shows for a project (SDD-005 section 5.12.4).
 func effectiveKind(head *ProductionHead, rows []ItemRow) string {
@@ -102,37 +97,30 @@ func (s *svc) nextPost(ctx context.Context, projectID string) *time.Time {
 // or approved. It is empty when there are none, and when the requests cannot be read: a cost the server does not
 // have is left out, never invented.
 func (s *svc) approvalCosts(ctx context.Context, projectID string) []project.Cost {
-	var sums []project.Cost
+	rows, err := s.store.Approvals().PendingApprovedCosts(ctx, projectID)
+	if err != nil {
+		s.log.WarnContext(
+			ctx,
+			"the approvals of a project were not read",
+			"project",
+			projectID,
+			"error",
+			err.Error(),
+		)
 
-	for _, state := range []string{approval.StatePending, approval.StateApproved} {
-		for offset := 0; ; offset += approvalPage {
-			rows, total, err := s.store.Approvals().ListRequests(ctx, approval.Filter{
-				State: state, ProjectID: projectID, Offset: offset, Limit: approvalPage,
-			})
-			if err != nil {
-				s.log.WarnContext(
-					ctx,
-					"the approvals of a project were not read",
-					"project",
-					projectID,
-					"error",
-					err.Error(),
-				)
-
-				return nil
-			}
-
-			for i := range rows {
-				sums = addCost(sums, rows[i].Estimate.Currency, rows[i].Estimate.Micros)
-			}
-
-			if offset+approvalPage >= total || len(rows) == 0 {
-				break
-			}
-		}
+		return nil
 	}
 
-	slices.SortFunc(sums, func(a, b project.Cost) int { return strings.Compare(a.Currency, b.Currency) })
+	if len(rows) == 0 {
+		return nil
+	}
+
+	sums := make([]project.Cost, 0, len(rows))
+	for i := range rows {
+		if rows[i].Micros > 0 && rows[i].Currency != "" {
+			sums = append(sums, project.Cost{Micros: rows[i].Micros, Currency: rows[i].Currency})
+		}
+	}
 
 	return sums
 }

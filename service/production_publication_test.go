@@ -53,6 +53,10 @@ func (noApprovals) SettledByKind(context.Context, string) ([]approval.KindSpend,
 	return nil, nil
 }
 
+func (noApprovals) PendingApprovedCosts(context.Context, string) ([]approval.CurrencySum, error) {
+	return nil, nil
+}
+
 type publicationsStore struct {
 	fakeStore
 	pubs pub.Store

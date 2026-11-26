@@ -443,8 +443,12 @@ func (r approvalRepo) Spent(ctx context.Context, q approval.SpentQuery) (int64, 
 
 func (r approvalRepo) SettledByKind(ctx context.Context, projectID string) ([]approval.KindSpend, error) {
 	rows, err := r.ex.QueryContext(ctx, `SELECT kind, currency, SUM(actual_micros) FROM cost_ledger
- WHERE state = 'settled' AND actual_micros IS NOT NULL AND `+ledgerOwner+` = ?
- GROUP BY kind, currency ORDER BY kind, currency`, projectID)
+ WHERE state = 'settled' AND actual_micros IS NOT NULL
+  AND (project_id = ? OR (
+   project_id IN (SELECT ref FROM project_items WHERE project_id = ? AND kind = 'timeline' AND ref != '')
+   AND NOT EXISTS (SELECT 1 FROM projects p WHERE p.id = cost_ledger.project_id)
+  ))
+ GROUP BY kind, currency ORDER BY kind, currency`, projectID, projectID)
 	if err != nil {
 		return nil, err
 	}
@@ -460,6 +464,34 @@ func (r approvalRepo) SettledByKind(ctx context.Context, projectID string) ([]ap
 		}
 
 		out = append(out, k)
+	}
+
+	return out, rows.Err()
+}
+
+func (r approvalRepo) PendingApprovedCosts(ctx context.Context, projectID string) ([]approval.CurrencySum, error) {
+	rows, err := r.ex.QueryContext(ctx, `SELECT currency, COALESCE(SUM(estimate_micros), 0) FROM approval_requests
+ WHERE state IN ('pending', 'approved') AND estimate_micros > 0 AND currency != ''
+  AND (project_id = ? OR (
+   project_id IN (SELECT ref FROM project_items WHERE project_id = ? AND kind = 'timeline' AND ref != '')
+   AND NOT EXISTS (SELECT 1 FROM projects p WHERE p.id = approval_requests.project_id)
+  ))
+ GROUP BY currency ORDER BY currency`, projectID, projectID)
+	if err != nil {
+		return nil, err
+	}
+
+	defer func() { _ = rows.Close() }()
+
+	var out []approval.CurrencySum
+
+	for rows.Next() {
+		var c approval.CurrencySum
+		if err := rows.Scan(&c.Currency, &c.Micros); err != nil {
+			return nil, err
+		}
+
+		out = append(out, c)
 	}
 
 	return out, rows.Err()
