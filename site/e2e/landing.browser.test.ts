@@ -22,7 +22,7 @@ function load<T>(name: string): T {
 		throw new Error(`${name} is not installed: run \`bun install --frozen-lockfile\` in web/ first`);
 	}
 }
-const { chromium } = load<Playwright>("@playwright/test");
+const { chromium, expect: browserExpect } = load<Playwright>("@playwright/test");
 const axeModule = load<{ default: AxeBuilder } | AxeBuilder>("@axe-core/playwright");
 const AxeBuilderClass: AxeBuilder = "default" in axeModule ? axeModule.default : axeModule;
 
@@ -428,8 +428,8 @@ describe("the entrance of the sections as the page scrolls", () => {
 		await page.goto(url, { waitUntil: "load" });
 		expect(await page.locator(".l-reveal-out").count()).toBe(0);
 		await page.locator(below).evaluate((e) => e.scrollIntoView({ block: "center" }));
-		// A page without JavaScript runs no animation frame, so the wait polls on an interval instead.
-		await page.waitForFunction((s) => Number(getComputedStyle(document.querySelector(s) as Element).opacity) === 1, below, { polling: 100, timeout: 5000 });
+		// Poll from the test runner because the page's JavaScript timers are disabled.
+		await browserExpect.poll(() => opacity(page, below)).toBe(1);
 		await context.close();
 	});
 });
