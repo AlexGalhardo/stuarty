@@ -153,9 +153,13 @@ test.describe("polish", () => {
 
 		test("volume and mute never reach the core", async ({ page, request }) => {
 			const seeded = await seedProject(request, { tracks: 1, perTrack: 1 });
+			const initialRecordings = page.waitForResponse((r) =>
+				r.url().includes(`/projects/${seeded.id}/recordings`),
+			);
 			await page.goto(`/editor/${seeded.id}?debug=1`);
 			const mute = page.getByRole("button", { name: "Mute preview" });
 			await expect(mute).toBeVisible();
+			await initialRecordings;
 			await page.waitForTimeout(500);
 			const requests = recordRequests(page);
 

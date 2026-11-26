@@ -69,7 +69,10 @@ test.describe("projects-page", () => {
 			name: "What to write in Specific",
 			exact: true,
 		});
-		await tip.focus();
+		// Reach the tip with Tab so :focus-visible matches in Firefox as well as Chromium.
+		await page.getByLabel("Description", { exact: true }).focus();
+		await page.keyboard.press("Tab");
+		await expect(tip).toBeFocused();
 		await expect(page.getByText("One concrete result")).toBeVisible();
 		await expect(
 			page.getByRole("button", { name: /^What to write in / }),

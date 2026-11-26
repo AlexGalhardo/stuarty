@@ -180,7 +180,14 @@ test.describe("a11y-keyboard-dashboard", () => {
 		await expect(page.getByTestId("calendar-week")).toBeVisible();
 		const firstDay = page.getByTestId("calendar-day").first();
 		const before = await firstDay.getAttribute("data-day");
-		await tabTo(page, page.getByRole("button", { name: "Next" }));
+		// Next sits before the view mode toggle in DOM order; Shift+Tab reaches it directly
+		// without wrapping out of the page into browser chrome in headed Firefox.
+		await tabTo(
+			page,
+			page.getByRole("button", { name: "Next" }),
+			120,
+			"Shift+Tab",
+		);
 		await page.keyboard.press("Enter");
 		await expect(firstDay).not.toHaveAttribute("data-day", before ?? "");
 		expect(await axeFindings(page), "axe on the week view").toEqual([]);

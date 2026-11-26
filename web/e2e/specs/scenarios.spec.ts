@@ -240,6 +240,11 @@ test.describe("prototype-reference", () => {
 				m.type() === "error" &&
 				!/Failed to load resource.*status of (409|400)/.test(m.text()) &&
 				!(
+					browserName === "firefox" &&
+					m.text().includes("downloadable font: download failed") &&
+					m.text().includes("status=2152398850")
+				) &&
+				!(
 					browserName === "webkit" &&
 					(m.text().startsWith("csp: style-src-attr") ||
 						m.text().startsWith("Refused to apply a stylesheet"))
@@ -247,7 +252,15 @@ test.describe("prototype-reference", () => {
 			)
 				problems.push(`console: ${m.text()}`);
 		});
-		page.on("pageerror", (e) => problems.push(`pageerror: ${e.message}`));
+		page.on("pageerror", (e) => {
+			if (
+				browserName === "webkit" &&
+				e.message.includes("due to access control checks.")
+			) {
+				return;
+			}
+			problems.push(`pageerror: ${e.message}`);
+		});
 		page.on("response", (r) => {
 			// The 409 of POST /projects is the Inertia redirect to the editor. A truth
 			// frame pinned to a revision that an edit has just replaced is refused

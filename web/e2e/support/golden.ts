@@ -11,6 +11,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { APIRequestContext, Page } from "@playwright/test";
 import { caller, expect, ffmpegExe, test } from "../specs/helpers";
+import { isCompletePng, makeOnce } from "./makeOnce";
 import { differencePicture, encodePng } from "./png";
 import {
 	type Centroid,
@@ -182,14 +183,19 @@ export function fixtureClip(spec: Fixture): string {
 	mkdirSync(dir, { recursive: true });
 	const out = join(dir, spec.name);
 	if (spec.sticker) {
-		writeFileSync(out, stickerPng(spec.width));
+		makeOnce(
+			out,
+			(target) => writeFileSync(target, stickerPng(spec.width)),
+			isCompletePng,
+		);
 		return out;
 	}
 	if (spec.lut !== undefined) {
-		writeFileSync(out, lutFixture(spec.lut));
+		const lut = spec.lut;
+		makeOnce(out, (target) => writeFileSync(target, lutFixture(lut)));
 		return out;
 	}
-	if (!existsSync(out)) {
+	makeOnce(out, (target) => {
 		execFileSync(
 			ffmpegExe(),
 			[
@@ -216,11 +222,11 @@ export function fixtureClip(spec: Fixture): string {
 				"aac",
 				"-f",
 				"mp4",
-				out,
+				target,
 			],
 			{ stdio: "ignore" },
 		);
-	}
+	});
 	return out;
 }
 

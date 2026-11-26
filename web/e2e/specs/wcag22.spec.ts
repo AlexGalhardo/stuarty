@@ -158,11 +158,26 @@ for (const theme of ["dark", "light"] as const) {
 				for (const small of await undersizedTargets(page, EQUIVALENT))
 					found.push(`${state}: ${small.target} ${small.size}`);
 			};
+			const settled = async (): Promise<void> => {
+				await page.evaluate(async () => {
+					const running = document
+						.getAnimations()
+						.filter(
+							(animation) =>
+								animation.effect?.getTiming().iterations !==
+								Number.POSITIVE_INFINITY,
+						);
+					await Promise.allSettled(
+						running.map((animation) => animation.finished),
+					);
+				});
+			};
 			await scan("project");
 			await page.locator(`[data-item-id="${clip}"]`).click();
 			await scan("clip selected");
 			await page.getByRole("button", { name: "Export" }).click();
 			await expect(page.locator("[role=dialog][data-open]")).toBeVisible();
+			await settled();
 			await scan("export dialog");
 			await page.keyboard.press("Escape");
 			// The export dialog leaves with a zoom-out animation: measured while it
@@ -170,6 +185,7 @@ for (const theme of ["dark", "light"] as const) {
 			await expect(page.getByRole("dialog")).toHaveCount(0);
 			await page.keyboard.press("Control+k");
 			await expect(page.locator("[role=dialog][data-open]")).toBeVisible();
+			await settled();
 			await scan("palette");
 			expect(found, "undersized targets").toEqual([]);
 		});

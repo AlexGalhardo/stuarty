@@ -50,10 +50,10 @@ test.describe.configure({ timeout: 240_000, mode: "serial" });
 
 test.use({ viewport: { width: 1440, height: 900 } });
 
-// The recording lock: a port of the run's block (the last one, after the account server), listened on by the test
-// that holds it. A local run starts the projects at once, each in its own worker process, so the lock has to hold
-// across processes; the system lets the port go when its worker dies, so a killed run leaves no lock behind.
-const RECORDING_LOCK_PORT = Number(process.env.STUARTY_E2E_PORT ?? 3101) + 9;
+// The recording lock: a port outside the servers of the run, listened on by the test that holds it. A local run
+// starts the projects at once, each in its own worker process, so the lock has to hold across processes; the system
+// lets the port go when its worker dies, so a killed run leaves no lock behind.
+const RECORDING_LOCK_PORT = Number(process.env.STUARTY_E2E_PORT ?? 3101) + 11;
 // The longest a test waits for the lock: the tests of the other browsers that hold it, one after the other.
 const LOCK_WAIT_MS = 300_000;
 
@@ -124,25 +124,48 @@ async function openDialog(page: Page, project: string): Promise<void> {
 // capture fails the test, and Chromium and Firefox, which have their fake devices here, must always be able to.
 async function endsAsBlocked(page: Page, project: string): Promise<boolean> {
 	const browserName = page.context().browser()?.browserType().name();
-	const canCapture = await page.evaluate(
-		() => typeof navigator.mediaDevices?.getDisplayMedia === "function",
-	);
+	const capability = await page.evaluate(() => {
+		if (!globalThis.isSecureContext)
+			return { ok: false as const, reason: "insecure_context" };
+		if (typeof navigator.mediaDevices?.getDisplayMedia !== "function")
+			return { ok: false as const, reason: "no_display_capture" };
+		const recorder = (
+			globalThis as {
+				MediaRecorder?: { isTypeSupported(type: string): boolean };
+			}
+		).MediaRecorder;
+		if (recorder === undefined)
+			return { ok: false as const, reason: "no_media_recorder" };
+		if (typeof globalThis.crypto?.subtle !== "object")
+			return { ok: false as const, reason: "no_digest" };
+		const candidates = [
+			"video/webm;codecs=vp9,opus",
+			"video/webm;codecs=vp8,opus",
+			"video/webm;codecs=av1,opus",
+			"video/mp4;codecs=avc1.42E01E,mp4a.40.2",
+			"video/webm",
+			"video/mp4",
+		];
+		if (!candidates.some((mime) => recorder.isTypeSupported(mime)))
+			return { ok: false as const, reason: "no_codec" };
+		return { ok: true as const };
+	});
 	if (browserName === "chromium" || browserName === "firefox") {
-		expect(canCapture, `${browserName} offers screen capture to a page`).toBe(
-			true,
-		);
+		expect(
+			capability.ok,
+			`${browserName} offers screen capture and recording to a page`,
+		).toBe(true);
 	}
 	const blocked = page.locator("[data-record-browser-blocked]");
-	if (canCapture) {
+	if (capability.ok) {
 		await expect(page.locator("[data-record-browser-codec]")).toBeVisible();
 		await expect(blocked).toHaveCount(0);
 		return false;
 	}
 	await expect(blocked).toHaveAttribute(
 		"data-record-browser-blocked",
-		"no_display_capture",
+		capability.reason,
 	);
-	await expect(blocked).toContainText("cannot capture the screen");
 	await expect(page.locator("[data-record-start]")).toBeDisabled();
 	expect(await recordingsOf(page.request, project)).toHaveLength(0);
 	return true;

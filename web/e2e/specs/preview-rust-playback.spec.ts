@@ -34,7 +34,12 @@ test.describe("preview-rust-playback", () => {
 		await expect(canvas).toHaveAttribute("data-executor", "rust");
 
 		await page.getByRole("button", { name: "Play" }).click();
-		await expect(canvas).toHaveAttribute("data-clock", "audio");
+		// Headless Firefox on Linux has no audio output device, so AudioContext.resume()
+		// falls back to the wall clock (mediaSync.ts) while still playing the frames.
+		await expect(canvas).toHaveAttribute(
+			"data-clock",
+			browserName === "firefox" ? /audio|wall/ : "audio",
+		);
 		// 45 frames at 30 fps is a second and a half of the clock.
 		await expect
 			.poll(
