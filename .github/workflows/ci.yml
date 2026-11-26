@@ -1058,8 +1058,12 @@ jobs:
       - name: cargo clippy
         working-directory: renderer
         run: cargo clippy --locked --all-targets -- -D warnings
+      - name: Install the software Vulkan adapter
+        run: sudo apt-get update && sudo apt-get install -y mesa-vulkan-drivers
       - name: cargo test
         working-directory: renderer
+        env:
+          STUARTY_TEST_GPU_ADAPTER: software
         run: cargo test --locked
       - name: cargo deny check
         working-directory: renderer
