@@ -1,10 +1,7 @@
 package testfs
 
 import (
-	"context"
 	"os"
-	"os/exec"
-	"runtime"
 	"testing"
 )
 
@@ -18,17 +15,5 @@ func LinkDir(tb testing.TB, link, target string) {
 		return
 	}
 
-	if runtime.GOOS == "windows" {
-		// Both paths are folders of the test's own temporary directory.
-		cmd := exec.CommandContext(context.Background(), "cmd", "/c", "mklink", "/J", link, target)
-
-		out, err := cmd.CombinedOutput()
-		if err == nil {
-			return
-		}
-
-		tb.Skipf("neither a symbolic link nor a junction can be made here: %v: %s", err, out)
-	}
-
-	tb.Skip("symbolic links are not available here")
+	linkDirFallback(tb, link, target)
 }

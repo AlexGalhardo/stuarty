@@ -78,8 +78,30 @@ func TestPutStoresByHashAndDeduplicates(t *testing.T) {
 	if n := len(entries(t, filepath.Join(s.Dir(), want[:2]))); n != 1 {
 		t.Errorf("%d objects for one hash", n)
 	}
-	if !s.Has(want) || s.Has(sum([]byte("other"))) {
+	if !s.Has(want) || s.Has(sum([]byte("other"))) || s.Has("not-a-hash") {
 		t.Error("Has is wrong")
+	}
+}
+
+func TestPutRefusesToDeduplicateAgainstATruncatedObject(t *testing.T) {
+	s := New(t.TempDir())
+	data := bytes.Repeat([]byte("media"), 20)
+	path, err := s.Path(sum(data))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := os.WriteFile(path, data[:1], 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = s.Put(t.Context(), bytes.NewReader(data), 1<<20)
+	if storeErr, ok := errors.AsType[*Error](err); !ok || storeErr.Reason != "store_corrupt" {
+		t.Fatalf("Put against a truncated object returned %v", err)
 	}
 }
 
