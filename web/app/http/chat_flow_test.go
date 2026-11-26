@@ -68,7 +68,7 @@ func fakeAgentBinary(t *testing.T) string {
 		fakePath = filepath.Join(fakeDir, name)
 
 		out, err := exec.CommandContext(context.Background(), "go", "build", "-o", fakePath,
-			"github.com/AlexGalhardo/stuarty/service/agenthost/fakeagent").CombinedOutput()
+			"github.com/AlexGalhardo/stuarty/internal/tools/fakeagent").CombinedOutput()
 		if err != nil {
 			errFake = &buildError{err: err, out: string(out)}
 		}

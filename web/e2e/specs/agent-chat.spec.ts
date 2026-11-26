@@ -18,7 +18,7 @@ import { ensureAccount, signInWithPassword } from "../support/account";
 import { caller, expect, home, test } from "./helpers";
 
 // SDD-017, epic 14: the agent the user hosts, in the panel of the right dock. The agent here is the
-// fake agent of the tests (service/agenthost/fakeagent), a program that speaks the Agent Client
+// fake agent of the tests (internal/tools/fakeagent), a program that speaks the Agent Client
 // Protocol, answers on request and misbehaves on request; a real agent is a manual check. The
 // server is the real one, so what the agent edits goes through its MCP endpoint with its own token.
 test.describe.configure({ mode: "serial" });
@@ -112,11 +112,9 @@ test.beforeAll(() => {
 		dir,
 		process.platform === "win32" ? "fakeagent.exe" : "fakeagent",
 	);
-	execFileSync(
-		"go",
-		["build", "-o", fakeAgent, "./service/agenthost/fakeagent"],
-		{ cwd: root },
-	);
+	execFileSync("go", ["build", "-o", fakeAgent, "./internal/tools/fakeagent"], {
+		cwd: root,
+	});
 });
 
 // A person writes profiles and drives a chat: the session of the desktop app, whose launch carries
