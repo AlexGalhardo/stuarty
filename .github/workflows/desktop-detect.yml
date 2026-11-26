@@ -76,21 +76,21 @@ jobs:
           path: ${{ runner.temp }}/detect-tmp/stuarty-e2e-detect-results/*.json
           if-no-files-found: warn
 
-  # The shell (Wails v3, ADR-0023) is a module of its own, so no other job
-  # builds it. The purego tag lets Linux and macOS targets build with no cgo and
-  # no WebKitGTK headers; it needs no secret.
+  # The shell (Wails v3, ADR-0023) is a module of its own. Run its tests natively
+  # and also check the amd64 build. The purego tag avoids cgo and WebKitGTK headers.
   shell-build:
     name: Shell build (${{ matrix.goos }})
     strategy:
       fail-fast: false
       matrix:
-        goos: [linux, darwin, windows]
-    runs-on: ubuntu-latest
+        include:
+          - { goos: linux, os: ubuntu-latest }
+          - { goos: darwin, os: macos-latest }
+          - { goos: windows, os: windows-latest }
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 15
     env:
       CGO_ENABLED: "0"
-      GOOS: ${{ matrix.goos }}
-      GOARCH: amd64
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -101,9 +101,16 @@ jobs:
           cache-dependency-path: |
             go.sum
             desktop/shell/app/go.sum
-      - name: go vet, go test, and go build
+      - name: Vet and test the native shell
         working-directory: desktop/shell/app
+        shell: bash
         run: |
           go vet -tags purego ./...
           go test -tags purego -count=1 ./...
-          go build -tags purego -o /dev/null ./...
+      - name: Build the amd64 shell
+        working-directory: desktop/shell/app
+        shell: bash
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: amd64
+        run: go build -tags purego -o ./stuarty-shell ./...
