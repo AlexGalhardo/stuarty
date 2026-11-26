@@ -37,5 +37,73 @@ updates:
       prefix: build
       include: scope
 
-  # The entries for /.config/docker (REL-DOCKER) and /site (SITE-COPY) are added
-  # by the tasks that create those folders: Dependabot fails on a missing path.
+  - package-ecosystem: bun
+    directory: /site
+    schedule:
+      interval: weekly
+    groups:
+      site-deps:
+        patterns: ["*"]
+    commit-message:
+      prefix: build
+      include: scope
+
+  - package-ecosystem: gomod
+    directory: /desktop/shell/app
+    schedule:
+      interval: weekly
+    groups:
+      desktop-go-deps:
+        patterns: ["*"]
+    commit-message:
+      prefix: build
+      include: scope
+
+  - package-ecosystem: cargo
+    directory: /renderer
+    schedule:
+      interval: weekly
+    groups:
+      renderer-cargo-deps:
+        patterns: ["*"]
+    commit-message:
+      prefix: build
+      include: scope
+
+  - package-ecosystem: cargo
+    directory: /aihelper
+    schedule:
+      interval: weekly
+    groups:
+      aihelper-cargo-deps:
+        patterns: ["*"]
+    commit-message:
+      prefix: build
+      include: scope
+
+  - package-ecosystem: cargo
+    directory: /capture
+    schedule:
+      interval: weekly
+    groups:
+      capture-cargo-deps:
+        patterns: ["*"]
+    commit-message:
+      prefix: build
+      include: scope
+
+  - package-ecosystem: docker
+    directory: /.config/docker
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: build
+      include: scope
+
+  - package-ecosystem: docker-compose
+    directory: /deploy
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: build
+      include: scope

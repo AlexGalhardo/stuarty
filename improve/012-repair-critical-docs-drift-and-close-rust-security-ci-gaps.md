@@ -149,14 +149,14 @@ This plan fixes actively misleading documentation and closes remaining CI/securi
 
 ## Done criteria
 
-- [ ] `grep -rn 'There is no login\|signs you in without a password\|The product was called Stuarty' site/content/docs/en/ .github/CONTRIBUTING.md` returns no matches
-- [ ] `python3 -c 'data = open("site/content/docs/en/getting-started/install-windows.mdx", "rb").read(); assert b"\x0c" not in data'` exits 0
-- [ ] `cd site && bun run check:mdx && bun run check:last-updated && bun run build && bun run check:built && bun run test:site` exits 0
-- [ ] `go test -count=1 ./internal/tools/notices/...` exits 0
-- [ ] `cd desktop/shell/app && go test -tags purego -count=1 ./...` exits 0
-- [ ] `task lint:go && task lint:md && task vet` exits 0
-- [ ] No files outside the in-scope list are modified (`git status`)
-- [ ] `improve/README.md` status row updated
+- [x] `grep -rn 'There is no login\|signs you in without a password\|The product was called Stuarty' site/content/docs/en/ .github/CONTRIBUTING.md` returns no matches
+- [x] `python3 -c 'data = open("site/content/docs/en/getting-started/install-windows.mdx", "rb").read(); assert b"\x0c" not in data'` exits 0
+- [x] `cd site && bun run check:mdx && bun run check:last-updated && bun run build && bun run check:built && bun run test:site` exits 0
+- [x] `go test -count=1 ./internal/tools/notices/...` exits 0
+- [x] `cd desktop/shell/app && go test -tags purego -count=1 ./...` exits 0
+- [x] `task lint:go && task lint:md && task vet` exits 0
+- [x] No files outside the in-scope list are modified (`git status`)
+- [x] `improve/README.md` status row updated
 
 ## STOP conditions
 

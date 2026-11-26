@@ -2,7 +2,7 @@
 
 Thank you for helping. Stuarty is where a creator plans, creates, edits, manages and publishes content in one place, self-hosted, with AI agents as first-class users. The planning documents in [`docs/`](../docs/README.md) are the contract. Start with the requirements ([`docs/prds/`](../docs/prds)), the decisions ([`docs/adrs/`](../docs/adrs)) and the specification of the area you will touch ([`docs/sdds/`](../docs/sdds)). The work is the epics of [`docs/plans/`](../docs/plans/00-roadmap.md).
 
-The product was called Stuarty until 2026-11-18. The code still carries the former name (`stuarty`, `STUARTY_*`) until the rename epic of ADR-0044 is merged; commands in this guide use the names the code accepts today.
+The product was called Vukem Video until 2026-11-18 and was renamed to Stuarty in Epic 02 (ADR-0044); the former names are still read for a deprecation period (SDD-000 section 13).
 
 By taking part you agree to the [Code of Conduct](CODE_OF_CONDUCT.md). Report vulnerabilities privately, as described in [SECURITY](SECURITY.md), never in a public issue.
 
@@ -30,7 +30,7 @@ Conventional Commits 1.0 in English:
 
 - Types: `feat`, `fix`, `perf`, `refactor`, `docs`, `test`, `build`, `ci`, `chore`, `style`, `revert`.
 - The description is imperative, starts with a lower-case letter, has no trailing period, and the header is at most 100 characters.
-- The scope is optional. When present it is one of `core`, `timeline`, `schema`, `command`, `plan`, `lint`, `engine`, `raster`, `ingest`, `export`, `image`, `transcribe`, `installers`, `service`, `workspace`, `web`, `api`, `mcp`, `cli`, `ui`, `site`, `docs`, `repo`, `ci`, `deps`, `deps-dev`, `release`, `adr`, `sdd`, `go`, `security`, `desktop`, `http`, `ffmpeg`, `renderer`, `docker`, `library`, `events`, `cmd`, `contract`, `pathguard`, `remote`, `timeval`, `store`, `notices`, `projects`, `preview`, `owner` or `e2e`. A new domain adds its scope to the three places named in `.agents/rules/commits.md`.
+- The scope is optional. When present it is one of `core`, `timeline`, `schema`, `command`, `plan`, `lint`, `engine`, `raster`, `ingest`, `export`, `image`, `transcribe`, `installers`, `service`, `workspace`, `web`, `api`, `mcp`, `cli`, `ui`, `site`, `docs`, `repo`, `ci`, `deps`, `deps-dev`, `release`, `adr`, `sdd`, `go`, `security`, `desktop`, `http`, `ffmpeg`, `renderer`, `docker`, `library`, `events`, `cmd`, `contract`, `pathguard`, `remote`, `timeval`, `store`, `notices`, `projects`, `preview`, `owner`, `e2e`, `upgrade`, `servicetest`, `auth` or `secrets`. A new domain adds its scope to the three places named in `.agents/rules/commits.md`.
 - A breaking change has `!` after the type or scope and a `BREAKING CHANGE:` footer that describes the impact.
 - A security change on a `feat`, `fix`, `perf` or `refactor` has a `Security: <one line on the risk closed>` footer.
 - The epic or the issue goes in the body: `Refs: epic 07 task 3` or `Fixes #123`.
@@ -40,13 +40,22 @@ The commit type decides the section of the release notes when releases are cut a
 
 ## How a change is delivered
 
-The process is ADR-0045.
+The process is ADR-0045 and the release train of ADR-0048.
 
-1. The maintainers work on one integration branch that carries one pull request. Each epic of `docs/plans/` is a branch from it. A contribution from outside is a branch from the integration branch, with a pull request against it.
+1. Approved work joins the open release branch (`release/vX.Y.Z`, with its pull request against `main`) as linear commits. Each epic of `docs/plans/` is a branch from the open release branch; a contribution from outside opens a pull request against the open release branch.
 2. A report that something works is a claim, not evidence. A change is done when its output exists and is tested, and every acceptance criterion of its epic has been run with its result visible. A change that cannot meet a criterion is not silently changed: say why.
 3. An independent reviewer reads the epic, its acceptance criteria and the diff, runs the checks again, fixes what it finds and approves. Review rules are in [`REVIEW.md`](../REVIEW.md).
-4. The maintainer merges the approved epic into the integration branch and marks it done in the roadmap. Nobody else pushes to `main`.
+4. The maintainer integrates approved work into the open release branch, marks the epic done in the roadmap, and cuts the release into `main` via rebase-merge at about 90 commits. Nobody pushes directly to `main`.
 5. If you found friction with the vukem framework, say so in the pull request (ADR-0047).
+
+## Running locally
+
+Start the backend server and the frontend dev server in two terminals:
+
+```bash
+go run ./web/cmd/app serve
+cd web && bun install --frozen-lockfile && bun run dev
+```
 
 ## Checks
 
@@ -77,9 +86,9 @@ The pull-request pipeline (`ci.yml`) still exists and will be required again. It
 
 `Golden cases (PATH FFmpeg)` is reported and does not block. `nightly.yml` runs once a day the long benchmarks, the 60 s export and the soak tests.
 
-### The Rust renderer
+### The Rust crates
 
-Rust lives only in `renderer/` (ADR-0029, rule `.agents/rules/rust.md`); you need it only to change the renderer.
+Rust lives only in `renderer/` (ADR-0029), `capture/` (ADR-0049), and `aihelper/` (ADR-0050), governed by `.agents/rules/rust.md`; you need it only to change those crates.
 
 1. Install [rustup](https://rustup.rs). The first `cargo` call in the repository installs the toolchain pinned in `rust-toolchain.toml` (an exact stable version with `rustfmt`, `clippy` and the `wasm32-unknown-unknown` target).
 2. Install the tool at the version of CI: `cargo install --locked cargo-deny --version 0.20.2`. The module has no wasm-bindgen glue, so no wasm-bindgen CLI is needed.
@@ -103,7 +112,7 @@ The project builds its own LGPL FFmpeg (author decision D-017, ADR-0011) with no
 
 ## Releases
 
-No release is cut while the epics are implemented (ADR-0045). When they are done, the integration pull request is split into releases starting at `v0.30.0`, the first one under the name Stuarty (ADR-0044), and the rules of ADR-0028 return, revised. What stays true meanwhile:
+Releases follow the release train of ADR-0048: approved commits accumulate linearly on the open `release/vX.Y.Z` pull request and are rebase-merged into `main` at about 90 commits. What stays true on every release:
 
 - Versions follow SemVer. Stuarty is in `0.x`: a minor release may break, a patch never does.
 - `web/contract/testdata/surface.txt` lists the MCP tools, CLI commands and HTTP routes, and `TestSurfaceFrozen` (`go test ./web/contract/ -run TestSurfaceFrozen`) fails when a name is removed or renamed. A new name needs `UPDATE_SURFACE=1` in the same change; a removal needs a deliberate edit of the file and a commit marked `!`.

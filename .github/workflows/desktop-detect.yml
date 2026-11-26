@@ -101,8 +101,9 @@ jobs:
           cache-dependency-path: |
             go.sum
             desktop/shell/app/go.sum
-      - name: go vet and go build
+      - name: go vet, go test, and go build
         working-directory: desktop/shell/app
         run: |
           go vet -tags purego ./...
+          go test -tags purego -count=1 ./...
           go build -tags purego -o /dev/null ./...

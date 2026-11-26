@@ -25,10 +25,12 @@ the repository (remote AlexGalhardo/stuarty)
 ├── core/                           the pure rules of every domain (Go, no I/O)
 ├── engine/                         media: FFmpeg, ingest, export, transcription, the renderer hosts
 ├── renderer/                       the pixel renderer (Rust, compiled to WebAssembly)
+├── capture/                        the native capture helper (Rust, ADR-0049)
 ├── aihelper/                       the local AI helper: faces over ONNX Runtime (Rust, ADR-0050)
 ├── service/                        the Service interface and its implementation
 ├── web/                            the server (vukem), the MCP server, the CLI, the web UI in web/resources/
 ├── desktop/                        the Wails shell, packaging, the update feed
+├── deploy/                         Docker Compose and self-hosting deployment templates
 ├── site/                           the documentation site
 ├── internal/, scripts/, licenses/  build tools, scripts, third-party licences
 └── spikes/                         disposable experiments, never promoted to product code
@@ -127,9 +129,9 @@ The author confirms before: a push or a merge to `main` outside the release trai
 | `bun run typecheck` and `bun run check:thin-client` (in `web/`) | the TypeScript types and the thin-client rules |
 | `bun run e2e` (in `web/`) | the browser tests (Playwright) |
 | `go test -run TestSecurity_ ./...` | the security suite |
-| `bash .agents/skills/verify/scripts/verify.sh --quick --base release/0.30.0` | the checks of what changed against the integration branch, before a commit (without `--base` it compares with `main`) |
+| `bash .agents/skills/verify/scripts/verify.sh --quick --base release/vX.Y.Z` | the checks of what changed against the open release branch, before a commit (without `--base` it compares with `main`) |
 | `bash scripts/build-renderer.sh` | builds the Rust renderer natively and to WebAssembly, reproducibly |
-| `cargo fmt --check && cargo clippy -- -D warnings && cargo test && cargo deny check` (in `renderer/`, and in `aihelper/` with `clippy --all-targets`) | the Rust gate (rule `.agents/rules/rust.md`) |
+| `cargo fmt --check && cargo clippy -- -D warnings && cargo test && cargo deny check` (in `renderer/`, `capture/`, and `aihelper/` with `clippy --all-targets`) | the Rust gate (rule `.agents/rules/rust.md`) |
 | `task ci`, `task gate -- <tag>`, `verify.sh --full` | the full gates; not required while releases are deferred (ADR-0045), useful before a large merge |
 
 Read `.agents/rules/rust.md` and `.agents/skills/renderer-parity/` before touching `renderer/`, the preview executor or the export compositor.

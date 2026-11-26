@@ -11,8 +11,8 @@ The server runs in one of two modes, and the address it binds to decides which. 
 
 The server is bound to `127.0.0.1` or `::1`, so only your computer can reach it. This is the default and what `stuarty serve` does.
 
-- There is no login. At the first start the server creates a random local token in the workspace, in a file readable only by you. The CLI and the stdio MCP server read it from there.
-- "No login" is not "no protection". Any web page you open can send requests to `127.0.0.1`, so the server also checks the `Host` and `Origin` of every request and refuses what does not come from the editor or from a client holding the token.
+- On the first start you create a local password [account](/docs/account) and save a recovery key. The browser session signs in with that password, and the password unlocks your encrypted workspace; CLI and stdio MCP clients authenticate with a random local token in `<workspace>/token` (readable only by you) while the studio is unlocked.
+- Any web page you open can send requests to `127.0.0.1`, so the server also checks the `Host` and `Origin` of every request and refuses what does not come from the editor or from a client holding the token.
 - Every operation records an actor, such as `local:claude-code` for an agent or `local:ui` for the editor. The history shows who changed what.
 - Emptying the trash is accepted only from the browser editor, never from the token an agent holds.
 

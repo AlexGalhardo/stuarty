@@ -16,7 +16,7 @@ A release carries two Windows files. Pick one:
 - `stuarty-desktop-X-Y-Z.exe`: the **desktop application**. One window that starts the server for you and shows the editor. This is the one most people want.
 - `stuarty-X-Y-Z.exe`: the **local server**. It adds `stuarty` to your path and a shortcut that starts the server and opens the editor in your browser. Choose it for the command line, for agents and for scripts.
 
-Both run only on your computer. Stuarty listens on `127.0.0.1` and nowhere else, and it signs you in without a password because nobody else can reach it. Uninstalling removes the program and keeps your workspace.
+Both run only on your computer. Stuarty listens on `127.0.0.1` and nowhere else, and on first launch you create a local password [account](/docs/account) with a recovery key to unlock your workspace. Uninstalling removes the program and keeps your workspace.
 
 ## Quick start
 
@@ -45,7 +45,7 @@ Both run only on your computer. Stuarty listens on `127.0.0.1` and nowhere else,
 Import and export need FFmpeg and ffprobe, run as separate programs.
 
 - **Today.** The installers of the releases already published do not carry them. If `stuarty doctor --full` reports `E_FFMPEG_MISSING`, install FFmpeg 9 so that `ffmpeg` and `ffprobe` are on your `PATH`, or name them with `STUARTY_FFMPEG` and `STUARTY_FFPROBE` (absolute paths of the files). In a clone of the repository, `scripts/install-ffmpeg.ps1` downloads the pinned LGPL build and verifies its checksum.
-- **Once the own build is published.** The desktop installer is built to place `ffmpeg.exe` and `ffprobe.exe` next to `stuarty.exe`, with the licence texts of the build in `licensesfmpeg-build` in the install folder. Then you need nothing else for export, and Stuarty uses that copy before any FFmpeg on your `PATH`; your own `STUARTY_FFMPEG` still wins. This starts with the first release whose build pins the own FFmpeg. Until then the installer carries none.
+- **Once the own build is published.** The desktop installer is built to place `ffmpeg.exe` and `ffprobe.exe` next to `stuarty.exe`, with the licence texts of the build in `licenses\ffmpeg-build` in the install folder. Then you need nothing else for export, and Stuarty uses that copy before any FFmpeg on your `PATH`; your own `STUARTY_FFMPEG` still wins. This starts with the first release whose build pins the own FFmpeg. Until then the installer carries none.
 
 Even then, H.264 software encoding needs Cisco's OpenH264, which Stuarty never carries: you install it yourself with `stuarty tools:install openh264`. A hardware encoder needs nothing. See [FFmpeg is not found](/docs/troubleshooting/ffmpeg-missing) and [No H.264 encoder works](/docs/troubleshooting/no-encoder).
 
