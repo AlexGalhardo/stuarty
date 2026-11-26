@@ -63,18 +63,18 @@ func TestSecurity_T37_HelperEnvironmentMinimal(t *testing.T) {
 func TestSecurity_T37_HelperDeadlineKillsIt(t *testing.T) {
 	r, dir, _ := helperRunner(t)
 
+	req := helperRequest(t, r, dir, "sleep", 500*time.Millisecond, &bytes.Buffer{})
+	// RunHelper owns the deadline, even if the discovered tool has a shorter default timeout.
+	req.Deadline = time.Second
 	start := time.Now()
 
-	_, err := r.RunHelper(
-		context.Background(),
-		helperRequest(t, r, dir, "sleep", 500*time.Millisecond, &bytes.Buffer{}),
-	)
+	_, err := r.RunHelper(context.Background(), req)
 	if !errors.Is(err, ErrDeadline) {
 		t.Fatalf("error = %v, want ErrDeadline", err)
 	}
 
 	if took := time.Since(start); took > 30*time.Second {
-		t.Errorf("the helper lived %s past a 500 ms deadline", took)
+		t.Errorf("the helper outlived its deadline of %s, taking %s", req.Deadline, took)
 	}
 }
 

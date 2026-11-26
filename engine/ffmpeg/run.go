@@ -333,12 +333,8 @@ func (r *Runner) exec(ctx context.Context, s execSpec) (engine.Result, error) {
 
 	runCtx, cancel := context.WithCancelCause(ctx)
 	defer cancel(nil)
-	dctx, dcancel := context.WithCancelCause(runCtx)
-	defer dcancel(nil)
-	started := time.Now()
-	go watchDeadline(dctx, started, s.deadline, deadlineCeiling(s.deadline, s.ceiling), func() {
-		dcancel(ErrDeadline)
-	})
+	dctx, stopDeadline := execDeadline(runCtx, s)
+	defer stopDeadline()
 
 	stdout := s.stdout
 	var pw *progressWriter
@@ -417,6 +413,20 @@ func (r *Runner) exec(ctx context.Context, s execSpec) (engine.Result, error) {
 		return res, nil
 	}
 	return res, err
+}
+
+func execDeadline(ctx context.Context, s execSpec) (context.Context, context.CancelFunc) {
+	if s.deadline == s.ceiling {
+		// contrib/engine only supplies its own timeout if the caller's context has no deadline.
+		return context.WithTimeoutCause(ctx, s.deadline, ErrDeadline)
+	}
+
+	runCtx, cancel := context.WithCancelCause(ctx)
+	go watchDeadline(runCtx, time.Now(), s.deadline, deadlineCeiling(s.deadline, s.ceiling), func() {
+		cancel(ErrDeadline)
+	})
+
+	return runCtx, func() { cancel(nil) }
 }
 
 var errOverflow = errors.New("output over the cap")

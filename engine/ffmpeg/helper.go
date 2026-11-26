@@ -34,8 +34,7 @@ func (r *Runner) HelperTool(ctx context.Context, path string, deadline time.Dura
 		Limits:      LimitsFor(KindExportHardware, deadline, cpus, 0),
 		CPUCount:    cpus,
 		VersionArgs: []string{"--version"},
-		// The run of a helper has no context deadline of its own, so contrib/engine would end it after its
-		// DefaultTimeout of 5 minutes: a screen recording found out (SDD-025). The deadline of the caller is the bound.
+		// Use the helper deadline as the fallback for callers that run the tool directly.
 		Timeout: deadline,
 	})
 }
@@ -67,6 +66,7 @@ func (r *Runner) RunHelper(ctx context.Context, req HelperRequest) (Result, erro
 		dir:      req.Dir.path,
 		argv:     req.Argv,
 		deadline: req.Deadline,
+		ceiling:  req.Deadline,
 		stdin:    req.Stdin,
 		stdout:   req.Stdout,
 	})
