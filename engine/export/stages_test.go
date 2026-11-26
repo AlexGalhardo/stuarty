@@ -67,10 +67,10 @@ func fileDigest(t *testing.T, path string) string {
 // ownStageDigests are the stages whose bytes differ with the own build: its zimg (3.0.6) rounds the zscale
 // colour conversion of the normalization pass differently from the zimg of the BtbN build (epic 46).
 var ownStageDigests = map[string]string{
-	"artifact normalized-1.mov": "861afb797c807e0ecca894ecca6c6003a24ea105826f7c44d9eafb495704adfd",
+	"artifact normalized-1.mov": "54bf9690de56c86d2697f8650501f756852c33749636eb5578cf74c559a00fa5",
 }
 
 var stageDigests = map[string]string{
 	"generated clip":            "b2e9dcb54719ff5275fdce16f20fcd39dfaa1fda0886232ad3eca05dbbde1799",
-	"artifact normalized-1.mov": "346f47391a30d96e048e84fbedba81f3d2c98799abd065ba1524e40675d4264f",
+	"artifact normalized-1.mov": "b14c0743af089354c5b7f9c7095fa417cb2c17cb6371bcf22dbe1c909f7ff910",
 }
