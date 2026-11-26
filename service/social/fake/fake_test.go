@@ -33,6 +33,12 @@ func TestConnectorReportsProcessingAndChecksItsEndpoint(t *testing.T) {
 		Secret: []byte(`{"refresh_token":"fake-refresh-token","account_id":"acct-1","account_title":"Test account"}`),
 	}
 	ctx := t.Context()
+	if _, err := connector.Account(ctx, connections.Credential{}); err == nil {
+		t.Fatal("Account accepted a missing sign-in")
+	}
+	if account, err := connector.Account(ctx, credential); err != nil || account.ID != "acct-1" {
+		t.Fatalf("Account = %+v, %v", account, err)
+	}
 	if _, err := connector.Begin("client", ""); err == nil {
 		t.Fatal("Begin accepted a missing secret")
 	}
