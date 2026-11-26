@@ -13,7 +13,7 @@ Execute in the order below unless dependencies say otherwise. Each executor: rea
 | [003](003-enforce-recording-project-owner-isolation.md) | Enforce project-owner tenant isolation across the Recording subsystem (SDD-007 T-06) | security | P1 | S | LOW | — | DONE |
 | [004](004-harden-first-run-account-create-privilege-boundary.md) | Harden first-run `POST /auth/account/create` against bearer-token privilege escalation (VV-378) | security | P1 | M | MED | — | BLOCKED (needs author choice on `stuarty open` vs one-time `serve` setup URL) |
 | [005](005-enforce-live-revocation-sse-and-hosted-agents.md) | Enforce live revocation on SSE `Revalidate` ticks and hosted agent sessions in network mode | security | P1 | M | LOW | — | DONE |
-| [006](006-confine-blog-files-and-desktop-reveal-paths.md) | Confine `blog_files` destination and desktop `showInFolder` paths against host escape | security | P1 | S | LOW | — | TODO |
+| [006](006-confine-blog-files-and-desktop-reveal-paths.md) | Confine `blog_files` destination and desktop `showInFolder` paths against host escape | security | P1 | S | LOW | — | DONE |
 | [007](007-fix-approval-cost-ledger-and-publish-scheduler-bugs.md) | Fix approval cost-ledger, publish scheduler lease-loss, and OAuth refresh-rotation bugs | bug | P1 | M | LOW | — | TODO |
 | [008](008-fix-recording-agenthost-capture-and-cache-concurrency-bugs.md) | Fix recording, agenthost, capturehost, library, cache, audio-plan, and desktop-shell concurrency and correctness bugs | bug | P1 | M | LOW | 003 | TODO |
 | [009](009-fix-rust-text-bounds-and-frontend-preview-async-bugs.md) | Fix Rust text-rasterizer float bounds and frontend preview, Web Lock, SSE, and recorder leaks | bug | P1 | M | LOW | — | TODO |

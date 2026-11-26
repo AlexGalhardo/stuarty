@@ -190,8 +190,10 @@ func (e *EndpointError) Error() string { return e.Message }
 
 // Config is what the destinations take from the build: the tests set the clock and the waits.
 type Config struct {
-	Now   func() time.Time
-	Sleep func(ctx context.Context, d time.Duration) error
+	Now         func() time.Time
+	Sleep       func(ctx context.Context, d time.Duration) error
+	Workspace   string
+	NetworkMode bool
 }
 
 func (c Config) now() time.Time {
