@@ -27,6 +27,18 @@ func BenchmarkImageReference(b *testing.B) {
 	cold := ImageConfig{AssetPath: paths}
 	cached := ImageConfig{AssetPath: paths, Cache: NewImageCache(0), CacheScope: "benchmark"}
 	ctx := context.Background()
+	b.Cleanup(func() {
+		// Release the drag's band instances before the next benchmark measures process memory.
+		for _, session := range cached.Cache.sessions {
+			session.gate <- struct{}{}
+			if session.timer != nil {
+				session.timer.Stop()
+			}
+			session.freeAll()
+			<-session.gate
+		}
+		imagePool.Drain()
+	})
 
 	var ids []string
 
