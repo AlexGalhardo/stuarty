@@ -21,8 +21,7 @@ export function ReleaseMarkView({
 }: {
 	version: string;
 	inline?: boolean;
-	// In the collapsed rail of the sidebar, which is 40 px wide inside its padding: a smaller type, so the tag
-	// is not cut at the edge of the window (VV-437).
+	// In the collapsed rail, let long release labels wrap within the available width (VV-437).
 	compact?: boolean;
 }): ReactNode {
 	const label = releaseLabel(version);
@@ -32,8 +31,10 @@ export function ReleaseMarkView({
 			<span
 				data-testid="release-mark"
 				className={cn(
-					"font-mono text-xs text-muted-foreground",
-					compact && "text-[10px] tracking-tighter",
+					"text-xs text-muted-foreground",
+					compact
+						? "max-w-10 wrap-anywhere text-center font-sans tracking-tight"
+						: "font-mono",
 				)}
 			>
 				{label}
