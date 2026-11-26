@@ -479,11 +479,11 @@ func (s *liveSession) Request(ctx context.Context, method string, params json.Ra
 	}
 	s.mu.Unlock()
 
+	s.h.changed()
 	s.rec.Permission(chat.Permission{
 		RequestID: p.id, CallID: p.callID, Title: p.title, ToolKind: p.toolKind, Options: p.options, Detail: p.detail,
 	})
 	s.rec.State(chat.StateInfo{State: chat.StateAwaitingPermission})
-	s.h.changed()
 
 	timeout := time.NewTimer(s.h.lim.Permission)
 	defer timeout.Stop()
@@ -523,13 +523,12 @@ func (s *liveSession) settle(p *pendingPerm, r permResult, answer chat.Answer) b
 
 	p.ch <- r
 
+	s.h.changed()
 	s.rec.PermissionAnswer(chat.Permission{RequestID: p.id, CallID: p.callID, Title: p.title, Answer: answer})
 
 	if resumed {
 		s.rec.State(chat.StateInfo{State: chat.StateRunning})
 	}
-
-	s.h.changed()
 
 	return true
 }
