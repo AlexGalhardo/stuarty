@@ -89,7 +89,11 @@ func newEnvWith(tb testing.TB, with func(e *env, o *service.Options)) *env {
 
 	e := &env{t: tb, dir: newDir(tb), clock: &clock{t: time.Date(2026, 11, 14, 12, 0, 0, 0, time.UTC)}}
 
-	st, err := store.Open(context.Background(), e.dir, store.Options{SchemaVersion: timeline.CurrentSchemaVersion})
+	st, err := store.OpenTemplate(
+		context.Background(),
+		e.dir,
+		store.Options{SchemaVersion: timeline.CurrentSchemaVersion},
+	)
 	if err != nil {
 		tb.Fatal(err)
 	}

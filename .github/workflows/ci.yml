@@ -140,7 +140,8 @@ jobs:
           - { os: ubuntu-latest, shard: export-2, export_n: 3 }
           - { os: ubuntu-latest, shard: export-3, export_n: 3 }
           - { os: ubuntu-latest, shard: engine }
-          - { os: ubuntu-latest, shard: rest }
+          - { os: ubuntu-latest, shard: web-app }
+          - { os: ubuntu-latest, shard: core-service }
           - { os: ubuntu-latest, shard: service-1, named_n: 3 }
           - { os: ubuntu-latest, shard: service-2, named_n: 3 }
           - { os: ubuntu-latest, shard: service-3, named_n: 3 }
@@ -154,7 +155,8 @@ jobs:
           - { os: windows-latest, shard: export-4, export_n: 5 }
           - { os: windows-latest, shard: export-5, export_n: 5 }
           - { os: windows-latest, shard: engine }
-          - { os: windows-latest, shard: rest }
+          - { os: windows-latest, shard: web-app }
+          - { os: windows-latest, shard: core-service }
           - { os: windows-latest, shard: service-1, named_n: 4 }
           - { os: windows-latest, shard: service-2, named_n: 4 }
           - { os: windows-latest, shard: service-3, named_n: 4 }
@@ -168,7 +170,8 @@ jobs:
           - { os: macos-latest, shard: export-2, export_n: 3 }
           - { os: macos-latest, shard: export-3, export_n: 3 }
           - { os: macos-latest, shard: engine }
-          - { os: macos-latest, shard: rest }
+          - { os: macos-latest, shard: web-app }
+          - { os: macos-latest, shard: core-service }
           - { os: macos-latest, shard: service-1, named_n: 3 }
           - { os: macos-latest, shard: service-2, named_n: 3 }
           - { os: macos-latest, shard: service-3, named_n: 3 }
@@ -225,6 +228,10 @@ jobs:
         # shards are merged before the gate (a block counts as covered when any
         # shard hit it).
         run: |
+          cover_flags=""
+          if [ "${RUNNER_OS:-}" = Linux ]; then
+            cover_flags="-covermode=atomic -coverpkg=./... -coverprofile=coverage.out"
+          fi
           case "$SHARD" in
             export-*)
               # Every Nth test of engine/export (sorted), shard k of N. Without -race:
@@ -233,27 +240,29 @@ jobs:
               # service and web/app (task test:race); -covermode=atomic keeps the
               # profiles mergeable with the race shards.
               names="$(go test -list '^(Test|Fuzz|Example)' ./engine/export/ | grep -E '^(Test|Fuzz|Example)' | awk -v k="${SHARD#export-}" -v n="$EXPORT_N" 'NR % n == k % n' | paste -sd'|' -)"
-              go test -count=1 -timeout=17m -covermode=atomic -coverpkg=./... -coverprofile=coverage.out -run "^(${names})"'$' ./engine/export/
+              # shellcheck disable=SC2086
+              go test -count=1 -timeout=17m $cover_flags -run "^(${names})"'$' ./engine/export/
               exit
               ;;
             engine) pkgs="$(go list ./engine/... | grep -vE '/engine/export$')" ;;
             service-* | contract-*)
               # The two packages that dominate `rest`: every test builds a store with every migration
-              # (about a second under -race) and web/contract starts real servers. 637 and 78 tests,
-              # sharded by sorted name like the export shards, with -race as before.
+              # and web/contract starts real servers. Sharded by sorted name with -race.
               case "$SHARD" in
                 service-*) pkg=./web/app/servicetest/ ;;
                 contract-*) pkg=./web/contract/ ;;
               esac
               # Fuzz targets too: without -fuzz they run their seed corpus (FuzzBundleArchive, SDD-007 T-20).
               names="$(go test -list '^(Test|Fuzz|Example)' "$pkg" | grep -E '^(Test|Fuzz|Example)' | awk -v k="${SHARD##*-}" -v n="$NAMED_N" 'NR % n == k % n' | paste -sd'|' -)"
-              go test -race -count=1 -timeout=17m -coverpkg=./... -coverprofile=coverage.out -run "^(${names})"'$' "$pkg"
+              # shellcheck disable=SC2086
+              go test -race -count=1 -timeout=17m $cover_flags -run "^(${names})"'$' "$pkg"
               exit
               ;;
-            rest) pkgs="$(go list ./... | grep -vE '/engine(/|$)|/web/app/servicetest$|/web/contract$')" ;;
+            web-app) pkgs="$(go list ./web/app/... ./web/cmd/... ./web/database/... | grep -vE '/web/app/servicetest$')" ;;
+            core-service) pkgs="$(go list ./... | grep -vE '/engine(/|$)|/web/app(/|$)|/web/cmd(/|$)|/web/database(/|$)|/web/contract$')" ;;
           esac
           # shellcheck disable=SC2086
-          go test -race -count=1 -timeout=17m -coverpkg=./... -coverprofile=coverage.out $pkgs
+          go test -race -count=1 -timeout=17m $cover_flags $pkgs
       # SDD-004 section 12: the common-case export must run at 1.5 x real time or
       # better. Benchmarks do not run under go test, and the race detector skips this
       # one, so it has a step of its own, on the three runners, with the pinned FFmpeg
@@ -315,9 +324,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { os: ubuntu-latest, shards: 12 }
-          - { os: windows-latest, shards: 16 }
-          - { os: macos-latest, shards: 12 }
+          - { os: ubuntu-latest, shards: 13 }
+          - { os: windows-latest, shards: 17 }
+          - { os: macos-latest, shards: 13 }
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
@@ -446,17 +455,12 @@ jobs:
           git diff --exit-code -- "${paths[@]}"
           test -z "$(git status --porcelain -- "${paths[@]}")"
 
-  # The Chromium specs grew to 786 tests; one job reached 533 of them in the 20 minute budget, and the heaviest specs are clustered in one part of the order
-  # (run 44880268307), so they run in six shards of the same Playwright run. `Browser tests
-  # (Playwright)` below keeps the name of the required check and passes only when every shard did.
-  browser:
-    name: Browser tests (Playwright, ${{ matrix.shard }}/6)
+  # Build the E2E frontend bundle and server binaries once so the 18 Playwright shards
+  # do not repeat 24 Vite builds and ~90 concurrent `go run` compilations.
+  e2e-build:
+    name: E2E build
     runs-on: ubuntu-latest
-    timeout-minutes: 20
-    strategy:
-      fail-fast: false
-      matrix:
-        shard: [1, 2, 3, 4, 5, 6]
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -468,21 +472,82 @@ jobs:
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version: ${{ env.BUN_VERSION }}
+      - uses: actions/cache@a7833574556fa59680c1b7cb190c1735db73ebf0 # v5.0.0
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('web/bun.lock') }}
+      - run: bun install --frozen-lockfile
+        working-directory: web
+      - run: bun run build
+        working-directory: web
+      - run: bun run build:e2e
+        working-directory: web
+      - name: Build E2E Go binaries
+        run: |
+          mkdir -p dist
+          go build -o dist/stuarty-e2e ./web/cmd/app
+          go build -o dist/desktop-detect ./desktop/detect
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: e2e-binaries
+          path: |
+            dist/stuarty-e2e
+            dist/desktop-detect
+            web/resources/public/build
+
+  # The Chromium specs grew to 786 tests; one job reached 533 of them in the 20 minute budget, and the heaviest specs are clustered in one part of the order
+  # (run 44880268307), so they run in six shards of the same Playwright run. `Browser tests
+  # (Playwright)` below keeps the name of the required check and passes only when every shard did.
+  browser:
+    name: Browser tests (Playwright, ${{ matrix.shard }}/6)
+    needs: e2e-build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4, 5, 6]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: e2e-binaries
+      - run: chmod +x dist/stuarty-e2e dist/desktop-detect
+      - uses: actions/cache@a7833574556fa59680c1b7cb190c1735db73ebf0 # v5.0.0
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('web/bun.lock') }}
+      - uses: actions/cache@a7833574556fa59680c1b7cb190c1735db73ebf0 # v5.0.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-${{ runner.os }}-${{ hashFiles('web/bun.lock') }}
       - name: Install FFmpeg
         run: |
           bin_dir="$(bash scripts/install-ffmpeg.sh)"
           echo "STUARTY_TEST_FFMPEG_DIR=${bin_dir}" >> "$GITHUB_ENV"
       - run: bun install --frozen-lockfile
         working-directory: web
-      - run: bun run build
-        working-directory: web
       - run: bunx playwright install --with-deps chromium
         working-directory: web
       # The projects that need only Chromium; firefox and webkit have their own jobs below.
-      - run: bun run e2e -- --project=chromium --project=chromium-person --project=failing-encoder --project=desktop-detect --shard="$SHARD"/6
+      - run: bunx playwright test -c e2e/playwright.config.ts --project=chromium --project=chromium-person --project=failing-encoder --project=desktop-detect --shard="$SHARD"/6
         working-directory: web
         env:
           SHARD: ${{ matrix.shard }}
+          STUARTY_E2E_BIN: ${{ github.workspace }}/dist/stuarty-e2e
+          STUARTY_DETECT_BIN: ${{ github.workspace }}/dist/desktop-detect
+      # Run the serial local-account first-run/lock/recovery project unsharded on shard 1.
+      - name: Local account first-run E2E
+        if: matrix.shard == 1
+        run: bunx playwright test -c e2e/playwright.config.ts --project=account
+        working-directory: web
+        env:
+          STUARTY_E2E_BIN: ${{ github.workspace }}/dist/stuarty-e2e
       - name: Upload traces
         if: failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -525,6 +590,7 @@ jobs:
   # @playwright/test version, installed from the lockfile.
   browser-engines:
     name: Browser tests (${{ matrix.browser }}, ${{ matrix.shard }}/6)
+    needs: e2e-build
     runs-on: ubuntu-latest
     timeout-minutes: 20
     # Two shards were not enough: the second of each engine reached 188 and 213 of its 379 tests in the
@@ -538,20 +604,26 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
-        with:
-          go-version-file: go.mod
-          cache-dependency-path: go.sum
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version: ${{ env.BUN_VERSION }}
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: e2e-binaries
+      - run: chmod +x dist/stuarty-e2e dist/desktop-detect
+      - uses: actions/cache@a7833574556fa59680c1b7cb190c1735db73ebf0 # v5.0.0
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('web/bun.lock') }}
+      - uses: actions/cache@a7833574556fa59680c1b7cb190c1735db73ebf0 # v5.0.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ matrix.browser }}-${{ runner.os }}-${{ hashFiles('web/bun.lock') }}
       - name: Install FFmpeg
         run: |
           bin_dir="$(bash scripts/install-ffmpeg.sh)"
           echo "STUARTY_TEST_FFMPEG_DIR=${bin_dir}" >> "$GITHUB_ENV"
       - run: bun install --frozen-lockfile
-        working-directory: web
-      - run: bun run build:e2e
         working-directory: web
       - run: bunx playwright install --with-deps "$BROWSER"
         working-directory: web
@@ -570,6 +642,8 @@ jobs:
         env:
           BROWSER: ${{ matrix.browser }}
           SHARD: ${{ matrix.shard }}
+          STUARTY_E2E_BIN: ${{ github.workspace }}/dist/stuarty-e2e
+          STUARTY_DETECT_BIN: ${{ github.workspace }}/dist/desktop-detect
       - name: Upload traces
         if: failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
