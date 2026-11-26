@@ -2,6 +2,7 @@ package capturehost
 
 import (
 	"context"
+	"errors"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -76,5 +77,24 @@ func TestLiveRefusesAHelperThatIsNotThere(t *testing.T) {
 		if err := l.check(); err == nil {
 			t.Errorf("%q must be refused", path)
 		}
+	}
+}
+
+func TestLiveSourcesUsesTheConfiguredHelper(t *testing.T) {
+	env := newEnv(t, "")
+	live := &Live{Runner: env.r, HelperPath: env.path}
+
+	sources, err := live.Sources(t.Context())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(sources.Displays) != 1 || sources.Displays[0].ID != "d1" {
+		t.Fatalf("unexpected displays: %+v", sources.Displays)
+	}
+
+	live.HelperPath = ""
+	if _, err := live.Sources(t.Context()); !errors.Is(err, ErrHelperMissing) {
+		t.Fatalf("Sources without a helper returned %v", err)
 	}
 }

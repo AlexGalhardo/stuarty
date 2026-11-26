@@ -49,3 +49,20 @@ func TestHeldEntryIsOnlyTheErrorsOfAHeldHandle(t *testing.T) {
 		t.Error("ENOENT is not a held entry")
 	}
 }
+
+func TestLinkDirSkipsWhenTheLinkPathIsOccupied(t *testing.T) {
+	root := t.TempDir()
+	occupied := filepath.Join(root, "occupied")
+	if err := os.WriteFile(occupied, []byte("keep"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	t.Run("occupied path", func(t *testing.T) {
+		LinkDir(t, occupied, root)
+		t.Fatal("LinkDir returned instead of skipping when no link could be made")
+	})
+
+	if data, err := os.ReadFile(occupied); err != nil || string(data) != "keep" {
+		t.Fatalf("LinkDir changed the occupied path: %q, %v", data, err)
+	}
+}
