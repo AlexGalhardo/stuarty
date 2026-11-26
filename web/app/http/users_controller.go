@@ -71,5 +71,14 @@ func (h *apiHandler) usersUpdate(c *web.Ctx, in userUpdateIn) (auth.UserView, er
 		return auth.UserView{}, err
 	}
 
-	return a.Update(c.Context(), in.UserID, auth.UserPatch{Role: in.Role, Disabled: in.Disabled})
+	view, err := a.Update(c.Context(), in.UserID, auth.UserPatch{Role: in.Role, Disabled: in.Disabled})
+	if err != nil {
+		return auth.UserView{}, err
+	}
+
+	if h.Auth != nil && h.Auth.OnUserRevoked != nil && (in.Role != nil || (in.Disabled != nil && *in.Disabled)) {
+		h.Auth.OnUserRevoked(in.UserID)
+	}
+
+	return view, nil
 }

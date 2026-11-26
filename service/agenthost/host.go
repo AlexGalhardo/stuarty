@@ -352,6 +352,33 @@ func (h *Host) EndAll(reason chat.EndReason) {
 	wg.Wait()
 }
 
+// EndByOwner ends every live session owned by ownerUserID (and revokes its session token) for a reason,
+// returning once their process trees are gone. An empty ownerUserID is a no-op.
+func (h *Host) EndByOwner(ownerUserID string, reason chat.EndReason) {
+	if ownerUserID == "" {
+		return
+	}
+
+	h.mu.Lock()
+
+	var sessions []*liveSession
+	for _, s := range h.live {
+		if s.req.OwnerUserID == ownerUserID {
+			sessions = append(sessions, s)
+		}
+	}
+
+	h.mu.Unlock()
+
+	var wg sync.WaitGroup
+
+	for _, s := range sessions {
+		wg.Go(func() { s.end(reason) })
+	}
+
+	wg.Wait()
+}
+
 // Shutdown ends every session and returns when no child of the host is left running.
 func (h *Host) Shutdown() {
 	h.mu.Lock()

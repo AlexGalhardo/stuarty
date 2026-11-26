@@ -144,7 +144,19 @@ func (h *apiHandler) publicationsStream(c *web.Ctx, _ noIn) (noIn, error) {
 	}
 
 	return noIn{}, h.Events.ServePublications(c, owner, func() bool {
-		_, err := h.Service.PublicationList(c.Context(), service.PublicationListRequest{Limit: 1})
+		fresh, ok := h.revalidateCaller(c)
+		if !ok || fresh.ProjectID != "" {
+			return false
+		}
+
+		if h.Network != nil && owner == "" && !slices.Contains(fresh.Scopes, service.ScopeAdmin) {
+			return false
+		}
+
+		_, err := h.Service.PublicationList(
+			service.WithCaller(c.Context(), fresh),
+			service.PublicationListRequest{Limit: 1},
+		)
 
 		return err == nil
 	})

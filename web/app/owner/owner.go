@@ -538,6 +538,12 @@ func (o *Owner) authSetup(ctx context.Context, cfg Config) error {
 		return err
 	}
 
+	o.netAuth.OnUserRevoked = func(uid string) {
+		if o.Agents != nil {
+			o.Agents.EndByOwner(uid, chat.EndLocked)
+		}
+	}
+
 	return auth.BootstrapAdmin(ctx, o.netAuth.Users, cfg.Getenv, cfg.Log)
 }
 

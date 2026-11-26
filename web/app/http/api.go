@@ -417,6 +417,11 @@ func (h *apiHandler) authenticateNetwork(w http.ResponseWriter, r *http.Request,
 		}
 
 		if g, found := h.agentGrant(secret, true); found {
+			if g.Owner != "" && !h.Auth.UserActive(r.Context(), g.Owner) {
+				deny()
+				return
+			}
+
 			next.ServeHTTP(w, r.WithContext(service.WithCaller(r.Context(), auth.AgentCaller(g, true))))
 			return
 		}
@@ -473,6 +478,101 @@ func (h *apiHandler) authenticateNetwork(w http.ResponseWriter, r *http.Request,
 	}
 
 	next.ServeHTTP(w, r.WithContext(service.WithCaller(r.Context(), user.Caller())))
+}
+
+// discardResponseWriter is a no-op http.ResponseWriter used during read-only SSE session
+// revalidation so session-guard checks never mutate headers on an already-flushed stream.
+type discardResponseWriter struct{ hdr http.Header }
+
+func (d *discardResponseWriter) Header() http.Header {
+	if d.hdr == nil {
+		d.hdr = make(http.Header)
+	}
+
+	return d.hdr
+}
+
+func (d *discardResponseWriter) Write(b []byte) (int, error) { return len(b), nil }
+func (d *discardResponseWriter) WriteHeader(int)             {}
+
+// revalidateCaller re-verifies the request's active credential (bearer token, API key, hosted
+// agent token, or session cookie) against live store/user state on SSE revalidation ticks,
+// returning a fresh service.Caller so revocations, user disablement, password resets, and role
+// demotions close open streams.
+func (h *apiHandler) revalidateCaller(c *web.Ctx) (service.Caller, bool) {
+	r := c.Request()
+	if h.Network != nil {
+		return h.revalidateNetworkCaller(r)
+	}
+
+	return h.revalidateLocalCaller(r)
+}
+
+func (h *apiHandler) revalidateNetworkCaller(r *http.Request) (service.Caller, bool) {
+	if header := r.Header.Get("Authorization"); header != "" {
+		secret, ok := auth.Bearer(header)
+		if !ok {
+			return service.Caller{}, false
+		}
+
+		if g, found := h.agentGrant(secret, true); found {
+			if g.Owner != "" && !h.Auth.UserActive(r.Context(), g.Owner) {
+				return service.Caller{}, false
+			}
+
+			return auth.AgentCaller(g, true), true
+		}
+
+		caller, err := h.Auth.KeyCaller(r.Context(), secret)
+		if err != nil || postsKeyOnly(&caller) {
+			return service.Caller{}, false
+		}
+
+		return caller, true
+	}
+
+	user, ok, err := h.Auth.SessionUser(web.NewCtx(&discardResponseWriter{}, r, h.r.Services()))
+	if err != nil || !ok {
+		return service.Caller{}, false
+	}
+
+	return user.Caller(), true
+}
+
+func (h *apiHandler) revalidateLocalCaller(r *http.Request) (service.Caller, bool) {
+	if h.Account != nil && h.Account.Check() != nil {
+		return service.Caller{}, false
+	}
+
+	if header := r.Header.Get("Authorization"); header != "" {
+		token, ok := auth.Bearer(header)
+		if g, found := h.agentGrant(token, ok); found {
+			return auth.AgentCaller(g, false), true
+		}
+
+		if !ok || !auth.TokenMatches(h.Token, token) {
+			return service.Caller{}, false
+		}
+
+		actor, err := auth.Actor(r.Header.Get(auth.ClientHeader))
+		if err != nil {
+			return service.Caller{}, false
+		}
+
+		return service.Caller{Actor: actor, Scopes: service.AllScopes}, true
+	}
+
+	ck, err := r.Cookie(auth.LocalCookieName(browserPort(r)))
+	if err != nil {
+		return service.Caller{}, false
+	}
+
+	valid, privileged := h.Sessions.Lookup(ck.Value)
+	if !valid {
+		return service.Caller{}, false
+	}
+
+	return service.Caller{Actor: "local:" + auth.UILabel, Scopes: service.AllScopes, Browser: privileged}, true
 }
 
 // postsKeyOnly says whether the caller holds the scope of the read API of the blog and no other.

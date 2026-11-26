@@ -215,17 +215,17 @@ mapfile -t web_files < <(staged 'web/resources/js' 'web/e2e')
 
 ## Done criteria
 
-- [ ] `bash -n scripts/upgrade-test.sh .githooks/pre-commit .githooks/commit-msg scripts/gate.sh` exits 0
-- [ ] `grep -n 'mapfile' .githooks/pre-commit` returns no matches
-- [ ] `go test -count=1 -run TestMigrationsIn ./service/` exits 0
-- [ ] `go test -count=1 ./internal/tools/labelsync/...` exits 0
-- [ ] `bash .agents/skills/ci-preflight/scripts/check-commits.sh .` exits 0 with no `BAD` lines
-- [ ] `cd web && bun run typecheck && bun run lint && bun run check:thin-client && bun run check:i18n && bun run test` exits 0
-- [ ] `grep -n 'web/app/agentdocs/out' .github/workflows/ci.yml` returns a match in the `generated` job
-- [ ] `grep -n -- '-tags soak' .github/workflows/nightly.yml` returns a match
-- [ ] `task lint:go && task lint:md` exits 0
-- [ ] No files outside the in-scope list are modified (`git status`)
-- [ ] `improve/README.md` status row updated
+- [x] `bash -n scripts/upgrade-test.sh .githooks/pre-commit .githooks/commit-msg scripts/gate.sh` exits 0
+- [x] `grep -n 'mapfile' .githooks/pre-commit` returns no matches
+- [x] `go test -count=1 -run TestMigrationsIn ./service/` exits 0
+- [x] `go test -count=1 ./internal/tools/labelsync/...` exits 0
+- [x] `bash .agents/skills/ci-preflight/scripts/check-commits.sh .` exits 0 with no `BAD` lines
+- [x] `cd web && bun run typecheck && bun run lint && bun run check:thin-client && bun run check:i18n && bun run test` exits 0
+- [x] `grep -n 'web/app/agentdocs/out' .github/workflows/ci.yml` returns a match in the `generated` job
+- [x] `grep -n -- '-tags soak' .github/workflows/nightly.yml` returns a match
+- [x] `task lint:go && task lint:md` exits 0
+- [x] No files outside the in-scope list are modified (`git status`)
+- [x] `improve/README.md` status row updated
 
 ## STOP conditions
 

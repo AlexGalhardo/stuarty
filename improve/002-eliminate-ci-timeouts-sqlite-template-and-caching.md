@@ -179,16 +179,16 @@ func newEnvWith(tb testing.TB, with func(e *env, o *service.Options)) *env {
 
 ## Done criteria
 
-- [ ] `go test -race -count=1 ./web/app/store/...` exits 0 including template tests
-- [ ] `go test -race -count=1 -run 'TestProject|TestApproval' ./web/app/servicetest/` exits 0
-- [ ] `go test -race -count=1 -run 'TestHTTP' ./web/contract/` exits 0
-- [ ] `cd web && bun run typecheck && bun run lint` exits 0
-- [ ] Local set-equality check proves `ci.yml` shard `go list` rules cover 100% of `go list ./...`
-- [ ] `shards` count in `ci.yml` `test` job matches the exact number of `test-shard` matrix rows per OS
-- [ ] Every added GitHub Action in `.github/workflows/ci.yml` is pinned to a real 40-char commit SHA
-- [ ] `task lint:go && task vet` exits 0
-- [ ] No files outside the in-scope list are modified (`git status`)
-- [ ] `improve/README.md` status row updated
+- [x] `go test -race -count=1 ./web/app/store/...` exits 0 including template tests
+- [x] `go test -race -count=1 -run 'TestProject|TestApproval' ./web/app/servicetest/` exits 0
+- [x] `go test -race -count=1 -run 'TestHTTP' ./web/contract/` exits 0
+- [x] `cd web && bun run typecheck && bun run lint` exits 0
+- [x] Local set-equality check proves `ci.yml` shard `go list` rules cover 100% of `go list ./...`
+- [x] `shards` count in `ci.yml` `test` job matches the exact number of `test-shard` matrix rows per OS
+- [x] Every added GitHub Action in `.github/workflows/ci.yml` is pinned to a real 40-char commit SHA
+- [x] `task lint:go && task vet` exits 0
+- [x] No files outside the in-scope list are modified (`git status`)
+- [x] `improve/README.md` status row updated
 
 ## STOP conditions
 
