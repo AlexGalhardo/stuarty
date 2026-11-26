@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { cutRows, decodeVideoPlanes, evenAround, whole } from "./pixels";
+import {
+	cutRows,
+	decodeVideoPlanes,
+	evenAround,
+	videoPlaneLayout,
+	whole,
+} from "./pixels";
 
 describe("pixels", () => {
 	it("rounds a crop to whole pixels and keeps it on the frame", () => {
@@ -89,5 +95,18 @@ describe("pixels", () => {
 			{ x: 1, y: 0, w: 2, h: 1 },
 		);
 		expect([...nv12Rgba]).toEqual([...rgba]);
+	});
+
+	it("keeps chroma rows and plane offsets distinct for odd image dimensions", () => {
+		expect(videoPlaneLayout("NV12", 5, 3)).toEqual([
+			{ offset: 0, stride: 5 },
+			{ offset: 15, stride: 6 },
+		]);
+		expect(videoPlaneLayout("I420A", 5, 3)).toEqual([
+			{ offset: 0, stride: 5 },
+			{ offset: 15, stride: 3 },
+			{ offset: 21, stride: 3 },
+			{ offset: 27, stride: 5 },
+		]);
 	});
 });

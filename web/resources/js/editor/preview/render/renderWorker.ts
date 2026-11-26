@@ -1,4 +1,10 @@
-import { cutRows, decodeVideoPlanes, evenAround, whole } from "./pixels";
+import {
+	cutRows,
+	decodeVideoPlanes,
+	evenAround,
+	videoPlaneLayout,
+	whole,
+} from "./pixels";
 import type {
 	FromRenderWorker,
 	PixelSource,
@@ -82,8 +88,9 @@ async function cutSource(
 	rect: Rect | undefined,
 ): Promise<Pixels> {
 	if (typeof VideoFrame !== "undefined" && source instanceof VideoFrame) {
-		const frameWidth = source.visibleRect?.width ?? source.codedWidth;
-		const frameHeight = source.visibleRect?.height ?? source.codedHeight;
+		const visible = source.visibleRect;
+		const frameWidth = visible?.width ?? source.codedWidth;
+		const frameHeight = visible?.height ?? source.codedHeight;
 		const area = rect
 			? whole(rect)
 			: { x: 0, y: 0, w: frameWidth, h: frameHeight };
@@ -92,7 +99,12 @@ async function cutSource(
 		// The browser converts from the colour tags of the proxy (SDD-013 5.3.6).
 		const layouts = await source.copyTo(copy, {
 			format: "RGBA",
-			rect: { x: outer.x, y: outer.y, width: outer.w, height: outer.h },
+			rect: {
+				x: (visible?.x ?? 0) + outer.x,
+				y: (visible?.y ?? 0) + outer.y,
+				width: outer.w,
+				height: outer.h,
+			},
 			colorSpace: "srgb",
 		});
 		if (layouts.length === 1 && layouts[0].stride >= outer.w * 4) {
@@ -104,24 +116,19 @@ async function cutSource(
 		}
 		// WebKitGTK ignores options.format in VideoFrame.copyTo and writes native
 		// YUV planes instead. Copy the full native planes and convert the crop.
-		const full = new Uint8Array(source.allocationSize());
-		const fullLayouts = await source.copyTo(full);
-		const ox = source.visibleRect?.x ?? 0;
-		const oy = source.visibleRect?.y ?? 0;
+		const layout = videoPlaneLayout(source.format, frameWidth, frameHeight);
+		const options = layout ? { layout } : undefined;
+		const full = new Uint8Array(source.allocationSize(options));
+		const reported = await source.copyTo(full, options);
 		return {
 			width: area.w,
 			height: area.h,
 			rgba: decodeVideoPlanes(
 				full,
-				fullLayouts,
+				layout ?? reported,
 				source.format,
 				source.colorSpace,
-				{
-					x: ox + area.x,
-					y: oy + area.y,
-					w: area.w,
-					h: area.h,
-				},
+				area,
 			),
 		};
 	}
