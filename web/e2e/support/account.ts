@@ -74,6 +74,10 @@ export async function signInWithPassword(
 		await restorePersonSession(target);
 		return;
 	}
+	await signInOn(target);
+}
+
+async function signInOn(target: APIRequestContext): Promise<void> {
 	const response = await target.post("/auth/account/login", {
 		headers: JSON_HEADERS,
 		data: {
@@ -92,12 +96,18 @@ function isPage(target: APIRequestContext | Page): target is Page {
 async function restorePersonSession(page: Page): Promise<void> {
 	const baseURL = test.info().project.use.baseURL;
 	const target = accountTargets().find((entry) => entry.baseURL === baseURL);
-	if (!target) throw new Error(`No E2E account state for ${baseURL}`);
-
-	const state = JSON.parse(await readFile(target.statePath, "utf8")) as {
-		cookies: Parameters<ReturnType<Page["context"]>["addCookies"]>[0];
-	};
-	await page.context().addCookies(state.cookies);
-	const response = await page.request.get("/auth/account/settings");
-	expect(response.ok(), await response.text()).toBe(true);
+	if (target) {
+		const state = JSON.parse(await readFile(target.statePath, "utf8")) as {
+			cookies: Parameters<ReturnType<Page["context"]>["addCookies"]>[0];
+		};
+		await page.context().addCookies(state.cookies);
+		const response = await page.request.get("/auth/account/settings");
+		if (response.ok()) return;
+		// A spec that starts a server of its own (the first-flow ones) has a workspace of its own: the session of
+		// the shared server means nothing there, so the person signs in on this server.
+		if (response.status() !== 401 && response.status() !== 403) {
+			expect(response.ok(), await response.text()).toBe(true);
+		}
+	}
+	await signInOn(page.request);
 }
