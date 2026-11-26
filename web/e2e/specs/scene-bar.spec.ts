@@ -17,7 +17,7 @@ import { ensureAccount, signInWithPassword } from "../support/account";
 import { caller, expect, home, test } from "./helpers";
 
 // SDD-012 section 23.4, epic 75: the shell of every dashboard page. The agent is the fake agent of the
-// tests (service/agenthost/fakeagent); the server is the real one. A permission is answered on the bar
+// tests (internal/tools/fakeagent); the server is the real one. A permission is answered on the bar
 // through the call the chat panel makes, and the conversation shows the same answer.
 test.describe.configure({ mode: "serial" });
 
@@ -67,11 +67,9 @@ test.beforeAll(async () => {
 		dir,
 		process.platform === "win32" ? "fakeagent.exe" : "fakeagent",
 	);
-	execFileSync(
-		"go",
-		["build", "-o", fakeAgent, "./service/agenthost/fakeagent"],
-		{ cwd: root },
-	);
+	execFileSync("go", ["build", "-o", fakeAgent, "./internal/tools/fakeagent"], {
+		cwd: root,
+	});
 });
 
 test.afterAll(() => {

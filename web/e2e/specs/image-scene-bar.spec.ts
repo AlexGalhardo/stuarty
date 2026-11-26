@@ -18,7 +18,7 @@ import { editImage, newImage } from "./image-support";
 
 // Epic 86 task 5 (SDD-012 sections 23.4 and 24): the scene bar of the dashboard at the foot of the image editor,
 // so a person answers the agent without leaving the image. The agent is the fake agent of the tests
-// (service/agenthost/fakeagent) and the server is the real one.
+// (internal/tools/fakeagent) and the server is the real one.
 test.describe.configure({ mode: "serial" });
 test.use({ viewport: { width: 1440, height: 900 } });
 
@@ -67,11 +67,9 @@ test.beforeAll(async () => {
 		dir,
 		process.platform === "win32" ? "fakeagent.exe" : "fakeagent",
 	);
-	execFileSync(
-		"go",
-		["build", "-o", fakeAgent, "./service/agenthost/fakeagent"],
-		{ cwd: root },
-	);
+	execFileSync("go", ["build", "-o", fakeAgent, "./internal/tools/fakeagent"], {
+		cwd: root,
+	});
 });
 
 test.afterAll(() => {

@@ -27,7 +27,13 @@ func run(m *testing.M) int {
 
 	fakeAgentPath = filepath.Join(dir, "fakeagent"+exeSuffix())
 
-	build := exec.Command("go", "build", "-o", fakeAgentPath, "./fakeagent")
+	build := exec.Command(
+		"go",
+		"build",
+		"-o",
+		fakeAgentPath,
+		"github.com/AlexGalhardo/stuarty/internal/tools/fakeagent",
+	)
 	if out, err := build.CombinedOutput(); err != nil {
 		fmt.Fprintf(os.Stderr, "agenthost tests: building the fake agent: %v\n%s", err, out)
 		return 1

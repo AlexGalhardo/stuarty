@@ -66,11 +66,9 @@ test.beforeAll(async () => {
 		dir,
 		process.platform === "win32" ? "fakeagent.exe" : "fakeagent",
 	);
-	execFileSync(
-		"go",
-		["build", "-o", fakeAgent, "./service/agenthost/fakeagent"],
-		{ cwd: root },
-	);
+	execFileSync("go", ["build", "-o", fakeAgent, "./internal/tools/fakeagent"], {
+		cwd: root,
+	});
 });
 
 test.afterAll(() => {

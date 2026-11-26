@@ -28,7 +28,7 @@ func TestClosingTheServerLeavesNoAgentProcess(t *testing.T) {
 	}
 
 	if out, err := exec.CommandContext(context.Background(), "go", "build", "-o", agent,
-		"github.com/AlexGalhardo/stuarty/service/agenthost/fakeagent").CombinedOutput(); err != nil {
+		"github.com/AlexGalhardo/stuarty/internal/tools/fakeagent").CombinedOutput(); err != nil {
 		t.Fatalf("building the fake agent: %v\n%s", err, out)
 	}
 

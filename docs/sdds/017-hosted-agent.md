@@ -258,7 +258,7 @@ The agent runs **where the server runs**: it is a child of the server process, w
 ## 13. Tests
 
 - `core/chat`: table tests of the state machine, the profile rules, the option picker, the clipping of text, the Markdown renderer (a text full of backticks, headings and HTML stays inside its fence).
-- `service/agenthost`: the protocol client against a **fake agent** (`service/agenthost/fakeagent`, a program the tests build): `TestProtocol*`; the process supervisor: `TestProcess*` (start, cancel, time limits, a hanging agent, a flooding agent, an exiting agent, shutdown that leaves no child); the token: `TestScopedToken*` (a call for another project is refused; the token dies with the session).
+- `service/agenthost`: the protocol client against a **fake agent** (`internal/tools/fakeagent`, a test-only command): `TestProtocol*`; the process supervisor: `TestProcess*` (start, cancel, time limits, a hanging agent, a flooding agent, an exiting agent, shutdown that leaves no child); the token: `TestScopedToken*` (a call for another project is refused; the token dies with the session).
 - `service`: `TestChat_*` over a real store: the operations, the person rule, the project rule, the transcript, the Markdown export, the operation log with the agent as the actor and its undo.
 - Activity (section 8.1): `core/chat` tables of event sequences for `chat.Reduce` and the tool catalogue; `service/agenthost` and `web/app/mcp` tests that a skill read by the token of a session records `skill_loaded` and a read by a person records nothing; `TestChatActivity*` over a real store with two members; the parity of HTTP and CLI.
 - Security, one test per row of SDD-007 that this SDD adds: `TestSecurity_T70_*` to `TestSecurity_T74_*`.

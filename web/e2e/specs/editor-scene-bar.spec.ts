@@ -16,7 +16,7 @@ import { ensureAccount, signInWithPassword } from "../support/account";
 import { expect, home, seedProject, test } from "./helpers";
 
 // Epic 85 task 5 (SDD-012 section 23.4): the scene bar of the dashboard under the timeline of the editor, so a
-// person answers the agent without leaving. The agent is the fake agent of the tests (service/agenthost/fakeagent)
+// person answers the agent without leaving. The agent is the fake agent of the tests (internal/tools/fakeagent)
 // and the server is the real one: the page of the editor carries the session the server shares with every other
 // page, and the catalogue of the bar.
 test.describe.configure({ mode: "serial" });
@@ -67,11 +67,9 @@ test.beforeAll(async () => {
 		dir,
 		process.platform === "win32" ? "fakeagent.exe" : "fakeagent",
 	);
-	execFileSync(
-		"go",
-		["build", "-o", fakeAgent, "./service/agenthost/fakeagent"],
-		{ cwd: root },
-	);
+	execFileSync("go", ["build", "-o", fakeAgent, "./internal/tools/fakeagent"], {
+		cwd: root,
+	});
 });
 
 test.afterAll(() => {
