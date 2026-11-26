@@ -697,7 +697,23 @@ func checkExport(t *testing.T, candidate, ws string) {
 	}
 }
 
-var migrationID = regexp.MustCompile(`d{14}_[a-z0-9_]+`)
+var migrationID = regexp.MustCompile(`\d{14}_[a-z0-9_]+`)
+
+func TestMigrationsInFindsRealIDs(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	const sample = "20261119140000_create_approval_tables"
+
+	if err := os.WriteFile(filepath.Join(dir, "db.sqlite"), []byte("header "+sample+" trailer"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	got := migrationsIn(t, dir)
+	if !got[sample] {
+		t.Fatalf("migrationsIn() = %v, want %q present", got, sample)
+	}
+}
 
 // migrationsIn lists the migration ids written in a workspace database. The ids are plain text in the
 // file; reading them this way keeps the test free of a SQLite driver.

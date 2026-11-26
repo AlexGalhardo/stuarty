@@ -102,18 +102,20 @@ for version in "${versions[@]}"; do
 	exe="$prefix$suffix"
 	archive="${prefix}_${number}_${os}_${arch}.${ext}"
 	dl="$work/download/$version"
-	mkdir -p "$dl" "$binaries/$version"
+	mkdir -p "$dl"
 
 	# A release can be published before its archives exist (v0.25.0 has notes and no binaries).
 	# There is nothing to open, so the matrix continues with the releases that shipped this OS.
 	if command -v gh >/dev/null 2>&1; then
-		names="$(gh release view "$version" -R "$repo" --json assets -q '.assets[].name' || true)"
+		names="$(gh release view "$version" -R "$repo" --json assets -q '.assets[].name' | tr -d '\r' || true)"
 		if ! printf '%s\n' "$names" | grep -qx "$archive"; then
 			log "$version: no $archive on the release, skipping"
 			rm -rf "$dl"
 			continue
 		fi
 	fi
+
+	mkdir -p "$binaries/$version"
 
 	log "$version: downloading $archive"
 	download "$version" "$archive" "$dl/$archive"

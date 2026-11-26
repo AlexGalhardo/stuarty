@@ -69,3 +69,4 @@ area:e2e|c5def5|e2e
 area:upgrade|c5def5|upgrade
 area:servicetest|c5def5|servicetest
 area:auth|c5def5|auth
+area:secrets|c5def5|secrets

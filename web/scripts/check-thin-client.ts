@@ -1,3 +1,4 @@
+// Runs under Node (D-115 fallback): `typescript/unstable/sync` crashes under Bun's `child_process` on Linux.
 // The thin-client check of SDD-012 section 1.4: rules R1 to R8 over every file
 // under resources/js/editor/, and R1 to R7 over every file under
 // resources/js/image-editor/ (SDD-012 section 24.2). It fails with file, line
@@ -15,6 +16,7 @@
 // the read model reject the same writes at typecheck; this catches them where a
 // cast or an `any` would hide them.
 
+import { readdirSync } from "node:fs";
 import { dirname, join, posix, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { SyntaxKind } from "typescript/unstable/ast";
@@ -403,11 +405,9 @@ function checkFixtures(): string[] {
 }
 
 function listCases(dir: string): string[] {
-	const out: string[] = [];
-	for (const entry of new Bun.Glob("*-{fail,pass}").scanSync({ cwd: dir, onlyFiles: false })) {
-		out.push(entry);
-	}
-	return out.sort();
+	return readdirSync(dir)
+		.filter((entry) => /-(fail|pass)$/.test(entry))
+		.sort();
 }
 
 const tree = scan(webRoot, join(webRoot, "tsconfig.json"));

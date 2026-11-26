@@ -1,3 +1,4 @@
+// Runs under Node (D-115 fallback): `typescript/unstable/sync` crashes under Bun's `child_process` on Linux.
 // The internationalization check of SDD-012 section 16.4.
 //
 //   bun run check:i18n     the tree, then the fixtures
