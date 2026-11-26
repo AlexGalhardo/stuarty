@@ -228,9 +228,12 @@ test.describe("a11y-first-flow-keyboard @chromium-only", () => {
 			await type(page, page.getByLabel("Name").first(), "Keyboard cover");
 			await page.keyboard.press("Enter");
 			await expect(page).toHaveURL(/\/edit-image\/img_/);
-			// The toolbar is one tab stop and the arrows walk it.
-			await tabTo(page, page.locator("[data-tool]").first());
-			await arrowTo(page, page.getByTestId("image-add-text"), "ArrowDown");
+			// Tab enters the vertical tool rail and the arrows walk its buttons.
+			const rail = page.getByTestId("image-toolbar");
+			const textTool = rail.getByTestId("image-add-text");
+			await expect(textTool).toBeEnabled();
+			await tabTo(page, rail);
+			await arrowTo(page, textTool, "ArrowDown");
 			await page.keyboard.press("Enter");
 			await expect(page.getByRole("treeitem")).not.toHaveCount(0);
 		});
