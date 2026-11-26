@@ -81,7 +81,7 @@ The pull-request pipeline (`ci.yml`) still exists and will be required again. It
 - `Browser tests (firefox, <i>/6)`, `Browser tests (webkit, <i>/6)`: the same specs on the other two engines, except those tagged `CHROMIUM_ONLY`; run one by hand with `bunx playwright test -c e2e/playwright.config.ts --project=firefox` in `web/`
 - `Bundle export (<os>)`, `Bundle matrix (<os>)`: a bundle of the reference project made on each system is imported on all three, and the document and media hashes must be equal; `bash scripts/bundle-matrix.sh` runs it by hand
 - `Sandbox (bwrap)`: `TestSecurity_T16_` must pass, not skip
-- `Renderer (ubuntu-24.04)`: the Rust gate of `renderer/` and the WebAssembly module built twice from clean with equal digests and equal to the embedded one (see [The Rust renderer](#the-rust-renderer)); `Renderer (windows-latest)`: the same module built on Windows, which must be byte for byte the embedded one
+- `Renderer (ubuntu-24.04)`: the Rust gate of `renderer/` and the WebAssembly module built twice from clean with equal digests and equal to the embedded one (see [The Rust crates](#the-rust-crates)); `Renderer (windows-latest)`: the same module built on Windows, which must be byte for byte the embedded one
 - `Notices`, `Vulnerabilities`, `Workflow pins`
 
 `Golden cases (PATH FFmpeg)` is reported and does not block. `nightly.yml` runs once a day the long benchmarks, the 60 s export and the soak tests.
