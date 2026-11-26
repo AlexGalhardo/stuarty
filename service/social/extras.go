@@ -1,6 +1,7 @@
 package social
 
 import (
+	"slices"
 	"sync"
 
 	"github.com/AlexGalhardo/stuarty/core/publish"
@@ -80,22 +81,29 @@ func CostOf(c Connector, secret []byte, p *publish.Post) Cost {
 	return CostFor(c.Describe(), price, p)
 }
 
-// Rotation keeps a refresh token that the network replaces at every refresh (SDD-020 section 34). Two sends
-// to one connection at once would each present the token the other already replaced; Rotation serialises the
-// refreshes of a connection in the process and remembers the newest token it saw, so the second send uses the
-// token the first one got. It holds only the latest refresh token of a connection, in memory, and no access
-// token.
+// maxRotationHistory bounds how many superseded refresh tokens Rotation retains per connection so
+// memory never grows unbounded across long uptime while still covering concurrent in-flight sends.
+const maxRotationHistory = 16
+
+// Rotation keeps a refresh token that the network replaces at every refresh (SDD-020 section 34). Two or more
+// sends to one connection at once would each present a token another send already replaced; Rotation serialises
+// the refreshes of a connection in the process and remembers the newest token along with a bounded set of
+// superseded tokens in the chain, so concurrent sends holding older tokens upgrade to the newest one. It holds
+// only refresh tokens in memory, and no access token.
 type Rotation struct {
 	mu    sync.Mutex
 	locks map[string]*sync.Mutex
-	last  map[string]rotated
+	last  map[string]rotationChain
 }
 
-type rotated struct{ from, to string }
+type rotationChain struct {
+	newest string
+	seen   []string
+}
 
 // NewRotation returns an empty Rotation.
 func NewRotation() *Rotation {
-	return &Rotation{locks: map[string]*sync.Mutex{}, last: map[string]rotated{}}
+	return &Rotation{locks: map[string]*sync.Mutex{}, last: map[string]rotationChain{}}
 }
 
 // Lock takes the lock of a connection and returns the function that releases it.
@@ -115,13 +123,13 @@ func (r *Rotation) Lock(connID string) (unlock func()) {
 }
 
 // Current is the refresh token to present: the one the secret holds, unless this process already traded that
-// one for a newer one.
+// one (directly or earlier in a chain) for a newer one.
 func (r *Rotation) Current(connID, inSecret string) string {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	if got, ok := r.last[connID]; ok && got.from == inSecret {
-		return got.to
+	if got, ok := r.last[connID]; ok && slices.Contains(got.seen, inSecret) {
+		return got.newest
 	}
 
 	return inSecret
@@ -134,6 +142,33 @@ func (r *Rotation) Remember(connID, from, to string) {
 	}
 
 	r.mu.Lock()
-	r.last[connID] = rotated{from: from, to: to}
-	r.mu.Unlock()
+	defer r.mu.Unlock()
+
+	chain := r.last[connID]
+
+	addSeen := func(tok string) {
+		if tok == "" || tok == to {
+			return
+		}
+
+		if idx := slices.Index(chain.seen, tok); idx >= 0 {
+			chain.seen = slices.Delete(chain.seen, idx, idx+1)
+		}
+
+		chain.seen = append(chain.seen, tok)
+	}
+
+	addSeen(chain.newest)
+	addSeen(from)
+
+	if idx := slices.Index(chain.seen, to); idx >= 0 {
+		chain.seen = slices.Delete(chain.seen, idx, idx+1)
+	}
+
+	if len(chain.seen) > maxRotationHistory {
+		chain.seen = append([]string(nil), chain.seen[len(chain.seen)-maxRotationHistory:]...)
+	}
+
+	chain.newest = to
+	r.last[connID] = chain
 }
