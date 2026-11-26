@@ -85,6 +85,10 @@ export class RustExecutor implements PreviewExecutor {
 	private raf = 0;
 	private canvas: HTMLCanvasElement | null = null;
 	private context2d: CanvasRenderingContext2D | null = null;
+	// Scratch 2D canvas used to snapshot <video> frames into CPU-backed ImageData
+	// before creating an ImageBitmap for the worker; WebKitGTK's direct
+	// createImageBitmap(HTMLVideoElement, ...) produces blank frames.
+	private videoScratch: HTMLCanvasElement | null = null;
 	private render: RenderClient<PixelSource, ImageBitmap> | null = null;
 	// False while a layer of the frame being drawn lacks pixels.
 	private complete = true;
@@ -263,6 +267,7 @@ export class RustExecutor implements PreviewExecutor {
 		this.canvas?.remove();
 		this.canvas = null;
 		this.context2d = null;
+		this.videoScratch = null;
 		this.audioGraph.detach();
 		void this.audioContext?.close();
 		this.audioContext = null;
@@ -737,21 +742,43 @@ export class RustExecutor implements PreviewExecutor {
 		) {
 			return this.uploaded.has(layer.item);
 		}
+		const sx = Math.round(crop[0]);
+		const sy = Math.round(crop[1]);
+		const sw = Math.max(1, Math.round(crop[2]));
+		const sh = Math.max(1, Math.round(crop[3]));
 		this.upload(
 			layer.item,
 			tag,
-			() =>
-				createImageBitmap(
-					video,
-					Math.round(crop[0]),
-					Math.round(crop[1]),
-					Math.max(1, Math.round(crop[2])),
-					Math.max(1, Math.round(crop[3])),
-				),
+			() => this.snapshotVideo(video, sx, sy, sw, sh),
 			size,
 		);
 		this.complete = false;
 		return this.uploaded.has(layer.item);
+	}
+
+	private snapshotVideo(
+		video: HTMLVideoElement,
+		sx: number,
+		sy: number,
+		sw: number,
+		sh: number,
+	): Promise<ImageBitmap> {
+		if (typeof document !== "undefined") {
+			const scratch = this.videoScratch ?? document.createElement("canvas");
+			this.videoScratch = scratch;
+			if (scratch.width !== sw || scratch.height !== sh) {
+				scratch.width = sw;
+				scratch.height = sh;
+			}
+			const ctx = scratch.getContext("2d", { willReadFrequently: true });
+			if (ctx !== null) {
+				ctx.imageSmoothingEnabled = false;
+				ctx.clearRect(0, 0, sw, sh);
+				ctx.drawImage(video, sx, sy, sw, sh, 0, 0, sw, sh);
+				return createImageBitmap(ctx.getImageData(0, 0, sw, sh));
+			}
+		}
+		return createImageBitmap(video, sx, sy, sw, sh);
 	}
 
 	// The poster of an asset that has no decoding element (beyond
