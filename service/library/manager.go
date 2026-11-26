@@ -227,6 +227,8 @@ func (m *Manager) scanFlat(
 	// counters are safe for it, and the result does not depend on the order.
 	jobs, examined := newPool(), atomic.Int64{}
 
+	var scanErr error
+
 	for _, e := range list {
 		file := e.Name()
 
@@ -260,7 +262,9 @@ func (m *Manager) scanFlat(
 		// The listing already holds the size and the time of the file: no second call to the disk to compare them.
 		info, err := e.Info()
 		if err != nil {
-			return err
+			scanErr = err
+
+			break
 		}
 
 		if row, ok := have[key]; ok && row.Sig == fileSig(info) {
@@ -280,10 +284,14 @@ func (m *Manager) scanFlat(
 		})
 	}
 
-	err = jobs.wait()
+	werr := jobs.wait()
 	st.Examined += int(examined.Load())
 
-	return err
+	if scanErr != nil {
+		return scanErr
+	}
+
+	return werr
 }
 
 func (m *Manager) scanSkills(

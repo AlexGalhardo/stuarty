@@ -280,6 +280,11 @@ func up(ctx context.Context, c *http.Client, target string) bool { //nolint:forb
 // It returns once the process is gone and is safe to call more than once.
 func (s *Server) Stop() {
 	s.once.Do(func() {
+		defer func() {
+			if s.release != nil {
+				s.release()
+			}
+		}()
 		select {
 		case <-s.done:
 			return
@@ -292,7 +297,6 @@ func (s *Server) Stop() {
 			_ = s.cmd.Process.Kill()
 			<-s.done
 		}
-		s.release()
 	})
 }
 

@@ -179,8 +179,23 @@ func (s *Store) Put(key string, data []byte) error {
 	if err := os.MkdirAll(filepath.Dir(p), 0o700); err != nil {
 		return err
 	}
-	tmp := p + ".part"
-	if err := os.WriteFile(tmp, data, 0o600); err != nil {
+	f, err := os.CreateTemp(filepath.Dir(p), filepath.Base(p)+".*.part")
+	if err != nil {
+		return err
+	}
+	tmp := f.Name()
+	if err := f.Chmod(0o600); err != nil {
+		_ = f.Close()
+		_ = os.Remove(tmp)
+		return err
+	}
+	if _, err := f.Write(data); err != nil {
+		_ = f.Close()
+		_ = os.Remove(tmp)
+		return err
+	}
+	if err := f.Close(); err != nil {
+		_ = os.Remove(tmp)
 		return err
 	}
 	if err := os.Rename(tmp, p); err != nil {

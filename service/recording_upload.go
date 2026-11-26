@@ -767,6 +767,39 @@ func (s *svc) uploadDiscard(ctx context.Context, r recordings.Row) (*Recording, 
 	a := s.recAssembling[r.ID]
 	s.recMu.Unlock()
 
+	if a == nil {
+		up := s.uploadFor(r)
+		up.mu.Lock()
+
+		s.recMu.Lock()
+		a = s.recAssembling[r.ID]
+		s.recMu.Unlock()
+
+		if a != nil {
+			up.mu.Unlock()
+		} else {
+			_, uerr := s.updateRecording(ctx, r.ID, func(x *recordings.Row) error {
+				next, terr := recording.Next(recording.State(x.State), recording.EventCancel)
+				if terr != nil {
+					return newError(command.CodeInvalidState, "the recording is %s and cannot be cancelled.", x.State)
+				}
+
+				x.State, x.Review, x.EndedMs = string(next), "", s.nowMs()
+
+				return nil
+			})
+
+			up.mu.Unlock()
+
+			if uerr != nil {
+				return nil, asError(uerr)
+			}
+
+			_ = os.RemoveAll(s.recordingFolder(r.ID))
+			s.dropUpload(r.ID)
+		}
+	}
+
 	if a != nil {
 		a.discard.Store(true)
 		a.cancel()
@@ -775,29 +808,6 @@ func (s *svc) uploadDiscard(ctx context.Context, r recordings.Row) (*Recording, 
 		case <-a.done:
 		case <-time.After(15 * time.Second):
 		}
-	} else {
-		up := s.uploadFor(r)
-		up.mu.Lock()
-
-		_, uerr := s.updateRecording(ctx, r.ID, func(x *recordings.Row) error {
-			next, terr := recording.Next(recording.State(x.State), recording.EventCancel)
-			if terr != nil {
-				return newError(command.CodeInvalidState, "the recording is %s and cannot be cancelled.", x.State)
-			}
-
-			x.State, x.Review, x.EndedMs = string(next), "", s.nowMs()
-
-			return nil
-		})
-
-		up.mu.Unlock()
-
-		if uerr != nil {
-			return nil, asError(uerr)
-		}
-
-		_ = os.RemoveAll(s.recordingFolder(r.ID))
-		s.dropUpload(r.ID)
 	}
 
 	got, err := s.store.Recordings().Get(ctx, r.ID)
@@ -877,6 +887,11 @@ func (s *svc) settleUpload(ctx context.Context, id string, a *assembly, force st
 	}
 
 	_, _ = s.updateRecording(context.WithoutCancel(ctx), id, func(x *recordings.Row) error {
+		// A row that is no longer finishing (e.g. a cancel came first) is left completely untouched.
+		if x.State != string(recording.Finishing) {
+			return nil
+		}
+
 		x.EndedMs = s.nowMs()
 
 		if force != "" {

@@ -240,11 +240,13 @@ type trackMsg struct {
 
 // Helper is a running stuarty-capture.
 type Helper struct {
-	cfg    Config
-	in     *io.PipeWriter
-	cancel context.CancelFunc
-	done   chan struct{}
-	msgs   chan msgOrErr
+	cfg      Config
+	in       *io.PipeWriter
+	cancel   context.CancelFunc
+	done     chan struct{}
+	msgs     chan msgOrErr
+	stopRead chan struct{}
+	stopOnce sync.Once
 
 	wmu sync.Mutex
 
@@ -291,7 +293,10 @@ func Start(ctx context.Context, r *ffmpeg.Runner, cfg Config) (*Helper, error) {
 	runCtx, cancel := context.WithCancel(ctx)
 	inR, inW := io.Pipe()
 	outR, outW := io.Pipe()
-	h := &Helper{cfg: cfg, in: inW, cancel: cancel, done: make(chan struct{}), msgs: make(chan msgOrErr, 64)}
+	h := &Helper{
+		cfg: cfg, in: inW, cancel: cancel, done: make(chan struct{}),
+		msgs: make(chan msgOrErr, 64), stopRead: make(chan struct{}),
+	}
 
 	go func() {
 		defer close(h.done)
@@ -359,10 +364,20 @@ func (h *Helper) read(r io.Reader) {
 	sc := bufio.NewScanner(r)
 	sc.Buffer(make([]byte, 0, 4096), maxLine)
 
+	send := func(v msgOrErr) bool {
+		select {
+		case h.msgs <- v:
+			return true
+		case <-h.stopRead:
+			_, _ = io.Copy(io.Discard, r)
+			return false
+		}
+	}
+
 	for sc.Scan() {
 		var m message
 		if err := json.Unmarshal(sc.Bytes(), &m); err != nil || m.Type == "" {
-			h.msgs <- msgOrErr{err: fmt.Errorf("%w: a line that is not a message", ErrProtocol)}
+			_ = send(msgOrErr{err: fmt.Errorf("%w: a line that is not a message", ErrProtocol)})
 
 			// Drain so the child is never blocked on its output while it is being killed.
 			_, _ = io.Copy(io.Discard, r)
@@ -370,11 +385,13 @@ func (h *Helper) read(r io.Reader) {
 			return
 		}
 
-		h.msgs <- msgOrErr{m: m}
+		if !send(msgOrErr{m: m}) {
+			return
+		}
 	}
 
 	if err := sc.Err(); err != nil && !errors.Is(err, io.EOF) && !errors.Is(err, io.ErrClosedPipe) {
-		h.msgs <- msgOrErr{err: fmt.Errorf("%w: %w", ErrProtocol, err)}
+		_ = send(msgOrErr{err: fmt.Errorf("%w: %w", ErrProtocol, err)})
 
 		_, _ = io.Copy(io.Discard, r)
 	}
@@ -667,7 +684,12 @@ func (h *Helper) unlight() {
 // Kill ends the helper and its whole process tree at once.
 func (h *Helper) Kill() { h.kill() }
 
+func (h *Helper) stopReading() {
+	h.stopOnce.Do(func() { close(h.stopRead) })
+}
+
 func (h *Helper) kill() {
+	h.stopReading()
 	h.cancel()
 	_ = h.in.CloseWithError(io.ErrClosedPipe)
 }
@@ -675,6 +697,7 @@ func (h *Helper) kill() {
 // Close ends the child: end of input first, so it exits by itself, then the kill of its tree when it does
 // not within a few seconds. It returns what the run reported, nil for a clean end.
 func (h *Helper) Close() error {
+	h.stopReading()
 	_ = h.in.Close()
 
 	select {
@@ -684,12 +707,6 @@ func (h *Helper) Close() error {
 
 	h.cancel()
 	<-h.done
-
-	// Nobody may be left blocked on the message channel.
-	go func() {
-		for range h.msgs {
-		}
-	}()
 
 	h.mu.Lock()
 	defer h.mu.Unlock()

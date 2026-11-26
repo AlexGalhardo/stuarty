@@ -496,11 +496,13 @@ func (s *liveSession) Request(ctx context.Context, method string, params json.Ra
 
 		return PermissionOutcome("", true), nil
 	case <-ctx.Done():
+		s.settle(p, permResult{cancelled: true}, chat.AnswerCancel)
+
 		return PermissionOutcome("", true), nil
 	}
 }
 
-// settle answers a request once, and returns the session to running when it waited on it.
+// settle answers a request once, and returns the session to running when no other permission waits.
 func (s *liveSession) settle(p *pendingPerm, r permResult, answer chat.Answer) bool {
 	s.mu.Lock()
 	if p.answered {
@@ -512,8 +514,10 @@ func (s *liveSession) settle(p *pendingPerm, r permResult, answer chat.Answer) b
 	p.answer, p.answeredAt = answer, s.h.o.Now().UTC()
 
 	resumed := false
-	if next, err := chat.Next(s.state, chat.InputPermissionAnswered); err == nil {
-		s.state, resumed = next, true
+	if s.waitingPermissionsLocked() == 0 {
+		if next, err := chat.Next(s.state, chat.InputPermissionAnswered); err == nil {
+			s.state, resumed = next, true
+		}
 	}
 	s.mu.Unlock()
 

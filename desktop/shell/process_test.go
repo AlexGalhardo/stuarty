@@ -116,6 +116,23 @@ func TestStopKillsAChildThatIgnoresTheSignal(t *testing.T) {
 	}
 }
 
+func TestStopReleasesHandleAfterChildAlreadyExited(t *testing.T) {
+	done := make(chan struct{})
+	close(done)
+
+	released := false
+	s := &Server{
+		done:    done,
+		release: func() { released = true },
+	}
+
+	s.Stop()
+
+	if !released {
+		t.Fatal("Server.Stop did not call release when child had already exited")
+	}
+}
+
 func TestReadinessTimeout(t *testing.T) {
 	cfg := newConfig(t, "never-ready")
 	cfg.ReadyTimeout = 600 * time.Millisecond
