@@ -69,13 +69,18 @@ jobs:
         run: |
           bin_dir="$(bash scripts/install-ffmpeg.sh)"
           echo "STUARTY_TEST_FFMPEG_DIR=${bin_dir}" >> "$GITHUB_ENV"
-      - name: Soak and Fixture5Min tests
+      - name: Soak tests
+        env:
+          STUARTY_SOAK_DURATION: 5m
         run: |
-          go test -count=1 -v -run 'Soak|Fixture5Min' -timeout=15m ./... | tee soak.txt
+          go test -tags soak -count=1 -v -run 'TestSoak' -timeout=15m ./web/app/servicetest/ | tee soak.txt
           {
             echo '### Soak and 5-minute fixture'
             echo '```'
             grep -E -- "^(--- |ok|FAIL)" soak.txt | grep -v "no test files" || true
             echo '```'
-            if ! grep -q -- "--- PASS:" soak.txt; then echo "No soak or fixture test exists yet."; fi
           } >> "$GITHUB_STEP_SUMMARY"
+          if ! grep -q -- "--- PASS:" soak.txt; then
+            echo "::error::no soak test passed"
+            exit 1
+          fi

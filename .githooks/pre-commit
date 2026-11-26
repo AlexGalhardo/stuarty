@@ -12,12 +12,24 @@ staged() {
 	git diff --cached --name-only --diff-filter=ACMR -- "$@"
 }
 
-mapfile -t go_files < <(staged '*.go')
-mapfile -t md_files < <(staged '*.md')
-mapfile -t web_files < <(staged 'web/resources/js' 'web/e2e')
+# While loops instead of mapfile: macOS ships bash 3.2, which has no mapfile.
+go_files=()
+while IFS= read -r f; do
+	[ -n "$f" ] && go_files+=("$f")
+done < <(staged '*.go')
+
+md_files=()
+while IFS= read -r f; do
+	[ -n "$f" ] && md_files+=("$f")
+done < <(staged '*.md')
+
+web_files=()
+while IFS= read -r f; do
+	[ -n "$f" ] && web_files+=("$f")
+done < <(staged 'web/resources/js' 'web/e2e')
 
 if [ "${#go_files[@]}" -gt 0 ]; then
-	golangci-lint fmt --diff "${go_files[@]}"
+	golangci-lint fmt --diff ${go_files[@]+"${go_files[@]}"}
 	golangci-lint run --allow-parallel-runners --new-from-rev=HEAD ./...
 fi
 
@@ -26,7 +38,7 @@ if [ -n "$(staged go.mod go.sum)" ]; then
 fi
 
 if [ "${#md_files[@]}" -gt 0 ]; then
-	bunx markdownlint-cli2@0.24.1 "${md_files[@]}"
+	bunx markdownlint-cli2@0.24.1 ${md_files[@]+"${md_files[@]}"}
 fi
 
 if [ "${#web_files[@]}" -gt 0 ]; then

@@ -8,7 +8,7 @@ Execute in the order below unless dependencies say otherwise. Each executor: rea
 
 | Plan | Title | Category | Priority | Effort | Risk | Depends on | Status |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| [001](001-unblock-pr172-ci-and-restore-missing-gates.md) | Unblock PR #172 CI checks, restore missing test gates, and fix macOS git hooks | dx | P1 | M | LOW | — | TODO |
+| [001](001-unblock-pr172-ci-and-restore-missing-gates.md) | Unblock PR #172 CI checks, restore missing test gates, and fix macOS git hooks | dx | P1 | M | LOW | — | DONE |
 | [002](002-eliminate-ci-timeouts-sqlite-template-and-caching.md) | Eliminate Go and Playwright CI timeouts with a template SQLite DB, sharding, prebuilt E2E artifacts, and caching | perf | P1 | M | LOW | 001 | TODO |
 | [003](003-enforce-recording-project-owner-isolation.md) | Enforce project-owner tenant isolation across the Recording subsystem (SDD-007 T-06) | security | P1 | S | LOW | — | TODO |
 | [004](004-harden-first-run-account-create-privilege-boundary.md) | Harden first-run `POST /auth/account/create` against bearer-token privilege escalation (VV-378) | security | P1 | M | MED | — | TODO |

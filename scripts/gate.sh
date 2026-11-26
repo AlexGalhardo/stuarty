@@ -43,7 +43,7 @@ else
 fi
 step test go test ./... -count=1 -timeout 60m
 step race go test -race -short -count=1 -timeout 30m ./core/... ./service/... ./web/app/...
-step cover bash -c "go test -short -count=1 -coverprofile='$L/coverage.out' ./... && go run ./internal/tools/covergate '$L/coverage.out'"
+step cover bash -c "go test -count=1 -coverpkg=./... -coverprofile='$L/coverage.out' ./... && go run ./internal/tools/covergate '$L/coverage.out'"
 
 export STUARTY_E2E_HOME="${TEMP:-${TMPDIR:-/tmp}}/gate-e2e-$tag"
 export STUARTY_E2E_PORT=3471

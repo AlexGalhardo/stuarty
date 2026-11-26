@@ -100,13 +100,18 @@ jobs:
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version: ${{ env.BUN_VERSION }}
+      # Node only for check:i18n and check:thin-client (D-115: typescript/unstable/sync crashes under Bun on Linux).
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
       - run: bun install --frozen-lockfile
       - run: bun run typecheck
       - run: bun run lint
+      - run: bun run check:thin-client
       - run: bun run check:contrast
       - run: bun run check:i18n
-      # `bun run test` is added with the unit test runner, which needs the
-      # author's approval (SDD-012 section 3.1).
+      - run: bun run test
+      - run: bun run check:hooks
 
   # The Go suite runs in shards, in parallel, each inside the 20 minute budget of
   # SDD-009 section 13.4. Together the shards of one system cover `./...`:
@@ -434,7 +439,7 @@ jobs:
       - name: The generated folders are unchanged
         run: |
           paths=()
-          for d in core/schema web/resources/js/generated site/generated site/content/generated internal/ffmpegpins; do
+          for d in core/schema web/resources/js/generated site/generated site/content/generated internal/ffmpegpins web/app/agentdocs/out; do
             if [ -e "$d" ]; then paths+=("$d"); fi
           done
           git status --short -- "${paths[@]}"

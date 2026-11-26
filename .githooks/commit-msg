@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# Validates the commit header against the Conventional Commits rules of
+# .github/workflows/pr-title.yml and SDD-009 section 6.1/6.2 before the commit
+# is created. Activate with `task hooks` (git config core.hooksPath .githooks).
+set -euo pipefail
+
+msg_file="${1:-}"
+if [ -z "$msg_file" ] || [ ! -f "$msg_file" ]; then
+	exit 0
+fi
+
+subject=""
+IFS= read -r subject <"$msg_file" || true
+subject="${subject%$'\r'}"
+
+case "$subject" in
+	Merge\ * | Revert\ \"* | Potential\ fix\ for\ *) exit 0 ;;
+esac
+
+types='build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test'
+scopes='core|timeline|schema|command|plan|lint|engine|raster|ingest|export|image|transcribe|installers|service|workspace|web|api|mcp|cli|ui|site|docs|repo|ci|deps|deps-dev|release|adr|sdd|sdd-[0-9]{3}|go|security|desktop|http|ffmpeg|renderer|docker|library|events|cmd|contract|pathguard|remote|timeval|store|notices|projects|preview|owner|e2e|upgrade|servicetest|auth|secrets'
+pattern="^(${types})(\((${scopes})\))?!?: [^A-Z ].*[^. ]$|^(${types})(\((${scopes})\))?!?: [^A-Z ]$"
+
+if [ "${#subject}" -gt 100 ] || ! printf '%s\n' "$subject" | grep -qE "$pattern"; then
+	echo "commit-msg: invalid Conventional Commit header (max 100 chars, lowercase subject, no trailing period):" >&2
+	echo "  $subject" >&2
+	echo "Allowed types: ${types//|/, }" >&2
+	echo "Allowed scopes: ${scopes//|/, }" >&2
+	exit 1
+fi
