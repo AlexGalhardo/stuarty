@@ -117,7 +117,9 @@ export function MediaCard({
 						)}
 					</span>
 					<span className="truncate text-sm font-medium">
-						<UntrustedText>{asset.name}</UntrustedText>
+						<UntrustedText className="block truncate">
+							{asset.name}
+						</UntrustedText>
 					</span>
 					<span className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 text-sm text-text-muted">
 						<span className="flex flex-wrap items-center gap-1">

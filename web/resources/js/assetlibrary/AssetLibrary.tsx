@@ -314,7 +314,9 @@ export function AssetDetail({
 					{asset === null ? (
 						t("ui.assets.detail.title")
 					) : (
-						<UntrustedText>{asset.name}</UntrustedText>
+						<UntrustedText className="block truncate">
+							{asset.name}
+						</UntrustedText>
 					)}
 				</h2>
 				<Button type="button" variant="outline" onClick={onClose}>
@@ -352,13 +354,17 @@ export function AssetDetail({
 							</p>
 						)}
 						{asset.origin?.source !== undefined && (
-							<p>
-								<UntrustedText>{asset.origin.source}</UntrustedText>
+							<p className="break-words">
+								<UntrustedText className="break-words">
+									{asset.origin.source}
+								</UntrustedText>
 							</p>
 						)}
 						{asset.origin?.prompt !== undefined && (
-							<p>
-								<UntrustedText>{asset.origin.prompt}</UntrustedText>
+							<p className="break-words">
+								<UntrustedText className="break-words">
+									{asset.origin.prompt}
+								</UntrustedText>
 							</p>
 						)}
 					</Field>

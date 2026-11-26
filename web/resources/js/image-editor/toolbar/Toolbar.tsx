@@ -102,6 +102,7 @@ export function Toolbar({
 			<div
 				ref={ref}
 				role="toolbar"
+				tabIndex={-1}
 				aria-label={label}
 				aria-orientation={orientation}
 				data-testid={testId}
