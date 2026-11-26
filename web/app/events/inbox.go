@@ -76,7 +76,10 @@ func inboxFrame(res *service.InboxListResult) (sse.Event, []byte, error) {
 func drain(live <-chan sse.Event) {
 	for {
 		select {
-		case <-live:
+		case _, ok := <-live:
+			if !ok {
+				return
+			}
 		default:
 			return
 		}
