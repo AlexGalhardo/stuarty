@@ -33,7 +33,12 @@ func (h *apiHandler) inboxStream(c *web.Ctx, _ noIn) (noIn, error) {
 	}
 
 	return noIn{}, h.Events.ServeInbox(c, read, func() bool {
-		_, err := read(c.Context())
+		fresh, ok := h.revalidateCaller(c)
+		if !ok {
+			return false
+		}
+
+		_, err := read(service.WithCaller(c.Context(), fresh))
 
 		return err == nil
 	})

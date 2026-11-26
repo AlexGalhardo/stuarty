@@ -34,17 +34,24 @@ func (h *apiHandler) eventsStream(c *web.Ctx, in eventsIn) (noIn, error) {
 	}
 
 	// The Service decides who may see the project, a trashed one included.
-	check := func() error {
-		_, err := h.Service.ProjectGet(c.Context(), service.ProjectGetRequest{ProjectID: in.ID})
+	check := func(ctx context.Context) error {
+		_, err := h.Service.ProjectGet(ctx, service.ProjectGetRequest{ProjectID: in.ID})
 
 		return err
 	}
 
-	if err := check(); err != nil {
+	if err := check(c.Context()); err != nil {
 		return noIn{}, err
 	}
 
-	return noIn{}, h.Events.Serve(c, in.ID, since, func() bool { return check() == nil })
+	return noIn{}, h.Events.Serve(c, in.ID, since, func() bool {
+		fresh, ok := h.revalidateCaller(c)
+		if !ok {
+			return false
+		}
+
+		return check(service.WithCaller(c.Context(), fresh)) == nil
+	})
 }
 
 // imagesStream is GET /images/{id}/events (SDD-006 section 12): the stream of one image document. The Service
@@ -63,17 +70,24 @@ func (h *apiHandler) imagesStream(c *web.Ctx, in eventsIn) (noIn, error) {
 		return noIn{}, err
 	}
 
-	check := func() error {
-		_, err := h.Service.ImageDescribe(c.Context(), service.ImageDescribeRequest{ImageID: in.ID})
+	check := func(ctx context.Context) error {
+		_, err := h.Service.ImageDescribe(ctx, service.ImageDescribeRequest{ImageID: in.ID})
 
 		return err
 	}
 
-	if err := check(); err != nil {
+	if err := check(c.Context()); err != nil {
 		return noIn{}, err
 	}
 
-	return noIn{}, h.Events.ServeImage(c, in.ID, since, func() bool { return check() == nil })
+	return noIn{}, h.Events.ServeImage(c, in.ID, since, func() bool {
+		fresh, ok := h.revalidateCaller(c)
+		if !ok {
+			return false
+		}
+
+		return check(service.WithCaller(c.Context(), fresh)) == nil
+	})
 }
 
 // approvalsStream is GET /approvals/events (SDD-015 section 7): the pending requests, then the events
@@ -115,7 +129,16 @@ func (h *apiHandler) approvalsStream(c *web.Ctx, _ noIn) (noIn, error) {
 	}
 
 	return noIn{}, h.Events.ServeApprovals(c, owner, pending, func() bool {
-		_, err := pending(c.Context())
+		fresh, ok := h.revalidateCaller(c)
+		if !ok || fresh.ProjectID != "" {
+			return false
+		}
+
+		if h.Network != nil && owner == "" && !slices.Contains(fresh.Scopes, service.ScopeAdmin) {
+			return false
+		}
+
+		_, err := pending(service.WithCaller(c.Context(), fresh))
 
 		return err == nil
 	})

@@ -134,13 +134,13 @@ func (s *svc) recordingProject(ctx context.Context, c Caller, projectID string) 
 
 ## Done criteria
 
-- [ ] Every exported `Recording*` method on `*svc` enforces `visible(c, head.OwnerUserID)`
-- [ ] `go test -race -count=1 -run 'TestSecurity_T06_Recording' ./web/app/servicetest/` exits 0
-- [ ] `go test -race -count=1 -run 'Recording' ./web/app/servicetest/` exits 0
-- [ ] `go test -count=1 -run TestSecurity_ ./...` exits 0
-- [ ] `task lint:go && task vet` exits 0
-- [ ] No files outside the in-scope list are modified (`git status`)
-- [ ] `improve/README.md` status row updated
+- [x] Every exported `Recording*` method on `*svc` enforces `visible(c, head.OwnerUserID)`
+- [x] `go test -race -count=1 -run 'TestSecurity_T06_Recording' ./web/app/servicetest/` exits 0
+- [x] `go test -race -count=1 -run 'Recording' ./web/app/servicetest/` exits 0
+- [x] `go test -count=1 -run TestSecurity_ ./...` exits 0
+- [x] `task lint:go && task vet` exits 0
+- [x] No files outside the in-scope list are modified (`git status`)
+- [x] `improve/README.md` status row updated
 
 ## STOP conditions
 

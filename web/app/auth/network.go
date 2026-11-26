@@ -43,6 +43,9 @@ type Network struct {
 	Users    *Users
 	Guard    *auth.SessionGuard[User]
 	Sessions *vsession.Manager
+	// OnUserRevoked, when set, runs after a user is disabled, changes role, or changes password,
+	// so live hosted agent sessions and their session tokens end immediately.
+	OnUserRevoked func(userID string)
 
 	db     *database.DB
 	store  vsession.UserStore
@@ -124,9 +127,20 @@ func (n *Network) SessionUser(c *web.Ctx) (User, bool, error) {
 	}
 }
 
+// UserActive reports whether userID exists and is not disabled.
+func (n *Network) UserActive(ctx context.Context, userID string) bool {
+	if n == nil || n.Users == nil || userID == "" {
+		return false
+	}
+
+	_, err := n.Users.ByID(ctx, userID)
+
+	return err == nil
+}
+
 // ChangePassword stores a new password and ends everything that the old one
-// opened: every browser session and every API key of the user (SDD-007 section
-// 4.1 item 4).
+// opened: every browser session, every API key, and every live hosted agent
+// session of the user (SDD-007 section 4.1 item 4).
 func (n *Network) ChangePassword(ctx context.Context, email, password string) (User, error) {
 	user, err := n.Users.SetPassword(ctx, email, password)
 	if err != nil {
@@ -137,5 +151,13 @@ func (n *Network) ChangePassword(ctx context.Context, email, password string) (U
 		return user, err
 	}
 
-	return user, n.RevokeKeysOf(ctx, user.ID)
+	if err := n.RevokeKeysOf(ctx, user.ID); err != nil {
+		return user, err
+	}
+
+	if n.OnUserRevoked != nil {
+		n.OnUserRevoked(user.ID)
+	}
+
+	return user, nil
 }

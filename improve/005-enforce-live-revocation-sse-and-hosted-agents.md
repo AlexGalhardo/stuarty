@@ -158,14 +158,14 @@ In network mode, two credential-revocation boundaries fail to terminate already-
 
 ## Done criteria
 
-- [ ] All 6 SSE handlers (`events`, `images`, `approvals`, `publications`, `chat`, `inbox`) call `revalidateCaller` on every revalidation tick
-- [ ] Workspace-wide admin SSE subscriptions close when the caller loses `ScopeAdmin`
-- [ ] Disabling/demoting a user or changing a password terminates their live hosted agent sessions and invalidates `stc_` tokens immediately
-- [ ] `go test -race -count=1 ./web/app/http/... ./web/app/events/... ./web/app/auth/... ./service/agenthost/...` exits 0
-- [ ] `go test -count=1 -run TestSecurity_ ./...` exits 0
-- [ ] `task lint:go && task vet` exits 0
-- [ ] No files outside the in-scope list are modified (`git status`)
-- [ ] `improve/README.md` status row updated
+- [x] All 6 SSE handlers (`events`, `images`, `approvals`, `publications`, `chat`, `inbox`) call `revalidateCaller` on every revalidation tick
+- [x] Workspace-wide admin SSE subscriptions close when the caller loses `ScopeAdmin`
+- [x] Disabling/demoting a user or changing a password terminates their live hosted agent sessions and invalidates `stc_` tokens immediately
+- [x] `go test -race -count=1 ./web/app/http/... ./web/app/events/... ./web/app/auth/... ./service/agenthost/...` exits 0
+- [x] `go test -count=1 -run TestSecurity_ ./...` exits 0
+- [x] `task lint:go && task vet` exits 0
+- [x] No files outside the in-scope list are modified (`git status`)
+- [x] `improve/README.md` status row updated
 
 ## STOP conditions
 

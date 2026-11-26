@@ -158,11 +158,11 @@ func (h *apiHandler) chatStream(c *web.Ctx, in chatStreamIn) (noIn, error) {
 		}
 	}
 
-	check := func() (*service.ChatSession, error) {
-		return h.Service.ChatSessionGet(c.Context(), service.ChatRef{SessionID: in.ID})
+	check := func(ctx context.Context) (*service.ChatSession, error) {
+		return h.Service.ChatSessionGet(ctx, service.ChatRef{SessionID: in.ID})
 	}
 
-	session, err := check()
+	session, err := check(c.Context())
 	if err != nil {
 		return noIn{}, err
 	}
@@ -179,7 +179,16 @@ func (h *apiHandler) chatStream(c *web.Ctx, in chatStreamIn) (noIn, error) {
 
 	after = max(after-1, 0)
 
-	authorized := func() bool { _, err := check(); return err == nil }
+	authorized := func() bool {
+		fresh, ok := h.revalidateCaller(c)
+		if !ok {
+			return false
+		}
+
+		_, err := check(service.WithCaller(c.Context(), fresh))
+
+		return err == nil
+	}
 
 	if h.Chat != nil && session.Live {
 		if sub, serr := h.Chat.Subscribe(c.Context(), in.ID, after); serr == nil {
