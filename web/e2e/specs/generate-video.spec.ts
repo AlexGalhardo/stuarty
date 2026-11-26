@@ -136,17 +136,6 @@ async function signInAsPerson(page: Page): Promise<void> {
 	await page.goto("/");
 }
 
-async function removeConnection(page: Page, label: string): Promise<void> {
-	await page.goto("/connections");
-	const row = page.locator("[data-connection-id]").filter({ hasText: label });
-	await row.getByRole("button", { name: "Remove" }).click();
-	await page
-		.getByRole("alertdialog")
-		.getByRole("button", { name: "Remove" })
-		.click();
-	await expect(row).toHaveCount(0);
-}
-
 async function approve(page: Page, approvalId: string): Promise<void> {
 	const other = await page.context().newPage();
 	try {
@@ -167,12 +156,19 @@ test.describe("Generate a video clip", () => {
 	}) => {
 		const tag = `${browserName}-${randomBytes(3).toString("hex")}`;
 		const modelId = `${OMNI}-${tag}`;
-		const fake = await fakeGemini(await readFile(testClip(0)), modelId);
+		// Give the MP4 its own content hash even when another spec imported the same fixture.
+		const marker = Buffer.alloc(8 + Buffer.byteLength(tag));
+		marker.writeUInt32BE(marker.length, 0);
+		marker.write("free", 4);
+		marker.write(tag, 8);
+		const clip = Buffer.concat([await readFile(testClip(0)), marker]);
+		const api = await caller(request);
+		const fake = await fakeGemini(clip, modelId);
 		const label = `Google video ${tag}`;
 		const projectName = validName(`Clips ${tag}`);
+		let connectionId: string | undefined;
 		try {
-			const api = await caller(request);
-			const connectionId = String(
+			connectionId = String(
 				(
 					await api("POST", "/connections", {
 						kind: "google",
@@ -260,17 +256,27 @@ test.describe("Generate a video clip", () => {
 
 			// The library has the clip, with the origin Generated, and it goes on a timeline.
 			const media = (await api("GET", `/projects/${projectId}/media`)) as {
-				assets: { asset_id: string; kind: string; state: string }[];
+				assets: {
+					asset_id: string;
+					name: string;
+					kind: string;
+					state: string;
+				}[];
 			};
 			const asset = media.assets.find((a) => a.kind === "video");
-			expect(asset?.state).toBe("ready");
+			if (!asset) throw new Error("The project did not receive the video");
+			expect(asset.state).toBe("ready");
 
 			await page.goto("/video-assets");
-			await page.getByRole("radio", { name: "Generated" }).check();
-			await page.getByRole("button", { name: "Apply" }).click();
-			await expect(
-				page.getByTestId("asset-grid").locator("li").first(),
-			).toContainText("Generated");
+			await page.getByRole("combobox", { name: "Origin" }).click();
+			await page
+				.getByRole("option", { name: "Generated", exact: true })
+				.click();
+			const card = page
+				.getByTestId("asset-grid")
+				.getByRole("button")
+				.filter({ hasText: asset.name });
+			await expect(card).toContainText("Generated");
 
 			const head = (await api(
 				"GET",
@@ -291,7 +297,7 @@ test.describe("Generate a video clip", () => {
 						op: "clip.add",
 						args: {
 							track_id: trackId,
-							asset_id: asset?.asset_id,
+							asset_id: asset.asset_id,
 							start: "0s",
 							source_in: "0s",
 							duration: "2s",
@@ -301,8 +307,8 @@ test.describe("Generate a video clip", () => {
 			});
 			expect(placed.revision).toBeGreaterThan(edited.revision);
 		} finally {
-			await removeConnection(page, label);
 			await fake.close();
+			if (connectionId) await api("DELETE", `/connections/${connectionId}`);
 		}
 	});
 });
