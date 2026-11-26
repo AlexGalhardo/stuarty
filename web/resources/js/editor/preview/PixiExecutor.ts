@@ -301,26 +301,55 @@ export class PixiExecutor implements PreviewExecutor {
 			const preference = await detectRenderer();
 			registerOverAlphaBlends();
 			const app = new Application();
-			await app.init({
-				canvas,
-				width: this.info?.width ?? 1080,
-				height: this.info?.height ?? 1920,
-				preference,
-				antialias: false,
-				autoStart: false,
-				autoDensity: false,
-				resolution: 1,
-				// Below 1 the canvas keeps an alpha channel. PixiJS cannot add one
-				// later, so a transparent project can clear to alpha 0; an opaque
-				// colour still sets alpha to 1 on each draw.
-				backgroundAlpha: 0,
-				// A blend filter reads the pixels drawn so far, which WebGL has only through the back buffer;
-				// it is turned on only for a frame that has such a layer (setBackdrop).
-				useBackBuffer: false,
-				// The end-to-end build reads the buffer pixels back (preview-vs-export),
-				// which a WebGL canvas that clears after each composite cannot give.
-				preserveDrawingBuffer: import.meta.env.VITE_E2E === "1",
-			});
+			// PixiJS's GpuLimitsSystem calls `void device.popErrorScope().then(...)` without a
+			// rejection handler during init. On software WebGPU adapters (SwiftShader) that scope
+			// can reject with "Instance dropped in popErrorScope", surfacing an unhandled rejection.
+			const gpuProto =
+				preference === "webgpu"
+					? (
+							globalThis as {
+								GPUDevice?: {
+									prototype?: {
+										popErrorScope?: (this: unknown) => Promise<unknown>;
+									};
+								};
+							}
+						).GPUDevice?.prototype
+					: undefined;
+			const origPop = gpuProto?.popErrorScope;
+			if (gpuProto !== undefined && typeof origPop === "function") {
+				gpuProto.popErrorScope = function (this: unknown) {
+					return origPop
+						.call(this)
+						.catch(() => ({ message: "popErrorScope rejected" }));
+				};
+			}
+			try {
+				await app.init({
+					canvas,
+					width: this.info?.width ?? 1080,
+					height: this.info?.height ?? 1920,
+					preference,
+					antialias: false,
+					autoStart: false,
+					autoDensity: false,
+					resolution: 1,
+					// Below 1 the canvas keeps an alpha channel. PixiJS cannot add one
+					// later, so a transparent project can clear to alpha 0; an opaque
+					// colour still sets alpha to 1 on each draw.
+					backgroundAlpha: 0,
+					// A blend filter reads the pixels drawn so far, which WebGL has only through the back buffer;
+					// it is turned on only for a frame that has such a layer (setBackdrop).
+					useBackBuffer: false,
+					// The end-to-end build reads the buffer pixels back (preview-vs-export),
+					// which a WebGL canvas that clears after each composite cannot give.
+					preserveDrawingBuffer: import.meta.env.VITE_E2E === "1",
+				});
+			} finally {
+				if (gpuProto !== undefined && origPop !== undefined) {
+					gpuProto.popErrorScope = origPop;
+				}
+			}
 			if (this.disposed) {
 				app.destroy(true);
 				return;
@@ -1463,7 +1492,9 @@ export class PixiExecutor implements PreviewExecutor {
 		let texture = this.stills.get(key);
 		if (texture === undefined) {
 			const source = new ImageSource({ resource: bitmap });
-			const [x, y, w, h] = crop;
+			const srcW = bitmap.visibleRect?.width ?? bitmap.codedWidth;
+			const srcH = bitmap.visibleRect?.height ?? bitmap.codedHeight;
+			const [x, y, w, h] = wholeCrop(crop, srcW, srcH);
 			texture = new Texture({ source, frame: new Rectangle(x, y, w, h) });
 			this.stills.set(key, texture);
 		} else if (texture.source.resource !== bitmap) {
@@ -1531,7 +1562,7 @@ export class PixiExecutor implements PreviewExecutor {
 				autoLoad: false,
 			});
 			source.resize(video.videoWidth, video.videoHeight);
-			const [x, y, w, h] = crop;
+			const [x, y, w, h] = wholeCrop(crop, video.videoWidth, video.videoHeight);
 			texture = new Texture({ source, frame: new Rectangle(x, y, w, h) });
 			this.putStill(key, texture);
 		}
@@ -1665,6 +1696,21 @@ export class PixiExecutor implements PreviewExecutor {
 		this.sounds.idle(inUse);
 		setProcessedAudioStates(this.processedAudio.states());
 	}
+}
+
+// Whole source-pixel crop rectangle matching engine/export/media.go (cropRect)
+// and render/pixels.ts (whole), so PixiJS samples the same crop phase as the export.
+function wholeCrop(
+	crop: readonly [number, number, number, number],
+	srcW: number,
+	srcH: number,
+): [number, number, number, number] {
+	const round = (v: number): number => Math.floor(v + 0.5);
+	const x = Math.min(Math.max(round(crop[0]), 0), Math.max(srcW - 1, 0));
+	const y = Math.min(Math.max(round(crop[1]), 0), Math.max(srcH - 1, 0));
+	const w = Math.min(Math.max(round(crop[2]), 1), Math.max(srcW - x, 1));
+	const h = Math.min(Math.max(round(crop[3]), 1), Math.max(srcH - y, 1));
+	return [x, y, w, h];
 }
 
 function isDrawable(resource: unknown): resource is CanvasImageSource {
