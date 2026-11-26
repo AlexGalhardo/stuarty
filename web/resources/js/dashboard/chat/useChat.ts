@@ -108,7 +108,14 @@ export function useChat(
 		return createClient(transport.current);
 	}, []);
 
+	const activeRef = useRef(active);
+	activeRef.current = active;
+	const projectIdRef = useRef(projectId);
+	projectIdRef.current = projectId;
+	const openGenRef = useRef(0);
+
 	const closeStream = useCallback(() => {
+		openGenRef.current++;
 		stream.current?.close();
 		stream.current = null;
 		setLive(false);
@@ -158,8 +165,10 @@ export function useChat(
 		async (id: string): Promise<void> => {
 			try {
 				const res = await api().listChatSessions(id);
+				if (!activeRef.current || projectIdRef.current !== id) return;
 				setSession(res.sessions[0] ?? null);
 			} catch (error) {
+				if (!activeRef.current || projectIdRef.current !== id) return;
 				if (error instanceof ApiError && error.status === 404) {
 					setSession(null);
 					await projectGone(id);
@@ -172,22 +181,28 @@ export function useChat(
 	const open = useCallback(
 		(s: ChatSession) => {
 			closeStream();
+			const gen = ++openGenRef.current;
 			setEvents([]);
 			const http = transport.current;
-			if (http === null) return;
+			if (http === null || !activeRef.current) return;
 			if (!s.live) {
 				// an ended session is read, not followed
 				api()
 					.getChatTranscript(s.id)
-					.then((res) =>
-						setEvents((was) => applySnapshot(was, res.events ?? [])),
-					)
-					.catch((error: unknown) => setFailure(failureOf(error)));
+					.then((res) => {
+						if (gen !== openGenRef.current || !activeRef.current) return;
+						setEvents((was) => applySnapshot(was, res.events ?? []));
+					})
+					.catch((error: unknown) => {
+						if (gen !== openGenRef.current || !activeRef.current) return;
+						setFailure(failureOf(error));
+					});
 				return;
 			}
 			stream.current = http.openStream(`/chat/sessions/${s.id}/events`, {
 				onOpen: () => setLive(true),
 				onMessage: (name, data) => {
+					if (gen !== openGenRef.current || !activeRef.current) return;
 					if (name !== "chat.event") return;
 					const frame = parseFrame(data);
 					if (frame === null) return;
@@ -315,9 +330,16 @@ export function useChat(
 	const start = useCallback(
 		async (profile: string): Promise<void> => {
 			if (projectId === null) return;
+			const targetProject = projectId;
 			actions.current++;
-			const s = await guard(() => api().startChatSession(projectId, profile));
-			if (s !== undefined) {
+			const s = await guard(() =>
+				api().startChatSession(targetProject, profile),
+			);
+			if (
+				s !== undefined &&
+				activeRef.current &&
+				projectIdRef.current === targetProject
+			) {
 				setSession(s);
 				open(s);
 			}

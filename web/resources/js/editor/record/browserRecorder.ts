@@ -156,135 +156,157 @@ export async function startBrowserRecording(
 		throw error;
 	}
 
-	const mix = mixAudio(
-		[display, micStream].filter((s): s is MediaStream => s !== null),
-	);
-	const screenTracks: MediaStreamTrack[] = [...display.getVideoTracks()];
-	if (mix.track !== null) screenTracks.push(mix.track);
-	const screenStream = new MediaStream(screenTracks);
-
-	const startedAt = performance.now();
-	let elapsedMs = 0;
-	let stoppedBy: RecorderState["stoppedBy"] = null;
-	let phase: RecorderPhase = "recording";
-	let recording: Recording | null = null;
-	let failure: Error | null = null;
-	let current: RecorderState;
-
-	const emit = (upload: UploaderState): void => {
-		current = {
-			phase,
-			recordingId: begun.recording_id,
-			elapsedMs,
-			shared,
-			upload,
-			stoppedBy,
-			recording,
-			error: failure,
-		};
-		setup.onChange(current);
-	};
-
-	const uploader = new ChunkUploader(client, begun.recording_id, (u) => {
-		emit(u);
-		// the server said enough (a limit) or the upload cannot go on: stop what is being captured
-		if (u.end !== null && phase === "recording") {
-			stoppedBy = u.end.kind === "limit" ? "limit" : "failure";
-			void halt();
-		}
-	});
-	emit(uploader.snapshot());
-
+	let mix: { track: MediaStreamTrack | null; close(): void } | null = null;
 	const recorders: { kind: RecordingUploadKind; recorder: MediaRecorder }[] =
 		[];
-	const make = (kind: RecordingUploadKind, stream: MediaStream): void => {
-		const recorder = new MediaRecorder(stream, { mimeType: setup.mimeType });
-		recorder.ondataavailable = (event: BlobEvent) => {
-			if (event.data.size > 0) {
-				uploader.enqueue(
-					kind,
-					event.data,
-					Math.round(performance.now() - startedAt),
-				);
-			}
+	let timer: ReturnType<typeof setInterval> | null = null;
+
+	try {
+		mix = mixAudio(
+			[display, micStream].filter((s): s is MediaStream => s !== null),
+		);
+		const screenTracks: MediaStreamTrack[] = [...display.getVideoTracks()];
+		if (mix.track !== null) screenTracks.push(mix.track);
+		const screenStream = new MediaStream(screenTracks);
+
+		const startedAt = performance.now();
+		let elapsedMs = 0;
+		let stoppedBy: RecorderState["stoppedBy"] = null;
+		let phase: RecorderPhase = "recording";
+		let recording: Recording | null = null;
+		let failure: Error | null = null;
+		let current: RecorderState;
+
+		const emit = (upload: UploaderState): void => {
+			current = {
+				phase,
+				recordingId: begun.recording_id,
+				elapsedMs,
+				shared,
+				upload,
+				stoppedBy,
+				recording,
+				error: failure,
+			};
+			setup.onChange(current);
 		};
-		recorders.push({ kind, recorder });
-	};
-	make("screen", screenStream);
-	if (shared.camera && cameraStream !== null) make("camera", cameraStream);
 
-	const timer = setInterval(() => {
-		if (phase !== "recording") return;
-		elapsedMs = Math.round(performance.now() - startedAt);
-		emit(uploader.snapshot());
-	}, setup.tickMs ?? TICK_MS);
-
-	const stopped = (recorder: MediaRecorder): Promise<void> =>
-		new Promise((resolve) => {
-			if (recorder.state === "inactive") {
-				resolve();
-				return;
+		const uploader = new ChunkUploader(client, begun.recording_id, (u) => {
+			emit(u);
+			// the server said enough (a limit) or the upload cannot go on: stop what is being captured
+			if (u.end !== null && phase === "recording") {
+				stoppedBy = u.end.kind === "limit" ? "limit" : "failure";
+				void halt();
 			}
-			recorder.addEventListener("stop", () => resolve(), { once: true });
-			recorder.stop();
+		});
+		emit(uploader.snapshot());
+
+		const make = (kind: RecordingUploadKind, stream: MediaStream): void => {
+			const recorder = new MediaRecorder(stream, { mimeType: setup.mimeType });
+			recorder.ondataavailable = (event: BlobEvent) => {
+				if (event.data.size > 0) {
+					uploader.enqueue(
+						kind,
+						event.data,
+						Math.round(performance.now() - startedAt),
+					);
+				}
+			};
+			recorders.push({ kind, recorder });
+		};
+		make("screen", screenStream);
+		if (shared.camera && cameraStream !== null) make("camera", cameraStream);
+
+		timer = setInterval(() => {
+			if (phase !== "recording") return;
+			elapsedMs = Math.round(performance.now() - startedAt);
+			emit(uploader.snapshot());
+		}, setup.tickMs ?? TICK_MS);
+
+		const stopped = (recorder: MediaRecorder): Promise<void> =>
+			new Promise((resolve) => {
+				if (recorder.state === "inactive") {
+					resolve();
+					return;
+				}
+				recorder.addEventListener("stop", () => resolve(), { once: true });
+				recorder.stop();
+			});
+
+		let ending: Promise<RecorderState> | null = null;
+		const audioMix = mix;
+		const tickTimer = timer;
+
+		// Stops the capture and ends the recording on the server: the last chunks are flushed by the recorders'
+		// own stop, sent, and then the server is told how many chunks there were.
+		async function halt(): Promise<RecorderState> {
+			if (ending !== null) return ending;
+			ending = (async () => {
+				elapsedMs = Math.round(performance.now() - startedAt);
+				phase = "sending";
+				emit(uploader.snapshot());
+				await Promise.all(recorders.map((r) => stopped(r.recorder)));
+				clearInterval(tickTimer);
+				stopAll(display, micStream, cameraStream);
+				audioMix.close();
+				const finalState = await uploader.drain();
+				phase = "finishing";
+				emit(finalState);
+				try {
+					recording =
+						finalState.end?.kind === "failed"
+							? await client.stopRecording(begun.recording_id)
+							: await client.finishRecordingUpload(begun.recording_id, {
+									tracks: uploader.acknowledged(),
+									elapsed_ms: elapsedMs,
+								});
+				} catch (error) {
+					failure = error instanceof Error ? error : new Error(String(error));
+				}
+				if (finalState.end?.kind === "failed") {
+					failure ??= finalState.end.error;
+				}
+				phase = "ended";
+				emit(finalState);
+				return current;
+			})();
+			return ending;
+		}
+
+		// The person pressed "Stop sharing" in the browser: that ends the recording as Stop does.
+		display.getVideoTracks()[0]?.addEventListener("ended", () => {
+			if (phase === "recording") {
+				stoppedBy = "browser";
+				void halt();
+			}
 		});
 
-	let ending: Promise<RecorderState> | null = null;
+		for (const r of recorders) r.recorder.start(TIMESLICE_MS);
 
-	// Stops the capture and ends the recording on the server: the last chunks are flushed by the recorders'
-	// own stop, sent, and then the server is told how many chunks there were.
-	async function halt(): Promise<RecorderState> {
-		if (ending !== null) return ending;
-		ending = (async () => {
-			elapsedMs = Math.round(performance.now() - startedAt);
-			phase = "sending";
-			emit(uploader.snapshot());
-			await Promise.all(recorders.map((r) => stopped(r.recorder)));
-			clearInterval(timer);
-			stopAll(display, micStream, cameraStream);
-			mix.close();
-			const finalState = await uploader.drain();
-			phase = "finishing";
-			emit(finalState);
-			try {
-				recording =
-					finalState.end?.kind === "failed"
-						? await client.stopRecording(begun.recording_id)
-						: await client.finishRecordingUpload(begun.recording_id, {
-								tracks: uploader.acknowledged(),
-								elapsed_ms: elapsedMs,
-							});
-			} catch (error) {
-				failure = error instanceof Error ? error : new Error(String(error));
+		return {
+			recordingId: begun.recording_id,
+			state: () => current,
+			stop: () => {
+				if (phase === "recording") stoppedBy = "person";
+				return halt();
+			},
+		};
+	} catch (error) {
+		if (timer !== null) clearInterval(timer);
+		for (const r of recorders) {
+			if (r.recorder.state !== "inactive") {
+				try {
+					r.recorder.stop();
+				} catch {
+					// ignore recorder stop errors during rollback
+				}
 			}
-			if (finalState.end?.kind === "failed") {
-				failure ??= finalState.end.error;
-			}
-			phase = "ended";
-			emit(finalState);
-			return current;
-		})();
-		return ending;
-	}
-
-	// The person pressed "Stop sharing" in the browser: that ends the recording as Stop does.
-	display.getVideoTracks()[0]?.addEventListener("ended", () => {
-		if (phase === "recording") {
-			stoppedBy = "browser";
-			void halt();
 		}
-	});
-
-	for (const r of recorders) r.recorder.start(TIMESLICE_MS);
-
-	return {
-		recordingId: begun.recording_id,
-		state: () => current,
-		stop: () => {
-			if (phase === "recording") stoppedBy = "person";
-			return halt();
-		},
-	};
+		stopAll(display, micStream, cameraStream);
+		mix?.close();
+		void client.cancelRecording(begun.recording_id).catch(() => undefined);
+		throw error;
+	}
 }
 
 // The sentence key for why the upload ended before the person stopped it.

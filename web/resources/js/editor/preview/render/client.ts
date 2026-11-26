@@ -13,6 +13,8 @@ import { RenderError } from "./renderCore";
 export interface RenderWorkerLike<S, B> {
 	postMessage(message: ToRenderWorker<S>, transfer?: Transferable[]): void;
 	onmessage: ((event: { data: FromRenderWorker<B> }) => void) | null;
+	onerror?: ((event: unknown) => void) | null;
+	onmessageerror?: ((event: unknown) => void) | null;
 	terminate(): void;
 }
 
@@ -54,6 +56,32 @@ export class RenderClient<S extends PixelSource, B> {
 		private readonly closeBitmap: (bitmap: B) => void,
 	) {
 		worker.onmessage = (event) => this.receive(event.data);
+		worker.onerror = (event) => {
+			const msg =
+				typeof event === "object" &&
+				event !== null &&
+				"message" in event &&
+				typeof (event as { message: unknown }).message === "string"
+					? (event as { message: string }).message
+					: "render worker error";
+			this.crash(msg);
+		};
+		worker.onmessageerror = () => this.crash("render worker message error");
+	}
+
+	private crash(detail: string): void {
+		if (this.disposed) return;
+		this.disposed = true;
+		this.waiting = null;
+		this.inflight = null;
+		if (this.failed !== null) {
+			const reject = this.failed;
+			this.failed = null;
+			this.ready = null;
+			reject(new RenderError("module_load", detail));
+			return;
+		}
+		this.hooks.onError({ reason: "render_trap", detail });
 	}
 
 	get chosenPath(): "cpu" | "gpu" | null {

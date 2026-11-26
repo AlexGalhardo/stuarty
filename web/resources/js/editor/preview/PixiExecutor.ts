@@ -368,6 +368,7 @@ export class PixiExecutor implements PreviewExecutor {
 			this.dropShadowOutline(entry);
 			this.sizeFx(entry, 0);
 			entry.grade?.destroy();
+			entry.lut?.destroy();
 		}
 		for (const surface of this.groups.values()) {
 			surface.container.destroy();
@@ -1518,6 +1519,11 @@ export class PixiExecutor implements PreviewExecutor {
 		if (crop === null) return null;
 		const key = `video:${layer.asset}:${crop.join(",")}`;
 		let texture = this.stills.get(key);
+		if (texture !== undefined && texture.source.resource !== video) {
+			texture.destroy(true);
+			this.stills.delete(key);
+			texture = undefined;
+		}
 		if (texture === undefined) {
 			const source = new VideoSource({
 				resource: video,
@@ -1527,10 +1533,21 @@ export class PixiExecutor implements PreviewExecutor {
 			source.resize(video.videoWidth, video.videoHeight);
 			const [x, y, w, h] = crop;
 			texture = new Texture({ source, frame: new Rectangle(x, y, w, h) });
-			this.stills.set(key, texture);
+			this.putStill(key, texture);
 		}
 		texture.source.update();
 		return texture;
+	}
+
+	private putStill(key: string, texture: Texture): void {
+		this.stills.delete(key);
+		this.stills.set(key, texture);
+		while (this.stills.size > 128) {
+			const oldest = this.stills.keys().next().value;
+			if (oldest === undefined) break;
+			this.stills.get(oldest)?.destroy(true);
+			this.stills.delete(oldest);
+		}
 	}
 
 	// The thumbnail still of an asset that has no decoding element (beyond
@@ -1598,7 +1615,10 @@ export class PixiExecutor implements PreviewExecutor {
 		fetchBitmap(projectId, key)
 			.then((bitmap) => {
 				this.loading.delete(id);
-				if (this.disposed) return;
+				if (this.disposed) {
+					bitmap.close();
+					return;
+				}
 				this.bitmaps.set(
 					key,
 					new Texture({ source: new ImageSource({ resource: bitmap }) }),

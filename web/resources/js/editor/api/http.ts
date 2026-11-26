@@ -32,9 +32,12 @@ export class HttpTransport implements Transport {
 			timedOut = true;
 			controller.abort();
 		}, request.timeoutMs);
-		request.signal?.addEventListener("abort", () => controller.abort(), {
-			once: true,
-		});
+		const onAbort = (): void => controller.abort();
+		if (request.signal?.aborted) {
+			controller.abort();
+		} else {
+			request.signal?.addEventListener("abort", onAbort, { once: true });
+		}
 
 		try {
 			const response = await fetch(this.base + request.path, {
@@ -78,6 +81,7 @@ export class HttpTransport implements Transport {
 			throw new TransportError("network", "network failure");
 		} finally {
 			clearTimeout(timer);
+			request.signal?.removeEventListener("abort", onAbort);
 		}
 	}
 
