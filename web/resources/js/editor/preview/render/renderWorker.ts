@@ -57,7 +57,13 @@ async function deliver(
 		scaled.close();
 		throw new Error("no 2d context");
 	}
-	context.drawImage(scaled, 0, 0);
+	if (scaled.width !== width || scaled.height !== height) {
+		context.imageSmoothingEnabled = true;
+		context.imageSmoothingQuality = "high";
+		context.drawImage(scaled, 0, 0, width, height);
+	} else {
+		context.drawImage(scaled, 0, 0);
+	}
 	scaled.close();
 	const data = context.getImageData(0, 0, width, height).data;
 	return { width, height, rgba: new Uint8Array(data.buffer) };
