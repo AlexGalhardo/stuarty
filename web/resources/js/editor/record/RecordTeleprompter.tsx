@@ -1,15 +1,50 @@
 import { type ReactNode, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { apiTransport, callJson } from "@/lib/api";
 import {
 	canOpenTeleprompter,
 	type DesktopBridge,
 	getDesktopBridge,
 } from "@/lib/desktopBridge";
 import { useT } from "@/lib/i18n";
-import { writingClient } from "../../pages/Write/client";
-import { HttpTransport } from "../api/http";
+import type { WritingClient } from "../../pages/Write/client";
 import Teleprompter from "../teleprompter/Teleprompter";
+
+const TELEPROMPTER_TIMEOUT_MS = 15_000;
+
+function teleprompterClient(): WritingClient {
+	return {
+		list: (filter) => {
+			const query = new URLSearchParams();
+			for (const [key, value] of Object.entries(filter)) {
+				if (value !== undefined && value !== "") query.set(key, value);
+			}
+			const text = query.toString();
+			return callJson(
+				apiTransport,
+				{
+					method: "GET",
+					path: `/texts${text === "" ? "" : `?${text}`}`,
+					timeoutMs: TELEPROMPTER_TIMEOUT_MS,
+				},
+				{ retry: false },
+			);
+		},
+		get: (projectId, itemId, revision) =>
+			callJson(
+				apiTransport,
+				{
+					method: "GET",
+					path: `/projects/${encodeURIComponent(projectId)}/texts/${encodeURIComponent(itemId)}${
+						revision === undefined ? "" : `?revision=${revision}`
+					}`,
+					timeoutMs: TELEPROMPTER_TIMEOUT_MS,
+				},
+				{ retry: false },
+			),
+	} as WritingClient;
+}
 
 // The teleprompter of the record dialog (SDD-025 section 20.3): in the desktop shell a button opens it in a window
 // of its own, which the system keeps out of a screen capture where it can; on the web it is a panel of this page,
@@ -22,7 +57,7 @@ export default function RecordTeleprompter({
 }): ReactNode {
 	const t = useT();
 	const bridge = getDesktopBridge();
-	const client = useMemo(() => writingClient(new HttpTransport("/api/v1")), []);
+	const client = useMemo(() => teleprompterClient(), []);
 	return (
 		<TeleprompterControls
 			bridge={bridge}

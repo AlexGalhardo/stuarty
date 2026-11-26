@@ -151,12 +151,7 @@ const handshakePath = BasePath + "/handshake"
 func (h *apiHandler) op(id string) api.Op {
 	ep := endpointOf(id)
 
-	op := api.Op{Name: ep.ID, Summary: ep.Summary, Status: ep.Status, Security: []string{"bearer"}, MaxBody: ep.MaxBody}
-	if ep.Pending != "" {
-		op.Description = "Not available in this build yet (" + ep.Pending + "): the route answers E_INTERNAL."
-	}
-
-	return op
+	return api.Op{Name: ep.ID, Summary: ep.Summary, Status: ep.Status, Security: []string{"bearer"}, MaxBody: ep.MaxBody}
 }
 
 // authenticate is step "authentication" of SDD-007 section 5.1 item 3 for

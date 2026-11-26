@@ -118,7 +118,18 @@ const COMPARISON = new Set<SyntaxKind>([
 ]);
 
 // The folders of SDD-012 section 3.3 and what each may import.
-const FEATURES = ["timeline", "inspector", "library", "export", "history"];
+const FEATURE_BASE = ["state", "commands", "ui", "a11y", "preview", "api"];
+const FEATURES = [
+	"timeline",
+	"inspector",
+	"library",
+	"export",
+	"history",
+	"record",
+	"stages",
+	"teleprompter",
+	"find",
+];
 const MAY_IMPORT: Record<string, string[]> = {
 	api: [],
 	state: ["api"],
@@ -128,9 +139,15 @@ const MAY_IMPORT: Record<string, string[]> = {
 	a11y: [],
 	layout: [...FEATURES, "commands", "preview", "state", "ui", "a11y"],
 	boot: ["*"],
-	...Object.fromEntries(
-		FEATURES.map((f) => [f, ["state", "commands", "ui", "a11y", "preview", "api"]]),
-	),
+	timeline: [...FEATURE_BASE, "stages"],
+	inspector: [...FEATURE_BASE, "stages"],
+	library: [...FEATURE_BASE, "record"],
+	export: [...FEATURE_BASE],
+	history: [...FEATURE_BASE],
+	record: [...FEATURE_BASE, "teleprompter"],
+	stages: [...FEATURE_BASE, "inspector", "history", "timeline"],
+	teleprompter: [...FEATURE_BASE],
+	find: [...FEATURE_BASE, "timeline"],
 };
 
 // What lies after the last /editor/ segment: "state/sync.ts".

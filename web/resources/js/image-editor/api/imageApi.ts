@@ -1,5 +1,4 @@
-import { fromResponse, networkError } from "../../editor/api/errors";
-import { type Transport, TransportError } from "../../editor/api/transport";
+import { callJson, type Transport } from "@/lib/api";
 import type { Checkpoint } from "../../editor/api/types";
 import type {
 	ImageCheckpointListResult,
@@ -73,24 +72,11 @@ export function createImageApi(transport: Transport): ImageApi {
 		signal?: AbortSignal,
 		file?: Blob,
 	): Promise<T> {
-		let response: Awaited<ReturnType<Transport["send"]>>;
-		try {
-			response = await transport.send({
-				method,
-				path,
-				body,
-				file,
-				timeoutMs,
-				signal,
-			});
-		} catch (error) {
-			if (error instanceof TransportError) throw networkError(error.message);
-			throw error;
-		}
-		if (response.status < 200 || response.status > 299) {
-			throw fromResponse(response.status, response.body);
-		}
-		return response.body as T;
+		return callJson<T>(
+			transport,
+			{ method, path, body, file, timeoutMs, signal },
+			{ retry: false },
+		);
 	}
 
 	const image = (id: string): string => `/images/${encodeURIComponent(id)}`;

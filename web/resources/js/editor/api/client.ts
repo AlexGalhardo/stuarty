@@ -1,6 +1,4 @@
-import { fromResponse, networkError } from "./errors";
-import { type RetryDeps, withRetry } from "./retry";
-import { type Transport, TransportError } from "./transport";
+import { callJson, type RetryDeps, type Transport } from "@/lib/api";
 import type {
 	AccountCreated,
 	AccountCreateRequest,
@@ -566,26 +564,18 @@ export function createClient(
 		signal?: AbortSignal,
 		file?: Blob,
 	): Promise<T> {
-		return withRetry(async () => {
-			let response: Awaited<ReturnType<Transport["send"]>>;
-			try {
-				response = await transport.send({
-					method,
-					path,
-					body,
-					...(file === undefined ? {} : { file }),
-					timeoutMs,
-					signal,
-				});
-			} catch (error) {
-				if (error instanceof TransportError) throw networkError(error.message);
-				throw error;
-			}
-			if (response.status < 200 || response.status > 299) {
-				throw fromResponse(response.status, response.body);
-			}
-			return response.body as T;
-		}, deps);
+		return callJson<T>(
+			transport,
+			{
+				method,
+				path,
+				body,
+				...(file === undefined ? {} : { file }),
+				timeoutMs,
+				signal,
+			},
+			{ retry: deps },
+		);
 	}
 
 	const project = (id: string): string => `/projects/${encodeURIComponent(id)}`;

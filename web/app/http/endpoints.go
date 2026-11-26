@@ -29,10 +29,7 @@ type Endpoint struct {
 	AlsoScope string
 	Service   string // the Service method that answers it, "" when it is not a service operation
 	Status    int
-	Summary   string
-	// Pending marks an operation of the Prototype whose Service method arrives
-	// with a later task; its handler answers E_INTERNAL until then.
-	Pending string
+	Summary string
 	// Uncounted marks a route the rate limiters never count: the event stream and
 	// the byte-serving routes that the editor calls many times a second (SDD-007
 	// section 4.4).

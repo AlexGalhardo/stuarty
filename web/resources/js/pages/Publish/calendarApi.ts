@@ -1,6 +1,4 @@
-import { fromResponse, networkError } from "../../editor/api/errors";
-import { HttpTransport } from "../../editor/api/http";
-import { TransportError } from "../../editor/api/transport";
+import { apiTransport, callJson, type Transport } from "@/lib/api";
 import type {
 	CalendarDay,
 	CalendarPlan,
@@ -45,7 +43,7 @@ export function exportHref(range: Omit<PlanRange, "publications">): string {
 // The calls of the day of the calendar (SDD-020 section 30A.7). They send what the person did and return what the
 // service answers; a refusal is an ApiError with the message, the path and the hint of the core.
 export function createCalendarApi(
-	transport: HttpTransport = new HttpTransport("/api/v1"),
+	transport: Transport = apiTransport,
 ): CalendarApi {
 	async function call<T>(
 		method: "GET" | "PUT" | "POST" | "DELETE",
@@ -53,17 +51,11 @@ export function createCalendarApi(
 		timeoutMs: number,
 		body?: unknown,
 	): Promise<T> {
-		let response: Awaited<ReturnType<HttpTransport["send"]>>;
-		try {
-			response = await transport.send({ method, path, body, timeoutMs });
-		} catch (error) {
-			if (error instanceof TransportError) throw networkError(error.message);
-			throw error;
-		}
-		if (response.status < 200 || response.status > 299) {
-			throw fromResponse(response.status, response.body);
-		}
-		return response.body as T;
+		return callJson<T>(
+			transport,
+			{ method, path, body, timeoutMs },
+			{ retry: false },
+		);
 	}
 
 	return {
