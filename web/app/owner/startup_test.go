@@ -174,3 +174,23 @@ func TestNetworkOwnerRequiresAValidatedOriginAndUsesRuntimeCredentials(t *testin
 		t.Fatal("the runtime credential survived owner shutdown")
 	}
 }
+
+func TestLocalOwnerAnnouncesAndStopsWorkersWhenCancelled(t *testing.T) {
+	o, err := Open(t.Context(), Config{Getenv: envOf(map[string]string{workspace.EnvHome: t.TempDir()})})
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = o.Close() })
+	const addr = "127.0.0.1:7878"
+	if err := o.Announce(addr); err != nil {
+		t.Fatal(err)
+	}
+	if runtime, err := o.Dir.ReadRuntime(); err != nil || runtime.Addr != addr || runtime.Mode != config.ModeLocal {
+		t.Fatalf("runtime after announcing = %+v, %v", runtime, err)
+	}
+	ctx, cancel := context.WithCancel(t.Context())
+	cancel()
+	if err := o.Work(ctx); err != nil {
+		t.Fatalf("worker shutdown = %v", err)
+	}
+}

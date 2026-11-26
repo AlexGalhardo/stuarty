@@ -5,9 +5,11 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
+	exportcore "github.com/AlexGalhardo/stuarty/core/export"
 	"github.com/AlexGalhardo/stuarty/core/timeline"
 	"github.com/AlexGalhardo/stuarty/engine/export"
 	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
@@ -148,5 +150,66 @@ func TestAudioExportResolvesThePresetWithoutDetectingAVideoEncoder(t *testing.T)
 	preset, plan, err := a.codecPlan(t.Context(), in, nil)
 	if err != nil || preset == nil || preset.ID != in.Preset || plan.Codec != "" {
 		t.Fatalf("audio codec plan = %+v, %+v, %v", preset, plan, err)
+	}
+}
+
+func TestExporterMeasuresSilenceAndReportsCodecAvailability(t *testing.T) {
+	ffmpegDir := os.Getenv("STUARTY_TEST_FFMPEG_DIR")
+	if ffmpegDir == "" {
+		t.Skip("verify:env-skip STUARTY_TEST_FFMPEG_DIR is not set")
+	}
+	suffix := ""
+	if runtime.GOOS == "windows" {
+		suffix = ".exe"
+	}
+	ctx := t.Context()
+	installation, err := ffmpeg.Discover(ctx, ffmpeg.Config{
+		FFmpegPath: filepath.Join(ffmpegDir, "ffmpeg"+suffix), CPUCount: 2,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	workspace := t.TempDir()
+	runner, err := ffmpeg.NewRunner(installation, workspace)
+	if err != nil {
+		t.Fatal(err)
+	}
+	a := &adapter{cfg: Config{Runner: runner, Workspace: workspace}}
+	codecs := a.Codecs(ctx)
+	if len(codecs) != len(exportcore.Codecs()) {
+		t.Fatalf("the encoder probe returned %d codecs", len(codecs))
+	}
+	for _, codec := range codecs {
+		if codec.Available && codec.Encoder == "" || !codec.Available && codec.Reason == "" {
+			t.Fatalf("incomplete codec availability: %+v", codec)
+		}
+	}
+	doc := &timeline.Document{
+		Settings: timeline.DefaultSettings(),
+		Items:    map[string]timeline.Item{"itm_visual": {Duration: 30}},
+	}
+	if result, err := a.MeasureAudio(
+		ctx,
+		service.AudioMeasureInput{Doc: doc, JobID: "measure_silence"},
+	); err != nil || result.Seconds != 1 || result.Before.IntegratedLUFS != nil ||
+		result.After.IntegratedLUFS != nil {
+		t.Fatalf("a second of silence measured as %+v, %v", result, err)
+	}
+	doc.Items["itm_visual"] = timeline.Item{Duration: 30 * (export.MaxMeasureSeconds + 1)}
+	if _, err := a.MeasureAudio(
+		ctx,
+		service.AudioMeasureInput{Doc: doc, JobID: "measure_long"},
+	); !errors.Is(
+		err,
+		service.ErrAudioRangeTooLong,
+	) {
+		t.Fatalf("measure beyond the limit = %v", err)
+	}
+	if err := a.RenderAudioPreview(
+		ctx,
+		service.AudioPreviewInput{Doc: doc, JobID: "preview_empty"},
+	); err == nil ||
+		!strings.Contains(err.Error(), "preview source is empty") {
+		t.Fatalf("preview of an empty source = %v", err)
 	}
 }

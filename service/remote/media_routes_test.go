@@ -80,6 +80,16 @@ func TestRemoteMediaRequestsKeepPathQueryAndBodySeparate(t *testing.T) {
 			_, err := c.ExportPresetList(ctx, service.ExportPresetListRequest{Codecs: true})
 			return err
 		}},
+		{"snap points", http.MethodGet, "/projects/prj_a/snap-points", "rev=3&timeline_id=prj_b&words=1", "", func(c *Client) error {
+			_, err := c.SnapPoints(ctx, service.SnapPointsRequest{ProjectID: "prj_a", TimelineID: "prj_b", Revision: 3, Words: true})
+			return err
+		}},
+		{"motion check", http.MethodGet, "/projects/prj_a/motion/check", "asset_id=ast_a&from=1s&timeline_id=prj_b&track_id=trk_a&until=4s", "", func(c *Client) error {
+			_, err := c.MotionCheck(ctx, service.MotionCheckRequest{
+				ProjectID: "prj_a", TimelineID: "prj_b", AssetID: "ast_a", TrackID: "trk_a", From: "1s", Until: "4s",
+			})
+			return err
+		}},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()

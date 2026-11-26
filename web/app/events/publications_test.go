@@ -58,3 +58,43 @@ func TestPublicationsStreamOfAMemberCarriesTheirOwnOnly(t *testing.T) {
 	case <-time.After(200 * time.Millisecond):
 	}
 }
+
+func TestProjectSubscribersReceiveAssetAndNestedTimelineChanges(t *testing.T) {
+	t.Parallel()
+	e := New(nil, Options{})
+	t.Cleanup(e.Close)
+	ctx, cancel := context.WithTimeout(t.Context(), 5*time.Second)
+	defer cancel()
+	const project = "prj_0000000001"
+	live, unsubscribe, err := e.hub.TrySubscribe(ctx, topic(project))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer unsubscribe()
+	for _, tc := range []struct {
+		ev   service.Event
+		want string
+	}{
+		{service.Event{Type: wire.AssetUpdated, ProjectID: project, AssetID: "ast_0000000001"}, `"asset_id":"ast_0000000001"`},
+		{service.Event{Type: wire.NestedUpdated, ProjectID: project, TimelineID: "prj_0000000002"}, `"timeline_id":"prj_0000000002"`},
+	} {
+		e.Publish(tc.ev)
+		select {
+		case got := <-live:
+			if got.Event != tc.ev.Type || !strings.Contains(got.Data, tc.want) {
+				t.Fatalf("got %+v, want %s with %s", got, tc.ev.Type, tc.want)
+			}
+		case <-ctx.Done():
+			t.Fatalf("no %s event arrived", tc.ev.Type)
+		}
+	}
+}
+
+func TestInvalidStoredJobErrorsAreOmittedFromEvents(t *testing.T) {
+	t.Parallel()
+	for _, raw := range []string{"invalid json", `{"message":"error without a code"}`} {
+		if err := errorOf([]byte(raw)); err != nil {
+			t.Fatalf("errorOf(%q) = %+v", raw, err)
+		}
+	}
+}

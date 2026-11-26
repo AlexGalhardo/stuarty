@@ -210,24 +210,26 @@ func (r *Recorder) Last() Seen {
 // refuse any dial that is not to a loopback address, so no test of the layer can reach a real provider
 // (NFR-064, SDD-016 section 11). The dial of a connection is shown to the recorder before the socket is made.
 func Main(m *testing.M) {
-	restore := outbound.SetDialRecorder(func(_ outbound.Purpose, address string) error {
-		host, _, err := net.SplitHostPort(address)
-		if err != nil {
-			host = address
-		}
-
-		if ip, perr := netip.ParseAddr(host); perr == nil && ip.IsLoopback() || host == "localhost" {
-			return nil
-		}
-
-		return fmt.Errorf(
-			"providertest: a test dialled %s, and no test of the provider layer may reach the network",
-			address,
-		)
-	})
+	restore := outbound.SetDialRecorder(allowLoopback)
 
 	code := m.Run()
 
 	restore()
 	os.Exit(code)
+}
+
+func allowLoopback(_ outbound.Purpose, address string) error {
+	host, _, err := net.SplitHostPort(address)
+	if err != nil {
+		host = address
+	}
+
+	if ip, perr := netip.ParseAddr(host); perr == nil && ip.IsLoopback() || host == "localhost" {
+		return nil
+	}
+
+	return fmt.Errorf(
+		"providertest: a test dialled %s, and no test of the provider layer may reach the network",
+		address,
+	)
 }

@@ -128,8 +128,11 @@ test.describe("a11y-first-flow-keyboard @chromium-only", () => {
 			for (const [label, value] of fields) {
 				await type(page, page.getByLabel(label, { exact: true }), value);
 			}
-			await tabTo(page, page.getByLabel("Due date", { exact: true }));
-			await page.keyboard.type("12312999");
+			const due = page.getByLabel("Due date", { exact: true });
+			await tabTo(page, due);
+			// The same day and month work with either native date-field order.
+			await page.keyboard.type("11112999");
+			await expect(due).toHaveValue("2999-11-11");
 			await page.keyboard.press("Enter");
 			await page.waitForURL(/\/projects\/prj_[0-9a-hjkmnp-tv-z]{10}$/);
 			projectId = page.url().split("/").pop() ?? "";
