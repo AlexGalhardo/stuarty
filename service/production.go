@@ -486,8 +486,17 @@ func (s *svc) ProjectDescribe(ctx context.Context, req ProjectDescribeRequest) (
 		return nil, asError(err)
 	}
 
-	rows, known := s.withPublications(ctx, head.ID, rows)
+	pubs, known := s.publicationsOf(ctx, head.ID)
+	if known {
+		rows = appendPublications(rows, head.ID, pubs)
+	}
+
 	workflow := s.workflowOf(ctx, &head, rows, known)
+
+	var nextPostAt *time.Time
+	if known {
+		nextPostAt = s.nextPostOf(pubs)
+	}
 
 	res := &ProjectDescribeResult{
 		UntrustedNotice: UntrustedNotice,
@@ -501,7 +510,7 @@ func (s *svc) ProjectDescribe(ctx context.Context, req ProjectDescribeRequest) (
 		Production:      productionOf(rows),
 		Workflow:        workflow,
 		TextSummary:     textSummaryOf(rows),
-		NextPostAt:      s.nextPost(ctx, head.ID),
+		NextPostAt:      nextPostAt,
 		Items:           itemViews(rows),
 	}
 	res.Text = s.describeText(ctx, &head, rows, res.Production, &workflow, req.MaxTokens)

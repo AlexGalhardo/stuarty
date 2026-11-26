@@ -138,14 +138,14 @@ As a workspace grows in projects, assets, and approval history, five concrete ba
 
 ## Done criteria
 
-- [ ] `go test -race -count=1 ./web/database/migrations/... ./web/app/store/...` exits 0
-- [ ] `go test -race -count=1 -run 'Asset|Project|Approval|Cost|Workflow' ./web/app/servicetest/` exits 0
-- [ ] `go test -count=1 -run TestSecurity_ ./...` exits 0
-- [ ] `grep -n 'useImage((s) => s)' web/resources/js/image-editor/toolbar/operations.tsx` returns no matches
-- [ ] `cd web && bun run typecheck && bun run lint && bun run check:thin-client && bun run test` exits 0
-- [ ] `task lint:go && task vet` exits 0
-- [ ] No files outside the in-scope list are modified (`git status`)
-- [ ] `improve/README.md` status row updated
+- [x] `go test -race -count=1 ./web/database/migrations/... ./web/app/store/...` exits 0
+- [x] `go test -race -count=1 -run 'Asset|Project|Approval|Cost|Workflow' ./web/app/servicetest/` exits 0
+- [x] `go test -count=1 -run TestSecurity_ ./...` exits 0
+- [x] `grep -n 'useImage((s) => s)' web/resources/js/image-editor/toolbar/operations.tsx` returns no matches
+- [x] `cd web && bun run typecheck && bun run lint && bun run check:thin-client && bun run test` exits 0
+- [x] `task lint:go && task vet` exits 0
+- [x] No files outside the in-scope list are modified (`git status`)
+- [x] `improve/README.md` status row updated
 
 ## STOP conditions
 

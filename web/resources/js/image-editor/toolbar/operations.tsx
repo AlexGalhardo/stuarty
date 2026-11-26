@@ -35,7 +35,7 @@ import type { ModelOperation } from "../api/modelEdit";
 import { ZOOM_STEP } from "../canvas/viewport";
 import { moveOp, step, treeRows } from "../layers/tree";
 import { isFinal, useModelJob } from "../modeledit/state";
-import { findLayer, useImage } from "../state/context";
+import { findLayer, useImage, useImageStore } from "../state/context";
 import { useLibrary } from "../state/library";
 import { useAddImage } from "./addImage";
 import type { ShortcutRow } from "./shortcuts";
@@ -113,11 +113,11 @@ export const PRIMARY_TOOLS = [
 
 export function useOperations(): Operation[] {
 	const t = useT();
-	const store = useImage((s) => s);
-	const doc = store.doc;
-	const busy = store.busy;
-	const selection = store.selection;
-	const send = store.send;
+	const imageStore = useImageStore();
+	const doc = useImage((s) => s.doc);
+	const busy = useImage((s) => s.busy);
+	const selection = useImage((s) => s.selection);
+	const send = useImage((s) => s.send);
 	const library = useLibrary();
 	const { setPicking } = useAddImage();
 	const { setImporting, setModelOperation } = useOperationDialogs();
@@ -135,14 +135,20 @@ export function useOperations(): Operation[] {
 			? 200
 			: Math.max(Math.round(Math.min(doc.width, doc.height) / 4), 1);
 	const logo = library.brand?.logo;
-	const only =
-		doc !== null && selection.length === 1
-			? findLayer(doc.layers, selection[0] ?? "")
-			: undefined;
-	const row =
-		doc !== null && only !== undefined
-			? treeRows(doc.layers, new Set()).find((r) => r.layer.id === only.id)
-			: undefined;
+	const only = useMemo(
+		() =>
+			doc !== null && selection.length === 1
+				? findLayer(doc.layers, selection[0] ?? "")
+				: undefined,
+		[doc, selection],
+	);
+	const row = useMemo(
+		() =>
+			doc !== null && only !== undefined
+				? treeRows(doc.layers, new Set()).find((r) => r.layer.id === only.id)
+				: undefined,
+		[doc, only],
+	);
 	const order = (direction: "up" | "down"): void => {
 		const move = row === undefined ? null : step(row, direction);
 		if (move !== null) void send([moveOp(move)]);
@@ -160,7 +166,7 @@ export function useOperations(): Operation[] {
 			shortcut: "undo",
 			disabled: busy || !ready,
 			testId: "image-undo",
-			run: () => void store.undo(),
+			run: () => void imageStore.getState().undo(),
 		},
 		{
 			id: "redo",
@@ -170,7 +176,7 @@ export function useOperations(): Operation[] {
 			shortcut: "redo",
 			disabled: busy || !ready,
 			testId: "image-redo",
-			run: () => void store.redo(),
+			run: () => void imageStore.getState().redo(),
 		},
 		{
 			id: "add-text",
@@ -384,7 +390,7 @@ export function useOperations(): Operation[] {
 			shortcut: "zoomOut",
 			disabled: !ready,
 			testId: "image-zoom-out",
-			run: () => store.zoomBy(1 / ZOOM_STEP),
+			run: () => imageStore.getState().zoomBy(1 / ZOOM_STEP),
 		},
 		{
 			id: "zoom-in",
@@ -394,7 +400,7 @@ export function useOperations(): Operation[] {
 			shortcut: "zoomIn",
 			disabled: !ready,
 			testId: "image-zoom-in",
-			run: () => store.zoomBy(ZOOM_STEP),
+			run: () => imageStore.getState().zoomBy(ZOOM_STEP),
 		},
 		{
 			id: "zoom-fit",
@@ -404,7 +410,7 @@ export function useOperations(): Operation[] {
 			shortcut: "fit",
 			disabled: !ready,
 			testId: "image-zoom-fit",
-			run: () => store.fitView(),
+			run: () => imageStore.getState().fitView(),
 		},
 		{
 			id: "zoom-actual",
@@ -414,7 +420,7 @@ export function useOperations(): Operation[] {
 			shortcut: "actual",
 			disabled: !ready,
 			testId: "image-zoom-100",
-			run: () => store.actualSize(),
+			run: () => imageStore.getState().actualSize(),
 		},
 	];
 }

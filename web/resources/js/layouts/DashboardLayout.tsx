@@ -1,16 +1,18 @@
 import { usePage } from "@inertiajs/react";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import ChatDock from "@/dashboard/chat/ChatDock";
-import { useChat } from "@/dashboard/chat/useChat";
 import Sidebar, { useSidebar } from "@/dashboard/Sidebar";
 import { useT } from "@/lib/i18n";
 import type { SharedProps } from "@/types";
 import ConnectedSceneBar from "../shell/ConnectedSceneBar";
 import NotificationBell from "../shell/NotificationBell";
 import { approvalsWaiting } from "../shell/notifications";
-import { projectInUrl, ShellProvider, useShell } from "../shell/ShellContext";
+import {
+	LiveShellProvider,
+	projectInUrl,
+	useShellSelector,
+} from "../shell/ShellContext";
 import TopBar from "../shell/TopBar";
-import { useInbox } from "../shell/useInbox";
 import { usePageVisible } from "../shell/usePageVisible";
 
 // The path of the page the person was on: a change of page moves the focus to the main region, so a
@@ -27,17 +29,13 @@ export default function DashboardLayout({
 	children: ReactNode;
 }): ReactNode {
 	const page = usePage<SharedProps>();
-	// One read of the agent session for the whole frame: the scene bar and the panel show the same one. Their
-	// streams are held only while the tab is on the screen (usePageVisible).
+	// One read of the agent session and inbox for the whole frame, isolated in a
+	// vanilla store so SSE chat/inbox updates never re-render the page children.
 	const visible = usePageVisible();
-	const chat = useChat(visible, projectInUrl(page.url));
-	// One read of everything that waits for a person (the chat permissions and the approvals): the bell, the center,
-	// the scene bar and the count of the sidebar read it, over one stream instead of one per source.
-	const inbox = useInbox(visible);
 	return (
-		<ShellProvider chat={chat} inbox={inbox}>
+		<LiveShellProvider visible={visible} projectId={projectInUrl(page.url)}>
 			<Frame>{children}</Frame>
-		</ShellProvider>
+		</LiveShellProvider>
 	);
 }
 
@@ -46,7 +44,9 @@ function Frame({ children }: { children: ReactNode }): ReactNode {
 	const page = usePage<SharedProps>();
 	const main = useRef<HTMLElement>(null);
 	const sidebar = useSidebar();
-	const { inbox } = useShell();
+	const pendingApprovals = useShellSelector((s) =>
+		approvalsWaiting(s.inbox.rows),
+	);
 	const [menuOpen, setMenuOpen] = useState(false);
 	const path = page.url.split(/[?#]/)[0] ?? page.url;
 	useEffect(() => {
@@ -88,7 +88,7 @@ function Frame({ children }: { children: ReactNode }): ReactNode {
 				user={page.props.auth?.user ?? null}
 				account={page.props.account ?? null}
 				person={page.props.session?.privileged ?? false}
-				pendingApprovals={approvalsWaiting(inbox.rows)}
+				pendingApprovals={pendingApprovals}
 				drawerOpen={menuOpen}
 				onDrawerOpenChange={setMenuOpen}
 			/>
