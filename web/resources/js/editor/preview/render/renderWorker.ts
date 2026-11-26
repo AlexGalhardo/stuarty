@@ -1,4 +1,4 @@
-import { cutRows, evenAround, whole } from "./pixels";
+import { cutRows, decodeVideoPlanes, evenAround, whole } from "./pixels";
 import type {
 	FromRenderWorker,
 	PixelSource,
@@ -90,12 +90,40 @@ async function cutSource(
 		const outer = rect ? evenAround(area, frameWidth, frameHeight) : area;
 		const copy = new Uint8Array(outer.w * outer.h * 4);
 		// The browser converts from the colour tags of the proxy (SDD-013 5.3.6).
-		await source.copyTo(copy, {
+		const layouts = await source.copyTo(copy, {
 			format: "RGBA",
 			rect: { x: outer.x, y: outer.y, width: outer.w, height: outer.h },
 			colorSpace: "srgb",
 		});
-		return { width: area.w, height: area.h, rgba: cutRows(copy, outer, area) };
+		if (layouts.length === 1 && layouts[0].stride >= outer.w * 4) {
+			return {
+				width: area.w,
+				height: area.h,
+				rgba: cutRows(copy, outer, area),
+			};
+		}
+		// WebKitGTK ignores options.format in VideoFrame.copyTo and writes native
+		// YUV planes instead. Copy the full native planes and convert the crop.
+		const full = new Uint8Array(source.allocationSize());
+		const fullLayouts = await source.copyTo(full);
+		const ox = source.visibleRect?.x ?? 0;
+		const oy = source.visibleRect?.y ?? 0;
+		return {
+			width: area.w,
+			height: area.h,
+			rgba: decodeVideoPlanes(
+				full,
+				fullLayouts,
+				source.format,
+				source.colorSpace,
+				{
+					x: ox + area.x,
+					y: oy + area.y,
+					w: area.w,
+					h: area.h,
+				},
+			),
+		};
 	}
 	const bitmap = source as unknown as ImageBitmap;
 	const x = Math.round(rect?.x ?? 0);
