@@ -114,8 +114,19 @@ async function cutSource(
 				rgba: cutRows(copy, outer, area),
 			};
 		}
-		// WebKitGTK ignores options.format in VideoFrame.copyTo and writes native
-		// YUV planes instead. Copy the full native planes and convert the crop.
+		// WebKitGTK ignores the RGBA request and reads I420 luma with the frame
+		// width instead of the padded source stride. Its image conversion uses
+		// the native frame layout. Convert the full frame before cropping since
+		// that version also ignores a VideoFrame's source crop in createImageBitmap.
+		const bitmap = await createImageBitmap(source).catch(() => undefined);
+		if (bitmap) {
+			try {
+				return cutBitmap(bitmap, area);
+			} finally {
+				bitmap.close();
+			}
+		}
+		// Keep the native fallback for browsers that cannot draw a VideoFrame.
 		const layout = videoPlaneLayout(source.format, frameWidth, frameHeight);
 		const options = layout ? { layout } : undefined;
 		const full = new Uint8Array(source.allocationSize(options));
@@ -133,10 +144,19 @@ async function cutSource(
 		};
 	}
 	const bitmap = source as unknown as ImageBitmap;
-	const x = Math.round(rect?.x ?? 0);
-	const y = Math.round(rect?.y ?? 0);
-	const width = Math.round(rect?.w ?? bitmap.width);
-	const height = Math.round(rect?.h ?? bitmap.height);
+	return cutBitmap(bitmap, {
+		x: Math.round(rect?.x ?? 0),
+		y: Math.round(rect?.y ?? 0),
+		w: Math.round(rect?.w ?? bitmap.width),
+		h: Math.round(rect?.h ?? bitmap.height),
+	});
+}
+
+function cutBitmap(
+	bitmap: ImageBitmap,
+	area: { x: number; y: number; w: number; h: number },
+): Pixels {
+	const { x, y, w: width, h: height } = area;
 	const canvas = new OffscreenCanvas(width, height);
 	const context = canvas.getContext("2d", { willReadFrequently: true });
 	if (context === null) throw new Error("no 2d context");
