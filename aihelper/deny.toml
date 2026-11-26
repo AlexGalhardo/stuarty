@@ -22,6 +22,11 @@ unused-allowed-license = "allow"
 multiple-versions = "warn"
 wildcards = "deny"
 
+[advisories]
+version = 2
+ignore = []
+
 [sources]
 unknown-registry = "deny"
 unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]

@@ -26,6 +26,9 @@ pub fn open() -> Option<GpuRenderer> {
 			Err(e) => panic!("the adapter exists but the device failed: {e}"),
 		}
 	}
+	if std::env::var("CI").is_ok() {
+		panic!("no graphics adapter available on CI runner (install mesa-vulkan-drivers for lavapipe)");
+	}
 	eprintln!("SKIP: no graphics adapter on this machine");
 	None
 }

@@ -15,7 +15,7 @@ The desktop application is new. A release lists an installer for Windows 11, a d
 
 ## The idea
 
-The desktop application is a small shell around the same program. It starts `stuarty serve` on a free port of `127.0.0.1`, waits until the server is up, and opens the editor in one native window. It has no editing logic of its own: the window shows the same editor you get in a browser, over the same [workspace](/docs/workspace), and no sign-in is needed because the server runs in local mode on your machine.
+The desktop application is a small shell around the same program. It starts `stuarty serve` on a free port of `127.0.0.1`, waits until the server is up, and opens the editor in one native window. It has no editing logic of its own: the window shows the same editor you get in a browser, over the same [workspace](/docs/workspace), protected by your local [account](/docs/account).
 
 Closing the window, choosing Quit, or a crash of the shell stops the server it started. The window cannot leave its own server: if a page ends at another address, the shell sends the window back to the editor.
 
@@ -29,9 +29,9 @@ go build -o dist/stuarty.exe ./web/cmd/app
 cd desktop/shell/app && go build -ldflags "-H windowsgui" -o ../../../dist/stuarty-desktop.exe .
 ```
 
-Put the two files in one folder and double-click `stuarty-desktop.exe`. To use a server program in another place, start it as `stuarty-desktop -binary <path to stuarty>`. The first start can take tens of seconds while the window component starts; later starts are faster.
+Put the two files in one folder and set `STUARTY_HOME` to a development folder (a dev build refuses the default `~/.stuarty` workspace with `E_INVALID_STATE` unless built with `-ldflags "-H windowsgui -X main.version=<release>"`), then start `stuarty-desktop.exe`. To use a server program in another place, start it as `stuarty-desktop -binary <path to stuarty>`. The first start can take tens of seconds while the window component starts; later starts are faster.
 
-The workspace is `~/.stuarty`, or the folder in `STUARTY_HOME` if you set it before you start the application. You can still run the same server with `stuarty serve` and open it in a browser with `stuarty open`; the two are the same data. The browser window is not a person's session, though: there the buttons that need a person (approve or reject, the rules and the ceilings, set a price, keep a memory note, mark a skill as read) are shown disabled with the reason, and you do those in the desktop app (see [Approvals](/docs/guide/approvals)).
+The workspace is `~/.stuarty` for release builds, or the folder in `STUARTY_HOME` if you set it before you start the application. You can also run the same server with `stuarty serve` and open it in a browser with `stuarty open`: once you sign in with your local [account](/docs/account), both the desktop window and the browser session have full person privileges (see [Approvals](/docs/guide/approvals)).
 
 ## Automate the window
 

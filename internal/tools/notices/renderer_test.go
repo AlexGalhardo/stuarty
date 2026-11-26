@@ -48,15 +48,52 @@ func TestRendererToolchainIsPinned(t *testing.T) {
 		}
 	}
 
-	if _, err := os.Stat(filepath.Join(root, "renderer", "Cargo.lock")); err != nil {
-		t.Errorf("Cargo.lock must be committed: %v", err)
+	for _, lock := range [][]string{
+		{"renderer", "Cargo.lock"},
+		{"aihelper", "Cargo.lock"},
+		{"capture", "Cargo.lock"},
+	} {
+		if _, err := os.Stat(filepath.Join(append([]string{root}, lock...)...)); err != nil {
+			t.Errorf("%s must be committed: %v", filepath.Join(lock...), err)
+		}
 	}
 
-	dep := regexp.MustCompile(`(?m)^([a-z0-9_-]+) = "([^"]+)"$`)
+	bareDep := regexp.MustCompile(`^([a-z0-9_-]+) = "([^"]+)"$`)
+	tableDep := regexp.MustCompile(`^([a-z0-9_-]+) = \{[^}]*version = "([^"]+)"`)
 
-	for _, m := range dep.FindAllStringSubmatch(readFile(t, root, "renderer", "stuarty-renderer", "Cargo.toml"), -1) {
-		if !strings.HasPrefix(m[2], "=") && m[1] != "name" && m[1] != "description" && m[1] != "version" {
-			t.Errorf("crate %s is at %q, want an exact version (=x.y.z)", m[1], m[2])
+	manifests := [][]string{
+		{"renderer", "stuarty-renderer", "Cargo.toml"},
+		{"renderer", "stuarty-renderer-gpu", "Cargo.toml"},
+		{"renderer", "stuarty-renderer-text", "Cargo.toml"},
+		{"aihelper", "Cargo.toml"},
+		{"capture", "Cargo.toml"},
+	}
+
+	for _, rel := range manifests {
+		content := readFile(t, root, rel...)
+		label := filepath.Join(rel...)
+		inDeps := false
+
+		for line := range strings.SplitSeq(content, "\n") {
+			trimmed := strings.TrimSpace(line)
+			if strings.HasPrefix(trimmed, "[") {
+				inDeps = strings.HasSuffix(trimmed, "dependencies]")
+				continue
+			}
+
+			if !inDeps || trimmed == "" || strings.HasPrefix(trimmed, "#") {
+				continue
+			}
+
+			if m := bareDep.FindStringSubmatch(trimmed); m != nil {
+				if !strings.HasPrefix(m[2], "=") {
+					t.Errorf("%s: crate %s is at %q, want an exact version (=x.y.z)", label, m[1], m[2])
+				}
+			} else if m := tableDep.FindStringSubmatch(trimmed); m != nil {
+				if !strings.HasPrefix(m[2], "=") {
+					t.Errorf("%s: crate %s is at %q, want an exact version (=x.y.z)", label, m[1], m[2])
+				}
+			}
 		}
 	}
 }
