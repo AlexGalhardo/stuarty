@@ -7,7 +7,7 @@ license.workspace = true
 publish.workspace = true
 
 [dependencies]
-harfrust = "=0.16.0"
+harfrust = "=0.16.1"
 skrifa = "=0.50.0"
 unicode-bidi = "=0.3.18"
 unicode-linebreak = "=0.1.5"
