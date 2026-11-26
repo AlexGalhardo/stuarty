@@ -6,6 +6,7 @@ import {
 	useState,
 	useSyncExternalStore,
 } from "react";
+import { flushSync } from "react-dom";
 import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -55,7 +56,9 @@ export default function Library({
 	// The panel shows only the media; the import controls open from the button of the header (final design 05).
 	const [importOpen, setImportOpen] = useState(false);
 	useEffect(() => {
-		const open = (): void => setImportOpen(true);
+		// Rendered at once: openImport focuses the path field on the next frame, and a plain state update from a
+		// window event may land after it, while the field is still hidden.
+		const open = (): void => flushSync(() => setImportOpen(true));
 		window.addEventListener(OPEN_IMPORT_EVENT, open);
 		return () => window.removeEventListener(OPEN_IMPORT_EVENT, open);
 	}, []);

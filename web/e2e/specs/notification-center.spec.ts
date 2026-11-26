@@ -125,7 +125,7 @@ const JSON_HEADERS = {
 
 async function signInAsPerson(page: Page): Promise<void> {
 	await ensureAccount(page.request, home);
-	await signInWithPassword(page.request);
+	await signInWithPassword(page);
 }
 
 async function send(

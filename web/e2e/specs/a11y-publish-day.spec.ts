@@ -101,7 +101,7 @@ for (const { lang, theme, day } of COMBINATIONS) {
 			);
 			// A person: only a person marks a quiet day (D-146).
 			await ensureAccount(page.request, home);
-			await signInWithPassword(page.request);
+			await signInWithPassword(page);
 			const api = await caller(request);
 			const zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 			await api("PUT", `/calendar/days/${day}`, {

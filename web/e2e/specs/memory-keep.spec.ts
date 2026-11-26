@@ -17,7 +17,7 @@ test.describe("keeping a memory note", () => {
 		});
 
 		await ensureAccount(page.request, home);
-		await signInWithPassword(page.request);
+		await signInWithPassword(page);
 		await page.goto("/memory");
 		await page.locator(`[data-entry='${name}']`).click();
 
@@ -56,7 +56,7 @@ test.describe("keeping a memory note", () => {
 		});
 
 		await ensureAccount(page.request, home);
-		await signInWithPassword(page.request);
+		await signInWithPassword(page);
 		await page.goto("/memory");
 		const row = page
 			.locator("[data-slot=list-row]")
@@ -83,7 +83,7 @@ test.describe("keeping a memory note", () => {
 		});
 
 		await ensureAccount(page.request, home);
-		await signInWithPassword(page.request);
+		await signInWithPassword(page);
 		await page.goto("/memory");
 		const row = page.locator(`[data-entry='${waiting}']`);
 		await expect(

@@ -134,7 +134,7 @@ async function fakeProvider(model: string): Promise<FakeProvider> {
 // of its own (playwright.config.ts), and never locks the one the other specs share.
 async function signInAsPerson(page: Page): Promise<void> {
 	await ensureAccount(page.request, home);
-	await signInWithPassword(page.request);
+	await signInWithPassword(page);
 	await page.goto("/");
 }
 

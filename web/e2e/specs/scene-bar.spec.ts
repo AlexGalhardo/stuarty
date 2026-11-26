@@ -94,7 +94,7 @@ const JSON_HEADERS = {
 // A person drives the chat: the session of the desktop app, whose launch carries the launcher secret.
 async function signInAsPerson(page: Page): Promise<void> {
 	await ensureAccount(page.request, home);
-	await signInWithPassword(page.request);
+	await signInWithPassword(page);
 }
 
 async function send(
