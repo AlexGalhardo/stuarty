@@ -158,8 +158,8 @@ func (s *svc) RecordingPrepare(ctx context.Context, req RecordingPrepareRequest)
 		return nil, err
 	}
 
-	if head, gerr := s.store.Productions().Get(ctx, req.ProjectID); gerr != nil || head.State == ProjectTrashed {
-		return nil, projectNotFound(req.ProjectID, gerr)
+	if gerr := s.recordingProject(ctx, c, req.ProjectID, false); gerr != nil {
+		return nil, gerr
 	}
 
 	if req.ScriptID != "" {
