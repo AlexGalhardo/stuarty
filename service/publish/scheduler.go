@@ -293,9 +293,9 @@ func (s *Scheduler) send(ctx context.Context, t Target) {
 
 	close(done)
 
-	// A shutdown interrupts the send: the target stays claimed, its lease runs out and the next process
-	// resumes it with the same upload key.
-	if ctx.Err() != nil {
+	// A shutdown or a lost lease interrupts the send: the target stays claimed (or is now owned by another
+	// scheduler) and is left for ActionResume instead of being marked failed.
+	if sendCtx.Err() != nil {
 		return
 	}
 

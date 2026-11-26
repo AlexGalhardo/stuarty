@@ -630,3 +630,44 @@ func TestSchedulerPausedPastTheWindowIsMissedNotSent(t *testing.T) {
 		t.Fatalf("state = %s, want missed", tg.State)
 	}
 }
+
+// When the heartbeat cannot renew the lease (e.g., another scheduler took over), sendCtx is cancelled
+// while the parent ctx is still alive. Scheduler.send must leave the target claimed/resumable rather
+// than calling Finish with a permanent "internal" failure.
+func TestSchedulerLeaseLossLeavesTargetResumable(t *testing.T) {
+	t.Parallel()
+
+	r := newSchedRig(t)
+	r.gw.block = make(chan struct{})
+	p, id := r.plan(time.Minute, nil)
+	s := r.scheduler("owner-a")
+
+	r.clock.advance(time.Minute)
+
+	if n, err := s.Tick(context.Background()); err != nil || n != 1 {
+		t.Fatalf("tick = %d, %v; want 1", n, err)
+	}
+
+	waitFor(t, "the heartbeat to wait on the clock", func() bool { return r.clock.pending() > 0 })
+
+	// Simulate lease takeover by another owner so owner-a's renewal fails and cancels sendCtx.
+	cur, err := r.env.store.Get(context.Background(), p.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	cur.Target(id).LeaseOwner = "owner-b"
+
+	if err := r.env.store.Save(context.Background(), &cur); err != nil {
+		t.Fatal(err)
+	}
+
+	r.clock.advance(core.Lease / 3)
+	s.Wait()
+
+	got := r.target(p, id)
+	if got.State != core.TargetPublishing || got.LeaseOwner != "owner-b" {
+		t.Fatalf("target after lease loss = state %s owner %q, want publishing / owner-b",
+			got.State, got.LeaseOwner)
+	}
+}

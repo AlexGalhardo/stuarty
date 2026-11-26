@@ -379,8 +379,16 @@ func (s *svc) ensureReserved(ctx context.Context, job *JobRow) error {
 		st := tx.Approvals()
 
 		req, err := st.RequestOfJob(ctx, job.ID)
-		if err != nil || req.Estimate.Micros == 0 {
-			return nil //nolint:nilerr // a job with no request or no cost reserves nothing
+		if errors.Is(err, approval.ErrNotFound) {
+			return nil
+		}
+
+		if err != nil {
+			return err
+		}
+
+		if req.Estimate.Micros == 0 {
+			return nil
 		}
 
 		if ok, err := st.Reserved(ctx, job.ID); err != nil || ok {
@@ -462,10 +470,13 @@ func (s *svc) finishCost(ctx context.Context, job *JobRow, cost *core.Money) {
 
 	cur, err := s.store.Jobs().Get(ctx, job.ID)
 	if err != nil {
+		s.logJob(ctx, slog.LevelError, "could not load job to settle cost ledger", job,
+			slog.String("error", err.Error()))
+
 		return
 	}
 
-	_ = s.store.Write(ctx, func(ctx context.Context, tx Tx) error {
+	if werr := s.store.Write(ctx, func(ctx context.Context, tx Tx) error {
 		st, now := tx.Approvals(), s.nowMs()
 
 		switch {
@@ -482,15 +493,22 @@ func (s *svc) finishCost(ctx context.Context, job *JobRow, cost *core.Money) {
 		}
 
 		return nil
-	})
+	}); werr != nil {
+		s.logJob(ctx, slog.LevelError, "could not settle cost ledger", job,
+			slog.String("error", werr.Error()))
+	}
 }
 
 // recordInterrupted records what a run spent before a shutdown interrupted it, as a settled entry of
 // its own, without touching the reservation of the job.
 func (s *svc) recordInterrupted(ctx context.Context, st approval.Store, jobID string, spent, now int64) error {
 	req, err := st.RequestOfJob(ctx, jobID)
+	if errors.Is(err, approval.ErrNotFound) {
+		return nil
+	}
+
 	if err != nil {
-		return nil //nolint:nilerr // a job with no request has no ledger
+		return err
 	}
 
 	e := s.ledgerEntry(&req, 0, now)
@@ -503,8 +521,12 @@ func (s *svc) recordInterrupted(ctx context.Context, st approval.Store, jobID st
 // settled entry, so what was spent is never lost.
 func (s *svc) recordActual(ctx context.Context, st approval.Store, jobID string, cost *core.Money, now int64) error {
 	req, err := st.RequestOfJob(ctx, jobID)
+	if errors.Is(err, approval.ErrNotFound) {
+		return nil
+	}
+
 	if err != nil {
-		return nil //nolint:nilerr // a job with no request has no ledger
+		return err
 	}
 
 	actual := req.Estimate.Micros

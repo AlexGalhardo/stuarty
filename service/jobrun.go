@@ -180,6 +180,10 @@ func (s *svc) RunJob(ctx context.Context, jobID string) (err error) {
 			defer fcancel()
 
 			_ = s.finishFailed(fctx, &job, JobFailed, internalError())
+			if s.kindOf(job.Kind) != nil {
+				s.finishCost(fctx, &job, nil)
+			}
+
 			err = nil
 		}
 	}()
@@ -190,6 +194,9 @@ func (s *svc) RunJob(ctx context.Context, jobID string) (err error) {
 		defer fcancel()
 
 		_ = s.finishFailed(fctx, &job, JobFailed, internalError())
+		if s.kindOf(job.Kind) != nil {
+			s.finishCost(fctx, &job, nil)
+		}
 
 		return gerr
 	}
@@ -202,7 +209,12 @@ func (s *svc) RunJob(ctx context.Context, jobID string) (err error) {
 		fctx, fcancel := context.WithTimeout(context.WithoutCancel(ctx), finishTimeout)
 		defer fcancel()
 
-		return s.finishFailed(fctx, &job, JobFailed, lockedError())
+		ferr := s.finishFailed(fctx, &job, JobFailed, lockedError())
+		if s.kindOf(job.Kind) != nil {
+			s.finishCost(fctx, &job, nil)
+		}
+
+		return ferr
 	}
 
 	jctx, cancel := context.WithCancel(ctx)

@@ -169,13 +169,13 @@ type rotated struct{ from, to string }
 
 ## Done criteria
 
-- [ ] `grep -n 'nolint:nilerr' service/approval_jobs.go` returns no matches
-- [ ] `go test -race -count=1 ./service/publish/...` exits 0 including lease-loss test
-- [ ] `go test -race -count=1 ./service/social/...` exits 0 including 3-way rotation test
-- [ ] `go test -race -count=1 -run 'Approval|Cost|Locked' ./web/app/servicetest/` exits 0 including new reservation-release tests
-- [ ] `task lint:go && task vet` exits 0
-- [ ] No files outside the in-scope list are modified (`git status`)
-- [ ] `improve/README.md` status row updated
+- [x] `grep -n 'nolint:nilerr' service/approval_jobs.go` returns no matches
+- [x] `go test -race -count=1 ./service/publish/...` exits 0 including lease-loss test
+- [x] `go test -race -count=1 ./service/social/...` exits 0 including 3-way rotation test
+- [x] `go test -race -count=1 -run 'Approval|Cost|Locked' ./web/app/servicetest/` exits 0 including new reservation-release tests
+- [x] `task lint:go && task vet` exits 0
+- [x] No files outside the in-scope list are modified (`git status`)
+- [x] `improve/README.md` status row updated
 
 ## STOP conditions
 
