@@ -64,6 +64,17 @@ func (s *oneStore) Get(context.Context, string) (Row, error) {
 	return Row{ID: "whk_a", URL: "https://hooks.example.com/h", Enabled: true}, nil
 }
 
+func (s *oneStore) NextDue(context.Context) (int64, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if s.del.State != core.StatePending {
+		return 0, nil
+	}
+
+	return s.del.NextMs, nil
+}
+
 func (s *oneStore) GetDelivery(context.Context, string, string) (Delivery, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -130,6 +141,23 @@ func newOne(t *testing.T, parallel int) (*Dispatcher, *oneStore, *countingDoer, 
 	})
 
 	return d, st, doer, clock
+}
+
+func TestDispatcherRunStopsAfterCancellation(t *testing.T) {
+	t.Parallel()
+
+	d, _, doer, _ := newOne(t, 1)
+	ctx, cancel := context.WithCancel(t.Context())
+	defer cancel()
+	doer.before = cancel
+
+	if err := d.Run(ctx); !errors.Is(err, context.Canceled) {
+		t.Fatalf("Run = %v, want context cancellation", err)
+	}
+
+	if got := doer.count(); got != 1 {
+		t.Fatalf("receiver called %d times, want 1", got)
+	}
 }
 
 // A result that cannot be stored leaves the row due. The receiver must not be called again at once, and again, for as

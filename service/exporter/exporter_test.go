@@ -3,7 +3,9 @@ package exporter
 import (
 	"context"
 	"errors"
+	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/AlexGalhardo/stuarty/core/timeline"
@@ -69,5 +71,82 @@ func TestJobCarriesTheGPUHost(t *testing.T) {
 	job := a.job(service.ExportInput{}, nil, nil)
 	if job.GPUHost != host || job.PixelRenderer != export.PixelRendererGPU {
 		t.Fatalf("job = %q %q, want %q gpu", job.GPUHost, job.PixelRenderer, host)
+	}
+}
+
+func TestDescribeReportsTheVerificationChecksForEachOutput(t *testing.T) {
+	t.Parallel()
+
+	settings := timeline.Settings{Width: 960, Height: 540}
+	for _, tc := range []struct {
+		format       export.Format
+		video, audio string
+		check, part  string
+	}{
+		{export.FormatGIF, "gif", "", "dimensions", "480x270 (reduced"},
+		{export.FormatWAV, "", "pcm_s16le", "streams", "48000 Hz stereo"},
+		{export.FormatAAC, "", "aac", "faststart", "moov before mdat"},
+		{export.FormatMP4, "h264", "aac", "pixel_format", "yuv420p"},
+	} {
+		t.Run(string(tc.format), func(t *testing.T) {
+			t.Parallel()
+			video, audio, checks := describe(&export.Result{
+				Format: tc.format, Width: 480, Height: 270, DurationMS: 1000, Frames: 30,
+			}, settings)
+			if video != tc.video || audio != tc.audio {
+				t.Fatalf("codecs = %q, %q", video, audio)
+			}
+			for _, check := range checks {
+				if check.Name == tc.check && check.OK && strings.Contains(check.Detail, tc.part) {
+					return
+				}
+			}
+			t.Fatalf("missing %q check with %q in %+v", tc.check, tc.part, checks)
+		})
+	}
+}
+
+func TestOutputDigestReadsThePublishedBytes(t *testing.T) {
+	t.Parallel()
+
+	path := filepath.Join(t.TempDir(), "export.mp4")
+	if _, err := sha256File(path); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("digest before the file exists: %v", err)
+	}
+	if err := os.WriteFile(path, []byte("hello"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	const helloSHA256 = "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
+	if digest, err := sha256File(path); err != nil || digest != helloSHA256 {
+		t.Fatalf("digest = %q, %v", digest, err)
+	}
+}
+
+func TestAudioAdapterRequiresARunnerAndDocument(t *testing.T) {
+	t.Parallel()
+
+	for _, cfg := range []Config{{}, {Runner: &ffmpeg.Runner{}}} {
+		a := &adapter{cfg: cfg}
+		_, measureErr := a.MeasureAudio(t.Context(), service.AudioMeasureInput{})
+		previewErr := a.RenderAudioPreview(t.Context(), service.AudioPreviewInput{})
+		for _, err := range []error{measureErr, previewErr} {
+			if ff, ok := errors.AsType[*ffmpeg.Error](err); !ok || ff.Code != "E_INTERNAL" {
+				t.Fatalf("empty audio request returned %v, want E_INTERNAL", err)
+			}
+		}
+	}
+}
+
+func TestAudioExportResolvesThePresetWithoutDetectingAVideoEncoder(t *testing.T) {
+	t.Parallel()
+	a := &adapter{}
+	in := service.ExportInput{Format: string(export.FormatWAV), Preset: "missing"}
+	if _, _, err := a.codecPlan(t.Context(), in, nil); err == nil {
+		t.Fatal("an unknown preset was accepted")
+	}
+	in.Preset = "youtube-shorts"
+	preset, plan, err := a.codecPlan(t.Context(), in, nil)
+	if err != nil || preset == nil || preset.ID != in.Preset || plan.Codec != "" {
+		t.Fatalf("audio codec plan = %+v, %+v, %v", preset, plan, err)
 	}
 }
