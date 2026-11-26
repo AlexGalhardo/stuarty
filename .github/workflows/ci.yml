@@ -149,6 +149,8 @@ jobs:
           - { os: ubuntu-latest, shard: export-5, export_n: 5 }
           - { os: ubuntu-latest, shard: engine }
           - { os: ubuntu-latest, shard: web-app }
+          - { os: ubuntu-latest, shard: web-owner-1, named_n: 2 }
+          - { os: ubuntu-latest, shard: web-owner-2, named_n: 2 }
           - { os: ubuntu-latest, shard: web-http-1, named_n: 3 }
           - { os: ubuntu-latest, shard: web-http-2, named_n: 3 }
           - { os: ubuntu-latest, shard: web-http-3, named_n: 3 }
@@ -170,6 +172,8 @@ jobs:
           - { os: windows-latest, shard: export-5, export_n: 5 }
           - { os: windows-latest, shard: engine }
           - { os: windows-latest, shard: web-app }
+          - { os: windows-latest, shard: web-owner-1, named_n: 2 }
+          - { os: windows-latest, shard: web-owner-2, named_n: 2 }
           - { os: windows-latest, shard: web-http-1, named_n: 3 }
           - { os: windows-latest, shard: web-http-2, named_n: 3 }
           - { os: windows-latest, shard: web-http-3, named_n: 3 }
@@ -191,6 +195,8 @@ jobs:
           - { os: macos-latest, shard: export-3, export_n: 3 }
           - { os: macos-latest, shard: engine }
           - { os: macos-latest, shard: web-app }
+          - { os: macos-latest, shard: web-owner-1, named_n: 2 }
+          - { os: macos-latest, shard: web-owner-2, named_n: 2 }
           - { os: macos-latest, shard: web-http-1, named_n: 3 }
           - { os: macos-latest, shard: web-http-2, named_n: 3 }
           - { os: macos-latest, shard: web-http-3, named_n: 3 }
@@ -271,14 +277,17 @@ jobs:
               exit
               ;;
             engine) pkgs="$(go list ./engine/... | grep -vE '/engine/export$')" ;;
-            service-* | contract-* | web-http-* | core-cmd-*)
-              # The four packages that dominate `rest` and `core-service`: every test builds a store with every migration,
-              # web/contract starts real servers, web/app/http took 801 s on ubuntu-latest (run 45844318920) and
-              # core/command ran past 17 min with -race on macos-latest (run 45856787504). Sharded by sorted name with -race.
+            service-* | contract-* | web-http-* | web-owner-* | core-cmd-*)
+              # The five packages that dominate `rest`, `web-app` and `core-service`: every test builds a store with
+              # every migration, web/contract starts real servers, web/app/http took 801 s on ubuntu-latest
+              # (run 45844318920), web/app/owner took 533 s on windows-latest and timed out web-app on macos-latest
+              # (run 45881524592), and core/command ran past 17 min with -race on macos-latest (run 45856787504).
+              # Sharded by sorted name with -race.
               case "$SHARD" in
                 service-*) pkg=./web/app/servicetest/ ;;
                 contract-*) pkg=./web/contract/ ;;
                 web-http-*) pkg=./web/app/http/ ;;
+                web-owner-*) pkg=./web/app/owner/ ;;
                 core-cmd-*) pkg=./core/command/ ;;
               esac
               # Fuzz targets too: without -fuzz they run their seed corpus (FuzzBundleArchive, SDD-007 T-20).
@@ -287,8 +296,14 @@ jobs:
               go test -race -count=1 -timeout=17m $cover_flags -run "^(${names})"'$' "$pkg"
               exit
               ;;
-            web-app) pkgs="$(go list ./web/app/... ./web/cmd/... ./web/database/... | grep -vE '/web/app/servicetest$|/web/app/http$')" ;;
-            core-service) pkgs="$(go list ./... | grep -vE '/engine(/|$)|/core/command$|/web/app(/|$)|/web/cmd(/|$)|/web/database(/|$)|/web/contract$')" ;;
+            web-app) pkgs="$(go list ./web/app/... ./web/cmd/... ./web/database/... | grep -vE '/web/app/servicetest$|/web/app/http$|/web/app/owner$')" ;;
+            core-service)
+              # Warm the non-race build cache for ./web/cmd/app once so web/e2e/netmode and web/e2e/security do not
+              # race a cold compile under their 5-minute build timeouts on macos-latest (run 45881524592).
+              go build -o "${RUNNER_TEMP}/stuarty-warmup" ./web/cmd/app
+              rm -f "${RUNNER_TEMP}/stuarty-warmup"
+              pkgs="$(go list ./... | grep -vE '/engine(/|$)|/core/command$|/web/app(/|$)|/web/cmd(/|$)|/web/database(/|$)|/web/contract$')"
+              ;;
           esac
           # shellcheck disable=SC2086
           go test -race -count=1 -timeout=17m $cover_flags $pkgs
