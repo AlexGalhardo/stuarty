@@ -59,7 +59,24 @@ func (s *state) verify(ctx context.Context, partial string, frames int, codec ex
 	if err != nil {
 		return Verified{}, exportErr(ReasonRender, "The verification command was refused.", err, "")
 	}
+	pargv, err := ffargs.ProbeEncodedPackets(pol, partial)
+	if err != nil {
+		return Verified{}, exportErr(ReasonRender, "The verification command was refused.", err, "")
+	}
+
+	type probeOut struct {
+		out    []byte
+		stderr string
+		err    error
+	}
+	pktsCh := make(chan probeOut, 1)
+	go func() {
+		out, res, perr := s.job.Runner.RunFFprobe(ctx, s.dir, pargv, verifyTimeout)
+		pktsCh <- probeOut{out: out, stderr: res.Stderr, err: perr}
+	}()
+
 	raw, res, err := s.job.Runner.RunFFprobe(ctx, s.dir, argv, verifyTimeout)
+	pout := <-pktsCh
 	if err != nil {
 		return Verified{}, wrapRun(err, ReasonRender, "The exported file could not be read back.", res.Stderr)
 	}
@@ -67,15 +84,10 @@ func (s *state) verify(ctx context.Context, partial string, frames int, codec ex
 	if err := json.Unmarshal(raw, &pf); err != nil {
 		return Verified{}, verifyError([]Check{{Name: "readable", Expected: "ffprobe JSON", Got: err.Error()}})
 	}
-
-	pargv, err := ffargs.ProbeEncodedPackets(pol, partial)
-	if err != nil {
-		return Verified{}, exportErr(ReasonRender, "The verification command was refused.", err, "")
+	if pout.err != nil {
+		return Verified{}, wrapRun(pout.err, ReasonRender, "The exported file could not be read back.", pout.stderr)
 	}
-	pkts, pres, err := s.job.Runner.RunFFprobe(ctx, s.dir, pargv, verifyTimeout)
-	if err != nil {
-		return Verified{}, wrapRun(err, ReasonRender, "The exported file could not be read back.", pres.Stderr)
-	}
+	pkts := pout.out
 
 	var failed []Check
 	fail := func(name, expected, got string) { failed = append(failed, Check{name, expected, got}) }

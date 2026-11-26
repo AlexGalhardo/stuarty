@@ -188,7 +188,7 @@ func (s *state) encode(
 		done <- encoderResult{res, err}
 	}()
 
-	const buffers = 2
+	const buffers = 4
 	free, full := make(chan *image.RGBA, buffers), make(chan *image.RGBA, buffers)
 	for range buffers {
 		free <- image.NewRGBA(image.Rect(0, 0, st.Width, st.Height))
