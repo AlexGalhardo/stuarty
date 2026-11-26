@@ -54,6 +54,7 @@ type audioPreviews struct {
 	inflight map[string]bool
 	failed   map[string]time.Time
 	queued   int
+	active   int
 
 	once    sync.Once
 	windows chan struct{} // one window is rendered at a time, and one whole item: two renders at most
@@ -346,6 +347,7 @@ func (s *svc) startPreview(store *cache.Store, known *knownPreview, t *previewTa
 	}
 
 	p.queued++
+	p.active++
 	p.inflight[t.key] = true
 	// Made here, under the lock: the id generator of a service is not asked to be safe for two renders at once.
 	t.job = s.newIDs("job")
@@ -363,6 +365,12 @@ func (s *svc) renderPreview(
 	t previewTarget,
 	lane chan struct{},
 ) {
+	defer func() {
+		s.previews.mu.Lock()
+		s.previews.active--
+		s.previews.mu.Unlock()
+	}()
+
 	lane <- struct{}{}
 
 	err := s.renderPreviewFile(renderer, store, &t)
