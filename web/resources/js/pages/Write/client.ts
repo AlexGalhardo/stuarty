@@ -1,5 +1,4 @@
-import { fromResponse, networkError } from "../../editor/api/errors";
-import { type Transport, TransportError } from "../../editor/api/transport";
+import { callJson, type Transport } from "@/lib/api";
 import type {
 	ChatActivity,
 	ChatSessionListResult,
@@ -274,22 +273,11 @@ export function writingClient(transport: Transport): WritingClient {
 		path: string,
 		body?: unknown,
 	): Promise<T> {
-		let response: Awaited<ReturnType<Transport["send"]>>;
-		try {
-			response = await transport.send({
-				method,
-				path,
-				body,
-				timeoutMs: TIMEOUT_MS,
-			});
-		} catch (error) {
-			if (error instanceof TransportError) throw networkError(error.message);
-			throw error;
-		}
-		if (response.status < 200 || response.status > 299) {
-			throw fromResponse(response.status, response.body);
-		}
-		return response.body as T;
+		return callJson<T>(
+			transport,
+			{ method, path, body, timeoutMs: TIMEOUT_MS },
+			{ retry: false },
+		);
 	}
 
 	const one = (id: string): string => encodeURIComponent(id);

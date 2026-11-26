@@ -43,19 +43,11 @@ func TestToolListHasTheToolsWhoseOperationsExist(t *testing.T) {
 		"publication",
 	}
 	if strings.Join(names, ",") != strings.Join(want, ",") {
-		t.Fatalf("tools = %v, want %v (the others wait for their Service methods: %v)", names, want, Pending)
+		t.Fatalf("tools = %v, want %v", names, want)
 	}
 
 	if list.TTLMs != listTTLMs || list.CacheScope != "public" {
 		t.Errorf("tools/list cache hints = %d %q", list.TTLMs, list.CacheScope)
-	}
-
-	for name, task := range Pending {
-		for _, got := range names {
-			if got == name {
-				t.Errorf("%s is pending (%s) and must not be listed", name, task)
-			}
-		}
 	}
 }
 

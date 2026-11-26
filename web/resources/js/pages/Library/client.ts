@@ -1,5 +1,4 @@
-import { fromResponse, networkError } from "../../editor/api/errors";
-import { type Transport, TransportError } from "../../editor/api/transport";
+import { callJson, type Transport } from "@/lib/api";
 
 // The client of the library operations (SDD-018 section 14): memory notes, skills and prompts. The page
 // computes nothing: it sends what the person wrote and draws what the service answers, the lint, the
@@ -191,22 +190,11 @@ export function libraryClient(transport: Transport): LibraryClient {
 		path: string,
 		body?: unknown,
 	): Promise<T> {
-		let response: Awaited<ReturnType<Transport["send"]>>;
-		try {
-			response = await transport.send({
-				method,
-				path,
-				body,
-				timeoutMs: TIMEOUT_MS,
-			});
-		} catch (error) {
-			if (error instanceof TransportError) throw networkError(error.message);
-			throw error;
-		}
-		if (response.status < 200 || response.status > 299) {
-			throw fromResponse(response.status, response.body);
-		}
-		return response.body as T;
+		return callJson<T>(
+			transport,
+			{ method, path, body, timeoutMs: TIMEOUT_MS },
+			{ retry: false },
+		);
 	}
 
 	const one = (name: string): string => encodeURIComponent(name);

@@ -202,16 +202,6 @@ func explicitSize(c *web.Ctx) error {
 	return nil
 }
 
-// pending registers an operation whose Service method arrives with a later task.
-func pending(h *apiHandler, id string) {
-	register(h, id, func(_ *web.Ctx, _ noIn) (noIn, error) {
-		return noIn{}, &service.Error{
-			Code: command.CodeInternal, Message: "this operation is not available in this build yet.",
-			Hint: "it arrives with " + endpointOf(id).Pending,
-		}
-	})
-}
-
 func (h *apiHandler) registerAll() {
 	register(h, "auth.login", h.login).Use(h.loginThrottle.middleware)
 	register(h, "auth.logout", h.logout)
@@ -335,12 +325,6 @@ func (h *apiHandler) registerAll() {
 	register(h, "projects.motion.brief", h.motionBrief)
 	register(h, "projects.motion.check", h.motionCheck)
 	register(h, "projects.motion.replace", h.motionReplace)
-
-	for i := range Endpoints {
-		if Endpoints[i].Pending != "" {
-			pending(h, Endpoints[i].ID)
-		}
-	}
 
 	register(h, "media.import", h.mediaImport)
 	register(h, "media.list", h.mediaList)

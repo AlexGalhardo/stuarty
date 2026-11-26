@@ -1,0 +1,107 @@
+import {
+	APPROVAL_EVENT_NAMES,
+	CHAT_EVENT_NAMES,
+	EVENT_NAMES,
+	IMAGE_EVENT_NAMES,
+	INBOX_EVENT_NAMES,
+	PUBLICATION_EVENT_NAMES,
+} from "@/editor/api/types";
+import {
+	type StreamConnection,
+	type StreamHandlers,
+	type Transport,
+	TransportError,
+	type TransportRequest,
+	type TransportResponse,
+} from "./transport";
+
+// The only place that calls fetch and EventSource (rule T7). Same origin, the
+// session cookie authenticates, no Authorization header and no token in the
+// URL (SDD-012 section 4.3 item 5).
+export class HttpTransport implements Transport {
+	private readonly base: string;
+
+	constructor(base: string) {
+		this.base = base;
+	}
+
+	async send(request: TransportRequest): Promise<TransportResponse> {
+		const controller = new AbortController();
+		let timedOut = false;
+		const timer = setTimeout(() => {
+			timedOut = true;
+			controller.abort();
+		}, request.timeoutMs);
+		const onAbort = (): void => controller.abort();
+		if (request.signal?.aborted) {
+			controller.abort();
+		} else {
+			request.signal?.addEventListener("abort", onAbort, { once: true });
+		}
+
+		try {
+			const response = await fetch(this.base + request.path, {
+				method: request.method,
+				credentials: "same-origin",
+				headers: {
+					Accept: "application/json",
+					...(request.body === undefined &&
+					request.file === undefined &&
+					request.method === "GET"
+						? {}
+						: { "Content-Type": "application/json" }),
+				},
+				body:
+					request.file !== undefined
+						? request.file
+						: request.body === undefined
+							? undefined
+							: JSON.stringify(request.body),
+				signal: controller.signal,
+			});
+			let body: unknown = null;
+			try {
+				body = await response.json();
+			} catch {
+				// An empty or non-JSON body (a proxy page) is reported as null.
+			}
+			// A locked studio (E_LOCKED, 423) has one way on: the sign-in page (ADR-0052).
+			if (
+				response.status === 423 &&
+				!window.location.pathname.startsWith("/account/")
+			) {
+				window.location.assign("/account/signin");
+			}
+			return { status: response.status, body };
+		} catch (error) {
+			if (timedOut) throw new TransportError("timeout", "request timed out");
+			if (request.signal?.aborted) throw error;
+			throw new TransportError("network", "network failure");
+		} finally {
+			clearTimeout(timer);
+			request.signal?.removeEventListener("abort", onAbort);
+		}
+	}
+
+	openStream(path: string, handlers: StreamHandlers): StreamConnection {
+		const source = new EventSource(this.base + path);
+		source.onopen = () => handlers.onOpen();
+		source.onmessage = (event: MessageEvent<string>) =>
+			handlers.onMessage(null, event.data);
+		for (const name of [
+			...EVENT_NAMES,
+			...APPROVAL_EVENT_NAMES,
+			...PUBLICATION_EVENT_NAMES,
+			...CHAT_EVENT_NAMES,
+			...IMAGE_EVENT_NAMES,
+			...INBOX_EVENT_NAMES,
+		]) {
+			source.addEventListener(name, (event) =>
+				handlers.onMessage(name, (event as MessageEvent<string>).data),
+			);
+		}
+		source.onerror = () =>
+			handlers.onError(source.readyState === EventSource.CLOSED);
+		return { close: () => source.close() };
+	}
+}

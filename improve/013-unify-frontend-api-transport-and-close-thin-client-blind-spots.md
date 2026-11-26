@@ -141,15 +141,15 @@ function editorRelative(file: string): string | null {
 
 ## Done criteria
 
-- [ ] `web/resources/js/lib/api/` holds the single `callJson` / `Transport` / `HttpTransport` / `errors` / `retry` implementation
-- [ ] All 6 domain API clients use `callJson` from `@/lib/api`
-- [ ] `RecordTeleprompter.tsx` no longer imports from `../../pages/Write/client`
-- [ ] `check-thin-client.ts` covers `record`, `stages`, `teleprompter`, `find`, `image-editor`, and `R6` across studio pages
-- [ ] `grep -rn 'Pending' web/app/http/endpoints.go web/app/mcp/server.go` returns no dead scaffolding matches
-- [ ] `cd web && bun run typecheck && bun run lint && bun run check:thin-client && bun run test` exits 0
-- [ ] `go test -race -count=1 ./web/app/http/... ./web/app/mcp/... && task lint:go && task vet` exits 0
-- [ ] No files outside the in-scope list are modified (`git status`)
-- [ ] `improve/README.md` status row updated
+- [x] `web/resources/js/lib/api/` holds the single `callJson` / `Transport` / `HttpTransport` / `errors` / `retry` implementation
+- [x] All 6 domain API clients use `callJson` from `@/lib/api`
+- [x] `RecordTeleprompter.tsx` no longer imports from `../../pages/Write/client`
+- [x] `check-thin-client.ts` covers `record`, `stages`, `teleprompter`, `find`, `image-editor`, and `R6` across studio pages
+- [x] `grep -rn 'Pending' web/app/http/endpoints.go web/app/mcp/server.go` returns no dead scaffolding matches
+- [x] `cd web && bun run typecheck && bun run lint && bun run check:thin-client && bun run test` exits 0
+- [x] `go test -race -count=1 ./web/app/http/... ./web/app/mcp/... && task lint:go && task vet` exits 0
+- [x] No files outside the in-scope list are modified (`git status`)
+- [x] `improve/README.md` status row updated
 
 ## STOP conditions
 

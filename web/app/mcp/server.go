@@ -38,16 +38,7 @@ type Options struct {
 	Session string
 	// Description is shown in serverInfo: which workspace and server the tools act on.
 	Description string
-	// Registry is not read since the operations left the definition of edit (SDD-003
-	// section 4.8): the Service names them, through command_help. It stays so that the
-	// callers that set it still compile.
-	Registry *command.Registry
 }
-
-// Pending names the task that delivers each tool of the Prototype that has no
-// Service method yet. A pending tool is not in tools/list: the list shows the
-// tools whose operations exist in the build (SDD-003 section 4.1).
-var Pending = map[string]string{}
 
 const (
 	defaultActor = "mcp"
