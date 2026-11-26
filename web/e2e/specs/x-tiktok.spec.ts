@@ -1,4 +1,4 @@
-import { randomBytes } from "node:crypto";
+import { randomInt } from "node:crypto";
 import { mkdirSync, writeFileSync } from "node:fs";
 import {
 	createServer,
@@ -144,7 +144,7 @@ const ALPHABET = "0123456789abcdefghjkmnpqrstvwxyz";
 
 function newId(prefix: string): string {
 	let out = "";
-	for (const byte of randomBytes(10)) out += ALPHABET[byte % ALPHABET.length];
+	for (let i = 0; i < 10; i++) out += ALPHABET[randomInt(ALPHABET.length)];
 	return `${prefix}_${out}`;
 }
 
