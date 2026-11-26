@@ -151,7 +151,13 @@ const handshakePath = BasePath + "/handshake"
 func (h *apiHandler) op(id string) api.Op {
 	ep := endpointOf(id)
 
-	return api.Op{Name: ep.ID, Summary: ep.Summary, Status: ep.Status, Security: []string{"bearer"}, MaxBody: ep.MaxBody}
+	return api.Op{
+		Name:     ep.ID,
+		Summary:  ep.Summary,
+		Status:   ep.Status,
+		Security: []string{"bearer"},
+		MaxBody:  ep.MaxBody,
+	}
 }
 
 // authenticate is step "authentication" of SDD-007 section 5.1 item 3 for
