@@ -74,7 +74,9 @@ function Slot({
 			<Icon aria-hidden="true" className="size-4 shrink-0 text-icon" />
 			<div className="min-w-0">
 				<p className="truncate text-sm text-muted-foreground">{label}</p>
-				<p className="truncate text-sm font-medium">{children}</p>
+				<p className="flex min-w-0 items-baseline truncate text-sm font-medium">
+					{children}
+				</p>
 			</div>
 		</div>
 	);
@@ -163,20 +165,24 @@ export default function SceneBar({
 				/>
 				<div className="min-w-0">
 					{/* relative: the sr-only word of the project is absolute, and would escape the clip of a static line */}
-					<p className="relative truncate text-sm font-medium">
+					<p className="relative flex min-w-0 items-baseline text-sm font-medium">
 						{model.agent === null ? (
-							t("ui.shell.scene.none")
+							<span className="truncate">{t("ui.shell.scene.none")}</span>
 						) : (
-							<UntrustedText>{model.agent}</UntrustedText>
+							<UntrustedText className="min-w-0 shrink truncate">
+								{model.agent}
+							</UntrustedText>
 						)}
 						{model.agent !== null && project !== null && (
 							<span
 								data-testid="scene-project"
-								className="font-normal text-muted-foreground"
+								className="flex min-w-0 items-baseline font-normal text-muted-foreground"
 							>
-								{" · "}
+								<span className="shrink-0 whitespace-pre">{" · "}</span>
 								<span className="sr-only">{t("ui.shell.scene.project")} </span>
-								<UntrustedText>{project}</UntrustedText>
+								<UntrustedText className="min-w-0 truncate">
+									{project}
+								</UntrustedText>
 							</span>
 						)}
 					</p>
@@ -214,7 +220,9 @@ export default function SceneBar({
 						)}
 					</span>
 				) : model.skill.state === "loaded" ? (
-					<UntrustedText>{model.skill.name}</UntrustedText>
+					<UntrustedText className="min-w-0 truncate">
+						{model.skill.name}
+					</UntrustedText>
 				) : (
 					<span className="text-muted-foreground">
 						{t(
@@ -245,14 +253,18 @@ export default function SceneBar({
 					// gave the call: the tool is recognised from that title, so an agent can claim the name of a tool
 					// of Stuarty, and the person sees what it wrote
 					<>
-						{t(model.tool.descriptionKey)}
-						<span className="font-normal text-muted-foreground">
-							{" · "}
-							<UntrustedText>{model.tool.title}</UntrustedText>
+						<span className="shrink-0">{t(model.tool.descriptionKey)}</span>
+						<span className="flex min-w-0 items-baseline font-normal text-muted-foreground">
+							<span className="shrink-0 whitespace-pre">{" · "}</span>
+							<UntrustedText className="min-w-0 truncate">
+								{model.tool.title}
+							</UntrustedText>
 						</span>
 					</>
 				) : (
-					<UntrustedText>{model.tool.title}</UntrustedText>
+					<UntrustedText className="min-w-0 truncate">
+						{model.tool.title}
+					</UntrustedText>
 				)}
 			</Slot>
 			<Slot
@@ -266,7 +278,7 @@ export default function SceneBar({
 						{t("ui.shell.scene.next_none")}
 					</span>
 				) : (
-					<UntrustedText>{next}</UntrustedText>
+					<UntrustedText className="min-w-0 truncate">{next}</UntrustedText>
 				)}
 			</Slot>
 			<div className="ms-auto flex flex-wrap items-center gap-2 max-md:w-full max-md:justify-end">
