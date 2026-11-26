@@ -233,8 +233,8 @@ func (s *svc) RecordingUploadBegin(ctx context.Context, req RecordingUploadBegin
 		return nil, err
 	}
 
-	if head, gerr := s.store.Productions().Get(ctx, req.ProjectID); gerr != nil || head.State == ProjectTrashed {
-		return nil, projectNotFound(req.ProjectID, gerr)
+	if gerr := s.recordingProject(ctx, c, req.ProjectID, false); gerr != nil {
+		return nil, gerr
 	}
 
 	if lerr := s.recordingLimits().CheckStart(s.freeBytes()); lerr != nil {

@@ -408,8 +408,8 @@ func (s *svc) RecordingStart(ctx context.Context, req RecordingStartRequest) (*R
 		return nil, err
 	}
 
-	if head, gerr := s.store.Productions().Get(ctx, req.ProjectID); gerr != nil || head.State == ProjectTrashed {
-		return nil, projectNotFound(req.ProjectID, gerr)
+	if gerr := s.recordingProject(ctx, c, req.ProjectID, false); gerr != nil {
+		return nil, gerr
 	}
 
 	limits := s.recordingLimits()
@@ -754,8 +754,23 @@ func (s *svc) stopSession(ctx context.Context, id string, sess *recSession, reas
 	return err
 }
 
-// recordingFor loads a recording a caller may see: one of a project the caller covers, and not a dismissed one
-// unless the caller is a person (SDD-025 section 4).
+// recordingProject verifies that projectID exists and is visible to c (SDD-007 T-06), returning the same
+// not-found error when the project does not exist, is owned by another user, or is trashed when allowTrashed is false.
+func (s *svc) recordingProject(ctx context.Context, c Caller, projectID string, allowTrashed bool) error {
+	head, err := s.store.Productions().Get(ctx, projectID)
+	if err != nil {
+		return projectNotFound(projectID, err)
+	}
+
+	if !visible(c, head.OwnerUserID) || (!allowTrashed && head.State == ProjectTrashed) {
+		return projectNotFound(projectID, ErrNotFound)
+	}
+
+	return nil
+}
+
+// recordingFor loads a recording a caller may see: one of a project the caller covers and owns (SDD-007 T-06),
+// and not a dismissed one unless the caller is a person (SDD-025 section 4).
 func (s *svc) recordingFor(ctx context.Context, c Caller, id string) (recordings.Row, error) {
 	if !timeline.ValidID("rec", id) {
 		return recordings.Row{}, recordingNotFound()
@@ -772,6 +787,13 @@ func (s *svc) recordingFor(ctx context.Context, c Caller, id string) (recordings
 
 	if !s.covers(ctx, c, r.ProjectID) || !recording.VisibleTo(recording.Review(r.Review), isPerson(c)) {
 		return r, recordingNotFound()
+	}
+
+	if c.OwnerUserID != "" {
+		head, gerr := s.store.Productions().Get(ctx, r.ProjectID)
+		if gerr != nil || !visible(c, head.OwnerUserID) {
+			return r, recordingNotFound()
+		}
 	}
 
 	return r, nil
@@ -1103,6 +1125,12 @@ func (s *svc) RecordingList(ctx context.Context, req RecordingListRequest) (*Rec
 	c, err := s.authorizeProject(ctx, "RecordingList", req.ProjectID)
 	if err != nil {
 		return nil, err
+	}
+
+	if c.OwnerUserID != "" {
+		if gerr := s.recordingProject(ctx, c, req.ProjectID, true); gerr != nil {
+			return nil, gerr
+		}
 	}
 
 	rows, err := s.store.Recordings().ListByProject(ctx, req.ProjectID)
