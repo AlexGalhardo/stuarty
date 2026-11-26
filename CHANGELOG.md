@@ -7,6 +7,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.60.0] - 2026-11-26
+
+### Fixed
+
+- **service:** Fix approval cost ledger, publish lease-loss, and refresh rotation bugs ([51039f4](https://github.com/AlexGalhardo/stuarty/commit/51039f4f1fcf4946837291bfecfe76b9d2b3e8eb))
+- **service:** Fix recording, agenthost, capture, library, cache, audio, and shell bugs ([1165c74](https://github.com/AlexGalhardo/stuarty/commit/1165c74e55068079585484fae733a5bd1829fc4f))
+- **web:** Fix preview executor leaks, worker errors, Web Lock, recorder, and async races ([99519dc](https://github.com/AlexGalhardo/stuarty/commit/99519dc2e5025f8b3e5d0cb32bb165b48e2e6176))
+- **engine:** Preserve the helper deadline error across platforms ([b468bad](https://github.com/AlexGalhardo/stuarty/commit/b468bad8b6b4caf8ef21b7024364ea96b13a508e))
+- **e2e:** Preserve shared sign-in and follow accessible editor controls ([ca9ed9b](https://github.com/AlexGalhardo/stuarty/commit/ca9ed9ba129c1f9266d614adc90483d8b9350bd0))
+- **ui:** Keep the image header and release label readable at narrow widths ([af8baf4](https://github.com/AlexGalhardo/stuarty/commit/af8baf462b947ef61e2d456720e09a5dc0db425d))
+- **engine:** Disable the libzimg gamma approximation in SDR normalization ([00af56b](https://github.com/AlexGalhardo/stuarty/commit/00af56b63ba19730ef43118f6c3bcc36a99284b7))
+- **contract:** Drop the removed mcp.Pending list from the parity test ([bd349fe](https://github.com/AlexGalhardo/stuarty/commit/bd349fe213404d6acfd40485180f954095aa436a))
+- **e2e:** Sign in on a spec's own server when the shared session is refused ([e0496ae](https://github.com/AlexGalhardo/stuarty/commit/e0496ae70df7ac88308d7dcd674ec6370ac488ce))
+- **engine:** Serialize cache rename on Windows and skip full-frame fill ([742ed0d](https://github.com/AlexGalhardo/stuarty/commit/742ed0d8e67a58380dbf93a97edfb02ea12988fa))
+- **service:** Wait for active audio previews and retry asset.add conflicts ([2d41e81](https://github.com/AlexGalhardo/stuarty/commit/2d41e8127e94c13b1b72583fa3cf66197a699dc7))
+- **preview:** Match export crop rounding, WebKit resize and WebGPU init ([c4bbaae](https://github.com/AlexGalhardo/stuarty/commit/c4bbaae619b994c0b06df166278d2ca2ee32ba62))
+- **ui:** Fix keyboard context menus, focus stops, truncation and pagehide ([c92917e](https://github.com/AlexGalhardo/stuarty/commit/c92917ef288af9b921d3633f6aa9a6466463be7f))
+- **e2e:** Use unbiased randomInt for test ids in publish and connect specs ([3deee31](https://github.com/AlexGalhardo/stuarty/commit/3deee31af85e956ab3adb2d8bad35fb5b9361b13))
+- **e2e:** Fix cross-browser specs, port collisions and atomic fixtures ([c52f1ad](https://github.com/AlexGalhardo/stuarty/commit/c52f1ad77a2d475ce16a8434c427e296e7b5da59))
+- **service:** Announce permission changes before emitting chat events ([6e6898b](https://github.com/AlexGalhardo/stuarty/commit/6e6898b536102d5cf01e8260565d6b3c076eb457))
+- **preview:** Snapshot video frames via 2d canvas for RustExecutor ([3e925bf](https://github.com/AlexGalhardo/stuarty/commit/3e925bfbf45e51d7b4b9ec0590923767948a49aa))
+- **ui:** Reject aborted json reads and constrain asset detail labels ([e5f3d81](https://github.com/AlexGalhardo/stuarty/commit/e5f3d8190cca650b162a239094deb4ff807a750a))
+- **e2e:** Restore firstFlow home, fix keyboard import and deterministic fixtures ([3108637](https://github.com/AlexGalhardo/stuarty/commit/31086379170a6c4bb718b6c21e05993764ab9db1))
+- **preview:** Decode native YUV planes when VideoFrame.copyTo ignores RGBA ([b4006ca](https://github.com/AlexGalhardo/stuarty/commit/b4006ca27b2220937227025eb7cb962f7858c9b7))
+- **ui:** Bound UntrustedText truncation inside SceneBar ([ea8e6e2](https://github.com/AlexGalhardo/stuarty/commit/ea8e6e24c7a6a8d3d0ad71caf29de4e3ed9807a4))
+- **e2e:** Fix keyboard import submit, theme transition wait and mid-grey gradient ([06e63a8](https://github.com/AlexGalhardo/stuarty/commit/06e63a85a84cb707addd73da17efcb47a63f9463))
+- **site:** Center the landing footer links ([d29fcac](https://github.com/AlexGalhardo/stuarty/commit/d29fcac95b1f2a104286ba5a26c1ef6287fdd84c))
+- **ui:** Stabilize keyboard focus and image editor contrast checks ([045fc5a](https://github.com/AlexGalhardo/stuarty/commit/045fc5a19b2a19aa9f99308418392396321ae8c0))
+- **preview:** Use explicit strides for native video planes ([9ec8320](https://github.com/AlexGalhardo/stuarty/commit/9ec832008b988c6f4d4c7970f4e0cda2f6a8f5f4))
+- **ci:** Ignore zero-statement coverage blocks ([beea861](https://github.com/AlexGalhardo/stuarty/commit/beea861b4ab923e90fc3c53dd45d93ede4c0f726))
+- **preview:** Convert WebKit frames through the browser image path ([8457b20](https://github.com/AlexGalhardo/stuarty/commit/8457b20e75c4b682f83d99cef1bb6dfc309b53a0))
+- **api:** Stop draining inbox hints when the hub closes ([5634235](https://github.com/AlexGalhardo/stuarty/commit/5634235012e69f2da99d8a8e037a09ad84ab5f80))
+
+### Security
+
+- **security:** Enforce project ownership checks across recording operations ([6f8e8d6](https://github.com/AlexGalhardo/stuarty/commit/6f8e8d62e4909bd3cfaf7b52eb0ae11ce7870ac9))
+- **security:** Revalidate SSE callers and revoke hosted agent sessions on user revocation ([affa960](https://github.com/AlexGalhardo/stuarty/commit/affa9607c5ec47fa8294be30597d1bf6e21a51d3))
+- **security:** Confine blog_files destinations and desktop showInFolder to safe roots ([7afa94c](https://github.com/AlexGalhardo/stuarty/commit/7afa94ce3ed0e37c8d1b56bdcfb050579db635c3))
+- **security:** Map recording isolation to the project threat ([676e3f0](https://github.com/AlexGalhardo/stuarty/commit/676e3f0d0ed31812a965ec43f7fdef796e28bb07))
+
 ## [0.59.0] - 2026-11-25
 
 ### Added
@@ -2896,7 +2936,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **security:** Count retries in the rolling render quota ([1bc8114](https://github.com/AlexGalhardo/vukem-studio/commit/1bc81140afc4efcc346d68dd16bd7e91abbc15f4))
 - **security:** Add a global rolling daily model budget ([7d3afc4](https://github.com/AlexGalhardo/vukem-studio/commit/7d3afc46c8da935e36ad5bcd179ea12a474d0423))
 
-[Unreleased]: https://github.com/AlexGalhardo/stuarty/compare/v0.59.0...HEAD
+[Unreleased]: https://github.com/AlexGalhardo/stuarty/compare/v0.60.0...HEAD
+[0.60.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.59.0...v0.60.0
 [0.59.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.58.0...v0.59.0
 [0.58.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.57.0...v0.58.0
 [0.57.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.56.0...v0.57.0
