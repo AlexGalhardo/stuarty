@@ -56,6 +56,48 @@ export interface ColorSpaceLike {
 	fullRange?: boolean | null;
 }
 
+// Specify the strides explicitly. WebKitGTK can report the chroma component
+// width as the stride, even for interleaved or subsampled chroma rows.
+export function videoPlaneLayout(
+	format: string | null,
+	width: number,
+	height: number,
+): PlaneLayoutLike[] | undefined {
+	const lumaSize = width * height;
+	const luma = { offset: 0, stride: width };
+	const halfWidth = Math.ceil(width / 2);
+	const halfHeight = Math.ceil(height / 2);
+	switch (format) {
+		case "RGBA":
+		case "RGBX":
+		case "BGRA":
+		case "BGRX":
+			return [{ offset: 0, stride: width * 4 }];
+		case "NV12":
+			return [luma, { offset: lumaSize, stride: halfWidth * 2 }];
+		case "I420":
+		case "I420A":
+		case "I422":
+		case "I444": {
+			const stride = format === "I444" ? width : halfWidth;
+			const rows =
+				format === "I420" || format === "I420A" ? halfHeight : height;
+			const planeSize = stride * rows;
+			const layouts = [
+				luma,
+				{ offset: lumaSize, stride },
+				{ offset: lumaSize + planeSize, stride },
+			];
+			if (format === "I420A") {
+				layouts.push({ offset: lumaSize + 2 * planeSize, stride: width });
+			}
+			return layouts;
+		}
+		default:
+			return undefined;
+	}
+}
+
 function clampByte(v: number): number {
 	if (v <= 0) return 0;
 	if (v >= 255) return 255;
