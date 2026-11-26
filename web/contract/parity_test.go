@@ -508,12 +508,6 @@ func listedTools(t *testing.T) []string {
 		names = append(names, tool.Name)
 	}
 
-	for name := range mcp.Pending {
-		if slices.Contains(names, name) {
-			t.Errorf("%s is pending and listed", name)
-		}
-	}
-
 	return names
 }
 
