@@ -495,35 +495,63 @@ func (s *state) build(ctx context.Context, f Format) (built, error) {
 func (s *state) buildMP4(ctx context.Context) (built, error) {
 	job := s.job
 
+	// 3. Audio (overlapped with codec detection, capability probing and renderer setup).
+	type audioResult struct {
+		mix  string
+		loud Loudness
+		err  error
+	}
+	audioCtx, cancelAudio := context.WithCancel(ctx)
+	audioDone := make(chan audioResult, 1)
+	go func() {
+		mix, loud, err := s.mixAudio(audioCtx)
+		audioDone <- audioResult{mix: mix, loud: loud, err: err}
+	}()
+	abortAudio := func() {
+		cancelAudio()
+		<-audioDone
+	}
+
 	// 2. Codec and encoder.
 	cp, err := s.codecPlan(ctx)
 	if err != nil {
+		abortAudio()
 		return built{}, err
 	}
 
 	det, err := job.Runner.DetectCodec(ctx, job.Caps, string(cp.Codec), job.Encoder)
 	if err != nil {
+		abortAudio()
 		return built{}, err
 	}
 
 	if _, ok := det.ChosenCandidate(); !ok {
+		abortAudio()
 		return built{}, exportErr(ReasonEncoder, "No encoder was chosen.", nil, "")
 	}
 
 	cand, err := s.checkCapability(ctx, det)
 	if err != nil {
-		return built{}, err
-	}
-
-	// 3. Audio.
-	mix, loud, err := s.mixAudio(ctx)
-	if err != nil {
+		abortAudio()
 		return built{}, err
 	}
 
 	// 4. Video.
 	rd := s.newRenderer(job.Bands)
 	defer rd.close()
+	if rd.rust != nil && job.PixelRenderer == PixelRendererRust && !s.single {
+		if err := rd.rust.ensureHosts(rd.rust.bands); err != nil {
+			abortAudio()
+			return built{}, wrapRun(err, ReasonRender, "The pixel renderer could not start.", "")
+		}
+	}
+
+	ar := <-audioDone
+	cancelAudio()
+	if ar.err != nil {
+		return built{}, ar.err
+	}
+	mix, loud := ar.mix, ar.loud
 
 	partial, err := s.dir.Path(job.JobID + ".partial.mp4")
 	if err != nil {
