@@ -613,25 +613,35 @@ func (s *svc) addAsset(ctx context.Context, project *ProjectRow, pa ProjectAsset
 		return internalError()
 	}
 
-	head, err := s.store.Projects().Get(ctx, project.ID)
-	if err != nil {
-		return asErr(err)
+	const maxAddAttempts = 8
+	for attempt := range maxAddAttempts {
+		head, err := s.store.Projects().Get(ctx, project.ID)
+		if err != nil {
+			return asErr(err)
+		}
+
+		caller := Caller{Actor: pa.ImportedBy, Scopes: []string{ScopeEdit, ScopeMedia}}
+		if head.OwnerUserID != nil {
+			caller.OwnerUserID = *head.OwnerUserID
+		}
+
+		_, err = s.edit(WithCaller(ctx, caller), EditRequest{
+			ProjectID: project.ID, TimelineID: project.ID, BaseRevision: head.Revision, IdempotencyKey: key,
+			Operations: []command.Operation{{Op: "asset.add", Args: args}},
+		}, true)
+		if err == nil {
+			return nil
+		}
+
+		serr := asErr(err)
+		if serr.Code == command.CodeRevisionConflict && attempt+1 < maxAddAttempts {
+			continue
+		}
+
+		return serr
 	}
 
-	caller := Caller{Actor: pa.ImportedBy, Scopes: []string{ScopeEdit, ScopeMedia}}
-	if head.OwnerUserID != nil {
-		caller.OwnerUserID = *head.OwnerUserID
-	}
-
-	_, err = s.edit(WithCaller(ctx, caller), EditRequest{
-		ProjectID: project.ID, TimelineID: project.ID, BaseRevision: head.Revision, IdempotencyKey: key,
-		Operations: []command.Operation{{Op: "asset.add", Args: args}},
-	}, true)
-	if err != nil {
-		return asErr(err)
-	}
-
-	return nil
+	return internalError()
 }
 
 // waitAssets holds the call until every accepted file is ready or failed, or

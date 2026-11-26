@@ -104,7 +104,7 @@ func previewEnv(t *testing.T, fake *fakePreviewer) *batchEnv {
 
 		for time.Now().Before(deadline) {
 			env.s.previews.mu.Lock()
-			idle := env.s.previews.queued == 0
+			idle := env.s.previews.active == 0
 			env.s.previews.mu.Unlock()
 
 			if idle {
