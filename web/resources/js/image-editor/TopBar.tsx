@@ -111,7 +111,7 @@ export default function TopBar({
 }): ReactNode {
 	const t = useT();
 	return (
-		<header className="flex h-12 shrink-0 items-center gap-3 border-b border-border bg-ed-panel px-3">
+		<header className="flex min-h-12 shrink-0 flex-wrap items-center gap-x-3 gap-y-1 border-b border-border bg-ed-panel px-3 py-2 lg:h-12 lg:flex-nowrap lg:py-0">
 			{/* The mark of the product, as the sidebar of the shell draws it (dashboard/Sidebar.tsx). */}
 			<img
 				src="/icon.png"

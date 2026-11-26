@@ -161,7 +161,7 @@ function Shell({ live }: { live: boolean }): ReactNode {
 			<AgentNotice />
 			<ModelJobStrip />
 			{!failed && <ErrorBar />}
-			<div className="flex min-h-0 flex-1">
+			<div className="flex min-h-0 flex-1 overflow-x-auto">
 				<ToolRail />
 				<aside
 					aria-label={t("ui.image.layers.title")}
@@ -169,7 +169,7 @@ function Shell({ live }: { live: boolean }): ReactNode {
 				>
 					<LayerPanel />
 				</aside>
-				<div className="relative flex min-w-0 flex-1 flex-col">
+				<div className="relative flex min-w-48 flex-1 flex-col lg:min-w-0">
 					<div className="relative min-h-0 flex-1">
 						<Canvas />
 						{failed && (
