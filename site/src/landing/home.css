@@ -709,37 +709,13 @@ html:not(.dark) .shot-zoom .shot-light {
 	background: var(--l-bg);
 	color: var(--l-subtle);
 }
-.l-footer-row {
-	display: flex;
-	align-items: center;
-	gap: 16px;
-	min-height: 96px;
-}
-.l-footer-logo {
-	display: inline-flex;
-}
-.l-footer-logo img {
-	height: 28px;
-	width: auto;
-}
-.logo-dark {
-	display: none;
-}
-.dark .l-footer-logo .logo-dark {
-	display: block;
-}
-.dark .l-footer-logo .logo-light {
-	display: none;
-}
-.l-footer-text {
-	font-size: 0.875rem;
-	line-height: 1.25rem;
-}
 .l-footer-nav {
 	display: flex;
 	flex-wrap: wrap;
+	justify-content: center;
+	align-content: center;
 	gap: 4px;
-	margin-inline-start: auto;
+	min-height: 96px;
 }
 .l-footer-nav a {
 	display: inline-flex;
@@ -1022,20 +998,9 @@ html:has(.zoom-dialog[open]) {
 	.l-downloads {
 		grid-template-columns: minmax(0, 1fr);
 	}
-	.l-footer-row {
-		flex-wrap: wrap;
-		gap: 4px;
+	.l-footer-nav {
 		min-height: 0;
 		padding-block: 24px 8px;
-	}
-	.l-footer-text {
-		flex-basis: 100%;
-	}
-	.l-footer-nav {
-		flex-direction: column;
-		flex-basis: 100%;
-		margin-inline-start: 0;
-		gap: 0;
 	}
 	.l-footer-nav a {
 		min-height: 44px;

@@ -1,6 +1,5 @@
 ---
-// The footer of the landing page (epic 95): the logo, the licence line and the links, as the design draws them, and
-// below them the two notes the page owes its screenshots (when they were taken, and that the demo is invented).
+// The landing page footer puts the navigation above the screenshot notes.
 import { capturedNote, credits } from "@/src/landing/content";
 import { site, withBase } from "@/lib/site";
 
@@ -15,16 +14,9 @@ const links = [
 ---
 
 <footer class="l-footer">
-	<div class="l-container l-footer-row">
-		<a class="l-footer-logo" href={withBase("/")} aria-label="Stuarty">
-			<img class="logo-light" src={withBase("/logo-wordmark-light.png")} alt="" height="28" />
-			<img class="logo-dark" src={withBase("/logo-wordmark-dark.png")} alt="" height="28" />
-		</a>
-		<p class="l-footer-text">MIT license. Open source.</p>
-		<nav class="l-footer-nav" aria-label="Footer">
-			{links.map((l) => <a href={l.href}>{l.label}</a>)}
-		</nav>
-	</div>
+	<nav class="l-container l-footer-nav" aria-label="Footer">
+		{links.map((link) => <a href={link.href}>{link.label}</a>)}
+	</nav>
 	<div class="l-container l-footer-notes">
 		<p>{capturedNote}</p>
 		<p>{credits}</p>
