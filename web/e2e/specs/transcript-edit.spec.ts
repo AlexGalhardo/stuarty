@@ -11,7 +11,7 @@ import { caller, expect, seedProject, test } from "./helpers";
 // The spec runs its own server because it needs the test transcriber (STUARTY_TEST_TRANSCRIBER works only under
 // APP_ENV=test), which answers every audio with the words hello, brave, new and world. It starts the same server as the
 // first-flow spec, on a workspace of its own.
-const PORT = Number(process.env.STUARTY_E2E_PORT ?? 3101) + 6;
+const PORT = Number(process.env.STUARTY_E2E_PORT ?? 3101) + 10;
 const BASE = `http://127.0.0.1:${PORT}`;
 const FPS = 30;
 

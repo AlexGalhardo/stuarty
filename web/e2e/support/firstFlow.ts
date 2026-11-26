@@ -92,14 +92,20 @@ export async function startFirstFlow(
 	const dir = `${home}-${tag}`;
 	rmSync(dir, { recursive: true, force: true });
 	mkdirSync(join(dir, "bin"), { recursive: true });
-	build(join(dir, "bin", `stuarty${exe}`), "./web/cmd/app");
-	build(
-		join(dir, "bin", `firstflowfake${exe}`),
-		"./internal/tools/firstflowfake",
-	);
-	const fake = await startFake(join(dir, "bin", `firstflowfake${exe}`), dir);
+	const stuartyBin =
+		process.env.STUARTY_E2E_BIN || join(dir, "bin", `stuarty${exe}`);
+	if (!process.env.STUARTY_E2E_BIN) {
+		build(stuartyBin, "./web/cmd/app");
+	}
+	const fakeBin =
+		process.env.STUARTY_FIRSTFLOWFAKE_BIN ||
+		join(dir, "bin", `firstflowfake${exe}`);
+	if (!process.env.STUARTY_FIRSTFLOWFAKE_BIN) {
+		build(fakeBin, "./internal/tools/firstflowfake");
+	}
+	const fake = await startFake(fakeBin, dir);
 	const logFd = openSync(join(dir, "server.log"), "a");
-	const server = spawn(join(dir, "bin", `stuarty${exe}`), ["serve"], {
+	const server = spawn(stuartyBin, ["serve"], {
 		cwd: REPO,
 		// The log of the server stays next to its workspace, for whoever debugs a failure.
 		stdio: ["ignore", logFd, logFd],
@@ -151,6 +157,6 @@ export async function uploads(socialUrl: string): Promise<Upload[]> {
 // launch code no longer makes one. The approval queue refuses the local token an agent holds.
 export async function signInAsPerson(page: Page): Promise<void> {
 	await ensureAccount(page.request, home);
-	await signInWithPassword(page);
+	await signInWithPassword(page.request);
 	await page.goto("/");
 }
