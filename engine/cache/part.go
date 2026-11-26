@@ -42,14 +42,14 @@ func (s *Store) Commit(key string) error {
 		return fmt.Errorf("cache: the file of %q is larger than the cache", key)
 	}
 
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	if err := os.Rename(p+".part", p); err != nil {
 		_ = os.Remove(p + ".part")
 
 		return err
 	}
-
-	s.mu.Lock()
-	defer s.mu.Unlock()
 
 	if el, ok := s.items[key]; ok {
 		s.used -= sizeOf(el)

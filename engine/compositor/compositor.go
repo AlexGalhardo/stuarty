@@ -103,14 +103,21 @@ func (c *Compositor) Compose(dst *image.RGBA, fp plan.FramePlan, outScale float6
 		return fmt.Errorf("compositor: output scale %v", outScale)
 	}
 
-	fill(dst.Pix, frameFill(fp))
+	filled := false
+	ensureFilled := func() {
+		if !filled {
+			fill(dst.Pix, frameFill(fp))
+			filled = true
+		}
+	}
 
 	for i := range fp.Layers {
 		l := &fp.Layers[i]
-		if err := c.layer(dst, l, &fp, outScale); err != nil {
+		if err := c.layer(dst, l, &fp, outScale, &filled, ensureFilled); err != nil {
 			return fmt.Errorf("layer %s: %w", l.ItemID, err)
 		}
 	}
+	ensureFilled()
 	return nil
 }
 
@@ -120,7 +127,14 @@ type placement struct {
 	cx, cy, w, h, rot float64
 }
 
-func (c *Compositor) layer(dst *image.RGBA, l *plan.Layer, fp *plan.FramePlan, outScale float64) error {
+func (c *Compositor) layer(
+	dst *image.RGBA,
+	l *plan.Layer,
+	fp *plan.FramePlan,
+	outScale float64,
+	filled *bool,
+	ensureFilled func(),
+) error {
 	op := uint32(math.Round(min(max(l.Opacity, 0), 1) * 255))
 	if op == 0 {
 		return nil
@@ -223,7 +237,7 @@ func (c *Compositor) layer(dst *image.RGBA, l *plan.Layer, fp *plan.FramePlan, o
 	src, p = c.applyEffects(src, p, pre, l, fp, outScale)
 	// The shadow and the outline sit under the picture and are cut by the mask with it (SDD-004 §3.15).
 	src, p = c.shadowed(src, p, l, outScale)
-	c.draw(dst, src, p, op, blendOf(l.Blend), mask)
+	c.draw(dst, src, p, op, blendOf(l.Blend), mask, filled, ensureFilled)
 	return nil
 }
 
@@ -269,15 +283,35 @@ func (c *Compositor) shrunk(key string, src Image, w, h int) Image {
 // round is round-half-up, which is what the copy path uses for offsets and sizes.
 func round(v float64) int { return int(math.Floor(v + 0.5)) }
 
-func (c *Compositor) draw(dst *image.RGBA, src Image, p placement, op uint32, mode blendMode, mask *maskState) {
+func (c *Compositor) draw(
+	dst *image.RGBA,
+	src Image,
+	p placement,
+	op uint32,
+	mode blendMode,
+	mask *maskState,
+	filled *bool,
+	ensureFilled func(),
+) {
 	if src.FullW != 0 {
+		ensureFilled()
 		c.blit(dst, src, round(p.cx-p.w/2)+src.OffX, round(p.cy-p.h/2)+src.OffY, op, mode, mask)
 		return
 	}
 	if p.rot == 0 && src.W == round(p.w) && src.H == round(p.h) {
-		c.blit(dst, src, round(p.cx-p.w/2), round(p.cy-p.h/2), op, mode, mask)
+		x0, y0 := round(p.cx-p.w/2), round(p.cy-p.h/2)
+		b := dst.Bounds()
+		if x0 == 0 && y0 == 0 && src.W == b.Dx() && src.H == b.Dy() &&
+			src.Opaque && op == 255 && mode == blendNormal && mask == nil {
+			copy(dst.Pix, src.Pix)
+			*filled = true
+			return
+		}
+		ensureFilled()
+		c.blit(dst, src, x0, y0, op, mode, mask)
 		return
 	}
+	ensureFilled()
 	c.sample(dst, src, p, op, mode, mask)
 }
 
