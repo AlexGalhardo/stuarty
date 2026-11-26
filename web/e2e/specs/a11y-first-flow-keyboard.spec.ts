@@ -177,7 +177,12 @@ test.describe("a11y-first-flow-keyboard @chromium-only", () => {
 				page.getByLabel("Path of a file to import"),
 				testClip(0),
 			);
-			await press(page, page.getByRole("button", { name: "Import" }));
+			await press(
+				page,
+				page
+					.locator("#library-import")
+					.getByRole("button", { name: "Import", exact: true }),
+			);
 			const add = page.getByRole("button", { name: "Add to timeline" }).first();
 			await expect(add).toBeEnabled({ timeout: 60_000 });
 			await press(page, add);
