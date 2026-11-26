@@ -32,6 +32,8 @@ func TestParse(t *testing.T) {
 		m+"/internal/tools/covergate/gate.go:1.1,2.2 50 0",
 		m+"/spikes/x/main.go:1.1,2.2 50 0",
 		m+"/desktop/main.go:1.1,2.2 50 0",
+		// The normal build of crashpoint contains only an empty function.
+		m+"/service/crashpoint/off.go:9.20,9.21 0 1",
 		"example.com/other/x.go:1.1,2.2 50 0",
 	)
 

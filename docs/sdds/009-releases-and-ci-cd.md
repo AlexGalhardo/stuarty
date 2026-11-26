@@ -1619,6 +1619,8 @@ fi
 
 The gate blocks since P1-REL-005 closed its last gap (the step has no `continue-on-error`). Two details beyond the text above: the CI test run passes `-coverpkg=./...`, so a package is credited with the statements any test of the repository executes in it (the wiring packages `web/bootstrap`, `web/routes`, `web/app/listeners` and `web/database/seeders` have no tests of their own and are exercised by `web/tests`); and the tool also leaves out any package under a `node_modules` directory (Go files that npm packages ship, such as `site/node_modules`). The gate runs on Linux only, from the merged profiles of the five Go test shards (`covergate` already counts a block once and covered when any profile hit it, so the profiles are concatenated). It needs every test to run, and the tests that drive FFmpeg skip where there is no pinned LGPL build: macOS has none (section 13.3, risk R6), so `Test (macos-latest)` runs `go test` and does not gate, and Windows runs the tests without gating. From release v0.21.0 the Go suite runs on all three systems again: the pause of 2026-11-15, taken because the export tests outran 20 minutes in one job, ended with the split of the suite into shards. No package was excluded to make the gate pass: the packages that were under their floor got tests (`core/timeline` schema, `service`, `service/workspace`, `engine/store`, `web/database/migrations`, `web/resources`).
 
+Coverage profile entries with zero statements are ignored. Packages with executable statements still fail if they are absent from the profile.
+
 ### 13.3 Operating systems
 
 | OS | Runner | Notes |

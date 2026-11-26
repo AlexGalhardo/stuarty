@@ -100,6 +100,9 @@ func Parse(r io.Reader) ([]Result, error) {
 		if err != nil {
 			return nil, fmt.Errorf("line %d: %w", line, err)
 		}
+		if stmts == 0 {
+			continue
+		}
 
 		file, _, _ := strings.Cut(pos, ":")
 		if file != module && !strings.HasPrefix(file, module+"/") {
