@@ -10,6 +10,7 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/AlexGalhardo/stuarty/core/timeline"
 	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
@@ -42,6 +43,11 @@ type ingested struct {
 }
 
 func TestMain(m *testing.M) {
+	if !raceEnabled && testing.CoverMode() == "atomic" {
+		// Atomic coverage instrumentation slows the Go compositor across every pixel similarly to
+		// -race, so a short scene on a 4-CPU runner outlives the 120 s + 6 x duration deadline.
+		exportDeadline = func(d time.Duration) time.Duration { return 4 * ffmpeg.ExportDeadline(d) }
+	}
 	code := m.Run()
 	if shared.dir != "" {
 		_ = os.RemoveAll(shared.dir)

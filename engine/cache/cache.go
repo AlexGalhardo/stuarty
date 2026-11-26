@@ -198,12 +198,13 @@ func (s *Store) Put(key string, data []byte) error {
 		_ = os.Remove(tmp)
 		return err
 	}
+	s.mu.Lock()
 	if err := os.Rename(tmp, p); err != nil {
+		s.mu.Unlock()
 		_ = os.Remove(tmp)
 		return err
 	}
 
-	s.mu.Lock()
 	if el, ok := s.items[key]; ok {
 		s.used -= sizeOf(el)
 		s.order.Remove(el)
