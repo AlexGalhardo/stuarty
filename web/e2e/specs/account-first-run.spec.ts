@@ -49,6 +49,15 @@ async function looksRight(page: Page, where: string): Promise<void> {
 			(on) => document.documentElement.classList.toggle("dark", on),
 			dark,
 		);
+		// Let any theme colour transition finish before axe reads computed colours.
+		await page.evaluate(() =>
+			Promise.all(
+				document
+					.getAnimations()
+					.filter((a) => a.effect?.getComputedTiming().iterations !== Infinity)
+					.map((a) => a.finished.catch(() => undefined)),
+			),
+		);
 		for (const size of [
 			{ width: 1440, height: 900 },
 			{ width: 1280, height: 800 },

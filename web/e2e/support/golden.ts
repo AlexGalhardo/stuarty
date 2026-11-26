@@ -145,8 +145,9 @@ export function markedGradient(spec: Fixture): string {
 		`x=${Math.round(spec.width * fx)}:y=${Math.round(spec.height * fy)}:w=${box}:h=${box}`;
 	// Pin endpoints, colour count, speed and seed explicitly: FFmpeg's gradients
 	// filter picks random colours/positions when omitted, making fixture frames
-	// vary across runners.
-	return `gradients=size=${spec.width}x${spec.height}:rate=${spec.fps}:duration=${spec.seconds}:c0=0x303030:c1=0xd0d0d0:x0=0:y0=0:x1=${spec.width}:y1=${spec.height}:nb_colors=2:speed=0.01:seed=7,drawbox=${at(0.2, 0.2)}:color=red:t=fill,drawbox=${at(0.55, 0.62)}:color=blue:t=fill`;
+	// vary across runners. Keep the grey range gentle around mid-grey so small
+	// browser YUV-to-RGB offsets do not read as spatial drift on blurred clips.
+	return `gradients=size=${spec.width}x${spec.height}:rate=${spec.fps}:duration=${spec.seconds}:c0=0x707070:c1=0x909090:x0=0:y0=0:x1=${spec.width}:y1=${spec.height}:nb_colors=2:speed=0.01:seed=7,drawbox=${at(0.2, 0.2)}:color=red:t=fill,drawbox=${at(0.55, 0.62)}:color=blue:t=fill`;
 }
 
 // The generated media of a case, with the arguments of engine/ingest/mediagen
