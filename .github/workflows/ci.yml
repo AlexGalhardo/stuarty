@@ -368,9 +368,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { os: ubuntu-latest, shards: 21 }
-          - { os: windows-latest, shards: 23 }
-          - { os: macos-latest, shards: 19 }
+          - { os: ubuntu-latest, shards: 23 }
+          - { os: windows-latest, shards: 25 }
+          - { os: macos-latest, shards: 21 }
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
