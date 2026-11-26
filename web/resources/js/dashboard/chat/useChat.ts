@@ -166,7 +166,7 @@ export function useChat(
 			try {
 				const res = await api().listChatSessions(id);
 				if (!activeRef.current || projectIdRef.current !== id) return;
-				setSession(res.sessions[0] ?? null);
+				setSession(res?.sessions?.[0] ?? null);
 			} catch (error) {
 				if (!activeRef.current || projectIdRef.current !== id) return;
 				if (error instanceof ApiError && error.status === 404) {
@@ -269,7 +269,7 @@ export function useChat(
 						.then((all) => alive && setProjects(all.projects))
 						.catch(() => undefined);
 				}
-				const latest = res.sessions[0] ?? null;
+				const latest = res?.sessions?.[0] ?? null;
 				setSession(latest);
 				if (latest === null) {
 					closeStream();

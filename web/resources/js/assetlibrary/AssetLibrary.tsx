@@ -437,7 +437,9 @@ export function AssetDetail({
 						<p data-testid="asset-rights">
 							{asset.origin?.rights_note !== undefined &&
 							asset.origin.rights_note !== "" ? (
-								<UntrustedText>{asset.origin.rights_note}</UntrustedText>
+								<UntrustedText className="break-words">
+									{asset.origin.rights_note}
+								</UntrustedText>
 							) : (
 								t("ui.assets.detail.no_rights")
 							)}
@@ -543,9 +545,11 @@ export function AssetDetail({
 							{(asset.tags ?? []).map((name) => (
 								<li
 									key={name}
-									className="flex items-center gap-1 rounded-full bg-surface-hover px-2 py-1 text-sm text-text"
+									className="flex max-w-full items-center gap-1 rounded-full bg-surface-hover px-2 py-1 text-sm text-text"
 								>
-									<UntrustedText>{name}</UntrustedText>
+									<UntrustedText className="min-w-0 truncate">
+										{name}
+									</UntrustedText>
 									<button
 										type="button"
 										className="px-1"
@@ -615,9 +619,11 @@ export function AssetDetail({
 									>
 										<Link
 											href={`/projects/${use.project_id}`}
-											className="underline"
+											className="min-w-0 max-w-full underline"
 										>
-											<UntrustedText>{use.name}</UntrustedText>
+											<UntrustedText className="break-words">
+												{use.name}
+											</UntrustedText>
 										</Link>
 										{asset.kind === "audio" && (
 											<Button
@@ -637,29 +643,31 @@ export function AssetDetail({
 							className="flex flex-col gap-2"
 							onSubmit={(event) => void addToProject(event)}
 						>
-							<fieldset className="flex max-h-40 flex-col gap-1 overflow-auto">
+							<fieldset className="flex max-h-40 min-w-0 flex-col gap-1 overflow-x-hidden overflow-y-auto">
 								<legend className="mb-1 text-sm font-medium">
 									{t("ui.assets.detail.use_in")}
 								</legend>
 								{projects.map((project) => (
 									<label
 										key={project.id}
-										className="flex items-center gap-2 text-sm"
+										className="flex min-w-0 items-center gap-2 text-sm"
 									>
 										<input
 											type="radio"
 											name={`${id}-project`}
-											className="accent-primary"
+											className="shrink-0 accent-primary"
 											checked={target === project.id}
 											onChange={() => void chooseProject(project.id)}
 										/>
-										<UntrustedText>{project.name}</UntrustedText>
+										<UntrustedText className="min-w-0 truncate">
+											{project.name}
+										</UntrustedText>
 									</label>
 								))}
 							</fieldset>
 							{timelines.length > 0 && (
 								<fieldset
-									className="flex max-h-40 flex-col gap-1 overflow-auto"
+									className="flex max-h-40 min-w-0 flex-col gap-1 overflow-x-hidden overflow-y-auto"
 									data-testid="asset-use-timelines"
 								>
 									<legend className="mb-1 text-sm font-medium">
@@ -668,16 +676,18 @@ export function AssetDetail({
 									{timelines.map((tl) => (
 										<label
 											key={tl.id}
-											className="flex items-center gap-2 text-sm"
+											className="flex min-w-0 items-center gap-2 text-sm"
 										>
 											<input
 												type="radio"
 												name={`${id}-timeline`}
-												className="accent-primary"
+												className="shrink-0 accent-primary"
 												checked={timeline === tl.id}
 												onChange={() => setTimeline(tl.id)}
 											/>
-											<UntrustedText>{tl.title}</UntrustedText>
+											<UntrustedText className="min-w-0 truncate">
+												{tl.title}
+											</UntrustedText>
 										</label>
 									))}
 								</fieldset>
