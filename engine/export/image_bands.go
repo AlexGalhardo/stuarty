@@ -362,7 +362,7 @@ func (r *imageRun) prepareOne(l *plan.Layer) (drawLayer, error) {
 
 	switch l.Kind {
 	case plan.Media:
-		img, err := imageTexture(l, r.cfg)
+		img, err := r.imageTexture(l)
 		if err != nil {
 			return drawLayer{}, fmt.Errorf("layer %s: %w", l.ItemID, err)
 		}
@@ -619,8 +619,10 @@ func bandsHold(drawn []drawLayer, width, lo, hi, n int) int64 {
 		y0, y1 := edges[b], edges[b+1]
 
 		for i := range drawn {
-			if drawn[i].y0 < y1 && drawn[i].y1 > y0 {
-				held += int64(drawn[i].pic.Bytes())
+			d := &drawn[i]
+			if d.y0 < y1 && d.y1 > y0 {
+				crop := windowCrop(d, 0, y0, width, y1)
+				held += int64(max(crop[2]-crop[0], 0)) * int64(max(crop[3]-crop[1], 0)) * 4
 			}
 		}
 	}
@@ -679,7 +681,13 @@ func (r *imageRun) drawBand(base *image.RGBA, drawn []drawLayer, dst *image.RGBA
 			continue
 		}
 
-		if err := host.PutPrepared(ctx, d.layer.ItemID, d.pic); err != nil {
+		pic := d.pic
+		if !keepAll {
+			crop := windowCrop(d, 0, y0, fp.Width, y1)
+			pic = d.pic.Window(crop[0], crop[1], crop[2], crop[3])
+		}
+
+		if err := host.PutPrepared(ctx, d.layer.ItemID, pic); err != nil {
 			return rendererError(err)
 		}
 

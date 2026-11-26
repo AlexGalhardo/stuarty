@@ -312,6 +312,36 @@ type imageRun struct {
 
 	lutMu sync.Mutex
 	luts  map[string]*lut.Table
+
+	imgMu sync.Mutex
+	imgs  map[string]*decodedImage
+}
+
+type decodedImage struct {
+	once sync.Once
+	img  compositor.Image
+	err  error
+}
+
+// loadDecodedImage decodes path at most once per imageRun; concurrent layer preparations share the single decode.
+func (r *imageRun) loadDecodedImage(path string) (compositor.Image, error) {
+	r.imgMu.Lock()
+	if r.imgs == nil {
+		r.imgs = map[string]*decodedImage{}
+	}
+
+	entry, ok := r.imgs[path]
+	if !ok {
+		entry = &decodedImage{}
+		r.imgs[path] = entry
+	}
+	r.imgMu.Unlock()
+
+	entry.once.Do(func() {
+		entry.img, entry.err = loadImage(path)
+	})
+
+	return entry.img, entry.err
 }
 
 // withoutLostClips drops the layers whose mask source did not make it to the renderer (a text with no pixels, an
@@ -344,17 +374,17 @@ func withoutLostClips(layers []plan.Layer) []plan.Layer {
 
 // imageTexture is the pixels of an image layer: the part of the source the layer shows, scaled down to the box
 // when the box is smaller, as the video export does, so a large photo is averaged and not point sampled.
-func imageTexture(l *plan.Layer, cfg ImageConfig) (compositor.Image, error) {
-	if cfg.AssetPath == nil {
+func (r *imageRun) imageTexture(l *plan.Layer) (compositor.Image, error) {
+	if r.cfg.AssetPath == nil {
 		return compositor.Image{}, errors.New("no image files are available")
 	}
 
-	path, err := cfg.AssetPath(l.AssetID)
+	path, err := r.cfg.AssetPath(l.AssetID)
 	if err != nil {
 		return compositor.Image{}, err
 	}
 
-	src, err := loadImage(path)
+	src, err := r.loadDecodedImage(path)
 	if err != nil {
 		return compositor.Image{}, fmt.Errorf("image %s: %w", l.AssetID, err)
 	}
