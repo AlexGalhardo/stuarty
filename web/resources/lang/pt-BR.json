@@ -1,5 +1,10 @@
 {
   "ui": {
+    "help": {
+      "more_info": "Mais informações sobre {field}",
+      "field": "este campo",
+      "examples": "Exemplos:"
+    },
     "session": {
       "person_only": {
         "local": "Só uma pessoa no aplicativo desktop do Stuarty pode fazer isto. Faça por lá, ou entre com a sua senha num servidor em modo de rede.",
