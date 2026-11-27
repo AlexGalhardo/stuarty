@@ -32,7 +32,10 @@ import { type Translate, useLocale, useT } from "@/lib/i18n";
 import type { ProjectSummary, SharedProps } from "@/types";
 import type { InboxRow } from "../../editor/api/types";
 import { useShell } from "../../shell/ShellContext";
-import { continueTarget } from "../../workflow/continueTarget";
+import {
+	continueTarget,
+	isDocumentNavigation,
+} from "../../workflow/continueTarget";
 import { FirstSteps } from "../../workflow/FirstSteps";
 import { HomeTrail } from "../../workflow/HomeTrail";
 import type { Workflow } from "../../workflow/types";
@@ -280,10 +283,17 @@ function InProgress({
 					</Button>
 					{step !== undefined && target !== null ? (
 						<Button asChild size="lg" data-testid="home-continue">
-							<Link href={target}>
-								<ArrowRight aria-hidden="true" />
-								{t(`ui.dashboard.home.continue.${step.id}`)}
-							</Link>
+							{isDocumentNavigation(target) ? (
+								<a href={target}>
+									<ArrowRight aria-hidden="true" />
+									{t(`ui.dashboard.home.continue.${step.id}`)}
+								</a>
+							) : (
+								<Link href={target}>
+									<ArrowRight aria-hidden="true" />
+									{t(`ui.dashboard.home.continue.${step.id}`)}
+								</Link>
+							)}
 						</Button>
 					) : (
 						<Button asChild size="lg">

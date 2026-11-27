@@ -367,6 +367,13 @@ func editorPage(c *web.Ctx, d *httpapi.Deps, app *vukem.App) error {
 		return c.Redirect("/projects/" + head.ProjectID)
 	}
 
+	// The video editor is a separate HTML document with its own bundle (SDD-012 section 2.2): if an Inertia
+	// link ever visits it with X-Inertia: true, force a full browser navigation instead of returning raw HTML
+	// that Inertia would display inside a blank white iframe overlay (epic 102).
+	if c.Header("X-Inertia") == "true" {
+		return inertia.Location(c, c.Request().URL.RequestURI())
+	}
+
 	locale := i18n.Locale(c.Context())
 	if locale == "" {
 		locale = app.I18n.Default()

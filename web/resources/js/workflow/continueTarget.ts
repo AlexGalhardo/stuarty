@@ -28,3 +28,9 @@ export function continueTarget(
 			return `/projects/${id}`;
 	}
 }
+
+// The video editor is a separate HTML document with its own bundle (SDD-012 section 2.2), so visiting it through
+// Inertia XHR would trigger Inertia's non-Inertia response overlay; callers must use a plain browser anchor for it.
+export function isDocumentNavigation(href: string): boolean {
+	return href.startsWith("/editor/");
+}

@@ -29,7 +29,10 @@ import type {
 	ProjectGoal,
 	ProjectItem,
 } from "../../editor/api/types";
-import { continueTarget } from "../../workflow/continueTarget";
+import {
+	continueTarget,
+	isDocumentNavigation,
+} from "../../workflow/continueTarget";
 import type { ProjectKind, TextSummary, Workflow } from "../../workflow/types";
 import { PublishedPostState } from "../Publish/PublishedPostState";
 import AddMedia from "./AddMedia";
@@ -564,14 +567,25 @@ export default function ProjectShow() {
 							/>
 							{target === null ? null : (
 								<Button asChild size="lg" data-testid="flow-continue">
-									<Link href={target}>
-										<ArrowRight aria-hidden="true" />
-										{t(
-											target.startsWith("/write")
-												? "ui.workflow.open_text"
-												: "ui.workflow.go_current",
-										)}
-									</Link>
+									{isDocumentNavigation(target) ? (
+										<a href={target}>
+											<ArrowRight aria-hidden="true" />
+											{t(
+												target.startsWith("/write")
+													? "ui.workflow.open_text"
+													: "ui.workflow.go_current",
+											)}
+										</a>
+									) : (
+										<Link href={target}>
+											<ArrowRight aria-hidden="true" />
+											{t(
+												target.startsWith("/write")
+													? "ui.workflow.open_text"
+													: "ui.workflow.go_current",
+											)}
+										</Link>
+									)}
 								</Button>
 							)}
 						</div>
