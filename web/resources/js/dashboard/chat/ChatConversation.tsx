@@ -274,6 +274,7 @@ export default function ChatConversation({
 				<Textarea
 					id={`${ids}-message`}
 					ref={composerRef}
+					placeholder={t("ui.help.g3.chat_composer_ph")}
 					value={text}
 					maxLength={20000}
 					disabled={!privileged || !canSend(state)}

@@ -1,12 +1,12 @@
 import { type FormEvent, type ReactNode, useState } from "react";
 
 import { type Failure, FailureNote } from "@/components/Failure";
+import { FieldLabel } from "@/components/FieldHelp";
 import { Notice } from "@/components/Notice";
 import { StatusBadge } from "@/components/StatusBadge";
 import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useT } from "@/lib/i18n";
 import { PersonOnlyNote, useSession } from "@/lib/session";
@@ -130,11 +130,14 @@ export default function ProfileSetup({
 				>
 					<h3 className="text-sm font-medium">{t("ui.chat.connect_title")}</h3>
 					<div className="flex flex-col gap-1">
-						<Label htmlFor="chat-profile-name">
-							{t("ui.chat.profile_name")}
-						</Label>
+						<FieldLabel
+							htmlFor="chat-profile-name"
+							label={t("ui.chat.profile_name")}
+							help={t("ui.help.g3.chat_profile_name_help")}
+						/>
 						<Input
 							id="chat-profile-name"
+							placeholder={t("ui.help.g3.chat_profile_name_ph")}
 							value={name}
 							maxLength={32}
 							autoComplete="off"
@@ -142,11 +145,14 @@ export default function ProfileSetup({
 						/>
 					</div>
 					<div className="flex flex-col gap-1">
-						<Label htmlFor="chat-profile-command">
-							{t("ui.chat.profile_command")}
-						</Label>
+						<FieldLabel
+							htmlFor="chat-profile-command"
+							label={t("ui.chat.profile_command")}
+							help={t("ui.help.g3.chat_profile_cmd_help")}
+						/>
 						<Input
 							id="chat-profile-command"
+							placeholder={t("ui.help.g3.chat_profile_cmd_ph")}
 							value={command}
 							maxLength={1024}
 							autoComplete="off"
@@ -155,11 +161,14 @@ export default function ProfileSetup({
 						/>
 					</div>
 					<div className="flex flex-col gap-1">
-						<Label htmlFor="chat-profile-args">
-							{t("ui.chat.profile_args")}
-						</Label>
+						<FieldLabel
+							htmlFor="chat-profile-args"
+							label={t("ui.chat.profile_args")}
+							help={t("ui.help.g3.chat_profile_args_help")}
+						/>
 						<Textarea
 							id="chat-profile-args"
+							placeholder={t("ui.help.g3.chat_profile_args_ph")}
 							value={args}
 							spellCheck={false}
 							onChange={(event) => setArgs(event.target.value)}

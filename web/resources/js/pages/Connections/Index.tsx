@@ -10,6 +10,7 @@ import {
 
 import { EmptyState } from "@/components/EmptyState";
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
+import { FieldLabel } from "@/components/FieldHelp";
 import { Notice } from "@/components/Notice";
 import { PageHeader, PageHeaderAction } from "@/components/PageHeader";
 import { SectionTitle } from "@/components/SectionTitle";
@@ -27,7 +28,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { formatDateTime } from "@/lib/format";
 import { useLocale, useT } from "@/lib/i18n";
 import { PersonOnlyNote, useSession } from "@/lib/session";
@@ -384,38 +384,47 @@ export default function Connections(): ReactNode {
 							className="flex flex-col gap-4 rounded-lg border border-border bg-surface p-5 text-text"
 						>
 							<div className="flex flex-col gap-2">
-								<Label htmlFor="connection-label">
-									{t("ui.connections.label")}
-								</Label>
+								<FieldLabel
+									htmlFor="connection-label"
+									label={t("ui.connections.label")}
+									help={t("ui.help.g4.conn_label_help")}
+								/>
 								<Input
 									id="connection-label"
 									required
 									maxLength={LABEL_MAX}
 									autoComplete="off"
+									placeholder={t("ui.help.g4.conn_label_ph")}
 									value={label}
 									onChange={(event) => setLabel(event.target.value)}
 								/>
 							</div>
 							<div className="flex flex-col gap-2">
-								<Label htmlFor="connection-endpoint">
-									{t("ui.connections.endpoint")}
-								</Label>
+								<FieldLabel
+									htmlFor="connection-endpoint"
+									label={t("ui.connections.endpoint")}
+									help={t("ui.help.g4.conn_endpoint_help")}
+								/>
 								<Input
 									id="connection-endpoint"
 									required
 									type="url"
 									autoComplete="off"
+									placeholder={t("ui.help.g4.conn_endpoint_ph")}
 									value={endpoint}
 									onChange={(event) => setEndpoint(event.target.value)}
 								/>
 							</div>
 							<div className="flex flex-col gap-2">
-								<Label htmlFor="connection-hosts">
-									{t("ui.connections.hosts")}
-								</Label>
+								<FieldLabel
+									htmlFor="connection-hosts"
+									label={t("ui.connections.hosts")}
+									help={t("ui.help.g4.conn_hosts_help")}
+								/>
 								<Input
 									id="connection-hosts"
 									autoComplete="off"
+									placeholder={t("ui.help.g4.conn_hosts_ph")}
 									value={hosts}
 									onChange={(event) => setHosts(event.target.value)}
 								/>
@@ -443,14 +452,17 @@ export default function Connections(): ReactNode {
 								))}
 							</fieldset>
 							<div className="flex flex-col gap-2">
-								<Label htmlFor="connection-secret">
-									{t("ui.connections.secret")}
-								</Label>
+								<FieldLabel
+									htmlFor="connection-secret"
+									label={t("ui.connections.secret")}
+									help={t("ui.help.g4.conn_secret_help")}
+								/>
 								<Input
 									id="connection-secret"
 									required
 									type="password"
 									autoComplete="off"
+									placeholder={t("ui.help.g4.conn_secret_ph")}
 									value={secret}
 									onChange={(event) => setSecret(event.target.value)}
 								/>

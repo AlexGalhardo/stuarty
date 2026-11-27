@@ -1,6 +1,7 @@
 import { type FormEvent, type ReactNode, useState } from "react";
 
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
+import { FieldLabel } from "@/components/FieldHelp";
 import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -256,9 +257,14 @@ export default function RulesPanel({
 			>
 				<h3 className="font-medium">{t("ui.approvals.rules.new")}</h3>
 				<div className="flex flex-col gap-2">
-					<Label htmlFor="rule-kind">{t("ui.approvals.rules.kind")}</Label>
+					<FieldLabel
+						htmlFor="rule-kind"
+						label={t("ui.approvals.rules.kind")}
+						help={t("ui.help.g3.rule_kind_help")}
+					/>
 					<Input
 						id="rule-kind"
+						placeholder={t("ui.help.g3.rule_kind_ph")}
 						required
 						autoComplete="off"
 						maxLength={80}
@@ -285,9 +291,11 @@ export default function RulesPanel({
 					</select>
 				</div>
 				<div className="flex flex-col gap-2">
-					<Label htmlFor="rule-project">
-						{t("ui.approvals.rules.project")}
-					</Label>
+					<FieldLabel
+						htmlFor="rule-project"
+						label={t("ui.approvals.rules.project")}
+						help={t("ui.help.g3.rule_project_help")}
+					/>
 					<Input
 						id="rule-project"
 						autoComplete="off"
@@ -298,9 +306,14 @@ export default function RulesPanel({
 				</div>
 				<div className="grid grid-cols-1 gap-4">
 					<div className="flex flex-col gap-2">
-						<Label htmlFor="rule-currency">{t("ui.approvals.currency")}</Label>
+						<FieldLabel
+							htmlFor="rule-currency"
+							label={t("ui.approvals.currency")}
+							help={t("ui.help.g3.currency_help")}
+						/>
 						<Input
 							id="rule-currency"
+							placeholder={t("ui.help.g3.currency_ph")}
 							autoComplete="off"
 							maxLength={3}
 							value={currency}
@@ -308,9 +321,14 @@ export default function RulesPanel({
 						/>
 					</div>
 					<div className="flex flex-col gap-2">
-						<Label htmlFor="rule-per-item">{t("ui.approvals.per_item")}</Label>
+						<FieldLabel
+							htmlFor="rule-per-item"
+							label={t("ui.approvals.per_item")}
+							help={t("ui.help.g3.per_item_help")}
+						/>
 						<Input
 							id="rule-per-item"
+							placeholder={t("ui.help.g3.per_item_ph")}
 							inputMode="decimal"
 							autoComplete="off"
 							value={perItem}
@@ -318,9 +336,14 @@ export default function RulesPanel({
 						/>
 					</div>
 					<div className="flex flex-col gap-2">
-						<Label htmlFor="rule-per-day">{t("ui.approvals.per_day")}</Label>
+						<FieldLabel
+							htmlFor="rule-per-day"
+							label={t("ui.approvals.per_day")}
+							help={t("ui.help.g3.per_day_help")}
+						/>
 						<Input
 							id="rule-per-day"
+							placeholder={t("ui.help.g3.per_day_ph")}
 							inputMode="decimal"
 							autoComplete="off"
 							value={perDay}

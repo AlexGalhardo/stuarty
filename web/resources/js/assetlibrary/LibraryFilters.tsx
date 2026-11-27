@@ -1,11 +1,11 @@
 import { Check } from "lucide-react";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 
+import { FieldLabel } from "@/components/FieldHelp";
 import { FilterBar } from "@/components/FilterBar";
 import { OptionSelect } from "@/components/OptionSelect";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useT } from "@/lib/i18n";
 import type {
 	AssetQuery,
@@ -81,9 +81,11 @@ export function LibraryFilters({
 	return (
 		<FilterBar label={t("ui.assets.filter.bar")} className="items-end gap-3">
 			<div className="flex min-w-48 flex-[2] flex-col gap-1">
-				<Label htmlFor={`filter-text-${section}`}>
-					{t("ui.assets.filter.text")}
-				</Label>
+				<FieldLabel
+					htmlFor={`filter-text-${section}`}
+					label={t("ui.assets.filter.text")}
+					help={t("ui.help.g3.lib_filter_help")}
+				/>
 				<Input
 					id={`filter-text-${section}`}
 					type="search"

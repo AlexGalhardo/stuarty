@@ -11,6 +11,7 @@ import {
 } from "react";
 
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
+import { FieldLabel } from "@/components/FieldHelp";
 import { OptionSelect } from "@/components/OptionSelect";
 import { PageHeaderAction } from "@/components/PageHeader";
 import RenameAssetDialog from "@/components/RenameAssetDialog";
@@ -452,20 +453,26 @@ export function AssetDetail({
 						</p>
 					</Field>
 					<div className="flex flex-col gap-2">
-						<Label htmlFor={`${id}-description`}>
-							{t("ui.assets.detail.description")}
-						</Label>
+						<FieldLabel
+							htmlFor={`${id}-description`}
+							label={t("ui.assets.detail.description")}
+							help={t("ui.help.g3.asset_desc_help")}
+						/>
 						<Textarea
 							id={`${id}-description`}
+							placeholder={t("ui.help.g3.asset_desc_ph")}
 							maxLength={2000}
 							value={description}
 							onChange={(event) => setDescription(event.target.value)}
 						/>
-						<Label htmlFor={`${id}-rights`}>
-							{t("ui.assets.detail.rights")}
-						</Label>
+						<FieldLabel
+							htmlFor={`${id}-rights`}
+							label={t("ui.assets.detail.rights")}
+							help={t("ui.help.g3.asset_rights_help")}
+						/>
 						<Textarea
 							id={`${id}-rights`}
+							placeholder={t("ui.help.g3.asset_rights_ph")}
 							maxLength={2000}
 							value={rights}
 							onChange={(event) => setRights(event.target.value)}
@@ -586,6 +593,8 @@ export function AssetDetail({
 							</Label>
 							<Input
 								id={`${id}-tag`}
+								placeholder={t("ui.help.g3.asset_tag_ph")}
+								title={t("ui.help.g3.asset_tag_help")}
 								autoComplete="off"
 								maxLength={40}
 								value={tag}

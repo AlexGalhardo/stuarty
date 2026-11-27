@@ -22,6 +22,7 @@ import {
 
 import { EmptyState } from "@/components/EmptyState";
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
+import { FieldLabel } from "@/components/FieldHelp";
 import { FilterBar } from "@/components/FilterBar";
 import { ListRow } from "@/components/ListRow";
 import { LoadError } from "@/components/LoadError";
@@ -384,7 +385,11 @@ export default function LibraryPage({
 					<div className="flex min-w-0 flex-col gap-3">
 						<FilterBar label={t("ui.library.search_bar")}>
 							<div className="flex min-w-0 flex-1 flex-col gap-1">
-								<Label htmlFor="library-query">{t("ui.library.search")}</Label>
+								<FieldLabel
+									htmlFor="library-query"
+									label={t("ui.library.search")}
+									help={t("ui.help.g3.lib_search_help")}
+								/>
 								<Input
 									id="library-query"
 									type="search"
@@ -681,18 +686,28 @@ function SkillTools({
 			<form className="mt-3 flex flex-col gap-3" onSubmit={importIt}>
 				<p className="text-sm text-text-muted">{t("ui.library.import.hint")}</p>
 				<div className="flex flex-col gap-1">
-					<Label htmlFor="import-path">{t("ui.library.import.path")}</Label>
+					<FieldLabel
+						htmlFor="import-path"
+						label={t("ui.library.import.path")}
+						help={t("ui.help.g3.lib_import_path_help")}
+					/>
 					<Input
 						id="import-path"
+						placeholder={t("ui.help.g3.lib_import_path_ph")}
 						value={path}
 						required
 						onChange={(e) => setPath(e.target.value)}
 					/>
 				</div>
 				<div className="flex flex-col gap-1">
-					<Label htmlFor="import-source">{t("ui.library.import.source")}</Label>
+					<FieldLabel
+						htmlFor="import-source"
+						label={t("ui.library.import.source")}
+						help={t("ui.help.g3.lib_import_source_help")}
+					/>
 					<Input
 						id="import-source"
+						placeholder={t("ui.help.g3.lib_import_source_ph")}
 						value={source}
 						onChange={(e) => setSource(e.target.value)}
 					/>

@@ -9,6 +9,7 @@ import {
 } from "react";
 
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
+import { FieldLabel } from "@/components/FieldHelp";
 import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
 import {
@@ -507,11 +508,14 @@ export function GenerateDialog({
 							</div>
 						)}
 						<div className="flex flex-col gap-1">
-							<Label htmlFor={`generate-prompt-${kind}`}>
-								{t(`ui.generate.prompt.${kind}`)}
-							</Label>
+							<FieldLabel
+								htmlFor={`generate-prompt-${kind}`}
+								label={t(`ui.generate.prompt.${kind}`)}
+								help={t("ui.help.g3.gen_prompt_help")}
+							/>
 							<Textarea
 								id={`generate-prompt-${kind}`}
+								placeholder={t("ui.help.g3.gen_prompt_ph")}
 								rows={4}
 								value={prompt}
 								onChange={(event) => {
@@ -523,9 +527,14 @@ export function GenerateDialog({
 						{kind === "image" ? (
 							<div className="flex flex-wrap gap-3">
 								<div className="flex flex-col gap-1">
-									<Label htmlFor="generate-size">{t("ui.generate.size")}</Label>
+									<FieldLabel
+										htmlFor="generate-size"
+										label={t("ui.generate.size")}
+										help={t("ui.help.g3.gen_size_help")}
+									/>
 									<Input
 										id="generate-size"
+										placeholder={t("ui.help.g3.gen_size_ph")}
 										className="w-36"
 										value={size}
 										onChange={(event) => {
@@ -535,11 +544,14 @@ export function GenerateDialog({
 									/>
 								</div>
 								<div className="flex flex-col gap-1">
-									<Label htmlFor="generate-count">
-										{t("ui.generate.count")}
-									</Label>
+									<FieldLabel
+										htmlFor="generate-count"
+										label={t("ui.generate.count")}
+										help={t("ui.help.g3.gen_count_help")}
+									/>
 									<Input
 										id="generate-count"
+										placeholder={t("ui.help.g3.gen_count_ph")}
 										className="w-24"
 										inputMode="numeric"
 										value={count}
@@ -553,11 +565,14 @@ export function GenerateDialog({
 						) : kind === "video" ? (
 							<div className="flex flex-wrap gap-3">
 								<div className="flex flex-col gap-1">
-									<Label htmlFor="generate-seconds">
-										{t("ui.generate.seconds")}
-									</Label>
+									<FieldLabel
+										htmlFor="generate-seconds"
+										label={t("ui.generate.seconds")}
+										help={t("ui.help.g3.gen_seconds_help")}
+									/>
 									<Input
 										id="generate-seconds"
+										placeholder={t("ui.help.g3.gen_seconds_ph")}
 										className="w-24"
 										inputMode="numeric"
 										value={seconds}
@@ -629,11 +644,14 @@ export function GenerateDialog({
 									</select>
 								</div>
 								<div className="flex flex-col gap-1">
-									<Label htmlFor="generate-language">
-										{t("ui.generate.language")}
-									</Label>
+									<FieldLabel
+										htmlFor="generate-language"
+										label={t("ui.generate.language")}
+										help={t("ui.help.g3.gen_lang_help")}
+									/>
 									<Input
 										id="generate-language"
+										placeholder={t("ui.help.g3.gen_lang_ph")}
 										className="w-28"
 										value={language}
 										onChange={(event) => setLanguage(event.target.value)}

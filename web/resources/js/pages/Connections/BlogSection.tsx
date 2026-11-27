@@ -1,6 +1,7 @@
 import { type FormEvent, type ReactNode, useState } from "react";
 
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
+import { FieldLabel } from "@/components/FieldHelp";
 import { SectionTitle } from "@/components/SectionTitle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -202,12 +203,17 @@ export default function BlogSection({
 						</select>
 					</div>
 					<div className="flex flex-col gap-2">
-						<Label htmlFor="blog-label">{t("ui.connections.label")}</Label>
+						<FieldLabel
+							htmlFor="blog-label"
+							label={t("ui.connections.label")}
+							help={t("ui.help.g4.blog_label_help")}
+						/>
 						<Input
 							id="blog-label"
 							required
 							maxLength={60}
 							autoComplete="off"
+							placeholder={t("ui.help.g4.blog_label_ph")}
 							value={form.label}
 							onChange={(event) => set("label", event.target.value)}
 						/>
@@ -223,13 +229,16 @@ export default function BlogSection({
 				{form.kind === "blog_files" && (
 					<>
 						<div className="flex flex-col gap-2">
-							<Label htmlFor="blog-folder">
-								{t("ui.connections.blog.folder")}
-							</Label>
+							<FieldLabel
+								htmlFor="blog-folder"
+								label={t("ui.connections.blog.folder")}
+								help={t("ui.help.g4.blog_folder_help")}
+							/>
 							<Input
 								id="blog-folder"
 								autoComplete="off"
 								aria-describedby="blog-folder-hint"
+								placeholder={t("ui.help.g4.blog_folder_ph")}
 								value={form.folder}
 								onChange={(event) => set("folder", event.target.value)}
 							/>
@@ -261,14 +270,17 @@ export default function BlogSection({
 						</div>
 						{form.template === "custom" && (
 							<div className="flex flex-col gap-2">
-								<Label htmlFor="blog-front-matter">
-									{t("ui.connections.blog.front_matter")}
-								</Label>
+								<FieldLabel
+									htmlFor="blog-front-matter"
+									label={t("ui.connections.blog.front_matter")}
+									help={t("ui.help.g4.blog_fm_help")}
+								/>
 								<Textarea
 									id="blog-front-matter"
 									rows={6}
 									className="font-mono"
 									aria-describedby="blog-front-matter-hint"
+									placeholder={t("ui.help.g4.blog_fm_ph")}
 									value={form.frontMatter}
 									onChange={(event) => set("frontMatter", event.target.value)}
 								/>
@@ -294,36 +306,47 @@ export default function BlogSection({
 				{form.kind === "blog_wordpress" && (
 					<>
 						<div className="flex flex-col gap-2">
-							<Label htmlFor="blog-site">{t("ui.connections.blog.site")}</Label>
+							<FieldLabel
+								htmlFor="blog-site"
+								label={t("ui.connections.blog.site")}
+								help={t("ui.help.g4.blog_site_help")}
+							/>
 							<Input
 								id="blog-site"
 								type="url"
 								autoComplete="off"
+								placeholder={t("ui.help.g4.blog_site_ph")}
 								value={form.site}
 								onChange={(event) => set("site", event.target.value)}
 							/>
 						</div>
 						<div className="grid gap-4 sm:grid-cols-2">
 							<div className="flex flex-col gap-2">
-								<Label htmlFor="blog-user">
-									{t("ui.connections.blog.user")}
-								</Label>
+								<FieldLabel
+									htmlFor="blog-user"
+									label={t("ui.connections.blog.user")}
+									help={t("ui.help.g4.blog_user_help")}
+								/>
 								<Input
 									id="blog-user"
 									autoComplete="off"
+									placeholder={t("ui.help.g4.blog_user_ph")}
 									value={form.user}
 									onChange={(event) => set("user", event.target.value)}
 								/>
 							</div>
 							<div className="flex flex-col gap-2">
-								<Label htmlFor="blog-app-password">
-									{t("ui.connections.blog.application_password")}
-								</Label>
+								<FieldLabel
+									htmlFor="blog-app-password"
+									label={t("ui.connections.blog.application_password")}
+									help={t("ui.connections.blog.wordpress_hint")}
+								/>
 								<Input
 									id="blog-app-password"
 									type="password"
 									autoComplete="off"
 									aria-describedby="blog-wordpress-hint"
+									placeholder={t("ui.help.g4.blog_app_pw_ph")}
 									value={form.applicationPassword}
 									onChange={(event) =>
 										set("applicationPassword", event.target.value)
@@ -340,37 +363,48 @@ export default function BlogSection({
 					form.kind === "blog_webhook_local") && (
 					<>
 						<div className="flex flex-col gap-2">
-							<Label htmlFor="blog-hook">{t("ui.connections.blog.hook")}</Label>
+							<FieldLabel
+								htmlFor="blog-hook"
+								label={t("ui.connections.blog.hook")}
+								help={t("ui.help.g4.blog_hook_help")}
+							/>
 							<Input
 								id="blog-hook"
 								type="url"
 								autoComplete="off"
+								placeholder={t("ui.help.g4.blog_hook_ph")}
 								value={form.hook}
 								onChange={(event) => set("hook", event.target.value)}
 							/>
 						</div>
 						<div className="grid gap-4 sm:grid-cols-2">
 							<div className="flex flex-col gap-2">
-								<Label htmlFor="blog-signing">
-									{t("ui.connections.blog.signing_secret")}
-								</Label>
+								<FieldLabel
+									htmlFor="blog-signing"
+									label={t("ui.connections.blog.signing_secret")}
+									help={t("ui.connections.blog.signing_hint")}
+								/>
 								<Input
 									id="blog-signing"
 									type="password"
 									autoComplete="off"
 									aria-describedby="blog-signing-hint"
+									placeholder={t("ui.help.g4.blog_signing_ph")}
 									value={form.signingSecret}
 									onChange={(event) => set("signingSecret", event.target.value)}
 								/>
 							</div>
 							<div className="flex flex-col gap-2">
-								<Label htmlFor="blog-media-base">
-									{t("ui.connections.blog.media_base")}
-								</Label>
+								<FieldLabel
+									htmlFor="blog-media-base"
+									label={t("ui.connections.blog.media_base")}
+									help={t("ui.help.g4.blog_media_base_help")}
+								/>
 								<Input
 									id="blog-media-base"
 									type="url"
 									autoComplete="off"
+									placeholder={t("ui.help.g4.blog_media_base_ph")}
 									value={form.mediaBase}
 									onChange={(event) => set("mediaBase", event.target.value)}
 								/>

@@ -1,11 +1,11 @@
 import { type FormEvent, type ReactNode, useEffect, useState } from "react";
 import { DetailPanel } from "@/components/DetailPanel";
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
+import { FieldLabel } from "@/components/FieldHelp";
 import { Notice } from "@/components/Notice";
 import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useT } from "@/lib/i18n";
@@ -278,11 +278,14 @@ export default function SkillPane({
 							<form className="flex flex-col gap-3" onSubmit={save}>
 								{name === null && (
 									<div className="flex flex-col gap-1">
-										<Label htmlFor="skill-name">
-											{t("ui.library.field.name")}
-										</Label>
+										<FieldLabel
+											htmlFor="skill-name"
+											label={t("ui.library.field.name")}
+											help={t("ui.help.g3.skill_name_help")}
+										/>
 										<Input
 											id="skill-name"
+											placeholder={t("ui.help.g3.skill_name_ph")}
 											value={newName}
 											maxLength={64}
 											required
@@ -294,32 +297,41 @@ export default function SkillPane({
 									</div>
 								)}
 								<div className="flex flex-col gap-1">
-									<Label htmlFor="skill-description">
-										{t("ui.library.field.description")}
-									</Label>
+									<FieldLabel
+										htmlFor="skill-description"
+										label={t("ui.library.field.description")}
+										help={t("ui.help.g3.skill_desc_help")}
+									/>
 									<Input
 										id="skill-description"
+										placeholder={t("ui.help.g3.skill_desc_ph")}
 										value={description}
 										required
 										onChange={(e) => setDescription(e.target.value)}
 									/>
 								</div>
 								<div className="flex flex-col gap-1">
-									<Label htmlFor="skill-license">
-										{t("ui.library.field.license")}
-									</Label>
+									<FieldLabel
+										htmlFor="skill-license"
+										label={t("ui.library.field.license")}
+										help={t("ui.help.g3.skill_license_help")}
+									/>
 									<Input
 										id="skill-license"
+										placeholder={t("ui.help.g3.skill_license_ph")}
 										value={license}
 										onChange={(e) => setLicense(e.target.value)}
 									/>
 								</div>
 								<div className="flex flex-col gap-1">
-									<Label htmlFor="skill-body">
-										{t("ui.library.skill.instructions")}
-									</Label>
+									<FieldLabel
+										htmlFor="skill-body"
+										label={t("ui.library.skill.instructions")}
+										help={t("ui.help.g3.skill_body_help")}
+									/>
 									<Textarea
 										id="skill-body"
+										placeholder={t("ui.help.g3.skill_body_ph")}
 										rows={12}
 										value={body}
 										required

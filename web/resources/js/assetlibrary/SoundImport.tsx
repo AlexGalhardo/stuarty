@@ -7,6 +7,7 @@ import {
 } from "react";
 
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
+import { FieldLabel } from "@/components/FieldHelp";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -102,9 +103,14 @@ export function SoundImport({ onImported }: { onImported(): void }): ReactNode {
 				</select>
 			</div>
 			<div className="flex min-w-64 flex-1 flex-col gap-1">
-				<Label htmlFor={`${id}-path`}>{t("ui.assets.sound.import_path")}</Label>
+				<FieldLabel
+					htmlFor={`${id}-path`}
+					label={t("ui.assets.sound.import_path")}
+					help={t("ui.help.g3.sound_path_help")}
+				/>
 				<Input
 					id={`${id}-path`}
+					placeholder={t("ui.help.g3.sound_path_ph")}
 					autoComplete="off"
 					value={path}
 					onChange={(event) => setPath(event.target.value)}

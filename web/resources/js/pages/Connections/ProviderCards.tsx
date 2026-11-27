@@ -1,12 +1,12 @@
 import { type FormEvent, type ReactNode, useState } from "react";
 
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
+import { FieldLabel } from "@/components/FieldHelp";
 import { SectionTitle } from "@/components/SectionTitle";
 import { StatusBadge } from "@/components/StatusBadge";
 import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { formatDateTime } from "@/lib/format";
 import { useLocale, useT } from "@/lib/i18n";
 import { PersonOnlyNote, useSession } from "@/lib/session";
@@ -189,13 +189,16 @@ export function ModelRow({
 					}}
 				>
 					<div className="flex flex-col gap-1">
-						<Label htmlFor={`price-currency-${model.id}`}>
-							{t("ui.providers.price_currency")}
-						</Label>
+						<FieldLabel
+							htmlFor={`price-currency-${model.id}`}
+							label={t("ui.providers.price_currency")}
+							help={t("ui.help.g3.currency_help")}
+						/>
 						<Input
 							id={`price-currency-${model.id}`}
 							className="w-24"
 							maxLength={3}
+							placeholder={t("ui.help.g3.currency_ph")}
 							value={currency}
 							onChange={(event) => setCurrency(event.target.value)}
 						/>
@@ -203,25 +206,31 @@ export function ModelRow({
 					{unit === undefined ? (
 						<>
 							<div className="flex flex-col gap-1">
-								<Label htmlFor={`price-in-${model.id}`}>
-									{t("ui.providers.price_input")}
-								</Label>
+								<FieldLabel
+									htmlFor={`price-in-${model.id}`}
+									label={t("ui.providers.price_input")}
+									help={t("ui.help.g4.prov_price_in_help")}
+								/>
 								<Input
 									id={`price-in-${model.id}`}
 									className="w-36"
 									inputMode="decimal"
+									placeholder={t("ui.help.g4.prov_price_in_ph")}
 									value={input}
 									onChange={(event) => setInput(event.target.value)}
 								/>
 							</div>
 							<div className="flex flex-col gap-1">
-								<Label htmlFor={`price-out-${model.id}`}>
-									{t("ui.providers.price_output")}
-								</Label>
+								<FieldLabel
+									htmlFor={`price-out-${model.id}`}
+									label={t("ui.providers.price_output")}
+									help={t("ui.help.g4.prov_price_out_help")}
+								/>
 								<Input
 									id={`price-out-${model.id}`}
 									className="w-36"
 									inputMode="decimal"
+									placeholder={t("ui.help.g4.prov_price_out_ph")}
 									value={output}
 									onChange={(event) => setOutput(event.target.value)}
 								/>
@@ -229,13 +238,16 @@ export function ModelRow({
 						</>
 					) : (
 						<div className="flex flex-col gap-1">
-							<Label htmlFor={`price-unit-${model.id}`}>
-								{t(`ui.providers.price_per.${unit}`)}
-							</Label>
+							<FieldLabel
+								htmlFor={`price-unit-${model.id}`}
+								label={t(`ui.providers.price_per.${unit}`)}
+								help={t("ui.help.g4.prov_price_unit_help")}
+							/>
 							<Input
 								id={`price-unit-${model.id}`}
 								className="w-36"
 								inputMode="decimal"
+								placeholder={t("ui.help.g4.prov_price_unit_ph")}
 								value={unitInput}
 								onChange={(event) => setUnitInput(event.target.value)}
 							/>
@@ -586,40 +598,49 @@ export function ProviderCard({
 					className="flex flex-col gap-3 px-4 pb-4"
 				>
 					<div className="flex flex-col gap-1">
-						<Label htmlFor={`provider-label-${provider.id}`}>
-							{t("ui.providers.connect_name")}
-						</Label>
+						<FieldLabel
+							htmlFor={`provider-label-${provider.id}`}
+							label={t("ui.providers.connect_name")}
+							help={t("ui.help.g4.prov_label_help")}
+						/>
 						<Input
 							id={`provider-label-${provider.id}`}
 							required
 							maxLength={LABEL_MAX}
 							autoComplete="off"
+							placeholder={t("ui.help.g4.prov_label_ph")}
 							value={label}
 							onChange={(event) => setLabel(event.target.value)}
 						/>
 					</div>
 					<div className="flex flex-col gap-1">
-						<Label htmlFor={`provider-endpoint-${provider.id}`}>
-							{t("ui.providers.connect_address")}
-						</Label>
+						<FieldLabel
+							htmlFor={`provider-endpoint-${provider.id}`}
+							label={t("ui.providers.connect_address")}
+							help={t("ui.help.g4.prov_endpoint_help")}
+						/>
 						<Input
 							id={`provider-endpoint-${provider.id}`}
 							required
 							type="url"
 							autoComplete="off"
+							placeholder={t("ui.help.g4.prov_endpoint_ph")}
 							value={endpoint}
 							onChange={(event) => setEndpoint(event.target.value)}
 						/>
 					</div>
 					<div className="flex flex-col gap-1">
-						<Label htmlFor={`provider-key-${provider.id}`}>
-							{t("ui.providers.connect_key")}
-						</Label>
+						<FieldLabel
+							htmlFor={`provider-key-${provider.id}`}
+							label={t("ui.providers.connect_key")}
+							help={t("ui.help.g4.prov_key_help")}
+						/>
 						<Input
 							id={`provider-key-${provider.id}`}
 							required
 							type="password"
 							autoComplete="off"
+							placeholder={t("ui.help.g4.prov_key_ph")}
 							value={secret}
 							onChange={(event) => setSecret(event.target.value)}
 						/>

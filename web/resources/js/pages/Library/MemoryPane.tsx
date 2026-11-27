@@ -1,6 +1,7 @@
 import { type FormEvent, type ReactNode, useEffect, useState } from "react";
 import { DetailPanel } from "@/components/DetailPanel";
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
+import { FieldLabel } from "@/components/FieldHelp";
 import { Notice } from "@/components/Notice";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -212,11 +213,14 @@ export default function MemoryPane({
 							<form className="flex flex-col gap-3" onSubmit={save}>
 								{name === null && (
 									<div className="flex flex-col gap-1">
-										<Label htmlFor="memory-name">
-											{t("ui.library.field.name_optional")}
-										</Label>
+										<FieldLabel
+											htmlFor="memory-name"
+											label={t("ui.library.field.name_optional")}
+											help={t("ui.help.g3.mem_name_help")}
+										/>
 										<Input
 											id="memory-name"
+											placeholder={t("ui.help.g3.mem_name_ph")}
 											value={newName}
 											maxLength={64}
 											onChange={(e) => setNewName(e.target.value)}
@@ -227,11 +231,14 @@ export default function MemoryPane({
 									</div>
 								)}
 								<div className="flex flex-col gap-1">
-									<Label htmlFor="memory-description">
-										{t("ui.library.memory.description")}
-									</Label>
+									<FieldLabel
+										htmlFor="memory-description"
+										label={t("ui.library.memory.description")}
+										help={t("ui.help.g3.mem_desc_help")}
+									/>
 									<Input
 										id="memory-description"
+										placeholder={t("ui.help.g3.mem_desc_ph")}
 										value={description}
 										maxLength={200}
 										required
@@ -239,11 +246,14 @@ export default function MemoryPane({
 									/>
 								</div>
 								<div className="flex flex-col gap-1">
-									<Label htmlFor="memory-body">
-										{t("ui.library.field.body")}
-									</Label>
+									<FieldLabel
+										htmlFor="memory-body"
+										label={t("ui.library.field.body")}
+										help={t("ui.help.g3.mem_body_help")}
+									/>
 									<Textarea
 										id="memory-body"
+										placeholder={t("ui.help.g3.mem_body_ph")}
 										rows={8}
 										value={body}
 										onChange={(e) => setBody(e.target.value)}
@@ -284,11 +294,14 @@ export default function MemoryPane({
 										</p>
 									</div>
 									<div className="flex flex-col gap-1">
-										<Label htmlFor="memory-tags">
-											{t("ui.library.field.tags")}
-										</Label>
+										<FieldLabel
+											htmlFor="memory-tags"
+											label={t("ui.library.field.tags")}
+											help={t("ui.help.g3.tags_csv_help")}
+										/>
 										<Input
 											id="memory-tags"
+											placeholder={t("ui.help.g3.tags_csv_ph")}
 											value={tags}
 											onChange={(e) => setTags(e.target.value)}
 										/>

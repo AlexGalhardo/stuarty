@@ -1,9 +1,9 @@
 import { type FormEvent, type ReactNode, useState } from "react";
 
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
+import { FieldLabel, HelpCard } from "@/components/FieldHelp";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useLocale, useT } from "@/lib/i18n";
 import { PersonOnlyNote, useSession } from "@/lib/session";
 import { createClient } from "../../editor/api/client";
@@ -202,13 +202,20 @@ export default function CostPanel({
 					onSubmit={(event) => void save(event)}
 					className="mt-4 flex flex-col gap-4"
 				>
+					<HelpCard
+						title={t("ui.help.g3.cost_card_title")}
+						description={t("ui.help.g3.cost_card_body")}
+					/>
 					<div className="grid grid-cols-1 gap-4">
 						<div className="flex flex-col gap-2">
-							<Label htmlFor="ceiling-currency">
-								{t("ui.approvals.currency")}
-							</Label>
+							<FieldLabel
+								htmlFor="ceiling-currency"
+								label={t("ui.approvals.currency")}
+								help={t("ui.help.g3.currency_help")}
+							/>
 							<Input
 								id="ceiling-currency"
+								placeholder={t("ui.help.g3.currency_ph")}
 								autoComplete="off"
 								maxLength={3}
 								value={currency}
@@ -216,9 +223,11 @@ export default function CostPanel({
 							/>
 						</div>
 						<div className="flex flex-col gap-2">
-							<Label htmlFor="ceiling-project">
-								{t("ui.approvals.rules.project")}
-							</Label>
+							<FieldLabel
+								htmlFor="ceiling-project"
+								label={t("ui.approvals.rules.project")}
+								help={t("ui.help.g3.ceiling_project_help")}
+							/>
 							<Input
 								id="ceiling-project"
 								autoComplete="off"
@@ -228,11 +237,14 @@ export default function CostPanel({
 							/>
 						</div>
 						<div className="flex flex-col gap-2">
-							<Label htmlFor="ceiling-per-item">
-								{t("ui.approvals.per_item")}
-							</Label>
+							<FieldLabel
+								htmlFor="ceiling-per-item"
+								label={t("ui.approvals.per_item")}
+								help={t("ui.help.g3.per_item_help")}
+							/>
 							<Input
 								id="ceiling-per-item"
+								placeholder={t("ui.help.g3.per_item_ph")}
 								inputMode="decimal"
 								autoComplete="off"
 								value={perItem}
@@ -240,11 +252,14 @@ export default function CostPanel({
 							/>
 						</div>
 						<div className="flex flex-col gap-2">
-							<Label htmlFor="ceiling-per-day">
-								{t("ui.approvals.per_day")}
-							</Label>
+							<FieldLabel
+								htmlFor="ceiling-per-day"
+								label={t("ui.approvals.per_day")}
+								help={t("ui.help.g3.per_day_help")}
+							/>
 							<Input
 								id="ceiling-per-day"
+								placeholder={t("ui.help.g3.per_day_ph")}
 								inputMode="decimal"
 								autoComplete="off"
 								value={perDay}
