@@ -58,6 +58,21 @@ func (d *EncoderDetection) ChosenCandidate() (Candidate, bool) {
 	return Candidate{}, false
 }
 
+// OKCandidates returns all candidates that passed detection, in detection order,
+// starting with Chosen when present.
+func (d *EncoderDetection) OKCandidates() []Candidate {
+	var out []Candidate
+	if chosen, ok := d.ChosenCandidate(); ok && chosen.Status == EncoderOK {
+		out = append(out, chosen)
+	}
+	for _, c := range d.Candidates {
+		if c.Status == EncoderOK && c.Name != d.Chosen {
+			out = append(out, c)
+		}
+	}
+	return out
+}
+
 // DetectOptions are the inputs of encoder detection.
 type DetectOptions struct {
 	// Forced is STUARTY_ENCODER: only that candidate is tested and it is never replaced.

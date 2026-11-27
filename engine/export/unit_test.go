@@ -47,7 +47,7 @@ func TestEncoderOptionsPerEncoder(t *testing.T) {
 	}
 	want := map[string]string{
 		"h264_nvenc":  "-c:v h264_nvenc -b:v 8000k -profile:v high -g 15 -bf 2",
-		"h264_mf":     "-c:v h264_mf -b:v 12000k -g 15 -bf 2",
+		"h264_mf":     "-c:v h264_mf -b:v 12000k -g 15",
 		"libopenh264": "-c:v libopenh264 -b:v 8000k -g 15",
 		"h264_vaapi":  "-c:v h264_vaapi -b:v 8000k -g 15 -bf 2",
 		"libx264":     "-c:v libx264 -crf 18 -preset medium -profile:v high -g 15 -bf 2",

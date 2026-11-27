@@ -68,6 +68,8 @@ func encoderOpts(name string, codec exportcore.Codec, w, h int, fps timeline.Rat
 		opts = append(opts, ffargs.Int("-crf", 18), ffargs.Enum("-preset", "medium"), ffargs.Enum("-profile:v", "high"))
 	case "h264_mf":
 		opts = append(opts, rate(12, 16))
+		// Windows Media Foundation H.264 rejects -bf 2 on many drivers and portrait geometries (epic 100).
+		bframes = false
 	case "libopenh264":
 		opts = append(opts, rate(8, 12))
 		bframes = false

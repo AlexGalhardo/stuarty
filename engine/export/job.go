@@ -536,15 +536,8 @@ func (s *state) buildMP4(ctx context.Context) (built, error) {
 		return built{}, err
 	}
 
-	// 4. Video.
-	rd := s.newRenderer(job.Bands)
-	defer rd.close()
-	if rd.rust != nil && job.PixelRenderer == PixelRendererRust && !s.single {
-		if err := rd.rust.ensureHosts(rd.rust.bands); err != nil {
-			abortAudio()
-			return built{}, wrapRun(err, ReasonRender, "The pixel renderer could not start.", "")
-		}
-	}
+	// 4. Video (with ordered encoder fallback when STUARTY_ENCODER is not forced, epic 100).
+	candidates := encodeCandidates(cand, det)
 
 	ar := <-audioDone
 	cancelAudio()
@@ -558,11 +551,10 @@ func (s *state) buildMP4(ctx context.Context) (built, error) {
 		return built{}, err
 	}
 
-	if err := s.encode(ctx, cand, cp.Codec, mix, partial, rd); err != nil {
+	used, err := s.encodeWithFallback(ctx, candidates, cp.Codec, mix, partial)
+	if err != nil {
 		return built{}, err
 	}
-
-	rd.close()
 
 	if job.afterEncode != nil {
 		if err := job.afterEncode(partial); err != nil {
@@ -589,9 +581,84 @@ func (s *state) buildMP4(ctx context.Context) (built, error) {
 	}
 
 	return built{
-		partial: partial, encoder: cand.Name, codec: cp.Codec, codecWanted: cp.Wanted, notes: cp.Notes,
+		partial: partial, encoder: used.Name, codec: cp.Codec, codecWanted: cp.Wanted, notes: cp.Notes,
 		loud: loud, ver: ver,
 	}, nil
+}
+
+// encodeCandidates orders the verified candidates to try for this export: primary first,
+// then any remaining EncoderOK candidates when STUARTY_ENCODER was not forced.
+func encodeCandidates(primary ffmpeg.Candidate, det *ffmpeg.EncoderDetection) []ffmpeg.Candidate {
+	out := []ffmpeg.Candidate{primary}
+	if det == nil || det.Forced {
+		return out
+	}
+	for _, c := range det.OKCandidates() {
+		if c.Name != primary.Name {
+			out = append(out, c)
+		}
+	}
+	return out
+}
+
+func (s *state) encodeWithFallback(
+	ctx context.Context,
+	candidates []ffmpeg.Candidate,
+	codec exportcore.Codec,
+	mix, partial string,
+) (ffmpeg.Candidate, error) {
+	job := s.job
+	return runEncoderCandidates(ctx, candidates, partial, func(cur ffmpeg.Candidate) error {
+		rd := s.newRenderer(job.Bands)
+		defer rd.close()
+
+		if rd.rust != nil && job.PixelRenderer == PixelRendererRust && !s.single {
+			if err := rd.rust.ensureHosts(rd.rust.bands); err != nil {
+				return wrapRun(err, ReasonRender, "The pixel renderer could not start.", "")
+			}
+		}
+
+		return s.encode(ctx, cur, codec, mix, partial, rd)
+	})
+}
+
+// runEncoderCandidates attempts each candidate in order, deleting partial between
+// encoder failures and enriching E_EXPORT_FAILED when every candidate fails (epic 100).
+func runEncoderCandidates(
+	ctx context.Context,
+	candidates []ffmpeg.Candidate,
+	partial string,
+	attempt func(ffmpeg.Candidate) error,
+) (ffmpeg.Candidate, error) {
+	var tried []string
+	var lastCand ffmpeg.Candidate
+	var lastErr error
+
+	for _, cur := range candidates {
+		lastCand = cur
+		tried = append(tried, cur.Name)
+
+		err := attempt(cur)
+		if err == nil {
+			return cur, nil
+		}
+
+		if ctx.Err() != nil {
+			return ffmpeg.Candidate{}, err
+		}
+
+		ffErr, ok := errors.AsType[*ffmpeg.Error](err)
+		if !ok || ffErr.Reason != ReasonEncoder {
+			return ffmpeg.Candidate{}, err
+		}
+
+		lastErr = err
+		if partial != "" {
+			_ = os.Remove(partial)
+		}
+	}
+
+	return ffmpeg.Candidate{}, attachEncoderDetails(lastErr, lastCand.Name, tried)
 }
 
 // codecPlan is the codec of the export: the plan the caller made, or the one PlanCodec makes now.
