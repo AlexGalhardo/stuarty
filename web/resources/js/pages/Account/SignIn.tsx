@@ -3,6 +3,7 @@ import { LockOpen } from "lucide-react";
 import { type FormEvent, type ReactNode, useState } from "react";
 
 import { AuthCard } from "@/components/AuthCard";
+import { DesktopUpdateControl } from "@/components/DesktopUpdateControl";
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
 import PasswordField from "@/components/PasswordField";
 import { Button } from "@/components/ui/button";
@@ -139,6 +140,7 @@ export default function SignIn(): ReactNode {
 					</a>
 				</p>
 			</AuthCard>
+			<DesktopUpdateControl variant="card" />
 		</>
 	);
 }

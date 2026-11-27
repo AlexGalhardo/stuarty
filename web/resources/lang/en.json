@@ -259,6 +259,22 @@
         "template_import": "Imports a template file."
       }
     },
+    "desktop_update": {
+      "title": "Desktop updates",
+      "check": "Update to latest",
+      "install": "Update to v{version}",
+      "auto_label": "Auto-update when online",
+      "status": {
+        "available": "Version v{version} is ready to install.",
+        "up_to_date": "You are on the latest stable version.",
+        "checking": "Checking for updates...",
+        "downloading": "Downloading update ({progress}%)...",
+        "installing": "Installing update...",
+        "offline": "Offline. Connect to the internet to check for updates.",
+        "unconfigured": "Automatic updates are not enabled in this build.",
+        "error": "Could not check for updates."
+      }
+    },
     "shell": {
       "back": "Back",
       "menu": "Open the navigation",

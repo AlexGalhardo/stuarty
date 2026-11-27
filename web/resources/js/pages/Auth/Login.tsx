@@ -2,6 +2,7 @@ import { Head } from "@inertiajs/react";
 import { type FormEvent, type ReactNode, useState } from "react";
 
 import { AuthCard } from "@/components/AuthCard";
+import { DesktopUpdateControl } from "@/components/DesktopUpdateControl";
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -76,6 +77,7 @@ export default function Login(): ReactNode {
 					</Button>
 				</form>
 			</AuthCard>
+			<DesktopUpdateControl variant="card" />
 		</>
 	);
 }
