@@ -1176,9 +1176,9 @@ The first editor release attaches installers next to the archives. Each installs
 
 | System | File | Tool (pinned) | Built by |
 | --- | --- | --- | --- |
-| Windows 11 | `stuarty-X-Y-Z.exe` (0.28.0 is `stuarty-0-28-0.exe`) | Inno Setup 7.1.1, fixed URL and SHA-256 in `.config/installers/tools.env` | `installers.yml`, on `windows-latest` |
+| Windows 11 | `stuarty-web-localhost-X-Y-Z.exe` (0.61.0 is `stuarty-web-localhost-0-61-0.exe`) | Inno Setup 7.1.1, fixed URL and SHA-256 in `.config/installers/tools.env` | `installers.yml`, on `windows-latest` |
 | Debian and Ubuntu | `stuarty_X.Y.Z_linux_amd64.deb`, `..._arm64.deb` | nfpm, the library inside GoReleaser v2.18.2 (the `nfpms` section of `.config/goreleaser.yaml`) | GoReleaser, in `release.yml` |
-| Any Linux | `stuarty-X-Y-Z.AppImage` (0.28.0 is `stuarty-0-28-0.AppImage`) | appimagetool 1.9.1, fixed URL and SHA-256 in `tools.env` | `installers.yml`, on `ubuntu-latest` |
+| Any Linux | `stuarty-web-localhost-X-Y-Z.AppImage` (0.61.0 is `stuarty-web-localhost-0-61-0.AppImage`) | appimagetool 1.9.1, fixed URL and SHA-256 in `tools.env` | `installers.yml`, on `ubuntu-latest` |
 | macOS | `stuarty_X.Y.Z_darwin_amd64.pkg`, `..._arm64.pkg` | `pkgbuild`, `sips` and `iconutil` of macOS | `installers.yml`, on `macos-latest` |
 
 Inno Setup and appimagetool are downloaded by `scripts/fetch-installer-tool.sh`, which verifies the SHA-256 and stops with both digests on a mismatch (the same rule as the FFmpeg pin of section 11). Bump them with a pull request that changes `tools.env` and passes `installers.yml`. There is no Windows ARM or Linux ARM AppImage: Windows 11 on ARM runs the amd64 installer, and the arm64 Linux user has the `.deb` and the archive.
