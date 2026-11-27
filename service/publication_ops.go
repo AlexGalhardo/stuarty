@@ -178,7 +178,7 @@ func (s *svc) PublicationCreate(ctx context.Context, req PublicationCreateReques
 
 	req.ProjectID = row.ID
 
-	p, err := s.pubs.Create(ctx, req)
+	p, err := s.pubs.Create(publicationActivity(ctx, "publication.create"), req)
 	if err != nil {
 		return nil, callerError(c, publicationError(err))
 	}
@@ -254,7 +254,7 @@ func (s *svc) PublicationUpdate(ctx context.Context, req PublicationUpdateReques
 		return nil, err
 	}
 
-	p, uerr := s.pubs.Update(ctx, req)
+	p, uerr := s.pubs.Update(publicationActivity(ctx, "publication.update"), req)
 	if uerr != nil {
 		return nil, callerError(c, publicationError(uerr))
 	}
@@ -269,7 +269,7 @@ func (s *svc) PublicationSchedule(ctx context.Context, req PublicationScheduleRe
 		return nil, err
 	}
 
-	p, serr := s.pubs.Schedule(ctx, pub.ScheduleInput(req))
+	p, serr := s.pubs.Schedule(publicationActivity(ctx, "publication.schedule"), pub.ScheduleInput(req))
 	if serr != nil {
 		return nil, callerError(c, publicationError(serr))
 	}
@@ -284,7 +284,7 @@ func (s *svc) PublicationSendNow(ctx context.Context, req PublicationSendNowRequ
 		return nil, err
 	}
 
-	p, serr := s.pubs.SendNow(ctx, pub.TargetRef(req))
+	p, serr := s.pubs.SendNow(publicationActivity(ctx, "publication.send_now"), pub.TargetRef(req))
 	if serr != nil {
 		return nil, callerError(c, publicationError(serr))
 	}
@@ -299,7 +299,7 @@ func (s *svc) PublicationRetry(ctx context.Context, req PublicationRetryRequest)
 		return nil, err
 	}
 
-	p, serr := s.pubs.Retry(ctx, pub.TargetRef(req))
+	p, serr := s.pubs.Retry(publicationActivity(ctx, "publication.retry"), pub.TargetRef(req))
 	if serr != nil {
 		return nil, callerError(c, publicationError(serr))
 	}
@@ -314,7 +314,10 @@ func (s *svc) PublicationCancel(ctx context.Context, req PublicationCancelReques
 		return nil, err
 	}
 
-	p, cerr := s.pubs.Cancel(ctx, pub.TargetRef{ID: req.ID, TargetID: req.TargetID})
+	p, cerr := s.pubs.Cancel(
+		publicationActivity(ctx, "publication.cancel"),
+		pub.TargetRef{ID: req.ID, TargetID: req.TargetID},
+	)
 	if cerr != nil {
 		return nil, callerError(c, publicationError(cerr))
 	}
@@ -356,13 +359,43 @@ func (e pubEnv) Actor(ctx context.Context) pub.Actor {
 }
 
 func (e pubEnv) Write(ctx context.Context, fn func(ctx context.Context, tx pub.Tx) error) error {
-	return e.s.store.Write(ctx, func(ctx context.Context, tx Tx) error { return fn(ctx, e.s.pubTx(tx)) })
+	return e.s.store.Write(ctx, func(ctx context.Context, tx Tx) error {
+		adapter := e.s.pubTx(tx)
+		adapter.recordActivity = true
+		if err := fn(ctx, adapter); err != nil {
+			return err
+		}
+
+		action, _ := ctx.Value(publicationActivityKey{}).(string)
+		if action == "" {
+			action = "publication.update"
+		}
+		actor := e.Actor(ctx).ID
+		if actor == "" {
+			actor = "scheduler"
+		}
+		for i := range adapter.activities {
+			p := &adapter.activities[i]
+			if err := appendAudit(ctx, tx, e.s.nowMs(), actor, action, p.ProjectID, p.ID); err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}
+
+type publicationActivityKey struct{}
+
+func publicationActivity(ctx context.Context, action string) context.Context {
+	return context.WithValue(ctx, publicationActivityKey{}, action)
 }
 
 // pubTx is a write transaction of the service, as the calendar sees it.
 type pubTx struct {
-	s  *svc
-	tx Tx
+	s              *svc
+	tx             Tx
+	recordActivity bool
+	activities     []pub.Publication
 }
 
 func (s *svc) pubTx(tx Tx) *pubTx { return &pubTx{s: s, tx: tx} }
@@ -371,6 +404,9 @@ func (t *pubTx) Store() pub.Store { return t.tx.Publications() }
 
 func (t *pubTx) Emit(p pub.Publication) {
 	owner := p.OwnerUserID
+	if t.recordActivity {
+		t.activities = append(t.activities, p)
+	}
 
 	t.tx.AfterCommit(func() {
 		t.s.emit(

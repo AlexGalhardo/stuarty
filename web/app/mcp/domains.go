@@ -83,7 +83,18 @@ func checkMembers(tool, domain string, raw json.RawMessage, required, refused []
 // historyMemberNames are the members of the history tool that an action takes or refuses besides the domain and
 // the action: the image domain refuses the ones its action does not use.
 var historyMemberNames = []string{
-	"project_id", "timeline_id", "actor", "cursor", "limit", "revision", "until", "name", "new_name", "note", "dry_run",
+	"project_id",
+	"timeline_id",
+	"actor",
+	"area",
+	"cursor",
+	"limit",
+	"revision",
+	"until",
+	"name",
+	"new_name",
+	"note",
+	"dry_run",
 }
 
 // imageHistory is the history tool in the image domain: undo and redo, and since epic 50 revert, the diff and the
@@ -212,7 +223,7 @@ var toolDomains = map[string][]string{
 	// project_item also serves the texts of a production (text, revisions, revert, check; SDD-019).
 	"project_item": {command.DomainProject, command.DomainWriting},
 	"edit":         {command.DomainVideo, command.DomainImage},
-	"history":      {command.DomainVideo, command.DomainImage},
+	"history":      {command.DomainVideo, command.DomainImage, command.DomainWorkspace},
 	"view":         {command.DomainVideo},
 	"lint":         {command.DomainVideo},
 	// job_start also starts text.generate, image.generate, voice.generate and video.generate, the generations of

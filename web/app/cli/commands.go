@@ -62,6 +62,7 @@ func registry() []*spec {
 		doctorCmd,
 		fontsCmd,
 		auditCmd,
+		activityCmd,
 		toolsInstallCmd,
 		tokenRotate,
 		fontImportCmd,

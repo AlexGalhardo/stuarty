@@ -1,6 +1,6 @@
 {
  "name": "history",
- "description": "Change log (action=list, newest first, with actor; actor, cursor, limit: list only); undo/redo your own latest step (one per call); revert to a revision or checkpoint as a new step (dry_run previews); diff two revisions; checkpoints, checkpoint, rename_checkpoint, remove_checkpoint name revisions. Undo skips (and reports) others' later changes. domain=image (image_id): all but list.",
+ "description": "Timeline revisions: list, undo, redo, revert, diff or manage checkpoints. Undo skips later changes by others. For images use domain=image and image_id. action=activity lists workspace or project activity; actor filters by kind, area by domain.",
  "inputSchema": {
   "type": "object",
   "properties": {
@@ -26,6 +26,7 @@
    "action": {
     "enum": [
      "list",
+     "activity",
      "undo",
      "redo",
      "revert",
@@ -38,6 +39,9 @@
     "default": "list"
    },
    "actor": {
+    "type": "string"
+   },
+   "area": {
     "type": "string"
    },
    "cursor": {
@@ -103,10 +107,7 @@
      "null"
     ]
    }
-  },
-  "required": [
-   "revision"
-  ]
+  }
  },
  "annotations": {
   "title": "History, undo and redo",

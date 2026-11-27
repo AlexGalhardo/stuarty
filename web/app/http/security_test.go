@@ -252,7 +252,7 @@ func TestSecurity_T05_EveryOperationHasScope(t *testing.T) {
 		// The teleprompter page of a project (web/routes/teleprompter_pages.go): it reads the script through /api/v1.
 		"GET /projects/{project_id}/teleprompter",
 		// The empty-state pages of the dashboard sections (web/routes/dashboard.go).
-		"GET /edit-video", "GET /write", "GET /visual-assets", "GET /video-assets", "GET /sound-assets",
+		"GET /edit-video", "GET /write", "GET /visual-assets", "GET /video-assets", "GET /sound-assets", "GET /history",
 		"GET /publish", "GET /skills", "GET /prompts", "GET /memory", "GET /connections", "GET /webhooks",
 		// The approval page (epic 05): it reads the queue through /api/v1/approvals.
 		"GET /approvals",

@@ -64,6 +64,7 @@ describe("Sidebar", () => {
 			"Writing",
 			"Video editor",
 			"Image editor",
+			"History",
 			"Videos",
 			"Images",
 			"Sounds",

@@ -206,6 +206,7 @@ var commandDomains = map[string]string{
 	"brand:set":             command.DomainWorkspace,
 	"doctor":                command.DomainWorkspace,
 	"audit":                 command.DomainWorkspace,
+	"activity":              command.DomainWorkspace,
 	"tools:install":         command.DomainWorkspace,
 	"version":               command.DomainWorkspace,
 	"mcp":                   command.DomainWorkspace,

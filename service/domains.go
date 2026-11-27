@@ -227,6 +227,7 @@ var OperationDomains = map[string]string{
 	"BrandKitSet":         command.DomainWorkspace,
 	"Doctor":              command.DomainWorkspace,
 	"AuditList":           command.DomainWorkspace,
+	"ActivityList":        command.DomainWorkspace,
 	"TrashEmpty":          command.DomainWorkspace,
 	"ToolsInstall":        command.DomainWorkspace,
 	"ToolsStatus":         command.DomainWorkspace,

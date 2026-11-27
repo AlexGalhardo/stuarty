@@ -68,6 +68,7 @@ export function tagOf(route: string): Tag {
 	if (parts[0] === "projects" && parts[2] === "texts") return "Writing";
 	if (parts[0] === "projects" && parts[2] === "chat") return "Agent chat";
 	if (parts[0] === "projects" && parts[2] === "recordings") return "Recordings";
+	if (parts[0] === "projects" && parts[2] === "activity") return "Audit";
 	if (parts[0] === "projects" || parts[0] === "trash") return "Projects";
 	const byRoot: Record<string, Tag> = {
 		assets: "Media",
@@ -107,6 +108,7 @@ export function tagOf(route: string): Tag {
 		keys: "API keys",
 		users: "Users",
 		audit: "Audit",
+		history: "Audit",
 	};
 	const tag = byRoot[parts[0] ?? ""];
 	if (!tag) throw new Error(`api-reference: no tag for ${route}; add it to tagOf`);

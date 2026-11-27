@@ -5,7 +5,7 @@ The installation: command help, connections, brand kit, health, audit.
 
 ## How to reach it
 
-MCP tools: `command_help`, `connection`. Tools that take `domain=workspace`: `command_help`.
+MCP tools: `command_help`, `history`, `connection`. Tools that take `domain=workspace`: `command_help`.
 
 CLI: `stuarty workspace` lists the commands of the domain and `stuarty workspace <verb>` runs one; the full names stay valid.
 
@@ -15,6 +15,7 @@ CLI: `stuarty workspace` lists the commands of the domain and `stuarty workspace
 - `agent:docs`: print or write the material for agents: the skill, the AGENTS.md snippet, the MCP instructions
 - `doctor`: check the installation and the workspace
 - `audit`: list the audit table
+- `activity`: list global or project activity history
 - `tools:install`: download a helper such as the transcription program
 - `token:rotate`: replace the local token; clients that hold the old one must be set up again
 - `brand:show`: show the brand kit: logo, colours and fonts

@@ -294,6 +294,24 @@ func history(ctx context.Context, svc service.Service, raw json.RawMessage) (*to
 		return nil, err
 	}
 
+	if in.Action == "activity" {
+		if err := checkMembers("history", "activity", raw, nil, []string{
+			"timeline_id", "image_id", "domain", "revision", "until", "name", "new_name", "note", "dry_run",
+		}); err != nil {
+			return nil, err
+		}
+		res, err := svc.ActivityList(ctx, service.ActivityListRequest{
+			ProjectID: in.ProjectID, ActorKind: in.Actor, Domain: in.Area, Cursor: in.Cursor, Limit: in.Limit,
+		})
+		if err != nil {
+			return nil, err
+		}
+		return &toolOutput{
+			value: res,
+			text:  fmt.Sprintf("%d activity entries. See structured content.", len(res.Entries)),
+		}, nil
+	}
+
 	domain, err := routeDomain("history", in.Domain)
 	if err != nil {
 		return nil, err

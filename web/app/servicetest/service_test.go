@@ -346,6 +346,10 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 			_, err := e.svc.AuditList(ctx, service.AuditListRequest{})
 			return err
 		},
+		"ActivityList": func() error {
+			_, err := e.svc.ActivityList(ctx, service.ActivityListRequest{})
+			return err
+		},
 		"KeyCreate": func() error {
 			_, err := e.svc.KeyCreate(ctx, service.KeyCreateRequest{Name: "k", Scopes: []string{"read"}})
 			return err

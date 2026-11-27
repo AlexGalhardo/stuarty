@@ -23,6 +23,69 @@
       }
     },
     "schemas": {
+      "ActivityEntry": {
+        "properties": {
+          "action": {
+            "type": "string"
+          },
+          "actor": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "actor_kind": {
+            "type": "string"
+          },
+          "actor_label": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "at": {
+            "type": "string"
+          },
+          "details": {},
+          "domain": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "project_id": {
+            "type": "string"
+          },
+          "project_name": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "subject_id": {
+            "type": "string"
+          },
+          "subject_kind": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ActivityListResult": {
+        "properties": {
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/ActivityEntry"
+            },
+            "type": "array"
+          },
+          "next_cursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "type": "object"
+      },
       "Adjust": {
         "properties": {
           "brightness": {
@@ -20401,6 +20464,86 @@
         "summary": "Prove that the server knows the local token"
       }
     },
+    "/api/v1/history": {
+      "get": {
+        "operationId": "history.list",
+        "parameters": [
+          {
+            "description": "The next_cursor of the previous page.",
+            "in": "query",
+            "name": "cursor",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The page size; the default depends on the operation.",
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Keep the entries of one project.",
+            "in": "query",
+            "name": "project_id",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Filter by actor kind: all, human, agent, or system.",
+            "in": "query",
+            "name": "actor_kind",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Filter by domain.",
+            "in": "query",
+            "name": "domain",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActivityListResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List global or project activity history"
+      }
+    },
     "/api/v1/image/generate": {
       "post": {
         "operationId": "image.generate",
@@ -24272,6 +24415,90 @@
           }
         ],
         "summary": "Change the name, the description or the goal of a project"
+      }
+    },
+    "/api/v1/projects/{id}/activity": {
+      "get": {
+        "operationId": "projects.activity.list",
+        "parameters": [
+          {
+            "description": "The next_cursor of the previous page.",
+            "in": "query",
+            "name": "cursor",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The page size; the default depends on the operation.",
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Filter by actor kind: all, human, agent, or system.",
+            "in": "query",
+            "name": "actor_kind",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Filter by domain.",
+            "in": "query",
+            "name": "domain",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActivityListResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List activity history of a project"
       }
     },
     "/api/v1/projects/{id}/audio-measure": {

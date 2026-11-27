@@ -63,6 +63,29 @@ func (s *sysService) AuditList(_ context.Context, r service.AuditListRequest) (*
 	}, s.err
 }
 
+func (s *sysService) ActivityList(
+	_ context.Context,
+	r service.ActivityListRequest,
+) (*service.ActivityListResult, error) {
+	next := "c2"
+
+	return &service.ActivityListResult{
+		Entries: []service.ActivityEntry{
+			{
+				ID:         "audit::7:",
+				At:         "2026-11-15T10:00:00Z",
+				Actor:      "local:ui",
+				ActorKind:  "human",
+				ActorLabel: "local:ui",
+				Domain:     "project",
+				Action:     "project.create",
+				ProjectID:  r.ProjectID,
+			},
+		},
+		NextCursor: &next,
+	}, s.err
+}
+
 func (s *sysService) ToolsInstall(
 	ctx context.Context,
 	r service.ToolsInstallRequest,

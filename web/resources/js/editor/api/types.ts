@@ -1183,6 +1183,51 @@ export interface AuditQuery {
 	limit?: number;
 }
 
+// GET /history and GET /projects/{id}/activity (read scope, epic 111).
+export type ActivityActorKind = "human" | "agent" | "system";
+
+export type ActivityDomain =
+	| "project"
+	| "video"
+	| "image"
+	| "asset"
+	| "writing"
+	| "publish"
+	| "approval"
+	| "agent"
+	| "connection"
+	| "account"
+	| "workspace";
+
+export interface ActivityEntry {
+	id: string;
+	at: string;
+	actor: string;
+	actor_kind: ActivityActorKind;
+	actor_label: string;
+	domain: ActivityDomain;
+	action: string;
+	project_id?: string;
+	project_name?: string;
+	subject_id?: string;
+	subject_kind?: "video" | "image" | "text";
+	revision?: number;
+	details?: unknown;
+}
+
+export interface ActivityListResult {
+	entries: ActivityEntry[];
+	next_cursor: string | null;
+}
+
+export interface ActivityQuery {
+	projectId?: string;
+	actorKind?: "all" | ActivityActorKind;
+	domain?: "all" | ActivityDomain;
+	cursor?: string;
+	limit?: number;
+}
+
 // GET /system/tools and POST /system/tools/install (admin scope).
 export interface InstalledTool {
 	name: string;

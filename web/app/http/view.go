@@ -256,6 +256,40 @@ func (h *apiHandler) auditList(c *web.Ctx, in auditIn) (service.AuditListResult,
 	return deref(res), err
 }
 
+type activityHistoryIn struct {
+	pageIn
+	ProjectID string `json:"project_id,omitempty" doc:"Keep the entries of one project."`
+	ActorKind string `json:"actor_kind,omitempty" doc:"Filter by actor kind: all, human, agent, or system."`
+	Domain    string `json:"domain,omitempty"     doc:"Filter by domain."`
+}
+
+// historyList is GET /history; the Service requires the read scope.
+func (h *apiHandler) historyList(c *web.Ctx, in activityHistoryIn) (service.ActivityListResult, error) {
+	res, err := h.Service.ActivityList(c.Context(), service.ActivityListRequest{
+		ProjectID: in.ProjectID, ActorKind: in.ActorKind, Domain: in.Domain,
+		Cursor: in.Cursor, Limit: in.Limit,
+	})
+
+	return deref(res), err
+}
+
+type projectActivityIn struct {
+	pageIn
+	ID        string `json:"id"                   validate:"required"`
+	ActorKind string `json:"actor_kind,omitempty"                     doc:"Filter by actor kind: all, human, agent, or system."`
+	Domain    string `json:"domain,omitempty"                         doc:"Filter by domain."`
+}
+
+// projectActivityList is GET /projects/{id}/activity.
+func (h *apiHandler) projectActivityList(c *web.Ctx, in projectActivityIn) (service.ActivityListResult, error) {
+	res, err := h.Service.ActivityList(c.Context(), service.ActivityListRequest{
+		ProjectID: in.ID, ActorKind: in.ActorKind, Domain: in.Domain,
+		Cursor: in.Cursor, Limit: in.Limit,
+	})
+
+	return deref(res), err
+}
+
 type systemIn struct {
 	Full   bool `json:"full,omitempty"   doc:"Run the checks."`
 	Verify bool `json:"verify,omitempty" doc:"Recompute the digests of FFmpeg, ffprobe and the installed helpers."`

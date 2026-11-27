@@ -191,6 +191,9 @@ func (m *memJobs) states() map[string]string {
 type batchAudit struct{ AuditRepo }
 
 func (batchAudit) Append(context.Context, AuditRow) error { return nil }
+func (batchAudit) ActivityPage(context.Context, ActivityPageQuery) ([]ActivityRow, error) {
+	return nil, nil
+}
 
 type batchProjects struct {
 	ProjectRepo
