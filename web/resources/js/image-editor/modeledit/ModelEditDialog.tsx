@@ -8,6 +8,7 @@ import {
 } from "react";
 
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
+import { FieldLabel } from "@/components/FieldHelp";
 import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
 import {
@@ -315,12 +316,15 @@ export function ModelEditDialog({
 						{!isRemoval && (
 							<>
 								<div className="flex flex-col gap-1">
-									<Label htmlFor="model-edit-prompt">
-										{t("ui.image.model.prompt")}
-									</Label>
+									<FieldLabel
+										htmlFor="model-edit-prompt"
+										label={t("ui.image.model.prompt")}
+										help={t("ui.help.g5.img_model_prompt_help")}
+									/>
 									<Textarea
 										id="model-edit-prompt"
 										rows={4}
+										placeholder={t("ui.help.g5.img_model_prompt_ph")}
 										value={prompt}
 										onChange={(event) => {
 											setPrompt(event.target.value);

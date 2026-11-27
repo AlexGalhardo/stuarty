@@ -44,6 +44,8 @@ function WordEditor({
 			// biome-ignore lint/a11y/noAutofocus: the editor opens on a double click and the person types at once.
 			autoFocus
 			aria-label={t("ui.editor.caption_words.edit_label", { n: index + 1 })}
+			placeholder={t("ui.help.g5.caption_word_ph")}
+			title={t("ui.help.g5.caption_word_help")}
 			defaultValue={initial}
 			maxLength={80}
 			className="h-full w-full min-w-0 bg-background px-1 text-xs text-foreground outline-none"

@@ -141,6 +141,7 @@ export function ShortcutsDialog({
 						value={query}
 						aria-label={t("ui.editor.shortcuts.search")}
 						placeholder={t("ui.editor.shortcuts.search")}
+						title={t("ui.help.g5.shortcuts_search_help")}
 						className="min-w-48 flex-1"
 						onChange={(event) => setQuery(event.target.value)}
 						onKeyDown={(event) => {

@@ -59,6 +59,8 @@ export default function InlineTextEditor({
 			// biome-ignore lint/a11y/noAutofocus: the editor opens on a double click and the person types at once.
 			autoFocus
 			aria-label={t("ui.editor.text.editor_label")}
+			placeholder={t("ui.help.g5.inline_text_ph")}
+			title={t("ui.help.g5.inline_text_help")}
 			defaultValue={stored}
 			maxLength={2000}
 			className="absolute z-10 resize-none border-2 border-ed-handle bg-black/60 p-1 text-center text-white outline-none"

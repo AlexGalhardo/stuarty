@@ -30,6 +30,8 @@ export default function TimeField({
 				inputMode="decimal"
 				autoComplete="off"
 				spellCheck={false}
+				placeholder={rest.placeholder ?? t("ui.help.g5.time_ph")}
+				title={rest.title ?? t("ui.help.g5.time_help")}
 				value={value}
 				aria-invalid={invalid || undefined}
 				aria-describedby={invalid ? messageId : rest["aria-describedby"]}

@@ -79,6 +79,8 @@ function ProjectName({ name }: { name: string }): ReactNode {
 			<Input
 				autoFocus
 				aria-label={t("ui.editor.project.name_label")}
+				placeholder={t("ui.help.g5.rename_inline_ph")}
+				title={t("ui.help.g5.rename_inline_help")}
 				defaultValue={name}
 				maxLength={120}
 				className="h-7 w-64 text-sm font-semibold"

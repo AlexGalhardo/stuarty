@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { useState } from "react";
 
+import { FieldLabel } from "@/components/FieldHelp";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -108,9 +109,12 @@ export default function MotionSection({
 					<option value="in">{t("ui.editor.animation.edge_in")}</option>
 					<option value="out">{t("ui.editor.animation.edge_out")}</option>
 				</select>
-				<Label htmlFor={`motion-length-${itemId}`} className="text-xs">
-					{t("ui.editor.animation.duration")}
-				</Label>
+				<FieldLabel
+					htmlFor={`motion-length-${itemId}`}
+					label={t("ui.editor.animation.duration")}
+					help={t("ui.help.g5.motion_duration_help")}
+					className="text-xs"
+				/>
 				<Input
 					id={`motion-length-${itemId}`}
 					aria-label={t("ui.editor.motion.duration_of")}
@@ -149,9 +153,12 @@ export default function MotionSection({
 				)}
 				{takesAmount && (
 					<>
-						<Label htmlFor={`motion-amount-${itemId}`} className="text-xs">
-							{t(`ui.editor.motion.amount_of.${preset}`)}
-						</Label>
+						<FieldLabel
+							htmlFor={`motion-amount-${itemId}`}
+							label={t(`ui.editor.motion.amount_of.${preset}`)}
+							help={t("ui.help.g5.motion_amount_help")}
+							className="text-xs"
+						/>
 						<Input
 							id={`motion-amount-${itemId}`}
 							value={amount}

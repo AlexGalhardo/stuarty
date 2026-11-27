@@ -176,6 +176,7 @@ export function CommandPalette(): ReactNode {
 						}
 						aria-label={t("ui.image.palette.placeholder")}
 						placeholder={t("ui.image.palette.placeholder")}
+						title={t("ui.image.palette.hint")}
 						value={query}
 						autoComplete="off"
 						spellCheck={false}

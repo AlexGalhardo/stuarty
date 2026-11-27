@@ -1,10 +1,10 @@
 import { X } from "lucide-react";
 import { type ReactNode, useState } from "react";
 
+import { FieldLabel } from "@/components/FieldHelp";
 import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useT } from "@/lib/i18n";
 import { ApiError } from "../../api/errors";
 import { templateInfoOperations } from "../../commands/builders";
@@ -55,26 +55,34 @@ function SaveAsTemplate(): ReactNode {
 	return (
 		<Section title={t("ui.editor.template.save_title")} defaultOpen={false}>
 			<div className="flex flex-col gap-1">
-				<Label htmlFor="template-save-name" className="text-xs">
-					{t("ui.editor.template.save_name")}
-				</Label>
+				<FieldLabel
+					htmlFor="template-save-name"
+					label={t("ui.editor.template.save_name")}
+					help={t("ui.help.g5.tpl_save_name_help")}
+					className="text-xs"
+				/>
 				<Input
 					id="template-save-name"
 					value={name}
 					maxLength={120}
+					placeholder={t("ui.help.g5.tpl_save_name_ph")}
 					disabled={!canEdit}
 					className="h-8"
 					onChange={(event) => setName(event.target.value)}
 				/>
 			</div>
 			<div className="flex flex-col gap-1">
-				<Label htmlFor="template-save-description" className="text-xs">
-					{t("ui.editor.template.save_description")}
-				</Label>
+				<FieldLabel
+					htmlFor="template-save-description"
+					label={t("ui.editor.template.save_description")}
+					help={t("ui.help.g5.tpl_save_desc_help")}
+					className="text-xs"
+				/>
 				<Input
 					id="template-save-description"
 					value={description}
 					maxLength={500}
+					placeholder={t("ui.help.g5.tpl_save_desc_ph")}
 					disabled={!canEdit}
 					className="h-8"
 					onChange={(event) => setDescription(event.target.value)}
@@ -159,26 +167,34 @@ export default function TemplateInfoSection(): ReactNode {
 					))}
 				</ul>
 				<div className="flex flex-col gap-1">
-					<Label htmlFor="template-color-name" className="text-xs">
-						{t("ui.editor.template.color_name")}
-					</Label>
+					<FieldLabel
+						htmlFor="template-color-name"
+						label={t("ui.editor.template.color_name")}
+						help={t("ui.help.g5.tpl_color_name_help")}
+						className="text-xs"
+					/>
 					<Input
 						id="template-color-name"
 						value={name}
 						maxLength={40}
+						placeholder={t("ui.help.g5.tpl_color_name_ph")}
 						disabled={!canEdit}
 						className="h-8"
 						onChange={(event) => setName(event.target.value)}
 					/>
 				</div>
 				<div className="flex flex-col gap-1">
-					<Label htmlFor="template-color-value" className="text-xs">
-						{t("ui.editor.template.color_value")}
-					</Label>
+					<FieldLabel
+						htmlFor="template-color-value"
+						label={t("ui.editor.template.color_value")}
+						help={t("ui.help.g5.tpl_color_val_help")}
+						className="text-xs"
+					/>
 					<Input
 						id="template-color-value"
 						value={colour}
 						maxLength={9}
+						placeholder={t("ui.help.g5.tpl_color_val_ph")}
 						disabled={!canEdit}
 						className="h-8 font-mono"
 						onChange={(event) => setColour(event.target.value)}

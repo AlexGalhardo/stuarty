@@ -43,12 +43,18 @@ function Cell({
 	disabled: boolean;
 	mono?: boolean;
 }): ReactNode {
+	const t = useT();
 	const binding = useCommitField(stored, commit);
 	return (
 		<div className="flex min-w-0 flex-col gap-0.5">
 			<Input
 				{...binding.input}
 				aria-label={label}
+				aria-describedby={binding.error ? `${label}-message` : undefined}
+				placeholder={
+					mono ? t("ui.help.g5.time_ph") : t("ui.help.g5.caption_word_ph")
+				}
+				title={t("ui.help.g5.caption_word_help")}
 				disabled={disabled}
 				autoComplete="off"
 				spellCheck={false}

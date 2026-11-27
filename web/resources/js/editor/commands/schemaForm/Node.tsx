@@ -135,6 +135,7 @@ function IdNode({
 	onChange,
 	...props
 }: NodeProps & { construct: Extract<Construct, { kind: "id" }> }): ReactNode {
+	const t = useT();
 	const { options, prefix } = useForm();
 	const id = `${prefix}${props.path}`;
 	const listId = `${id}-options`;
@@ -146,6 +147,8 @@ function IdNode({
 				list={listId}
 				autoComplete="off"
 				spellCheck={false}
+				placeholder={t("ui.help.g5.schema_id_ph")}
+				title={descriptionOf(props.schema) ?? t("ui.help.g5.schema_id_help")}
 				className="font-mono"
 				value={typeof draft === "string" ? draft : ""}
 				onChange={(event) => onChange(event.target.value)}
@@ -219,6 +222,8 @@ function NumberNode({
 				step={construct.integer ? 1 : "any"}
 				min={construct.min}
 				max={construct.max}
+				placeholder={t("ui.help.g5.schema_num_ph")}
+				title={descriptionOf(props.schema) ?? t("ui.help.g5.schema_num_help")}
 				value={typeof draft === "number" ? draft : ""}
 				onChange={(event) =>
 					onChange(
@@ -258,6 +263,7 @@ function BooleanNode({ draft, onChange, ...props }: NodeProps): ReactNode {
 }
 
 function TextNode({ draft, onChange, ...props }: NodeProps): ReactNode {
+	const t = useT();
 	const { prefix } = useForm();
 	const id = `${prefix}${props.path}`;
 	return (
@@ -265,6 +271,8 @@ function TextNode({ draft, onChange, ...props }: NodeProps): ReactNode {
 			<Input
 				id={id}
 				data-path={props.path}
+				placeholder={t("ui.help.g5.schema_text_ph")}
+				title={descriptionOf(props.schema) ?? t("ui.help.g5.schema_text_help")}
 				value={typeof draft === "string" ? draft : ""}
 				onChange={(event) => onChange(event.target.value)}
 			/>
@@ -292,6 +300,8 @@ function JsonNode({ draft, onChange, ...props }: NodeProps): ReactNode {
 				data-path={props.path}
 				data-fallback="json"
 				className="min-h-20 font-mono text-xs"
+				placeholder={t("ui.help.g5.schema_json_ph")}
+				title={descriptionOf(props.schema) ?? t("ui.help.g5.schema_json_help")}
 				spellCheck={false}
 				aria-invalid={invalid || undefined}
 				value={text}
