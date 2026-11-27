@@ -1,10 +1,14 @@
 import { Head, Link } from "@inertiajs/react";
-import { Image as ImageIcon } from "lucide-react";
+import { Image as ImageIcon, Upload } from "lucide-react";
 import {
+	type ChangeEvent,
+	type DragEvent,
 	type FormEvent,
 	type ReactNode,
+	useCallback,
 	useEffect,
 	useMemo,
+	useRef,
 	useState,
 } from "react";
 
@@ -19,6 +23,12 @@ import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/cn";
+import {
+	canPickFiles,
+	DESKTOP_READY_EVENT,
+	getDesktopBridge,
+} from "@/lib/desktopBridge";
 import { useT } from "@/lib/i18n";
 import { HttpTransport } from "../../editor/api/http";
 import { API_BASE, createImageApi } from "../../image-editor/api/imageApi";
@@ -90,6 +100,143 @@ export default function Index(): ReactNode {
 	const [importing, setImporting] = useState(false);
 	const [importBusy, setImportBusy] = useState(false);
 	const [importFailure, setImportFailure] = useState<Failure | null>(null);
+	// Standalone instant dropzone and ?asset=<hash> quick-open (epic 105, SDD-012 section 23.1).
+	const quickFileRef = useRef<HTMLInputElement | null>(null);
+	const [quickBusy, setQuickBusy] = useState(false);
+	const [quickLabel, setQuickLabel] = useState<string | null>(null);
+	const [quickFailure, setQuickFailure] = useState<Failure | null>(null);
+	const [dragging, setDragging] = useState(false);
+	const [desktopPick, setDesktopPick] = useState(() =>
+		canPickFiles(getDesktopBridge()),
+	);
+	const assetHandled = useRef(false);
+
+	const openQuickPath = useCallback(
+		async (filePath: string) => {
+			setQuickBusy(true);
+			setQuickLabel(t("ui.image.dropzone.opening"));
+			setQuickFailure(null);
+			try {
+				const result = await api.importImage({ path: filePath });
+				if (result.state === "pending" || result.image_id === undefined) {
+					setQuickFailure({ code: "E_ASSET_NOT_READY", message: result.text });
+					setQuickBusy(false);
+					setQuickLabel(null);
+					return;
+				}
+				window.location.assign(`/edit-image/${result.image_id}`);
+			} catch (error) {
+				setQuickFailure(failureOf(error));
+				setQuickBusy(false);
+				setQuickLabel(null);
+			}
+		},
+		[api, t],
+	);
+
+	const openQuickFile = useCallback(
+		async (file: File) => {
+			setQuickBusy(true);
+			setQuickLabel(t("ui.image.dropzone.uploading", { name: file.name }));
+			setQuickFailure(null);
+			try {
+				const result = await api.importFile(file, {});
+				if (result.state === "pending" || result.image_id === undefined) {
+					setQuickFailure({ code: "E_ASSET_NOT_READY", message: result.text });
+					setQuickBusy(false);
+					setQuickLabel(null);
+					return;
+				}
+				window.location.assign(`/edit-image/${result.image_id}`);
+			} catch (error) {
+				setQuickFailure(failureOf(error));
+				setQuickBusy(false);
+				setQuickLabel(null);
+			}
+		},
+		[api, t],
+	);
+
+	// Auto-open when arriving via /edit-image?asset=<hash>.
+	useEffect(() => {
+		if (assetHandled.current || typeof window === "undefined") return;
+		const hash = new URLSearchParams(window.location.search).get("asset");
+		if (!hash) return;
+		assetHandled.current = true;
+		setQuickBusy(true);
+		setQuickLabel(t("ui.image.dropzone.opening_asset"));
+		setQuickFailure(null);
+		api
+			.openFromAsset(hash)
+			.then((result) => {
+				if (result.state === "pending" || result.image_id === undefined) {
+					setQuickFailure({ code: "E_ASSET_NOT_READY", message: result.text });
+					setQuickBusy(false);
+					setQuickLabel(null);
+					return;
+				}
+				window.location.assign(`/edit-image/${result.image_id}`);
+			})
+			.catch((error: unknown) => {
+				setQuickFailure(failureOf(error));
+				setQuickBusy(false);
+				setQuickLabel(null);
+			});
+	}, [api, t]);
+
+	// Desktop bridge integration for native file picker and drag-and-drop paths.
+	useEffect(() => {
+		let unsub: (() => void) | undefined;
+		const attach = (): void => {
+			const bridge = getDesktopBridge();
+			setDesktopPick(canPickFiles(bridge));
+			unsub?.();
+			unsub = bridge?.onDropPaths?.((paths) => {
+				if (paths.length > 0) void openQuickPath(paths[0]);
+			});
+		};
+		attach();
+		window.addEventListener(DESKTOP_READY_EVENT, attach);
+		return () => {
+			window.removeEventListener(DESKTOP_READY_EVENT, attach);
+			unsub?.();
+		};
+	}, [openQuickPath]);
+
+	async function handleQuickChoose(): Promise<void> {
+		if (desktopPick) {
+			const bridge = getDesktopBridge();
+			const paths = await bridge?.pickFiles?.();
+			if (paths && paths.length > 0) {
+				await openQuickPath(paths[0]);
+			}
+			return;
+		}
+		quickFileRef.current?.click();
+	}
+
+	function handleQuickFileChange(event: ChangeEvent<HTMLInputElement>): void {
+		const file = event.target.files?.[0];
+		event.target.value = "";
+		if (file) void openQuickFile(file);
+	}
+
+	function handleDragOver(event: DragEvent<HTMLElement>): void {
+		event.preventDefault();
+		if (!dragging) setDragging(true);
+	}
+
+	function handleDragLeave(event: DragEvent<HTMLElement>): void {
+		event.preventDefault();
+		setDragging(false);
+	}
+
+	function handleDrop(event: DragEvent<HTMLElement>): void {
+		event.preventDefault();
+		setDragging(false);
+		const file = event.dataTransfer.files?.[0];
+		if (file) void openQuickFile(file);
+	}
 
 	useEffect(() => {
 		let live = true;
@@ -164,6 +311,64 @@ export default function Index(): ReactNode {
 					title={t("ui.image.index.title")}
 					description={t("ui.image.index.intro")}
 				/>
+
+				<section
+					aria-label={t("ui.image.dropzone.section")}
+					className="flex flex-col gap-3"
+					onDragOver={handleDragOver}
+					onDragLeave={handleDragLeave}
+					onDrop={handleDrop}
+				>
+					<div
+						data-testid="edit-image-dropzone"
+						className={cn(
+							"flex flex-col items-center justify-center gap-4 rounded-xl border-2 border-dashed bg-surface px-6 py-8 text-center transition-colors",
+							dragging
+								? "border-primary bg-primary/5"
+								: "border-border hover:border-primary/50",
+						)}
+					>
+						<div className="flex size-12 items-center justify-center rounded-full bg-surface-sunken text-foreground">
+							<Upload aria-hidden="true" className="size-6" />
+						</div>
+						<div className="flex max-w-md flex-col gap-1">
+							<h2 className="text-base font-semibold text-foreground">
+								{t("ui.image.dropzone.title")}
+							</h2>
+							<p className="text-sm text-muted-foreground">
+								{t("ui.image.dropzone.subtitle")}
+							</p>
+						</div>
+						<input
+							ref={quickFileRef}
+							type="file"
+							accept="image/*"
+							className="sr-only"
+							data-testid="edit-image-file-input"
+							onChange={handleQuickFileChange}
+						/>
+						<div className="flex flex-wrap items-center justify-center gap-3">
+							<Button
+								type="button"
+								disabled={quickBusy}
+								onClick={() => void handleQuickChoose()}
+								data-testid="edit-image-choose-file"
+							>
+								<ImageIcon aria-hidden="true" className="size-4" />
+								{t("ui.image.dropzone.choose")}
+							</Button>
+						</div>
+						{quickBusy && quickLabel !== null && (
+							<p
+								role="status"
+								className="text-sm font-medium text-muted-foreground"
+							>
+								{quickLabel}
+							</p>
+						)}
+					</div>
+					<FailureNote failure={quickFailure} />
+				</section>
 
 				<section
 					aria-label={t("ui.image.index.new")}
