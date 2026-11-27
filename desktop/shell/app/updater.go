@@ -55,7 +55,12 @@ func newUpdater(app *application.App) *updater {
 	}
 
 	if buildErr == nil {
-		cfg.Progress = func(done, total int64) { u.ui.SetProgress(done, total) }
+		cfg.Progress = func(done, total int64) {
+			u.ui.SetProgress(done, total)
+			if u.launcher != nil {
+				u.launcher.SetProgress(done, total)
+			}
+		}
 
 		var client *update.Client
 

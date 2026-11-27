@@ -21,6 +21,7 @@ type bridge struct {
 	win  atomic.Pointer[application.WebviewWindow]
 	port atomic.Int64
 	bg   atomic.Pointer[background]
+	up   atomic.Pointer[updater]
 	// mediaRoot is the media folder of the workspace the shell started the server on: the only place a library
 	// file may be revealed from (SDD-011 section 14.10). Empty until the workspace is known, and then every
 	// reveal is refused.
@@ -87,7 +88,36 @@ func (b *bridge) handle(_ application.Window, message string, origin *applicatio
 		go b.background(win, req)
 	case shell.OpOpenTeleprompter, shell.OpCloseTeleprompter:
 		go b.teleprompter(win, req)
+	case shell.OpGetUpdateState, shell.OpCheckForUpdates, shell.OpInstallUpdate, shell.OpSetAutoUpdate:
+		go b.update(win, req)
 	}
+}
+
+func (b *bridge) update(win *application.WebviewWindow, req shell.BridgeRequest) {
+	up := b.up.Load()
+	if up == nil || up.launcher == nil {
+		win.ExecJS(shell.ResolveValueScript(req.ID, nil, "the updater is not ready"))
+		return
+	}
+
+	var st shell.UpdateState
+	var errMsg string
+
+	switch req.Op {
+	case shell.OpGetUpdateState:
+		st = up.launcher.State()
+	case shell.OpCheckForUpdates:
+		st = up.launcher.CheckState(up.ctx)
+	case shell.OpInstallUpdate:
+		st = up.launcher.InstallAvailable(up.ctx)
+	case shell.OpSetAutoUpdate:
+		if err := up.launcher.SetAutoCheck(up.ctx, *req.AutoUpdate); err != nil {
+			errMsg = err.Error()
+		}
+		st = up.launcher.State()
+	}
+
+	win.ExecJS(shell.ResolveValueScript(req.ID, st, errMsg))
 }
 
 // teleprompter opens or closes the teleprompter window. The page names a project; the address is built here, on the

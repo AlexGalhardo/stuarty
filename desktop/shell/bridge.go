@@ -27,6 +27,11 @@ const (
 	// shell builds the address and keeps the window out of a screen capture where the system allows it.
 	OpOpenTeleprompter  = "openTeleprompter"
 	OpCloseTeleprompter = "closeTeleprompter"
+	// In-app desktop updater controls on Login and the sidebar footer (epic 101, SDD-009 section 10.5).
+	OpGetUpdateState  = "getUpdateState"
+	OpCheckForUpdates = "checkForUpdates"
+	OpInstallUpdate   = "installUpdate"
+	OpSetAutoUpdate   = "setAutoUpdate"
 )
 
 // projectID is the shape of the id of a project (SDD-000 section 3): the only thing a page sends to open the
@@ -60,14 +65,26 @@ type BackgroundSettings struct {
 	Asked         bool `json:"asked"`
 }
 
+// UpdateState is the snapshot of the desktop updater shown in the UI (epic 101).
+type UpdateState struct {
+	CurrentVersion   string `json:"current_version"`
+	AvailableVersion string `json:"available_version,omitempty"`
+	ReleaseNotes     string `json:"release_notes,omitempty"`
+	AutoUpdate       bool   `json:"auto_update"`
+	Status           string `json:"status"`
+	Progress         int    `json:"progress,omitempty"`
+	Error            string `json:"error,omitempty"`
+}
+
 // BridgeRequest is one message from the page. Path is set only for OpShowInFolder and OpRevealAsset, Background only
-// for OpSetBackground and Project only for OpOpenTeleprompter.
+// for OpSetBackground, Project only for OpOpenTeleprompter and AutoUpdate only for OpSetAutoUpdate.
 type BridgeRequest struct {
 	Op         string              `json:"vukem"`
 	ID         int64               `json:"id"`
 	Path       string              `json:"path,omitempty"`
 	Background *BackgroundSettings `json:"background,omitempty"`
 	Project    string              `json:"project,omitempty"`
+	AutoUpdate *bool               `json:"auto_update,omitempty"`
 }
 
 // ParseBridgeMessage decodes a raw webview message. It reports false for
@@ -78,23 +95,29 @@ func ParseBridgeMessage(msg string) (BridgeRequest, bool) {
 		return BridgeRequest{}, false
 	}
 	switch req.Op {
-	case OpPickFiles, OpPickTemplate, OpGetBackground, OpCloseTeleprompter:
-		req.Path, req.Background, req.Project = "", nil, ""
+	case OpPickFiles, OpPickTemplate, OpGetBackground, OpCloseTeleprompter,
+		OpGetUpdateState, OpCheckForUpdates, OpInstallUpdate:
+		req.Path, req.Background, req.Project, req.AutoUpdate = "", nil, "", nil
 	case OpShowInFolder, OpRevealAsset:
 		if req.Path == "" {
 			return BridgeRequest{}, false
 		}
-		req.Background, req.Project = nil, ""
+		req.Background, req.Project, req.AutoUpdate = nil, "", nil
 	case OpSetBackground:
 		if req.Background == nil {
 			return BridgeRequest{}, false
 		}
-		req.Path, req.Project = "", ""
+		req.Path, req.Project, req.AutoUpdate = "", "", nil
 	case OpOpenTeleprompter:
 		if !projectID.MatchString(req.Project) {
 			return BridgeRequest{}, false
 		}
-		req.Path, req.Background = "", nil
+		req.Path, req.Background, req.AutoUpdate = "", nil, nil
+	case OpSetAutoUpdate:
+		if req.AutoUpdate == nil {
+			return BridgeRequest{}, false
+		}
+		req.Path, req.Background, req.Project = "", nil, ""
 	default:
 		return BridgeRequest{}, false
 	}
@@ -144,8 +167,8 @@ func ResolveScript(id int64, paths []string, errMsg string) string {
 const BridgeScript = `(function(){var w=window;` +
 	`if(w.vukemDesktop||!w._wails||typeof w._wails.invoke!=="function"){return;}` +
 	`var pending={},drops=[],menus=[],next=1;` +
-	`function send(op,id,path,bg,project){var m={vukem:op,id:id};if(path){m.path=path;}if(bg){m.background=bg;}if(project){m.project=project;}w._wails.invoke(JSON.stringify(m));}` +
-	`function ask(op,path,bg,project){return new Promise(function(resolve,reject){var id=next++;pending[id]={resolve:resolve,reject:reject};send(op,id,path,bg,project);});}` +
+	`function send(op,id,path,bg,project,auto){var m={vukem:op,id:id};if(path){m.path=path;}if(bg){m.background=bg;}if(project){m.project=project;}if(typeof auto==="boolean"){m.auto_update=auto;}w._wails.invoke(JSON.stringify(m));}` +
+	`function ask(op,path,bg,project,auto){return new Promise(function(resolve,reject){var id=next++;pending[id]={resolve:resolve,reject:reject};send(op,id,path,bg,project,auto);});}` +
 	`w._wails.vukemResolve=function(id,paths,err){var p=pending[id];if(!p){return;}delete pending[id];` +
 	`if(err){p.reject(new Error(err));}else{p.resolve(paths);}};` +
 	`w._wails.handlePlatformFileDrop=function(paths){drops.slice().forEach(function(cb){cb(paths.slice());});};` +
@@ -165,6 +188,10 @@ const BridgeScript = `(function(){var w=window;` +
 	`setBackground:function(s){return ask("setBackground",undefined,s);},` +
 	`openTeleprompter:function(project){return ask("openTeleprompter",undefined,undefined,project);},` +
 	`closeTeleprompter:function(){return ask("closeTeleprompter");},` +
+	`getUpdateState:function(){return ask("getUpdateState");},` +
+	`checkForUpdates:function(){return ask("checkForUpdates");},` +
+	`installUpdate:function(){return ask("installUpdate");},` +
+	`setAutoUpdate:function(enabled){return ask("setAutoUpdate",undefined,undefined,undefined,Boolean(enabled));},` +
 	`onDropPaths:function(cb){drops.push(cb);return function(){var i=drops.indexOf(cb);if(i>=0){drops.splice(i,1);}};},` +
 	`onMenuAction:function(cb){menus.push(cb);return function(){var i=menus.indexOf(cb);if(i>=0){menus.splice(i,1);}};}});` +
 	`w.dispatchEvent(new Event("vukem-desktop-ready"));})();`
