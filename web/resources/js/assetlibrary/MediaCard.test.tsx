@@ -3,7 +3,7 @@ import { describe, expect, test, vi } from "vitest";
 
 import { I18nProvider } from "@/lib/i18n";
 import type { LibraryAsset } from "../editor/api/types";
-import { MediaCard } from "./MediaCard";
+import { assetEditorTarget, MediaCard } from "./MediaCard";
 
 vi.mock("@inertiajs/react", () => ({ Head: () => null, Link: () => null }));
 
@@ -147,5 +147,26 @@ describe("the facts on a card", () => {
 
 	test("a file the service did not mark reusable carries no reusable badge", () => {
 		expect(markup(asset())).not.toContain("Reusable");
+	});
+
+	test("maps video and image assets to their direct editor routes", () => {
+		const hash = `sha256:${"b".repeat(64)}`;
+		const encoded = encodeURIComponent(hash);
+		expect(
+			assetEditorTarget(
+				asset({
+					hash,
+					kind: "video",
+					poster: { timeline_id: "prj_1234567890", asset_id: "ast_1" },
+				}),
+			),
+		).toBe(`/editor/prj_1234567890?asset=${encoded}`);
+		expect(assetEditorTarget(asset({ hash, kind: "video" }))).toBe(
+			`/edit-video?asset=${encoded}`,
+		);
+		expect(assetEditorTarget(asset({ hash, kind: "image" }))).toBe(
+			`/edit-image?asset=${encoded}`,
+		);
+		expect(assetEditorTarget(asset({ hash, kind: "audio" }))).toBeNull();
 	});
 });

@@ -1,4 +1,4 @@
-import { Link } from "@inertiajs/react";
+import { Link, router } from "@inertiajs/react";
 import { Upload, WandSparkles } from "lucide-react";
 import {
 	type FormEvent,
@@ -32,6 +32,7 @@ import type {
 	TagInUse,
 } from "../editor/api/types";
 import { thumbnailUrl } from "../editor/api/urls";
+import { isDocumentNavigation } from "../workflow/continueTarget";
 import { AssetSize } from "./AssetSize";
 import { OriginBadge } from "./badges";
 import { GenerateDialog, type Kind as GenerateKind } from "./GenerateDialog";
@@ -43,7 +44,7 @@ import {
 	LibraryReadFailed,
 } from "./LibraryStates";
 import { localizeSize } from "./localizeSize";
-import { MediaCard } from "./MediaCard";
+import { assetEditorTarget, MediaCard } from "./MediaCard";
 import { type RevealNotice, RevealNoticeText, useReveal } from "./reveal";
 import { SoundImport } from "./SoundImport";
 import { SoundRow } from "./SoundRow";
@@ -915,6 +916,15 @@ export function AssetLibrary({ section }: { section: Section }): ReactNode {
 									asset={asset}
 									selected={open === asset.hash}
 									onOpen={() => setOpen(asset.hash)}
+									onOpenEditor={(picked) => {
+										const target = assetEditorTarget(picked);
+										if (target === null) return;
+										if (isDocumentNavigation(target)) {
+											window.location.assign(target);
+											return;
+										}
+										router.visit(target);
+									}}
 									onRenamed={renamed}
 									reveal={reveal}
 									onReveal={(hash) => void showFolder(hash)}
