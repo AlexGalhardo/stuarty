@@ -33,7 +33,7 @@ export function EmptyState({
 			data-slot="empty-state"
 			aria-labelledby={titleId}
 			className={cn(
-				"flex flex-col items-center gap-3 rounded-lg border border-dashed border-border-strong bg-surface px-6 py-12 text-center",
+				"@container flex flex-col items-center gap-3 overflow-hidden rounded-lg border border-dashed border-border-strong bg-surface px-6 py-12 text-center",
 				className,
 			)}
 		>
@@ -45,7 +45,7 @@ export function EmptyState({
 			</Heading>
 			<p className="max-w-prose text-base text-text-muted">{description}</p>
 			{steps !== undefined && steps.length > 0 ? (
-				<ol className="mt-2 grid w-full max-w-3xl gap-4 text-left sm:grid-cols-3">
+				<ol className="mt-2 grid w-full max-w-3xl grid-cols-1 gap-4 text-left @[34rem]:grid-cols-3">
 					{steps.map((step, i) => (
 						<NumberedStep
 							key={step.title}
