@@ -89,7 +89,7 @@ func TestTablesMatchSDD005Section5(t *testing.T) {
 			"trashed_ms INTEGER 0 - 0", "trashed_by TEXT 0 - 0", "description TEXT 1 '' 0", "goal_specific TEXT 1 '' 0",
 			"goal_measurable TEXT 1 '' 0", "goal_achievable TEXT 1 '' 0", "goal_relevant TEXT 1 '' 0",
 			"goal_time_bound TEXT 1 '' 0", "goal_due TEXT 1 '' 0", "kind TEXT 1 'undecided' 0",
-			"skipped_steps TEXT 1 '' 0",
+			"skipped_steps TEXT 1 '' 0", "standalone INTEGER 1 0 0",
 		},
 		"project_items": {
 			"id TEXT 1 - 1", "project_id TEXT 1 - 0", "kind TEXT 1 - 0", "title TEXT 1 - 0",
@@ -250,6 +250,7 @@ func TestIndexesAndTriggers(t *testing.T) {
 	want := map[string][]string{
 		"timelines_state_updated_ms_index":            {"ON timelines (state, updated_ms)"},
 		"projects_state_updated_ms_index":             {"ON projects (state, updated_ms)"},
+		"projects_standalone_state_updated_ms_index":  {"ON projects (standalone, state, updated_ms)"},
 		"project_items_project_id_position_index":     {"ON project_items (project_id, position)"},
 		"project_items_timeline_ref_unique":           {"UNIQUE INDEX", "WHERE kind = 'timeline'"},
 		"project_items_brief_unique":                  {"UNIQUE INDEX", "WHERE kind = 'brief' AND state = 'active'"},

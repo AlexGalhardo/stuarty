@@ -45,6 +45,8 @@ type ProjectSummary struct {
 	Duration  TimeValue `json:"duration"` // end of the last item
 	// Complete is false for a project made before epic 56, which has no description and no goal yet.
 	Complete bool `json:"complete"`
+	// Standalone is true for a lightweight standalone video editor session (epic 105).
+	Standalone bool `json:"standalone,omitempty"`
 	// Kind is the effective kind of the project and TextSummary says what its text is like, when it holds one
 	// (SDD-005 section 5.12.4).
 	Kind        string       `json:"kind"`
@@ -133,6 +135,7 @@ type ProjectGetResult struct {
 	Description    string        `json:"description"     untrusted:"true"`
 	Goal           ProjectGoal   `json:"goal"`
 	Complete       bool          `json:"complete"` // false for a project made before epic 56 that nobody completed
+	Standalone     bool          `json:"standalone,omitempty"`
 	Kind           string        `json:"kind"`     // the effective kind (SDD-005 section 5.12.4)
 	Revision       int64         `json:"revision"`
 	State          string        `json:"state"`

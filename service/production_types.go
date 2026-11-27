@@ -40,6 +40,7 @@ type ProjectDescribeResult struct {
 	Description string           `json:"description" untrusted:"true"`
 	Goal        ProjectGoal      `json:"goal"`
 	Complete    bool             `json:"complete"` // false for a project made before epic 56 that nobody completed
+	Standalone  bool             `json:"standalone,omitempty"`
 	Kind        string           `json:"kind"`     // the effective kind (SDD-005 section 5.12.4)
 	Production  ProductionState  `json:"production"`
 	Workflow    project.Workflow `json:"workflow"`

@@ -249,7 +249,7 @@ func productionSummary(h *ProductionHead) ProjectSummary {
 		Duration: timeValue(fps, t.Summary.DurationFrames),
 		Tracks:   t.Summary.Tracks, Items: t.Summary.Items, Assets: t.Summary.Assets,
 		TimelineID: t.ID, Timelines: h.Timelines, UpdatedAt: msTime(h.UpdatedMs),
-		Complete: contextOf(h).Complete,
+		Complete: contextOf(h).Complete, Standalone: h.Standalone,
 	}
 }
 
