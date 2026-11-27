@@ -30,7 +30,7 @@ The product was a video editor called Vukem Video until 2026-11-18, when it beca
 | understand why preview and export agree | `adrs/0003-*.md`, `adrs/0029-*.md`, `sdds/004-render-pipeline.md`, `sdds/013-renderer.md` |
 | know why a decision was taken | `adrs/` |
 | follow the recipe of a product commercial or of a long talking video in Portuguese | `guides/pt-BR/recipe-product-commercial.md`, `guides/pt-BR/recipe-long-talking-video.md` (the English pages are in `site/content/docs/en/guide/`) |
-| design or review a screen (tokens, components, content style, accessibility) | `design-system.md`, then `sdds/012-ui-architecture.md` |
+| design or review a screen (tokens, components, content style, accessibility) | `design-system.md`, `design/final/README.md` (`stuarty-redesign-final-trilha.figcraft`), then `sdds/012-ui-architecture.md` |
 | see how well small and large AI agents use the editor, round by round | `agent-benchmark.md` |
 
 ## Requirements (`prds/`)
