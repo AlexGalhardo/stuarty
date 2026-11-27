@@ -26,8 +26,9 @@ An `admin` has the five scopes `read`, `edit`, `media`, `render` and `admin`. A 
 Create the first administrator at start-up, from the environment, when no user exists yet:
 
 ```bash
-STUARTY_ADMIN_EMAIL=admin@example.com
-STUARTY_ADMIN_PASSWORD=@file:/run/secrets/admin_password
+STUARTY_ADMIN_EMAIL=admin@stuarty.com
+STUARTY_ADMIN_PASSWORD="admin@stuarty.com"
+# On a public server, prefer a strong secret file: STUARTY_ADMIN_PASSWORD=@file:/run/secrets/admin_password
 ```
 
 Create or change users with the commands below. They run in process and need the workspace lock, so **stop the server first**. The password is read from a terminal prompt (twice, without echo) or from the first line of standard input, never from an argument.

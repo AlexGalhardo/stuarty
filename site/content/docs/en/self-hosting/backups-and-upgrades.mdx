@@ -40,9 +40,9 @@ docker start stuarty
 To upgrade, pull the new tag and recreate the container with the same volume and the same `APP_KEY`:
 
 ```bash
-docker pull ghcr.io/alexgalhardo/stuarty:X.Y.Z
+docker pull ghcr.io/alexgalhardo/stuarty:latest
 docker stop stuarty && docker rm stuarty
-# run the same docker run command as before, with the new tag
+# run the same docker run command as before
 ```
 
 On start the server checks the database. If migrations are pending and the workspace is not new, it first writes `backups/db-<UTC timestamp>-before-<migration>.sqlite` and keeps the five newest, then migrates. A project document written by an older version is migrated when it is opened, and the original is kept in the database. Read the [changelog](/changelog) before a minor upgrade: a minor release may change a public interface.

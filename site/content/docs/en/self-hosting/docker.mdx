@@ -27,17 +27,19 @@ docker run -d --name stuarty \
   -p 127.0.0.1:7878:7878 \
   -v stuarty:/data \
   -e APP_KEY="$(openssl rand -base64 32)" \
-  -e STUARTY_ADMIN_EMAIL=admin@example.com \
-  -e STUARTY_ADMIN_PASSWORD="choose-a-long-password" \
-  ghcr.io/alexgalhardo/stuarty:X.Y.Z
+  -e STUARTY_ADMIN_EMAIL=admin@stuarty.com \
+  -e STUARTY_ADMIN_PASSWORD="admin@stuarty.com" \
+  ghcr.io/alexgalhardo/stuarty:latest
 curl -fsS http://localhost:7878/up
 ```
+
+Change the example password before exposing the container outside `127.0.0.1`.
 
 - `-p 127.0.0.1:7878:7878` publishes the port on your own machine only. With the default `APP_URL=http://localhost:7878` this is the one case where plain HTTP is accepted.
 - `-v stuarty:/data` keeps the workspace (database, media, exports) across container runs.
 - `APP_KEY` is required: 32 bytes or more, base64. It is not baked into the image, because a key in a public image is public. Store the value somewhere safe and give the container the same one on every start.
 - The two `STUARTY_ADMIN_*` variables create the first administrator, once, when no user exists. A container never lets you run `user:create` before the first start, because the server owns the workspace. Afterwards the variables are ignored. The password may be `@file:/run/secrets/admin_password` to keep it out of the environment, and the log shows the email and never the password.
-- `GET /up` answers 200 when the server is healthy; the image has a health check on it. `docker run --rm ghcr.io/alexgalhardo/stuarty:X.Y.Z version` prints the version.
+- `GET /up` answers 200 when the server is healthy; the image has a health check on it. `docker run --rm ghcr.io/alexgalhardo/stuarty:latest version` prints the version.
 
 ### Your first export from the container
 
@@ -52,7 +54,7 @@ The container has no files of yours and the CLI needs a key, so three more steps
 
    ```bash
    APP=http://localhost:7878
-   curl -fsS -c jar.txt -H "Content-Type: application/json" -H "Origin: $APP"      -d '{"email": "admin@example.com", "password": "choose-a-long-password"}' "$APP/auth/login"
+   curl -fsS -c jar.txt -H "Content-Type: application/json" -H "Origin: $APP"      -d '{"email": "admin@stuarty.com", "password": "admin@stuarty.com"}' "$APP/auth/login"
    curl -fsS -b jar.txt -H "Content-Type: application/json" -H "Origin: $APP"      -d '{"name": "first-export", "scopes": ["read", "edit", "media", "render"]}' "$APP/api/v1/keys"
    ```
 
@@ -100,7 +102,7 @@ docker run -d --name stuarty \
   -v stuarty:/data \
   -v "$PWD/master.key:/run/secrets/master_key:ro" \
   -e STUARTY_MASTER_KEY_FILE=/run/secrets/master_key \
-  ghcr.io/alexgalhardo/stuarty:X.Y.Z
+  ghcr.io/alexgalhardo/stuarty:latest
 ```
 
 Add the other variables of the command above (`APP_KEY` and the first administrator) to the same `docker run`.

@@ -39,7 +39,7 @@ Sign in to get a session, create a key with it and use the key. The `Origin` hea
 ```bash
 APP=http://localhost:7878
 curl -fsS -c jar.txt -H "Content-Type: application/json" -H "Origin: $APP" \
-  -d '{"email": "admin@example.com", "password": "choose-a-long-password"}' "$APP/auth/login"
+  -d '{"email": "admin@stuarty.com", "password": "admin@stuarty.com"}' "$APP/auth/login"
 curl -fsS -b jar.txt -H "Content-Type: application/json" -H "Origin: $APP" \
   -d '{"name": "claude-code", "scopes": ["read", "edit", "media", "render"]}' "$APP/api/v1/keys"
 ```
