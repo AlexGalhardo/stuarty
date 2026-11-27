@@ -5,7 +5,12 @@ import { browserTimers, createEventStream, type Timers } from "../api/events";
 import { createSharedEventStream } from "../api/eventsLock";
 import type { Transport } from "../api/transport";
 import { guardUnauthorized, scopedToTimeline } from "../api/transport";
-import type { Job, ProjectEvent } from "../api/types";
+import type {
+	Job,
+	ProjectEvent,
+	ProjectUpdateResult,
+	StandalonePromoteRequest,
+} from "../api/types";
 import {
 	type ActivityState,
 	createActivityStore,
@@ -98,6 +103,10 @@ export interface EditorRuntime {
 	importPaths(paths: readonly string[]): Promise<void>;
 	// Reloads the media list (after a trash, a restore or an asset.remove).
 	reloadLibrary(): Promise<void>;
+	// Promotes a standalone video session into a full production project (epic 105).
+	promoteStandalone(
+		input: StandalonePromoteRequest,
+	): Promise<ProjectUpdateResult>;
 	// "Move to trash" and "Restore" of a card (SDD-012 section 13.2).
 	setAssetTrashed(assetId: string, trashed: boolean): Promise<void>;
 	// Renames a file by its hash (SDD-011 section 14.8) and reloads the list; a refusal of the service is thrown
@@ -354,6 +363,11 @@ export function createRuntime(options: RuntimeOptions): EditorRuntime {
 		async renameAsset(hash, name) {
 			await client.renameAsset(hash, name);
 			await loadLibrary();
+		},
+		async promoteStandalone(input) {
+			const res = await client.promoteStandaloneVideo(projectId, input);
+			await sync.start();
+			return res;
 		},
 		sync,
 		edits,

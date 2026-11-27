@@ -70,6 +70,7 @@ export default function EditorApp({
 					<TooltipProvider>
 						<WithAgent bootstrap={bootstrap}>
 							<EditorShell
+								standalone={bootstrap.standalone === true}
 								sceneBar={
 									bootstrap.session === undefined ? null : <EditorSceneBar />
 								}

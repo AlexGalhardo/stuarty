@@ -104,10 +104,12 @@ function useViewportWidth(): number {
 export default function EditorShell({
 	onLocaleChange,
 	sceneBar = null,
+	standalone = false,
 }: {
 	onLocaleChange(locale: string): void;
 	// The scene bar of the agent, under the timeline; the timeline keeps its stored size and the preview gives way.
 	sceneBar?: ReactNode;
+	standalone?: boolean;
 }): ReactNode {
 	const t = useT();
 	const canvasPort = useCanvasPort();
@@ -169,7 +171,11 @@ export default function EditorShell({
 					}}
 				>
 					<div className="col-span-full">
-						<TopBar onLocaleChange={onLocaleChange} agent={sceneBar !== null} />
+						<TopBar
+							onLocaleChange={onLocaleChange}
+							agent={sceneBar !== null}
+							standalone={standalone}
+						/>
 						<TrashedBanner />
 						<RecordingBanner />
 						{status === "failed" && (
