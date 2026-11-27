@@ -19,6 +19,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
 	"github.com/AlexGalhardo/stuarty/engine/transcribe"
 	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/textview"
 	"github.com/AlexGalhardo/stuarty/web/app/owner"
 )
 
@@ -186,11 +187,15 @@ var activityCmd = &spec{
 func activityHistoryText(res *service.ActivityListResult) string {
 	var b strings.Builder
 
+	if len(res.Entries) > 0 {
+		b.WriteString(textview.Note + "\n")
+	}
 	fmt.Fprintf(&b, "activity (%d entries)", len(res.Entries))
 
 	for i := range res.Entries {
 		e := &res.Entries[i]
-		fmt.Fprintf(&b, "\n%s %s [%s:%s] %s %s", e.ID, e.At, e.ActorKind, e.ActorLabel, e.Domain, e.Action)
+		fmt.Fprintf(&b, "\n%s %s [%s:%s] %s %s", e.ID, e.At, e.ActorKind,
+			textview.Quote(e.ActorLabel, 80), e.Domain, e.Action)
 
 		if e.ProjectID != "" {
 			b.WriteString(" " + e.ProjectID)

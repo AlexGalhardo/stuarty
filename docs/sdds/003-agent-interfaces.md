@@ -2269,7 +2269,7 @@ errors: E_VALIDATION, E_INVALID_TIME, E_NOT_FOUND, E_ID_EXISTS, E_INVALID_STATE,
 ```json
 {
   "name": "history",
-  "description": "Change log (action=list, newest first, with actor; actor, cursor, limit: list only); undo/redo your own latest step (one per call); revert to a revision or checkpoint as a new step (dry_run previews); diff two revisions; checkpoints, checkpoint, rename_checkpoint, remove_checkpoint name revisions. Undo skips (and reports) others' later changes. domain=image (image_id): all but list.",
+  "description": "Timeline revisions and checkpoints. Undo skips later changes by others. For images use domain=image and image_id. action=activity lists workspace or project activity; actor filters by kind, area by domain.",
   "inputSchema": {
     "type": "object",
     "properties": {
@@ -2295,6 +2295,7 @@ errors: E_VALIDATION, E_INVALID_TIME, E_NOT_FOUND, E_ID_EXISTS, E_INVALID_STATE,
       "action": {
         "enum": [
           "list",
+          "activity",
           "undo",
           "redo",
           "revert",
@@ -2307,6 +2308,9 @@ errors: E_VALIDATION, E_INVALID_TIME, E_NOT_FOUND, E_ID_EXISTS, E_INVALID_STATE,
         "default": "list"
       },
       "actor": {
+        "type": "string"
+      },
+      "area": {
         "type": "string"
       },
       "cursor": {
@@ -2357,7 +2361,12 @@ errors: E_VALIDATION, E_INVALID_TIME, E_NOT_FOUND, E_ID_EXISTS, E_INVALID_STATE,
       "entries": {
         "type": "array",
         "items": {
-          "type": "object"
+          "type": "object",
+          "properties": {
+            "actor": { "x-untrusted": true },
+            "actor_label": { "x-untrusted": true },
+            "project_name": { "x-untrusted": true }
+          }
         }
       },
       "skipped": {
@@ -2372,10 +2381,7 @@ errors: E_VALIDATION, E_INVALID_TIME, E_NOT_FOUND, E_ID_EXISTS, E_INVALID_STATE,
           "null"
         ]
       }
-    },
-    "required": [
-      "revision"
-    ]
+    }
   },
   "annotations": {
     "title": "History, undo and redo",

@@ -209,6 +209,7 @@
       },
       "action": {
         "history_list": "Lists the change log, newest first.",
+        "history_activity": "Lists recent activity in the workspace or in a project.",
         "history_undo": "Undoes the agent's latest change.",
         "history_redo": "Redoes a change that was undone.",
         "history_revert": "Goes back to an earlier revision or checkpoint, as a new step.",
