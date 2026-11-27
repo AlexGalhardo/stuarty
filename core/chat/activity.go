@@ -197,7 +197,7 @@ var toolCatalogue = map[string][]string{
 	"edit":           nil,
 	"command_help":   nil,
 	"history": {
-		"list", "undo", "redo", "revert", "diff", "checkpoints", "checkpoint", "rename_checkpoint",
+		"list", "activity", "undo", "redo", "revert", "diff", "checkpoints", "checkpoint", "rename_checkpoint",
 		"remove_checkpoint",
 	},
 	"media_import":  nil,

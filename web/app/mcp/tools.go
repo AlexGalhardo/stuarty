@@ -307,8 +307,11 @@ func history(ctx context.Context, svc service.Service, raw json.RawMessage) (*to
 			return nil, err
 		}
 		return &toolOutput{
-			value: res,
-			text:  fmt.Sprintf("%d activity entries. See structured content.", len(res.Entries)),
+			value: struct {
+				*service.ActivityListResult
+				Notice string `json:"untrusted_notice"`
+			}{res, untrusted.Notice},
+			text: fmt.Sprintf("%d activity entries. See structured content.", len(res.Entries)),
 		}, nil
 	}
 

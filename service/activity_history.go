@@ -10,6 +10,7 @@ import (
 
 	"github.com/AlexGalhardo/stuarty/core/audit"
 	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/service/untrusted"
 )
 
 // ActivityListRequest queries the human- and agent-attributed activity timeline,
@@ -202,9 +203,9 @@ func (s *svc) activityEntry(
 			":",
 		),
 		At:         time.UnixMilli(key.AtMs).UTC().Format(time.RFC3339Nano),
-		Actor:      r.Actor,
+		Actor:      untrusted.Value(r.Actor, 80),
 		ActorKind:  actorKind,
-		ActorLabel: actorLabel,
+		ActorLabel: untrusted.Value(actorLabel, 80),
 		Domain:     domain,
 		Action:     r.Action,
 		ProjectID:  key.ProjectID,
@@ -216,8 +217,8 @@ func (s *svc) activityEntry(
 		if name, ok := names[pid]; ok {
 			e.ProjectName = name
 		} else if row, err := s.store.Productions().Get(ctx, pid); err == nil {
-			names[pid] = row.Name
-			e.ProjectName = row.Name
+			e.ProjectName = untrusted.Value(row.Name, 120)
+			names[pid] = e.ProjectName
 		} else {
 			names[pid] = ""
 		}

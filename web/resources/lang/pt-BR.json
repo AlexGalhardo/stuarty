@@ -209,6 +209,7 @@
       },
       "action": {
         "history_list": "Lista o registro de alterações, da mais recente para a mais antiga.",
+        "history_activity": "Lista as atividades recentes do espaço de trabalho ou de um projeto.",
         "history_undo": "Desfaz a última alteração do agente.",
         "history_redo": "Refaz uma alteração que foi desfeita.",
         "history_revert": "Volta a uma revisão ou a um ponto de controle anterior, como um novo passo.",

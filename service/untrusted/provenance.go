@@ -6,6 +6,9 @@ package untrusted
 // results of the Service for fields tagged untrusted:"true" and fails on any
 // that is not here, so a new field cannot reach an agent undelimited.
 var Provenance = map[string]string{
+	"service.ActivityEntry.Actor":               SourceMetadata,
+	"service.ActivityEntry.ActorLabel":          SourceMetadata,
+	"service.ActivityEntry.ProjectName":         SourceProjectText,
 	"service.ProjectSummary.Name":               SourceProjectText,
 	"service.ProjectUpdateResult.Name":          SourceProjectText,
 	"service.ProjectGetResult.Description":      SourceProjectText,
