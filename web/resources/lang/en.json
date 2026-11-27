@@ -5623,9 +5623,12 @@
       "load_more": "Load more",
       "by": "By",
       "details": "Action details",
+      "identifier": "Identifier",
       "empty": {
         "title": "No activity recorded yet",
-        "hint": "Edits, imports, generations, approvals, and publications will appear here."
+        "hint": "Edits, imports, generations, approvals, and publications will appear here.",
+        "filtered_title": "No activity matches these filters",
+        "filtered_hint": "Change a filter to see more activity."
       },
       "filter": {
         "actor": "Actor",

@@ -735,7 +735,10 @@ export default function ProjectShow() {
 					aria-labelledby="project-history-title"
 					className="flex flex-col gap-3"
 				>
-					<h2 id="project-history-title" className="text-lg font-semibold">
+					<h2
+						id="project-history-title"
+						className="scroll-mt-20 text-lg font-semibold"
+					>
 						{t("ui.history.project_title")}
 					</h2>
 					<ActivityTimeline projectId={project.id} />

@@ -148,7 +148,7 @@ export default function SceneBar({
 			className={cn(
 				// A window under 30 rem high (a phone on its side, 400 % zoom) keeps the bar at the end of the page:
 				// stuck to the bottom, its card would hide most of what is left between it and the top bar.
-				"sticky bottom-0 z-20 flex shrink-0 flex-wrap items-center gap-x-6 gap-y-2 border-t px-4 py-2 [@media(max-height:30rem)]:static",
+				"sticky bottom-0 z-20 hidden shrink-0 flex-wrap items-center gap-x-6 gap-y-2 border-t px-4 py-2 md:flex [@media(max-height:30rem)]:static",
 				note ? "md:min-h-14" : "md:h-14 md:flex-nowrap md:py-0",
 				look.tone,
 			)}
