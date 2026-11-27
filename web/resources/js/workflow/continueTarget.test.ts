@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 
-import { continueTarget } from "./continueTarget";
+import { continueTarget, isDocumentNavigation } from "./continueTarget";
 
 describe("continueTarget", () => {
 	test("a text step opens the text, a media step the editor and the others the project or the page", () => {
@@ -18,5 +18,11 @@ describe("continueTarget", () => {
 		expect(continueTarget("briefing", "prj_aaaaaaaaaa")).toBe(
 			"/projects/prj_aaaaaaaaaa",
 		);
+	});
+
+	test("marks video editor routes as full-document navigations", () => {
+		expect(isDocumentNavigation("/editor/prj_aaaaaaaaaa")).toBe(true);
+		expect(isDocumentNavigation("/projects/prj_aaaaaaaaaa")).toBe(false);
+		expect(isDocumentNavigation("/write?project=prj_aaaaaaaaaa")).toBe(false);
 	});
 });

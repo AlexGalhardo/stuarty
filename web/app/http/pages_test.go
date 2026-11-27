@@ -179,6 +179,18 @@ func TestPages(t *testing.T) {
 		t.Error("the editor page carries the local token")
 	}
 
+	// Visiting the standalone editor document via an Inertia XHR visit returns 409 X-Inertia-Location so
+	// Inertia performs a full browser navigation instead of showing raw HTML in its white overlay (epic 102).
+	edInertia := h.do(req{
+		path: "/editor/" + id, noAuth: true,
+		headers: map[string]string{"Cookie": ck, "X-Inertia": "true"},
+	})
+	if edInertia.status != http.StatusConflict ||
+		edInertia.header.Get("X-Inertia-Location") != "/editor/"+id {
+		t.Errorf("inertia /editor = %d, location %q\n%s",
+			edInertia.status, edInertia.header.Get("X-Inertia-Location"), edInertia.body)
+	}
+
 	for _, p := range []string{"/editor/prj_0000000000", "/editor/not-an-id"} {
 		if res := page(p); res.status != http.StatusNotFound {
 			t.Errorf("%s = %d, want 404", p, res.status)
