@@ -2181,6 +2181,15 @@ Settings and Log out stay in the footer, as the local account leaves them (ADR-0
 
 The History sidebar item opens `/history`. The same timeline is present in project details. Both pages use the `ActivityList` read model and provide actor and domain filters, with a project filter on the global page. Each local date groups rows with a time column on screens with room for it. The filters and times stack at narrow widths. A filtered empty state offers a way to widen the view. The client translates action codes from the activity catalogue. Names and actor labels render through `UntrustedText`. Document revisions link to their editor, and the feed requests more entries with an opaque cursor.
 
+#### Universal input help (epic 112)
+
+Every user-editable `<Input>` and `<Textarea>` across the dashboard, dialogs, and editors (excluding `file`, `hidden`, `checkbox`, `radio`, `range`, `color`, and `readOnly` display inputs) provides both:
+
+1. a concrete, localized example `placeholder` (never substituting for a visible `<Label>` or `aria-label`, rule I3 of §16.4);
+2. contextual guidance explaining what the field does and what format it expects, via `FieldLabel` / `FieldHelpTip` (hover- and keyboard-focusable tooltip in `components/FieldHelp.tsx`), `FieldHint` / `aria-describedby`, or a top-of-form `HelpCard` for complex multi-field forms (connections, SMART goals, prompt templates, cost ceilings, webhooks, export options, recurring slots).
+
+The static AST check `bun run check:input-help` (`web/scripts/check-input-help.ts`) enforces this contract across `web/resources/js/**/*.tsx`.
+
 ### 23.5 The asset libraries (epic 81)
 
 Video, Visual and Sound Assets are one library seen through the `section` filter (section 23.1), so a creator learns it once. All three are `assetlibrary/AssetLibrary.tsx` over the frame `LibraryFrame` (the window title and a `PageHeader`: one h1, its sentence and the generate action), the filters `LibraryFilters` (search, tag, the origin as radios, reusable only, Apply and Clear: the same four in each library, sent as a query; which files match is the service's answer), `MediaCard` (video and visual: the poster, the duration the service reported, the name, the origin as an icon and a word, the reusable mark, the size and the tags), `SoundRow` (the name, duration, size, origin, mark and tags, a waveform drawn from the `peaks` route and a native player) and the detail `AssetDetail`.
