@@ -54,7 +54,8 @@ func (in *Installation) WithLimits(ctx context.Context, l engine.Limits) (*Insta
 
 	retool := func(t *engine.Tool, maxOutput int) (*engine.Tool, error) {
 		return engine.Find(ctx, engine.Config{
-			Path: t.Path(), Limits: l, CPUCount: t.CPUCount(), MaxOutput: maxOutput,
+			Path: t.Path(), VersionArgs: []string{}, Limits: l, CPUCount: t.CPUCount(), MaxOutput: maxOutput,
+			Prepare: HideWindow,
 		})
 	}
 

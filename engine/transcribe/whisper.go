@@ -155,6 +155,7 @@ func (w *Whisper) helper(ctx context.Context) (*engine.Tool, error) {
 		Env:         w.Env,
 		Limits:      w.Limits,
 		CPUCount:    w.CPUCount,
+		Prepare:     ffmpeg.HideWindow,
 	})
 	if err != nil {
 		return nil, &MissingError{Items: []Item{w.HelperItem}, DownloadBytes: w.HelperItem.Bytes}

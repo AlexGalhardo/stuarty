@@ -176,18 +176,31 @@ func tryPair(ctx context.Context, cfg Config, c candidate) (*Installation, error
 	if !filepath.IsAbs(c.ffmpeg) {
 		return nil, errors.New("path is not absolute")
 	}
+
+	ffmpegPath, resolvedFromShim := resolveScoopShim(c.ffmpeg)
 	probePath := c.probe
 	if probePath == "" {
-		probePath = filepath.Join(filepath.Dir(c.ffmpeg), exeName("ffprobe"))
-	} else if !filepath.IsAbs(probePath) {
-		return nil, errors.New("ffprobe path is not absolute")
+		if resolvedFromShim {
+			sibling := filepath.Join(filepath.Dir(ffmpegPath), exeName("ffprobe"))
+			if info, err := os.Stat(sibling); err == nil && info.Mode().IsRegular() {
+				probePath = sibling
+			}
+		}
+		if probePath == "" {
+			probePath, _ = resolveScoopShim(filepath.Join(filepath.Dir(c.ffmpeg), exeName("ffprobe")))
+		}
+	} else {
+		if !filepath.IsAbs(probePath) {
+			return nil, errors.New("ffprobe path is not absolute")
+		}
+		probePath, _ = resolveScoopShim(probePath)
 	}
 
-	ff, info, err := openTool(ctx, cfg, "ffmpeg", c.ffmpeg, ffmpegMaxOutput, nil)
+	ff, info, err := openTool(ctx, cfg, "ffmpeg", ffmpegPath, ffmpegMaxOutput, nil)
 	if err != nil {
 		return nil, err
 	}
-	lib, ff, err := attachOpenH264(ctx, cfg, c.ffmpeg, info, ff)
+	lib, ff, err := attachOpenH264(ctx, cfg, ffmpegPath, info, ff)
 	if err != nil {
 		return nil, err
 	}
@@ -213,6 +226,8 @@ func tryPair(ctx context.Context, cfg Config, c candidate) (*Installation, error
 			info.Version,
 			"license",
 			info.License.Name,
+			"resolved_from_shim",
+			resolvedFromShim,
 		)
 	}
 	return in, nil
@@ -223,8 +238,9 @@ func openTool(
 	ctx context.Context, cfg Config, name, path string, maxOutput int, env map[string]string,
 ) (*engine.Tool, VersionInfo, error) {
 	t, err := engine.Find(ctx, engine.Config{
-		Name: name, Path: path, VersionArgs: []string{"-hide_banner", "-version"},
+		Name: name, Path: path, VersionArgs: []string{},
 		Limits: cfg.Limits, CPUCount: cfg.CPUCount, MaxOutput: maxOutput, Log: cfg.Log, Env: env,
+		Prepare: HideWindow,
 	})
 	if err != nil {
 		return nil, VersionInfo{}, err
