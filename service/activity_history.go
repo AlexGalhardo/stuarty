@@ -57,10 +57,11 @@ type ActivityKey struct {
 
 // ActivityRow is the metadata of an audit or revision row before display normalization.
 type ActivityRow struct {
-	Key     ActivityKey
-	Actor   string
-	Action  string
-	Details json.RawMessage
+	Key        ActivityKey
+	Actor      string
+	ActorLabel string
+	Action     string
+	Details    json.RawMessage
 }
 
 // ActivityPageQuery selects one page from the combined activity logs.
@@ -197,6 +198,9 @@ func (s *svc) activityEntry(
 	ctx context.Context, r *ActivityRow, actorKind, actorLabel, domain string, names map[string]string,
 ) ActivityEntry {
 	key := r.Key
+	if r.ActorLabel != "" {
+		actorLabel = r.ActorLabel
+	}
 	e := ActivityEntry{
 		ID: strings.Join(
 			[]string{key.Source, key.Subject, strconv.FormatInt(key.Sequence, 10), key.ProjectID},
@@ -224,7 +228,8 @@ func (s *svc) activityEntry(
 		}
 	}
 
-	if key.Source != "audit" {
+	switch key.Source {
+	case "video", "image", "text":
 		e.SubjectKind = key.Source
 		e.Revision = key.Sequence
 	}

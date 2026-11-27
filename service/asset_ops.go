@@ -208,6 +208,7 @@ func (s *svc) AssetSetInfo(ctx context.Context, req AssetSetInfoRequest) (*Asset
 
 	werr := s.store.Write(ctx, func(ctx context.Context, tx Tx) error {
 		lib := assets.Library{Store: tx.AssetLibrary(), Owner: c.OwnerUserID}
+		now := s.nowMs()
 
 		var uerr error
 
@@ -218,10 +219,13 @@ func (s *svc) AssetSetInfo(ctx context.Context, req AssetSetInfoRequest) (*Asset
 				Reusable:    req.Reusable,
 				SoundKind:   req.SoundKind,
 			},
-			c.Actor, s.nowMs(), names,
+			c.Actor, now, names,
 		)
 
-		return uerr
+		if uerr != nil {
+			return uerr
+		}
+		return appendAudit(ctx, tx, now, c.Actor, "asset.info.set", "", h.Hash)
 	})
 	if werr != nil {
 		return nil, ruleError(werr)
@@ -248,12 +252,16 @@ func (s *svc) AssetTag(ctx context.Context, req AssetTagRequest) (*AssetResult, 
 
 	werr := s.store.Write(ctx, func(ctx context.Context, tx Tx) error {
 		lib := assets.Library{Store: tx.AssetLibrary(), Owner: c.OwnerUserID}
+		now := s.nowMs()
 
 		var uerr error
 
-		entry, uerr = lib.Tag(ctx, &h, req.Add, req.Remove, c.Actor, s.nowMs(), names)
+		entry, uerr = lib.Tag(ctx, &h, req.Add, req.Remove, c.Actor, now, names)
 
-		return uerr
+		if uerr != nil {
+			return uerr
+		}
+		return appendAudit(ctx, tx, now, c.Actor, "asset.tags.set", "", h.Hash)
 	})
 	if werr != nil {
 		return nil, ruleError(werr)
@@ -330,7 +338,11 @@ func (s *svc) AssetRename(ctx context.Context, req AssetRenameRequest) (*AssetRe
 		// One audit row per rename that changed a name, with who did it and which file; never the name, which is
 		// untrusted text. A request for the name every row already has writes nothing (SDD-011 section 14.8).
 		if len(changed) > 0 {
-			if aerr := appendAudit(ctx, tx, s.nowMs(), c.Actor, "asset.rename", "", h.Hash); aerr != nil {
+			now := s.nowMs()
+			if aerr := appendAudit(ctx, tx, now, c.Actor, "asset.rename", "", h.Hash); aerr != nil {
+				return aerr
+			}
+			if aerr := auditProjectAssetRename(ctx, tx, now, c.Actor, h.Hash, changed); aerr != nil {
 				return aerr
 			}
 		}
@@ -358,6 +370,30 @@ func (s *svc) AssetRename(ctx context.Context, req AssetRenameRequest) (*AssetRe
 // renameTargets is every row of the caller's timelines that holds the file: the holdings of the library first, then
 // the rows in a trash (of a file or of a whole project), so that a restore brings the file back under the name it
 // has now. A timeline the caller may not see is never read.
+func auditProjectAssetRename(
+	ctx context.Context, tx Tx, now int64, actor, hash string, rows []ProjectAssetRow,
+) error {
+	seen := make(map[string]bool)
+	for i := range rows {
+		projectID, err := tx.Productions().ProjectOfTimeline(ctx, rows[i].ProjectID)
+		if errors.Is(err, ErrNotFound) {
+			projectID, err = rows[i].ProjectID, nil
+		}
+		if err != nil {
+			return err
+		}
+		if seen[projectID] {
+			continue
+		}
+		if err := appendAudit(ctx, tx, now, actor, "asset.rename.project", projectID, hash); err != nil {
+			return err
+		}
+		seen[projectID] = true
+	}
+
+	return nil
+}
+
 func (s *svc) renameTargets(ctx context.Context, c Caller, h *assets.Held) ([]asset.Holding, error) {
 	out := slices.Clone(h.Holdings)
 

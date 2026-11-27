@@ -265,6 +265,20 @@ func (r chatRepo) SessionList(ctx context.Context, projectID string) ([]agenthos
 }
 
 func (r chatRepo) SessionDelete(ctx context.Context, id string) error {
+	// Keep the activity once the shorter-lived transcript is pruned. Use the
+	// session and sequence key so a retry can resume after archiving.
+	if _, err := r.ex.ExecContext(ctx, `
+ INSERT INTO audit (at_ms, actor, action, project_id, subject_id)
+ SELECT e.at_ms, CASE WHEN s.owner_user_id IS NULL THEN 'local:chat-' || substr(s.id, 5)
+                      ELSE 'key:' || s.id END,
+        'chat.tool_call', s.project_id, s.id || '/' || e.seq
+ FROM chat_events e JOIN chat_sessions s ON s.id = e.session_id
+ WHERE e.session_id = ? AND e.kind = 'tool_call' AND NOT EXISTS (
+  SELECT 1 FROM audit a WHERE a.action = 'chat.tool_call' AND a.subject_id = s.id || '/' || e.seq
+ )`, id); err != nil {
+		return err
+	}
+
 	if _, err := r.ex.ExecContext(ctx, `DELETE FROM chat_events WHERE session_id = ?`, id); err != nil {
 		return err
 	}

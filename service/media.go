@@ -479,7 +479,7 @@ func (s *svc) linkProjectAsset(
 
 		row.State = ProjectAssetPending
 
-		return row, nil
+		return row, appendAudit(ctx, tx, now, actor, "media.restore", projectID, row.AssetID)
 	case err == nil:
 		return row, nil
 	case !isNotFound(err):

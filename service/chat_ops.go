@@ -491,7 +491,8 @@ func (s *svc) invalidChatState(ctx context.Context, id string, err error) error 
 }
 
 func (s *svc) ChatSend(ctx context.Context, req ChatSendRequest) (*ChatSession, error) {
-	if _, _, err := s.chatPersonSession(ctx, "ChatSend", req.SessionID); err != nil {
+	c, session, err := s.chatPersonSession(ctx, "ChatSend", req.SessionID)
+	if err != nil {
 		return nil, err
 	}
 
@@ -515,11 +516,13 @@ func (s *svc) ChatSend(ctx context.Context, req ChatSendRequest) (*ChatSession, 
 		return nil, s.invalidChatState(ctx, req.SessionID, err)
 	}
 
+	s.chatAudit(ctx, c.Actor, "chat.send", session.ProjectID, req.SessionID, nil)
 	return s.chatReload(ctx, req.SessionID)
 }
 
 func (s *svc) ChatCancel(ctx context.Context, req ChatCancelRequest) (*ChatSession, error) {
-	if _, _, err := s.chatPersonSession(ctx, "ChatCancel", req.SessionID); err != nil {
+	c, session, err := s.chatPersonSession(ctx, "ChatCancel", req.SessionID)
+	if err != nil {
 		return nil, err
 	}
 
@@ -531,11 +534,13 @@ func (s *svc) ChatCancel(ctx context.Context, req ChatCancelRequest) (*ChatSessi
 		return nil, s.invalidChatState(ctx, req.SessionID, err)
 	}
 
+	s.chatAudit(ctx, c.Actor, "chat.cancel", session.ProjectID, req.SessionID, nil)
 	return s.chatReload(ctx, req.SessionID)
 }
 
 func (s *svc) ChatAnswerPermission(ctx context.Context, req ChatAnswerRequest) (*ChatSession, error) {
-	if _, _, err := s.chatPersonSession(ctx, "ChatAnswerPermission", req.SessionID); err != nil {
+	c, session, err := s.chatPersonSession(ctx, "ChatAnswerPermission", req.SessionID)
+	if err != nil {
 		return nil, err
 	}
 
@@ -551,6 +556,7 @@ func (s *svc) ChatAnswerPermission(ctx context.Context, req ChatAnswerRequest) (
 		return nil, s.invalidChatState(ctx, req.SessionID, err)
 	}
 
+	s.chatAudit(ctx, c.Actor, "chat.permission.answer", session.ProjectID, req.SessionID, nil)
 	return s.chatReload(ctx, req.SessionID)
 }
 

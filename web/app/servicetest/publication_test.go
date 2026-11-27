@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"slices"
 	"strings"
 	"sync"
 	"testing"
@@ -692,6 +693,11 @@ func TestPublicationIsAnItemOfItsProject(t *testing.T) {
 		if _, known := wantActions[entry.Action]; known && entry.SubjectID == p.ID {
 			wantActions[entry.Action] = true
 		}
+	}
+	if !slices.ContainsFunc(activity.Entries, func(e service.ActivityEntry) bool {
+		return e.Action == "publication.published" && e.SubjectID == id && e.ActorKind == "system"
+	}) {
+		t.Errorf("missing the scheduler's publication outcome: %+v", activity.Entries)
 	}
 	for action, found := range wantActions {
 		if !found {
