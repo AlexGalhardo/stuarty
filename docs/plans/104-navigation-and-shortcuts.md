@@ -70,7 +70,7 @@ Navigating Stuarty feels immediate and effortless: every screen has a consistent
 - [x] 2. Implement `useBackNavigation` and mount the Back button in `TopBar.tsx` and the Video Editor header; add tests in `TopBar.test.tsx`. Verify: `cd web && bunx vitest run resources/js/shell/TopBar.test.tsx`.
 - [x] 3. Make every step dot in `HomeTrail.tsx` clickable using `continueTarget` and `isDocumentNavigation`; update `Home.tsx` and `Home.test.tsx`. Verify: `cd web && bunx vitest run resources/js/pages/Dashboard/Home.test.tsx`.
 - [x] 4. Add double-click handlers (plus context-menu equivalents) to `Publish/CalendarView.tsx` day cards and `assetlibrary/MediaCard.tsx` + `AssetLibrary.tsx` for video and image assets. Verify: `cd web && bunx vitest run resources/js/pages/Publish/ resources/js/assetlibrary/`.
-- [ ] 5. Add `en.json` and `pt-BR.json` labels and Playwright E2E tests covering Back navigation across 3 screens, calendar day double-click, asset double-click, and Home workflow dot clicks. Verify: `task lint`, `task test:web`, `cd web && bun run typecheck && bun run check:thin-client && bun run check:i18n`, and the Playwright spec pass.
+- [x] 5. Add `en.json` and `pt-BR.json` labels and Playwright E2E tests covering Back navigation across 3 screens, calendar day double-click, asset double-click, and Home workflow dot clicks. Verify: `task lint`, `task test:web`, `cd web && bun run typecheck && bun run check:thin-client && bun run check:i18n`, and the Playwright spec pass.
 
 ## Test strategy
 
