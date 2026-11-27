@@ -503,3 +503,30 @@ T-170 (SDD-007 section 2): the bridge of the teleprompter opens a window, so it 
 ### 20.6 Tests
 
 Golden cases of the two commands (C.96 and C.97) with each of the four formats; a property test that no clip leaves the frame for every layout, format, corner and padding; an export test that draws a layout on a background and compares frames to golden images; the unit tests of the picker and of the teleprompter (the script is shown, the scroll runs at the set speed, the mirror and the size apply, a script with markup is text); the tests of the bridge; and on Windows two tests (`desktop/shell`, run with `STUARTY_TEST_REAL_SCREEN=1`) that open a real window of a solid colour, capture the display where it is, and find all of its pixels with the flag off, none with `WDA_EXCLUDEFROMCAPTURE` on, and all of them again with it off (so the test can fail): one captures with GDI, the other with the real helper built with `--allow-test-source`, which writes the frames raw (`STUARTY_TEST_CAPTURE_HELPER`, `STUARTY_TEST_FFMPEG_DIR`). Not run: the Wails window of the shipped application captured by the real helper (a check by hand).
+
+## 21. Dedicated `/record` studio page and standalone recordings (epic 117)
+
+Implements author decision D-160: screen recording is a first-class destination in the studio shell, usable without creating a production project first.
+
+### 21.1 Standalone recording container
+
+`RecordingStart` (`POST /api/v1/recordings`) and `RecordingUploadBegin` (`POST /api/v1/recordings/upload`) accept an empty `project_id` (when `recording_id` is also empty). ADR-0051 still runs first (`person` check before any input validation or row creation). After validating the capture options (source and FPS, or browser container), the service creates a lightweight standalone video container (`projects.standalone = 1`, SDD-005 §5.12.5) with a single `V1` track and attaches the recording to that container ID. Standalone recordings stay out of `/projects` until the creator promotes the edit into a project.
+
+### 21.2 Workspace-wide recording listing
+
+`RecordingList` accepts an empty `project_id` to return recent recordings across the workspace, newest first (`created_ms DESC, id`). When the caller is scoped to a single project (`c.ProjectID != ""`), the service narrows the query to that project. In network mode (`c.OwnerUserID != ""`), the query joins `projects` and filters by `owner_user_id` so one user never sees another user's recordings. Every row still passes `recording.VisibleTo(review, isPerson(c))` so unconfirmed takes stay hidden from agents.
+
+Surfaces:
+
+- HTTP: `GET /api/v1/recordings` (workspace-wide) in addition to `GET /api/v1/projects/{id}/recordings` (per-project).
+- CLI: `stuarty recording:list [--project <id>]` (`--project` is optional; when omitted and `STUARTY_PROJECT` is unset, lists across the workspace).
+- MCP: unchanged (ADR-0051 keeps capture controls human-driven and preserves NFR-020 budget).
+
+### 21.3 The `/record` studio page
+
+`GET /record` renders `pages/Record/Index.tsx` inside `DashboardLayout` and is linked from the `Create` group of the sidebar (`Record` / `Gravar tela`) and from a quick-action button on Home. The page reuses `useRecordFlow`, `RecordPanel`, and the existing recording APIs and teleprompter preferences without duplicating state rules:
+
+1. **Setup stage**: shows whether native desktop capture or browser WebRTC capture (`getDisplayMedia`) is active (with an explicit notice on non-HTTPS remote origins), lets the creator pick screen/window/tab, microphone, system audio, camera, FPS, and optional project destination (defaulting to a standalone session), and opens the teleprompter or preset layout/background options.
+2. **Active recording stage**: live timer, pause/resume/stop/cancel controls, audio level meters, and `useUnsavedGuard` protection against accidental navigation while capturing.
+3. **Post-take review & polish stage**: confirms and places the take, offers one-click polish actions (layout, background, auto-zoom/cursor polish via existing core commands), and provides direct links to open the take in `/editor/{project_id}` (full document navigation), export, or promote to a project.
+4. **Recent recordings**: workspace-wide list from `GET /api/v1/recordings` with status, duration, source kind, direct link to `/editor/{project_id}`, and delete action.
