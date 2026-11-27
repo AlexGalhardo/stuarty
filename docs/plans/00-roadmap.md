@@ -177,13 +177,13 @@ Every UI epic in this section updates `docs/design/final/stuarty-redesign-final-
 | --- | --- | --- | --- | --- |
 | [100](100-windows-silent-processes-and-export.md) | Windows silent child processes, FFmpeg shim resolution and reliable video export | M | 46, 98 | TODO |
 | [101](101-installer-naming-and-desktop-updater.md) | Explicit web-localhost installer naming and desktop in-app auto-updater | M | 100 | TODO |
-| [102](102-critical-ui-bug-fixes.md) | Critical UI bug fixes: workflow navigation, collapsed sidebar version and empty-state layout | S | 75, 79, 99 | TODO |
-| [103](103-login-and-recovery-polish.md) | Login, password recovery and account switching polish | S | 57, 84 | TODO |
+| [102](102-critical-ui-bug-fixes.md) | Critical UI bug fixes: workflow navigation, collapsed sidebar version and empty-state layout | S | 75, 79, 99 | IN PROGRESS (2026-11-27, `3d8d10821`..`bc1cb73bd`; tasks 1-3 verified, Playwright E2E pending) |
+| [103](103-login-and-recovery-polish.md) | Login, password recovery and account switching polish | S | 57, 84 | IN PROGRESS (2026-11-27, `092916646`..`5dbf40e8c`; tasks 1-3 and i18n/Vitest verified, Playwright E2E pending) |
 | [104](104-navigation-and-shortcuts.md) | Global back navigation, double-click shortcuts and clickable workflow steps | M | 102 | TODO |
 | [105](105-standalone-video-and-image-editors.md) | Standalone video and image editors without a pre-created project | L | 06, 28, 85, 86, 116 | TODO |
 | [106](106-project-independent-asset-imports.md) | Project-independent drag-and-drop asset imports, library copy prompt and project allocation details | L | 08, 81, 94, 116 | TODO |
 | [107](107-oauth-first-agent-connections.md) | OAuth-first agent connections and secondary API key mode | L | 12, 14, 83, 84, 116 | TODO |
-| [108](108-docs-docker-latest-and-admin-defaults.md) | Documentation and website Docker `:latest` image and simplified default admin credentials | S | 25, 40, 87 | TODO |
+| [108](108-docs-docker-latest-and-admin-defaults.md) | Documentation and website Docker `:latest` image and simplified default admin credentials | S | 25, 40, 87 | DONE (2026-11-27, `15cb1a5cc`..`35402cc38`) |
 | [109](109-native-ai-media-providers.md) | Native AI image and video generation providers (Higgsfield, fal.ai, Replicate, Runway, Kling, Luma, FLUX, Ideogram, Recraft and ElevenLabs) | L | 10, 11, 84, 116 | TODO |
 | [110](110-drive-figma-and-creative-mcps.md) | Native Google Drive, Figma and open-source creative MCP connectors (ArtCraft, OpenPencil and custom MCPs) | L | 04, 84, 106, 116 | TODO |
 | [111](111-global-and-project-history.md) | Global and per-project Activity History | M | 06, 75, 79, 116 | TODO |
