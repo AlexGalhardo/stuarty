@@ -43,9 +43,9 @@ The canonical FigCraft design source (`stuarty-redesign-final-trilha.figcraft`),
 
 ## Tasks
 
-- [ ] 1. Confirm with the author whether `docs/design/final/` should store only the canonical sources (`stuarty-redesign-final-trilha.figcraft`, `tokens-tailwind-final.css`, English `README.md`) or also selected PNG reference captures (~100 MB for all 540 PNGs). **STOP** if committing >20 MB of PNG binaries is requested without Git LFS confirmation. Verify: decision recorded in the hand-off.
-- [ ] 2. Copy `stuarty-redesign-final-trilha.figcraft` and `tokens-tailwind-final.css` from the local FINAL design bundle into `docs/design/final/`, and write the English `docs/design/final/README.md` (with zero local-folder path references and zero scratch scripts copied). Verify: `git status docs/design/final/` shows only the clean canonical files and `task lint:md` exits 0.
-- [ ] 3. Update `docs/design-system.md` and `docs/README.md` to reference `docs/design/final/stuarty-redesign-final-trilha.figcraft` and document the FigCraft update step for all new UI epics. Verify: `task lint:md` exits 0 and no public document under `docs/design/final/` cites a git-ignored local path.
+- [x] 1. Confirm with the author whether `docs/design/final/` should store only the canonical sources (`stuarty-redesign-final-trilha.figcraft`, `tokens-tailwind-final.css`, English `README.md`) or also selected PNG reference captures (~100 MB for all 540 PNGs). **STOP** if committing >20 MB of PNG binaries is requested without Git LFS confirmation. Verify: decision recorded in the hand-off.
+- [x] 2. Copy `stuarty-redesign-final-trilha.figcraft` and `tokens-tailwind-final.css` from the local FINAL design bundle into `docs/design/final/`, and write the English `docs/design/final/README.md` (with zero local-folder path references and zero scratch scripts copied). Verify: `git status docs/design/final/` shows only the clean canonical files and `task lint:md` exits 0.
+- [x] 3. Update `docs/design-system.md` and `docs/README.md` to reference `docs/design/final/stuarty-redesign-final-trilha.figcraft` and document the FigCraft update step for all new UI epics. Verify: `task lint:md` exits 0 and no public document under `docs/design/final/` cites a git-ignored local path.
 
 ## Test strategy
 
