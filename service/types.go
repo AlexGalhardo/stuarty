@@ -132,11 +132,11 @@ type ProjectGetResult struct {
 	ProjectID string `json:"project_id"`
 	Name      string `json:"name"       untrusted:"true"`
 	// The description and the goal come right after the name: an agent reads them first.
-	Description    string        `json:"description"     untrusted:"true"`
+	Description    string        `json:"description"          untrusted:"true"`
 	Goal           ProjectGoal   `json:"goal"`
 	Complete       bool          `json:"complete"` // false for a project made before epic 56 that nobody completed
 	Standalone     bool          `json:"standalone,omitempty"`
-	Kind           string        `json:"kind"`     // the effective kind (SDD-005 section 5.12.4)
+	Kind           string        `json:"kind"` // the effective kind (SDD-005 section 5.12.4)
 	Revision       int64         `json:"revision"`
 	State          string        `json:"state"`
 	Width          int           `json:"width"`

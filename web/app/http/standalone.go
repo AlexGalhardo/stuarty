@@ -4,6 +4,7 @@ import (
 	"io"
 	"mime"
 	"mime/multipart"
+	"net/http"
 	"strconv"
 	"strings"
 
@@ -25,11 +26,11 @@ type standaloneVideoCreateIn struct {
 }
 
 type standalonePromoteIn struct {
-	ID          string              `json:"id"             validate:"required"`
-	Name        string              `json:"name"           validate:"required" doc:"4 to 32 letters, digits and single spaces."`
-	Description string              `json:"description"    validate:"required" doc:"64 to 1024 characters."`
-	Goal        service.ProjectGoal `json:"goal"           validate:"required"`
-	Kind        string              `json:"kind,omitempty"                     doc:"video (default), text, image or undecided."`
+	ID          string              `json:"id"                validate:"required"`
+	Name        string              `json:"name"              validate:"required" doc:"4 to 32 letters, digits and single spaces."`
+	Description string              `json:"description"       validate:"required" doc:"64 to 1024 characters."`
+	Goal        service.ProjectGoal `json:"goal"              validate:"required"`
+	Kind        string              `json:"kind,omitempty"                        doc:"video (default), text, image or undecided."`
 	DryRun      any                 `json:"dry_run,omitempty"`
 }
 
@@ -124,55 +125,9 @@ func (h *apiHandler) standaloneVideoUpload(c *web.Ctx, _ noIn) (service.Standalo
 		return service.StandaloneVideoResult{}, err
 	}
 
-	var (
-		body     io.Reader = r.Body
-		size               = r.ContentLength
-		fileName           = q("file_name")
-	)
-
-	if ct := r.Header.Get("Content-Type"); ct != "" {
-		if mediaType, params, perr := mime.ParseMediaType(ct); perr == nil &&
-			strings.HasPrefix(mediaType, "multipart/") && params["boundary"] != "" {
-			mr := multipart.NewReader(r.Body, params["boundary"])
-
-			var found bool
-
-			for {
-				part, nextErr := mr.NextPart()
-				if nextErr == io.EOF {
-					break
-				}
-
-				if nextErr != nil {
-					return service.StandaloneVideoResult{}, &service.Error{
-						Code: command.CodeValidation, Path: "file",
-						Message: "could not read the uploaded multipart body.",
-					}
-				}
-
-				if part.FormName() == "file" {
-					body = part
-					size = -1
-
-					if fileName == "" {
-						fileName = part.FileName()
-					}
-
-					found = true
-
-					break
-				}
-
-				_ = part.Close()
-			}
-
-			if !found {
-				return service.StandaloneVideoResult{}, &service.Error{
-					Code: command.CodeValidation, Path: "file",
-					Message: "multipart upload must include a file field.",
-				}
-			}
-		}
+	body, size, fileName, err := extractStandaloneUploadBody(r, q("file_name"))
+	if err != nil {
+		return service.StandaloneVideoResult{}, err
 	}
 
 	res, err := h.Service.StandaloneVideoUpload(c.Context(), service.StandaloneVideoUploadRequest{
@@ -192,6 +147,50 @@ func (h *apiHandler) standaloneVideoUpload(c *web.Ctx, _ noIn) (service.Standalo
 	revisionHeader(c, res.Revision)
 
 	return *res, nil
+}
+
+func extractStandaloneUploadBody(r *http.Request, queryName string) (io.Reader, int64, string, error) {
+	ct := r.Header.Get("Content-Type")
+	if ct == "" {
+		return r.Body, r.ContentLength, queryName, nil
+	}
+
+	mediaType, params, _ := mime.ParseMediaType(ct)
+	if !strings.HasPrefix(mediaType, "multipart/") || params["boundary"] == "" {
+		return r.Body, r.ContentLength, queryName, nil
+	}
+
+	mr := multipart.NewReader(r.Body, params["boundary"])
+
+	for {
+		part, nextErr := mr.NextPart()
+		if nextErr == io.EOF {
+			break
+		}
+
+		if nextErr != nil {
+			return nil, 0, "", &service.Error{
+				Code: command.CodeValidation, Path: "file",
+				Message: "could not read the uploaded multipart body.",
+			}
+		}
+
+		if part.FormName() == "file" {
+			fileName := queryName
+			if fileName == "" {
+				fileName = part.FileName()
+			}
+
+			return part, -1, fileName, nil
+		}
+
+		_ = part.Close()
+	}
+
+	return nil, 0, "", &service.Error{
+		Code: command.CodeValidation, Path: "file",
+		Message: "multipart upload must include a file field.",
+	}
 }
 
 func (h *apiHandler) standaloneVideoPromote(c *web.Ctx, in standalonePromoteIn) (service.ProjectUpdateResult, error) {

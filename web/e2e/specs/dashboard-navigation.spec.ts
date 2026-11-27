@@ -83,6 +83,7 @@ test.describe("dashboard-navigation", () => {
 			"Writing",
 			"Video editor",
 			"Image editor",
+			"History",
 			"Videos",
 			"Images",
 			"Sounds",
@@ -178,17 +179,11 @@ test.describe("dashboard-navigation", () => {
 		}
 	}
 
-	// Every section but Edit Video has its own page now; Edit Video opens from a project, and its section
-	// says so and leads there.
-	test("a section with no page of its own says so and leads to the projects", async ({
-		page,
-	}) => {
+	// Edit Video now has its own standalone launcher (epic 105): dropzone, blank presets and recent edits.
+	test("Edit Video opens its standalone launcher page", async ({ page }) => {
 		await page.goto("/edit-video");
-		await expect(page.getByTestId("empty-edit-video")).toContainText(
-			"The video editor opens from a project",
-		);
-		await page.getByRole("link", { name: "Go to Projects" }).click();
-		await expect(page).toHaveURL(/\/projects$/);
+		await expect(page.getByTestId("edit-video-dropzone")).toBeVisible();
+		await expect(page.getByTestId("edit-video-presets")).toBeVisible();
 	});
 
 	// WebKit leaves links out of the Tab order unless a browser option is set
@@ -207,6 +202,7 @@ test.describe("dashboard-navigation", () => {
 			"write",
 			"edit-video",
 			"edit-image",
+			"history",
 			"video-assets",
 			"visual-assets",
 			"sound-assets",
@@ -344,13 +340,8 @@ test.describe("dashboard-navigation", () => {
 	}) => {
 		const seeded = await seedProject(request, { tracks: 1, perTrack: 1 });
 
-		// In: Edit Video leads to the projects, whose card opens the editor.
-		await page.goto("/edit-video");
-		await expect(page.getByTestId("empty-edit-video")).toContainText(
-			"The video editor opens from a project",
-		);
-		await page.getByRole("link", { name: "Go to Projects" }).click();
-		await expect(page).toHaveURL(/\/projects$/);
+		// In: the projects card opens the editor.
+		await page.goto("/projects");
 		await page
 			.locator(`[data-project-card='${seeded.id}']`)
 			.getByRole("link", { name: /^Open/ })
@@ -367,6 +358,7 @@ test.describe("dashboard-navigation", () => {
 			}),
 		).toBeVisible();
 
+		await page.goto("/projects");
 		await page.goto(`/editor/${seeded.id}`);
 		await page.getByRole("link", { name: "Back to projects" }).click();
 		await expect(page).toHaveURL(/\/projects$/);

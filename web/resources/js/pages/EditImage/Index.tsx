@@ -343,6 +343,8 @@ export default function Index(): ReactNode {
 							ref={quickFileRef}
 							type="file"
 							accept="image/*"
+							tabIndex={-1}
+							aria-label={t("ui.image.dropzone.choose")}
 							className="sr-only"
 							data-testid="edit-image-file-input"
 							onChange={handleQuickFileChange}

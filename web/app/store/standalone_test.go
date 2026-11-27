@@ -125,7 +125,10 @@ func TestStandaloneServiceLifecycle(t *testing.T) {
 	})
 
 	// Read-only caller cannot create a standalone video.
-	if _, err := svc.StandaloneVideoCreate(readOnlyCtx, service.StandaloneVideoCreateRequest{Preset: "16:9"}); err == nil {
+	if _, err := svc.StandaloneVideoCreate(
+		readOnlyCtx,
+		service.StandaloneVideoCreateRequest{Preset: "16:9"},
+	); err == nil {
 		t.Fatal("expected read-only caller to be forbidden from StandaloneVideoCreate")
 	}
 
@@ -137,7 +140,8 @@ func TestStandaloneServiceLifecycle(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !created.Created || !created.Standalone || created.Width != 1920 || created.Height != 1080 || created.TrackID == "" {
+	if !created.Created || !created.Standalone || created.Width != 1920 || created.Height != 1080 ||
+		created.TrackID == "" {
 		t.Fatalf("unexpected created standalone result: %+v", created)
 	}
 
@@ -154,7 +158,8 @@ func TestStandaloneServiceLifecycle(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(stList.Projects) != 1 || stList.Projects[0].ProjectID != created.ProjectID || !stList.Projects[0].Standalone {
+	if len(stList.Projects) != 1 || stList.Projects[0].ProjectID != created.ProjectID ||
+		!stList.Projects[0].Standalone {
 		t.Fatalf("StandaloneVideoList = %+v", stList.Projects)
 	}
 

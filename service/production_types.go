@@ -35,13 +35,13 @@ type ProjectDescribeRequest struct {
 type ProjectDescribeResult struct {
 	Envelope
 	ProjectID   string           `json:"project_id"`
-	Name        string           `json:"name"        untrusted:"true"`
+	Name        string           `json:"name"                 untrusted:"true"`
 	State       string           `json:"state"`
-	Description string           `json:"description" untrusted:"true"`
+	Description string           `json:"description"          untrusted:"true"`
 	Goal        ProjectGoal      `json:"goal"`
 	Complete    bool             `json:"complete"` // false for a project made before epic 56 that nobody completed
 	Standalone  bool             `json:"standalone,omitempty"`
-	Kind        string           `json:"kind"`     // the effective kind (SDD-005 section 5.12.4)
+	Kind        string           `json:"kind"` // the effective kind (SDD-005 section 5.12.4)
 	Production  ProductionState  `json:"production"`
 	Workflow    project.Workflow `json:"workflow"`
 	// TextSummary and NextPostAt are the same facts a project list gives (SDD-005 section 5.12.4).

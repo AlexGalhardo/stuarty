@@ -18,10 +18,10 @@ describe("EditVideo/Index", () => {
 		expect(htmlEn).toContain('data-testid="edit-video-preset-16:9"');
 		expect(htmlEn).toContain('data-testid="edit-video-preset-1:1"');
 		expect(htmlEn).toContain('data-testid="edit-video-preset-4:5"');
-		expect(htmlEn).toContain("Edit video");
+		expect(htmlEn).toContain("Video editor");
 
 		const htmlPt = drawForTest(<Index />, "pt-BR");
-		expect(htmlPt).toContain("Editar vídeo");
+		expect(htmlPt).toContain("Editor de vídeo");
 		expect(htmlPt).toContain('data-testid="edit-video-dropzone"');
 	});
 

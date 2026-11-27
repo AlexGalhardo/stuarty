@@ -136,12 +136,15 @@ func (s *svc) StandaloneVideoList(
 		for i := range hs {
 			h := &hs[i]
 			out = append(out, textview.ProjectLine{
-				ID:            h.ID,
-				Name:          h.Name,
-				Revision:      h.Timeline.Revision,
-				Width:         h.Timeline.Summary.Width,
-				Height:        h.Timeline.Summary.Height,
-				FPS:           timeval.FPS{Num: int64(h.Timeline.Summary.FPSNum), Den: int64(h.Timeline.Summary.FPSDen)},
+				ID:       h.ID,
+				Name:     h.Name,
+				Revision: h.Timeline.Revision,
+				Width:    h.Timeline.Summary.Width,
+				Height:   h.Timeline.Summary.Height,
+				FPS: timeval.FPS{
+					Num: int64(h.Timeline.Summary.FPSNum),
+					Den: int64(h.Timeline.Summary.FPSDen),
+				},
 				DurationFrame: h.Timeline.Summary.DurationFrames,
 				Items:         h.Timeline.Summary.Items,
 				Timelines:     h.Timelines,
@@ -201,85 +204,12 @@ func (s *svc) StandaloneVideoCreate(
 			withHint("use a key without a project limit")
 	}
 
-	if c.OwnerUserID != "" && req.ID != "" {
-		return nil, newError(command.CodeValidation, "the id of a project is chosen by the server.").
-			withPath("id").withHint("leave id out")
+	derivedName, normalizedHash, err := s.validateStandaloneCreate(ctx, c, req)
+	if err != nil {
+		return nil, err
 	}
 
-	if req.Path != "" && req.AssetHash != "" {
-		return nil, newError(command.CodeValidation, "give either path or asset_hash, not both.").
-			withPath("path").withHint("omit one of path or asset_hash")
-	}
-
-	if req.WaitMS < 0 || req.WaitMS > maxWaitMS {
-		return nil, newError(command.CodeValidation, "wait_ms is %d; it must be 0 to %d.", req.WaitMS, maxWaitMS).
-			withPath("wait_ms")
-	}
-
-	hasMedia := req.Path != "" || req.AssetHash != ""
-	if hasMedia {
-		if _, merr := s.authorizeScope(ctx, ScopeMedia, ""); merr != nil {
-			return nil, merr
-		}
-	}
-
-	// Validate media source before creating any rows so bad paths or unknown hashes leave no orphan session.
-	derivedName := ""
-
-	if req.Path != "" {
-		if s.media.Guard == nil || s.media.Content == nil {
-			return nil, internalError()
-		}
-
-		f, oerr := s.media.Guard.OpenImport(req.Path)
-		if oerr != nil {
-			return nil, fromEngine(s.withRootsHint(c, oerr))
-		}
-
-		st, serr := f.Stat()
-		_ = f.Close()
-
-		if serr != nil {
-			return nil, fromEngine(serr)
-		}
-
-		if lerr := s.checkImportSize(st.Size()); lerr != nil {
-			return nil, forCaller(c, lerr)
-		}
-
-		derivedName = project.StandaloneNameFromFile(displayName(req.Path))
-	}
-
-	normalizedHash := ""
-	if req.AssetHash != "" {
-		hash, perr := parseHash(req.AssetHash)
-		if perr != nil {
-			return nil, perr
-		}
-
-		ar, ok, gerr := s.checkReusableAsset(ctx, c, hash)
-		if gerr != nil {
-			return nil, gerr
-		}
-
-		if !ok {
-			return nil, newError(command.CodeValidation, "the library has no file with this hash.").
-				withPath("asset_hash").withHint("list the files with asset:list")
-		}
-
-		normalizedHash = hash
-		derivedName = project.StandaloneNameFromFile(ar.OriginalName)
-	}
-
-	name := req.Name
-	if name == "" {
-		if derivedName != "" {
-			name = derivedName
-		} else {
-			name = project.DefaultStandaloneName
-		}
-	}
-
+	name := resolveStandaloneName(req.Name, derivedName, project.DefaultStandaloneName)
 	if verr := project.CheckStandaloneTitle(name); verr != nil {
 		return nil, violation(verr)
 	}
@@ -292,16 +222,23 @@ func (s *svc) StandaloneVideoCreate(
 	}
 
 	res := &StandaloneVideoResult{
-		Envelope:   Envelope{UntrustedNotice: UntrustedNotice},
-		ProjectID:  doc.ID,
-		TimelineID: doc.ID,
-		Name:       doc.Name,
-		Standalone: true,
-		Width:      doc.Settings.Width,
-		Height:     doc.Settings.Height,
-		FPS:        fpsString(doc.Settings.FPS.Num, doc.Settings.FPS.Den),
-		AssetHash:  normalizedHash,
-		Text:       fmt.Sprintf("%s\ncreated standalone video %s %s (%dx%d)", textview.Note, doc.ID, textview.Quote(doc.Name, 60), doc.Settings.Width, doc.Settings.Height),
+		UntrustedNotice: UntrustedNotice,
+		ProjectID:       doc.ID,
+		TimelineID:      doc.ID,
+		Name:            doc.Name,
+		Standalone:      true,
+		Width:           doc.Settings.Width,
+		Height:          doc.Settings.Height,
+		FPS:             fpsString(doc.Settings.FPS.Num, doc.Settings.FPS.Den),
+		AssetHash:       normalizedHash,
+		Text: fmt.Sprintf(
+			"%s\ncreated standalone video %s %s (%dx%d)",
+			textview.Note,
+			doc.ID,
+			textview.Quote(doc.Name, 60),
+			doc.Settings.Width,
+			doc.Settings.Height,
+		),
 	}
 
 	if req.DryRun {
@@ -321,40 +258,153 @@ func (s *svc) StandaloneVideoCreate(
 
 	res.TrackID, res.Revision = trackID, rev
 
-	if !hasMedia {
+	if req.Path == "" && normalizedHash == "" {
 		return res, nil
 	}
 
-	waitMS := req.WaitMS
+	if err := s.importAndPlaceStandalone(
+		ctx,
+		res,
+		ImportFile{Path: req.Path, Hash: normalizedHash},
+		req.WaitMS,
+		req.Preset != "",
+	); err != nil {
+		return nil, err
+	}
+
+	return res, nil
+}
+
+func resolveStandaloneName(explicit, derived, fallback string) string {
+	if explicit != "" {
+		return explicit
+	}
+
+	if derived != "" {
+		return derived
+	}
+
+	return fallback
+}
+
+func (s *svc) validateStandaloneCreate(
+	ctx context.Context,
+	c Caller,
+	req StandaloneVideoCreateRequest,
+) (string, string, error) {
+	if c.OwnerUserID != "" && req.ID != "" {
+		return "", "", newError(command.CodeValidation, "the id of a project is chosen by the server.").
+			withPath("id").withHint("leave id out")
+	}
+
+	if req.Path != "" && req.AssetHash != "" {
+		return "", "", newError(command.CodeValidation, "give either path or asset_hash, not both.").
+			withPath("path").withHint("omit one of path or asset_hash")
+	}
+
+	if req.WaitMS < 0 || req.WaitMS > maxWaitMS {
+		return "", "", newError(command.CodeValidation, "wait_ms is %d; it must be 0 to %d.", req.WaitMS, maxWaitMS).
+			withPath("wait_ms")
+	}
+
+	if req.Path != "" || req.AssetHash != "" {
+		if _, merr := s.authorizeScope(ctx, ScopeMedia, ""); merr != nil {
+			return "", "", merr
+		}
+	}
+
+	if req.Path != "" {
+		name, err := s.checkStandalonePath(c, req.Path)
+
+		return name, "", err
+	}
+
+	if req.AssetHash != "" {
+		return s.checkStandaloneHash(ctx, c, req.AssetHash)
+	}
+
+	return "", "", nil
+}
+
+func (s *svc) checkStandalonePath(c Caller, path string) (string, error) {
+	if s.media.Guard == nil || s.media.Content == nil {
+		return "", internalError()
+	}
+
+	f, oerr := s.media.Guard.OpenImport(path)
+	if oerr != nil {
+		return "", fromEngine(s.withRootsHint(c, oerr))
+	}
+
+	st, serr := f.Stat()
+	_ = f.Close()
+
+	if serr != nil {
+		return "", fromEngine(serr)
+	}
+
+	if lerr := s.checkImportSize(st.Size()); lerr != nil {
+		return "", forCaller(c, lerr)
+	}
+
+	return project.StandaloneNameFromFile(displayName(path)), nil
+}
+
+func (s *svc) checkStandaloneHash(ctx context.Context, c Caller, rawHash string) (string, string, error) {
+	hash, perr := parseHash(rawHash)
+	if perr != nil {
+		return "", "", perr
+	}
+
+	ar, ok, gerr := s.checkReusableAsset(ctx, c, hash)
+	if gerr != nil {
+		return "", "", gerr
+	}
+
+	if !ok {
+		return "", "", newError(command.CodeValidation, "the library has no file with this hash.").
+			withPath("asset_hash").withHint("list the files with asset:list")
+	}
+
+	return project.StandaloneNameFromFile(ar.OriginalName), hash, nil
+}
+
+func (s *svc) importAndPlaceStandalone(
+	ctx context.Context,
+	res *StandaloneVideoResult,
+	file ImportFile,
+	waitMS int,
+	keepPreset bool,
+) error {
 	if waitMS == 0 {
 		waitMS = defaultStandaloneWaitMS
 	}
 
 	imp, ierr := s.MediaImport(ctx, MediaImportRequest{
-		ProjectID: doc.ID,
-		Files:     []ImportFile{{Path: req.Path, Hash: normalizedHash}},
+		ProjectID: res.ProjectID,
+		Files:     []ImportFile{file},
 		WaitMS:    waitMS,
 	})
 	if ierr != nil {
-		return nil, ierr
+		return ierr
 	}
 
-	if len(imp.Assets) > 0 {
-		a := imp.Assets[0]
-		res.AssetID = a.AssetID
-		res.AssetHash = a.Hash
-		res.AssetState = a.State
-		res.JobID = a.JobID
-		res.Revision = imp.Revision
-
-		if a.State == string(IngestReady) {
-			if err := s.placeStandaloneAsset(ctx, res, &a, req.Preset != ""); err != nil {
-				return nil, err
-			}
-		}
+	if len(imp.Assets) == 0 {
+		return nil
 	}
 
-	return res, nil
+	a := imp.Assets[0]
+	res.AssetID = a.AssetID
+	res.AssetHash = a.Hash
+	res.AssetState = a.State
+	res.JobID = a.JobID
+	res.Revision = imp.Revision
+
+	if a.State == string(IngestReady) {
+		return s.placeStandaloneAsset(ctx, res, &a, keepPreset)
+	}
+
+	return nil
 }
 
 // StandaloneVideoUpload streams a browser-uploaded video file into the content store and creates
@@ -368,70 +418,28 @@ func (s *svc) StandaloneVideoUpload(
 		return nil, err
 	}
 
-	if _, merr := s.authorizeScope(ctx, ScopeMedia, ""); merr != nil {
-		return nil, merr
-	}
-
-	if c.ProjectID != "" {
-		return nil, newError(CodeForbidden, "the key is limited to one project and cannot create projects.").
-			withHint("use a key without a project limit")
-	}
-
-	if req.Body == nil {
-		return nil, newError(command.CodeValidation, "the request carries no file.").
-			withPath("body").withHint("send the video file as the body of the request")
-	}
-
-	if req.WaitMS < 0 || req.WaitMS > maxWaitMS {
-		return nil, newError(command.CodeValidation, "wait_ms is %d; it must be 0 to %d.", req.WaitMS, maxWaitMS).
-			withPath("wait_ms")
-	}
-
-	if s.media.Content == nil {
-		return nil, internalError()
-	}
-
-	fileName := displayName(req.FileName)
-	if fileName == "" {
-		fileName = "video.mp4"
-	}
-
-	name := req.Name
-	if name == "" {
-		name = project.StandaloneNameFromFile(fileName)
-	}
-
-	if verr := project.CheckStandaloneTitle(name); verr != nil {
-		return nil, violation(verr)
-	}
-
-	doc, derr := s.newDocument(ProjectCreateRequest{
-		Name: name, Preset: req.Preset, FPS: req.FPS,
-	})
-	if derr != nil {
-		return nil, derr
-	}
-
-	if req.Size >= 0 {
-		if lerr := s.checkImportSize(req.Size); lerr != nil {
-			return nil, forCaller(c, lerr)
-		}
-	}
-
-	if derr := s.checkDisk(); derr != nil {
-		return nil, forCaller(c, derr)
+	fileName, doc, err := s.validateStandaloneUpload(ctx, c, req)
+	if err != nil {
+		return nil, err
 	}
 
 	res := &StandaloneVideoResult{
-		Envelope:   Envelope{UntrustedNotice: UntrustedNotice},
-		ProjectID:  doc.ID,
-		TimelineID: doc.ID,
-		Name:       doc.Name,
-		Standalone: true,
-		Width:      doc.Settings.Width,
-		Height:     doc.Settings.Height,
-		FPS:        fpsString(doc.Settings.FPS.Num, doc.Settings.FPS.Den),
-		Text:       fmt.Sprintf("%s\ncreated standalone video %s %s (%dx%d)", textview.Note, doc.ID, textview.Quote(doc.Name, 60), doc.Settings.Width, doc.Settings.Height),
+		UntrustedNotice: UntrustedNotice,
+		ProjectID:       doc.ID,
+		TimelineID:      doc.ID,
+		Name:            doc.Name,
+		Standalone:      true,
+		Width:           doc.Settings.Width,
+		Height:          doc.Settings.Height,
+		FPS:             fpsString(doc.Settings.FPS.Num, doc.Settings.FPS.Den),
+		Text: fmt.Sprintf(
+			"%s\ncreated standalone video %s %s (%dx%d)",
+			textview.Note,
+			doc.ID,
+			textview.Quote(doc.Name, 60),
+			doc.Settings.Width,
+			doc.Settings.Height,
+		),
 	}
 
 	if req.DryRun {
@@ -455,12 +463,7 @@ func (s *svc) StandaloneVideoUpload(
 	}
 
 	hash := "sha256:" + put.Hash
-	row, berr := s.projectRowForDoc(c, doc)
-	if berr != nil {
-		s.storeMu.RUnlock()
-
-		return nil, berr
-	}
+	row := s.projectRowForDoc(c, doc)
 
 	var att attached
 
@@ -606,13 +609,13 @@ func (s *svc) StandalonePromote(
 		}
 
 		res = &ProjectUpdateResult{
-			Envelope:    Envelope{UntrustedNotice: UntrustedNotice},
-			ProjectID:   head.ID,
-			Name:        ctxIn.Name,
-			Description: ctxIn.Description,
-			Goal:        ProjectGoal(ctxIn.Goal),
-			Complete:    ctxIn.Complete(),
-			Text:        textview.UpdatedProject(head.ID, ctxIn.Name, ctxIn.Complete()),
+			UntrustedNotice: UntrustedNotice,
+			ProjectID:       head.ID,
+			Name:            ctxIn.Name,
+			Description:     ctxIn.Description,
+			Goal:            ProjectGoal(ctxIn.Goal),
+			Complete:        ctxIn.Complete(),
+			Text:            textview.UpdatedProject(head.ID, ctxIn.Name, ctxIn.Complete()),
 		}
 
 		if req.DryRun {
@@ -709,24 +712,80 @@ func (s *svc) checkReusableAsset(ctx context.Context, c Caller, hash string) (As
 	return ar, true, nil
 }
 
-func (s *svc) projectRowForDoc(c Caller, doc *timeline.Document) (ProjectRow, error) {
+func (s *svc) validateStandaloneUpload(
+	ctx context.Context,
+	c Caller,
+	req StandaloneVideoUploadRequest,
+) (string, *timeline.Document, error) {
+	if _, merr := s.authorizeScope(ctx, ScopeMedia, ""); merr != nil {
+		return "", nil, merr
+	}
+
+	if c.ProjectID != "" {
+		return "", nil, newError(CodeForbidden, "the key is limited to one project and cannot create projects.").
+			withHint("use a key without a project limit")
+	}
+
+	if req.Body == nil {
+		return "", nil, newError(command.CodeValidation, "the request carries no file.").
+			withPath("body").withHint("send the video file as the body of the request")
+	}
+
+	if req.WaitMS < 0 || req.WaitMS > maxWaitMS {
+		return "", nil, newError(command.CodeValidation, "wait_ms is %d; it must be 0 to %d.", req.WaitMS, maxWaitMS).
+			withPath("wait_ms")
+	}
+
+	if s.media.Content == nil {
+		return "", nil, internalError()
+	}
+
+	fileName := displayName(req.FileName)
+	if fileName == "" {
+		fileName = "video.mp4"
+	}
+
+	name := resolveStandaloneName(req.Name, project.StandaloneNameFromFile(fileName), project.DefaultStandaloneName)
+	if verr := project.CheckStandaloneTitle(name); verr != nil {
+		return "", nil, violation(verr)
+	}
+
+	doc, derr := s.newDocument(ProjectCreateRequest{
+		Name: name, Preset: req.Preset, FPS: req.FPS,
+	})
+	if derr != nil {
+		return "", nil, derr
+	}
+
+	if req.Size >= 0 {
+		if lerr := s.checkImportSize(req.Size); lerr != nil {
+			return "", nil, forCaller(c, lerr)
+		}
+	}
+
+	if derr := s.checkDisk(); derr != nil {
+		return "", nil, forCaller(c, derr)
+	}
+
+	return fileName, doc, nil
+}
+
+func (s *svc) projectRowForDoc(c Caller, doc *timeline.Document) ProjectRow {
 	raw := timeline.Canonical(doc)
 
 	now := s.nowMs()
 	row := ProjectRow{
-		ProjectHead: ProjectHead{
-			ID:            doc.ID,
-			Name:          doc.Name,
-			State:         ProjectActive,
-			Revision:      0,
-			SchemaVersion: doc.SchemaVersion,
-			Summary:       summarize(doc),
-			CreatedMs:     now,
-			UpdatedMs:     now,
-			CreatedBy:     c.Actor,
-		},
-		Document:  raw,
-		DocSHA256: sha256Hex(raw),
+		ID:            doc.ID,
+		Name:          doc.Name,
+		State:         ProjectActive,
+		Revision:      0,
+		SchemaVersion: doc.SchemaVersion,
+		Summary:       summarize(doc),
+		CreatedMs:     now,
+		UpdatedMs:     now,
+		CreatedBy:     c.Actor,
+		Document:      raw,
+		DocSHA256:     sha256Hex(raw),
 	}
 
 	if c.OwnerUserID != "" {
@@ -734,16 +793,13 @@ func (s *svc) projectRowForDoc(c Caller, doc *timeline.Document) (ProjectRow, er
 		row.OwnerUserID = &owner
 	}
 
-	return row, nil
+	return row
 }
 
 func (s *svc) createStandaloneRows(ctx context.Context, c Caller, doc *timeline.Document) error {
-	row, err := s.projectRowForDoc(c, doc)
-	if err != nil {
-		return err
-	}
+	row := s.projectRowForDoc(c, doc)
 
-	err = s.store.Write(ctx, func(ctx context.Context, tx Tx) error {
+	err := s.store.Write(ctx, func(ctx context.Context, tx Tx) error {
 		return s.writeStandaloneRowsTx(ctx, tx, c, &row)
 	})
 	if err != nil {
@@ -792,7 +848,7 @@ func (s *svc) writeStandaloneRowsTx(ctx context.Context, tx Tx, c Caller, row *P
 		return err
 	}
 
-	details, _ := json.Marshal(map[string]any{"standalone": true})
+	details := []byte(`{"standalone":true}`)
 
 	return tx.Audit().Append(ctx, AuditRow{
 		AtMs:      row.CreatedMs,

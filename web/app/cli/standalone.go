@@ -28,9 +28,11 @@ var videoStandaloneListCmd = &spec{
 }
 
 var videoQuickOpenCmd = &spec{
-	name:       "video:quick-open",
-	summary:    "open a standalone video editor session from a file, library asset or blank preset",
-	usage:      []string{"stuarty video:quick-open [path] [--asset sha256:...] [--preset 9:16|16:9|1:1|4:5] [--name n]"},
+	name:    "video:quick-open",
+	summary: "open a standalone video editor session from a file, library asset or blank preset",
+	usage: []string{
+		"stuarty video:quick-open [path] [--asset sha256:...] [--preset 9:16|16:9|1:1|4:5] [--name n]",
+	},
 	example:    `stuarty video:quick-open ./clip.mp4 --json`,
 	positional: true,
 	globals:    []string{"dry-run"},

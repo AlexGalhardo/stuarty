@@ -6099,7 +6099,7 @@
       }
     },
     "edit_video": {
-      "title": "Edit video",
+      "title": "Video editor",
       "intro": "Drop a video file to start editing right away, or open a blank timeline without creating a project first.",
       "dropzone_section": "Open a video file",
       "drop_title": "Drop a video file here",
