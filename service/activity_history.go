@@ -54,6 +54,7 @@ type ActivityKey struct {
 	ProjectID string `json:"project"`
 }
 
+// ActivityRow is the metadata of an audit or revision row before display normalization.
 type ActivityRow struct {
 	Key     ActivityKey
 	Actor   string
@@ -61,6 +62,7 @@ type ActivityRow struct {
 	Details json.RawMessage
 }
 
+// ActivityPageQuery selects one page from the combined activity logs.
 type ActivityPageQuery struct {
 	ProjectID string
 	Owner     string
