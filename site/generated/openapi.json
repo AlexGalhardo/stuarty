@@ -31419,6 +31419,39 @@
       }
     },
     "/api/v1/recordings": {
+      "get": {
+        "operationId": "recordings.list",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecordingListResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List recent recordings"
+      },
       "post": {
         "operationId": "recordings.start",
         "requestBody": {
@@ -31443,7 +31476,7 @@
                     "type": "string"
                   },
                   "project_id": {
-                    "description": "The project the recording will join once a person adds it. Required unless recording_id is sent.",
+                    "description": "The recording destination. Omit to create a standalone recording.",
                     "type": "string"
                   },
                   "recording_id": {
@@ -31632,13 +31665,11 @@
                     "type": "string"
                   },
                   "project_id": {
-                    "description": "The project the recording will join once a person adds it.",
-                    "minLength": 1,
+                    "description": "The recording destination. Omit to create a standalone recording.",
                     "type": "string"
                   }
                 },
                 "required": [
-                  "project_id",
                   "container"
                 ],
                 "type": "object"

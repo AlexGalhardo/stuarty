@@ -18,6 +18,7 @@ const SECTIONS = [
 	"edit-video",
 	"edit-image",
 	"write",
+	"record",
 	"visual-assets",
 	"video-assets",
 	"sound-assets",
@@ -35,6 +36,7 @@ const LABELS = {
 		"Video editor",
 		"Image editor",
 		"Writing",
+		"Record",
 		"Images",
 		"Videos",
 		"Sounds",
@@ -50,6 +52,7 @@ const LABELS = {
 		"Editor de vídeo",
 		"Editor de imagem",
 		"Escrita",
+		"Gravar",
 		"Visuais",
 		"Vídeos",
 		"Sons",
@@ -63,7 +66,7 @@ const LABELS = {
 } as const;
 
 test.describe("dashboard-navigation", () => {
-	test("the application opens on the dashboard with the thirteen sections, the profile and the theme toggle", async ({
+	test("the application opens on the dashboard with the sections, the profile and the theme toggle", async ({
 		page,
 	}) => {
 		await page.goto("/");
@@ -81,6 +84,7 @@ test.describe("dashboard-navigation", () => {
 			"Home",
 			"Projects",
 			"Writing",
+			"Record",
 			"Video editor",
 			"Image editor",
 			"History",
@@ -195,11 +199,12 @@ test.describe("dashboard-navigation", () => {
 		await page.goto("/");
 		await page.getByRole("link", { name: /Stuarty, dashboard/ }).focus();
 
-		// Home, the thirteen sections and the brand kit and Approvals links, in the order of the groups
+		// Home and the links of the five sidebar groups in order.
 		const order = [
 			"home",
 			"projects",
 			"write",
+			"record",
 			"edit-video",
 			"edit-image",
 			"history",

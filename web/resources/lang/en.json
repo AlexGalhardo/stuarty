@@ -456,6 +456,67 @@
         }
       }
     },
+    "record": {
+      "title": "Record screen",
+      "description": "Choose what to share, capture a take, and polish it in the studio.",
+      "native": "Desktop capture",
+      "browser": "Browser capture",
+      "leave": "Leave this page while a capture is in progress?",
+      "discard": "Discard take",
+      "recent": "Recent recordings",
+      "empty": "Your recordings will appear here.",
+      "open_take": "Open take",
+      "script_project": "Project with a script",
+      "select_project": "Select a project",
+      "polish": "Polish the take",
+      "preview": "Recorded take preview",
+      "open_editor": "Open in Video Editor",
+      "export": "Export MP4",
+      "open_project": "Open project",
+      "exporting": "Exporting the take…",
+      "export_failed": "The export did not finish. Start a new export.",
+      "style": "Layout and background",
+      "layout": "Layout",
+      "camera_position": "Camera position",
+      "background": "Background",
+      "no_background": "None",
+      "apply_style": "Apply layout and background",
+      "pointer": "Cursor and clicks",
+      "zoom": "Apply auto-zoom",
+      "cursor": "Show smooth cursor",
+      "clicks": "Highlight clicks",
+      "clear_pointer": "Clear effects",
+      "trim_end": "New end time",
+      "trim_help": "Enter a time from the start of the take.",
+      "trim_example": "e.g. 12s",
+      "trim": "Trim end",
+      "source": {
+        "browser": "Browser",
+        "display": "Screen",
+        "window": "Window"
+      },
+      "state": {
+        "prepared": "Prepared",
+        "recording": "Recording",
+        "paused": "Paused",
+        "finishing": "Finishing",
+        "ready": "Ready",
+        "failed": "Failed",
+        "cancelled": "Discarded"
+      },
+      "layouts": {
+        "screen_only": "Screen only",
+        "pip": "Picture in picture",
+        "split": "Split screen",
+        "camera_focus": "Camera focus"
+      },
+      "corners": {
+        "top_left": "Top left",
+        "top_right": "Top right",
+        "bottom_left": "Bottom left",
+        "bottom_right": "Bottom right"
+      }
+    },
     "nav": {
       "label": "Main navigation",
       "skip": "Skip to the main content",
@@ -487,6 +548,7 @@
         "projects": "Projects",
         "edit-video": "Video editor",
         "edit-image": "Image editor",
+        "record": "Record",
         "write": "Writing",
         "visual-assets": "Images",
         "video-assets": "Videos",

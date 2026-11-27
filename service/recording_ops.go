@@ -408,8 +408,13 @@ func (s *svc) RecordingStart(ctx context.Context, req RecordingStartRequest) (*R
 		return nil, err
 	}
 
-	if gerr := s.recordingProject(ctx, c, req.ProjectID, false); gerr != nil {
-		return nil, gerr
+	project, projectErr := s.recordingDestination(ctx, c, req.ProjectID, req.FPS)
+	if projectErr != nil {
+		return nil, projectErr
+	}
+
+	if project != nil {
+		req.ProjectID = project.ID
 	}
 
 	limits := s.recordingLimits()
@@ -453,6 +458,12 @@ func (s *svc) RecordingStart(ctx context.Context, req RecordingStartRequest) (*R
 			return newError(CodeQueueFull, "a recording is already in progress.").
 				withDetail("limit", "recordings").withDetail("value", len(open)).withDetail("ceiling", 1).
 				withHint("stop the recording in progress first")
+		}
+
+		if project != nil {
+			if err := s.writeStandaloneRowsTx(ctx, tx, c, project); err != nil {
+				return err
+			}
 		}
 
 		if err := claimOrInsert(ctx, tx, prepared, row); err != nil {
@@ -752,6 +763,36 @@ func (s *svc) stopSession(ctx context.Context, id string, sess *recSession, reas
 	})
 
 	return err
+}
+
+// recordingDestination resolves an existing project or prepares a standalone timeline. The transaction
+// that admits the recording creates its timeline, so a rejected start leaves no standalone session.
+func (s *svc) recordingDestination(ctx context.Context, c Caller, id string, fps int) (*ProjectRow, error) {
+	if id != "" {
+		return nil, s.recordingProject(ctx, c, id, false)
+	}
+
+	if c.ProjectID != "" {
+		return nil, newError(CodeForbidden, "the key is limited to one project and cannot create projects.")
+	}
+
+	doc, err := s.newDocument(ProjectCreateRequest{
+		Name: "Screen recording", Preset: "16:9", FPS: strconv.Itoa(recording.FPSOrDefault(fps)),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	initial, trackErr := s.reg.Apply(doc, command.Operation{
+		Op: "track.add", Args: json.RawMessage(`{"kind":"visual","name":"V1"}`),
+	}, command.Env{NewIDs: s.newIDs})
+	if trackErr != nil {
+		return nil, asError(trackErr)
+	}
+
+	row := s.projectRowForDoc(c, initial.Doc)
+
+	return &row, nil
 }
 
 // recordingProject verifies that projectID exists and is visible to c (SDD-007 T-06), returning the same
@@ -1125,20 +1166,30 @@ func (s *svc) RecordingGet(ctx context.Context, req RecordingRef) (*Recording, e
 	return s.liveView(r), nil
 }
 
-// RecordingList returns the recordings of a project that the caller may see.
+// RecordingList returns the caller's recordings, optionally limited to a project.
 func (s *svc) RecordingList(ctx context.Context, req RecordingListRequest) (*RecordingListResult, error) {
 	c, err := s.authorizeProject(ctx, "RecordingList", req.ProjectID)
 	if err != nil {
 		return nil, err
 	}
 
-	if c.OwnerUserID != "" {
-		if gerr := s.recordingProject(ctx, c, req.ProjectID, true); gerr != nil {
+	projectID := req.ProjectID
+	if projectID == "" {
+		projectID = c.ProjectID
+	}
+
+	if c.OwnerUserID != "" && projectID != "" {
+		if gerr := s.recordingProject(ctx, c, projectID, true); gerr != nil {
 			return nil, gerr
 		}
 	}
 
-	rows, err := s.store.Recordings().ListByProject(ctx, req.ProjectID)
+	var rows []recordings.Row
+	if projectID == "" {
+		rows, err = s.store.Recordings().ListRecent(ctx, c.OwnerUserID)
+	} else {
+		rows, err = s.store.Recordings().ListByProject(ctx, projectID)
+	}
 	if err != nil {
 		return nil, asError(err)
 	}

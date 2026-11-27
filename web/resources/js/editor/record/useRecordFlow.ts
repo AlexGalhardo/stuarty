@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { type Failure, failureOf } from "@/components/Failure";
 import type { ApiClient } from "../api/client";
+import type { Recording } from "../api/types";
 import { currentCapability } from "./browserCapture";
 import {
 	type BrowserRecording,
@@ -31,6 +32,7 @@ export interface RecordFlow {
 	placed: boolean;
 	// what the service said about the last decision on a proposal of cuts
 	notice: string | null;
+	recent?: Recording[];
 	start(
 		kind: "display" | "window",
 		id: string,
@@ -53,6 +55,9 @@ export interface RecordFlow {
 	confirm(id?: string): Promise<void>;
 	dismiss(): Promise<void>;
 	remove(id?: string): Promise<void>;
+	openTake?(id: string): Promise<void>;
+	toggleBrowserPause?(): void;
+	cancelBrowser?(): Promise<void>;
 	place(): Promise<void>;
 	// back to the picker, to record again
 	reset(): void;
@@ -64,7 +69,7 @@ export interface RecordFlow {
 // is the one the service reports.
 export function useRecordFlow(
 	client: ApiClient,
-	projectId: string,
+	projectId: string | undefined,
 	open: boolean,
 ): RecordFlow {
 	const [view, setView] = useState<RecordView>({ step: "loading" });
@@ -72,6 +77,7 @@ export function useRecordFlow(
 	const [busy, setBusy] = useState(false);
 	const [placed, setPlaced] = useState(false);
 	const [notice, setNotice] = useState<string | null>(null);
+	const [recent, setRecent] = useState<Recording[]>([]);
 	const alive = useRef(true);
 	// the recording this tab is making in the browser, if any: it outlives the dialog being closed
 	const browser = useRef<BrowserRecording | null>(null);
@@ -93,6 +99,7 @@ export function useRecordFlow(
 		setFailure(null);
 		try {
 			const list = await client.listRecordings(projectId);
+			if (alive.current && projectId === undefined) setRecent(list.recordings);
 			const waiting = list.recordings.find(
 				(r) => isLive(r) || (r.state === "ready" && r.review === "pending"),
 			);
@@ -120,6 +127,8 @@ export function useRecordFlow(
 				// no native capture here: the browser records and uploads instead
 				try {
 					const list = await client.listRecordings(projectId);
+					if (alive.current && projectId === undefined)
+						setRecent(list.recordings);
 					if (alive.current)
 						setView({
 							step: "browser",
@@ -181,7 +190,10 @@ export function useRecordFlow(
 		setBusy(true);
 		try {
 			const next = await call();
-			if (next !== null && alive.current) setView(next);
+			if (next !== null && alive.current) {
+				setView(next);
+				if (projectId === undefined) refreshRecent();
+			}
 		} catch (error) {
 			if (alive.current) setFailure(failureOf(error));
 		} finally {
@@ -190,6 +202,15 @@ export function useRecordFlow(
 	}
 
 	const current = (): string => recordingId ?? "";
+
+	function refreshRecent(): void {
+		void client.listRecordings().then(
+			(list) => {
+				if (alive.current) setRecent(list.recordings);
+			},
+			() => undefined,
+		);
+	}
 
 	// What the recorder of this tab reports. A recorder that ended, by the Stop of the person or on its own (Stop
 	// sharing in the browser, a limit, a failed upload), is no longer this tab's: the dialog follows the server's
@@ -213,6 +234,7 @@ export function useRecordFlow(
 		busy,
 		placed,
 		notice,
+		recent,
 		startPrepared: (id) =>
 			run(async () => {
 				setNotice(null);
@@ -236,7 +258,7 @@ export function useRecordFlow(
 			run(async () =>
 				viewOf(
 					await client.startRecording({
-						project_id: projectId,
+						...(projectId ? { project_id: projectId } : {}),
 						source: name === "" ? { kind, id } : { kind, id, name },
 						fps,
 						...(extras.microphone === ""
@@ -262,7 +284,11 @@ export function useRecordFlow(
 						projectId,
 						mimeType: capability.mimeType,
 						container: capability.container,
-						choice,
+						choice: {
+							...choice,
+							microphone: choice.microphone && capability.microphone,
+							camera: choice.camera && capability.camera,
+						},
 						onChange: (state: RecorderState) => {
 							if (browser.current !== null) showBrowser(state);
 						},
@@ -285,9 +311,20 @@ export function useRecordFlow(
 			setBusy(true);
 			try {
 				showBrowser(await own.stop());
+				if (projectId === undefined) refreshRecent();
 			} finally {
 				if (alive.current) setBusy(false);
 			}
+		},
+		toggleBrowserPause: () => browser.current?.togglePause(),
+		cancelBrowser: async () => {
+			const own = browser.current;
+			if (own === null) return;
+			await run(async () => {
+				await own.cancel();
+				browser.current = null;
+				return { step: "gone" };
+			});
 		},
 		pause: () =>
 			run(async () => viewOf(await client.pauseRecording(current()))),
@@ -303,6 +340,11 @@ export function useRecordFlow(
 			}),
 		remove: (id) =>
 			run(async () => viewOf(await client.cancelRecording(id ?? current()))),
+		openTake: (id) =>
+			run(async () => {
+				setPlaced(false);
+				return viewOf(await client.getRecording(id));
+			}),
 		place: async () => {
 			await run(async () => {
 				await client.placeRecording(current());

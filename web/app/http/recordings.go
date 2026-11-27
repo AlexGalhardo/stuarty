@@ -29,7 +29,7 @@ type recordingStartSourceIn struct {
 }
 
 type recordingStartIn struct {
-	ProjectID   string                 `json:"project_id,omitempty"   doc:"The project the recording will join once a person adds it. Required unless recording_id is sent."`
+	ProjectID   string                 `json:"project_id,omitempty"   doc:"The recording destination. Omit to create a standalone recording."`
 	Source      recordingStartSourceIn `json:"source"                 doc:"What to capture. Required unless recording_id is sent."`
 	FPS         int                    `json:"fps,omitempty"          doc:"24, 30 (the default) or 60."`
 	RecordingID string                 `json:"recording_id,omitempty" doc:"A recording that was prepared (POST /recordings/prepare): its stored plan is the request, and nothing else may be sent."`
@@ -198,6 +198,10 @@ func (h *apiHandler) recordingList(c *web.Ctx, in recordingListIn) (service.Reco
 	return deref(res), err
 }
 
+func (h *apiHandler) recordingListRecent(c *web.Ctx, _ noIn) (service.RecordingListResult, error) {
+	return h.recordingList(c, recordingListIn{})
+}
+
 func (h *apiHandler) recordingConfirm(c *web.Ctx, in recordingRefIn) (service.Recording, error) {
 	res, err := h.Service.RecordingConfirm(c.Context(), service.RecordingRef{ID: in.ID})
 
@@ -224,7 +228,7 @@ func (h *apiHandler) recordingPlace(c *web.Ctx, in recordingPlaceIn) (service.Ed
 // for itself and hands the body on.
 
 type recordingUploadBeginIn struct {
-	ProjectID string `json:"project_id"       validate:"required"                doc:"The project the recording will join once a person adds it."`
+	ProjectID string `json:"project_id,omitempty"                                    doc:"The recording destination. Omit to create a standalone recording."`
 	Container string `json:"container"        validate:"required,oneof=webm mp4" doc:"What the browser records: webm or mp4."`
 	Camera    bool   `json:"camera,omitempty"                                    doc:"A second track, the camera, will be uploaded."`
 	Label     string `json:"label,omitempty"                                     doc:"Optional plain text about what was shared."`

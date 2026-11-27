@@ -424,7 +424,7 @@ export interface ApiClient {
 		request: RecordingUploadFinishRequest,
 	): Promise<Recording>;
 	getRecording(id: string): Promise<Recording>;
-	listRecordings(projectId: string): Promise<RecordingListResult>;
+	listRecordings(projectId?: string): Promise<RecordingListResult>;
 	stopRecording(id: string): Promise<Recording>;
 	pauseRecording(id: string): Promise<Recording>;
 	resumeRecording(id: string): Promise<Recording>;
@@ -1123,7 +1123,9 @@ export function createClient(
 		listRecordings: (projectId) =>
 			call(
 				"GET",
-				`/projects/${encodeURIComponent(projectId)}/recordings`,
+				projectId
+					? `/projects/${encodeURIComponent(projectId)}/recordings`
+					: "/recordings",
 				READ_TIMEOUT_MS,
 			),
 		beginRecordingUpload: (request) =>

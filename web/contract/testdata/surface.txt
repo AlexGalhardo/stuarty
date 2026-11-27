@@ -301,6 +301,7 @@ route GET /publications/events
 route GET /publications/{}
 route GET /publish/{}
 route GET /recording/sources
+route GET /recordings
 route GET /recordings/{}
 route GET /recordings/{}/events
 route GET /social/accounts

@@ -76,6 +76,10 @@ func (p Plan) Spec(projectID string) StartSpec {
 func ValidatePrepare(s StartSpec, scriptID, notes string) []FieldError {
 	out := ValidateStart(s)
 
+	if s.ProjectID == "" {
+		out = append([]FieldError{{"project_id", "invalid_id"}}, out...)
+	}
+
 	if scriptID != "" && !timeline.ValidID("pit", scriptID) {
 		out = append(out, FieldError{"script_id", "invalid_id"})
 	}

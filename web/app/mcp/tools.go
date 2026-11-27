@@ -631,12 +631,33 @@ func jobGet(ctx context.Context, svc service.Service, raw json.RawMessage) (*too
 		WaitMS     int    `json:"wait_ms"`
 		ApprovalID string `json:"approval_id"`
 		Approvals  string `json:"approvals"`
+		Recordings bool   `json:"recordings"`
 	}](raw)
 	if err != nil {
 		return nil, err
 	}
 
 	switch {
+	case in.Recordings:
+		if in.JobID != "" || in.ApprovalID != "" || in.Approvals != "" ||
+			in.TimelineID != "" || in.State != "" || in.WaitMS != 0 {
+			return nil, &service.Error{
+				Code: command.CodeValidation, Path: "recordings",
+				Message: "recordings takes an optional project_id only.",
+			}
+		}
+
+		res, lerr := svc.RecordingList(ctx, service.RecordingListRequest{ProjectID: in.ProjectID})
+		if lerr != nil {
+			return nil, lerr
+		}
+
+		lines := []string{fmt.Sprintf("%d recording(s)", len(res.Recordings))}
+		for _, rec := range res.Recordings {
+			lines = append(lines, rec.Text)
+		}
+
+		return &toolOutput{value: res, text: strings.Join(lines, "\n")}, nil
 	case in.ApprovalID != "" || in.Approvals != "":
 		if in.JobID != "" || (in.ApprovalID != "" && in.Approvals != "") {
 			return nil, &service.Error{

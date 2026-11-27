@@ -99,6 +99,14 @@ func callService(ctx context.Context, svc service.Service, s step) (any, error) 
 		return invoke(ctx, s, svc.ProjectList)
 	case "ProjectCreate":
 		return invoke(ctx, s, svc.ProjectCreate)
+	case "StandaloneVideoList":
+		return invoke(ctx, s, svc.StandaloneVideoList)
+	case "StandaloneVideoCreate":
+		return invoke(ctx, s, svc.StandaloneVideoCreate)
+	case "StandalonePromote":
+		return invoke(ctx, s, svc.StandalonePromote)
+	case "ImageOpenFromAsset":
+		return invoke(ctx, s, svc.ImageOpenFromAsset)
 	case "ProjectGet":
 		return invoke(ctx, s, svc.ProjectGet)
 	case "Edit":
@@ -574,6 +582,13 @@ func newMCPWith(t *testing.T, o testenv.Options) driver {
 	return &mcpDriver{e: e, cs: cs}
 }
 
+func renameArgument(args map[string]any, from, to string) {
+	if value, found := args[from]; found {
+		args[to] = value
+		delete(args, from)
+	}
+}
+
 // toolCall is how a Service operation is encoded as a tool call (SDD-003 7.1).
 func toolCall(s step) (tool string, args map[string]any, err error) {
 	args = map[string]any{}
@@ -586,6 +601,10 @@ func toolCall(s step) (tool string, args map[string]any, err error) {
 	switch s.Call {
 	case "RecordingGet":
 		return "job_get", map[string]any{"job_id": args["recording_id"]}, nil
+	case "RecordingList":
+		args["recordings"] = true
+
+		return "job_get", args, nil
 	case "RecordingStop":
 		return "job_cancel", map[string]any{"job_id": args["recording_id"]}, nil
 	case "AssetList", "AssetGet", "AssetUses", "AssetSetInfo", "AssetTag", "AssetRename":
@@ -604,6 +623,29 @@ func toolCall(s step) (tool string, args map[string]any, err error) {
 		return "image", args, nil
 	case "ProjectList":
 		return "project_list", args, nil
+	case "StandaloneVideoList":
+		args["standalone"] = true
+
+		return "project_list", args, nil
+	case "StandaloneVideoCreate":
+		args["standalone"] = true
+		delete(args, "wait_ms")
+		delete(args, "dry_run")
+
+		return "project_create", args, nil
+	case "StandalonePromote":
+		args["action"] = "promote"
+		renameArgument(args, "name", "title")
+		renameArgument(args, "description", "text")
+		delete(args, "dry_run")
+
+		return "project_item", args, nil
+	case "ImageOpenFromAsset":
+		args["action"] = "import"
+		renameArgument(args, "asset_hash", "hash")
+		delete(args, "wait_ms")
+
+		return "image", args, nil
 	case "ProjectCreate":
 		delete(args, "dry_run")
 
@@ -1111,6 +1153,7 @@ func commandOf(s step) (name string, argv []string, stdin string, err error) {
 		Description string              `json:"description"`
 		Fill        json.RawMessage     `json:"fill"`
 		Path        string              `json:"path"`
+		AssetHash   string              `json:"asset_hash"`
 		At          string              `json:"at"`
 		From        string              `json:"from"`
 		Until       string              `json:"until"`
@@ -1184,7 +1227,24 @@ func commandOf(s step) (name string, argv []string, stdin string, err error) {
 		return imageArgv(s)
 	case "ProjectList":
 		return "project:list", nil, "", nil
-	case "ProjectCreate":
+	case "StandaloneVideoList":
+		return "video:standalone-list", flag("state", a.State), "", nil
+	case "StandaloneVideoCreate":
+		argv = slices.Concat(flag("path", a.Path), flag("asset", a.AssetHash), flag("name", a.Name),
+			flag("preset", a.Preset), flag("fps", a.FPS), flag("id", a.ID))
+		if a.DryRun {
+			argv = append(argv, "--dry-run")
+		}
+
+		return "video:quick-open", argv, "", nil
+	case "ImageOpenFromAsset":
+		argv = slices.Concat(flag("asset", a.AssetHash), flag("name", a.Name), flag("preset", a.Preset))
+		if a.DryRun {
+			argv = append(argv, "--dry-run")
+		}
+
+		return "image:quick-open", argv, "", nil
+	case "ProjectCreate", "StandalonePromote":
 		argv = append(argv, flag("name", a.Name)...)
 		argv = append(argv, flag("description", a.Description)...)
 		argv = append(argv, flag("specific", a.Goal.Specific)...)
@@ -1193,6 +1253,14 @@ func commandOf(s step) (name string, argv []string, stdin string, err error) {
 		argv = append(argv, flag("relevant", a.Goal.Relevant)...)
 		argv = append(argv, flag("time-bound", a.Goal.TimeBound)...)
 		argv = append(argv, flag("due", a.Goal.Due)...)
+
+		if s.Call == "StandalonePromote" {
+			if a.DryRun {
+				argv = append(argv, "--dry-run")
+			}
+
+			return "video:promote", slices.Concat(argv, proj, flag("kind", a.Kind)), "", nil
+		}
 
 		return "project:create", slices.Concat(argv, flag("id", a.ID), flag("kind", a.Kind)), "", nil
 	case "ProjectGet":

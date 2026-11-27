@@ -233,8 +233,13 @@ func (s *svc) RecordingUploadBegin(ctx context.Context, req RecordingUploadBegin
 		return nil, err
 	}
 
-	if gerr := s.recordingProject(ctx, c, req.ProjectID, false); gerr != nil {
-		return nil, gerr
+	project, projectErr := s.recordingDestination(ctx, c, req.ProjectID, 0)
+	if projectErr != nil {
+		return nil, projectErr
+	}
+
+	if project != nil {
+		req.ProjectID = project.ID
 	}
 
 	if lerr := s.recordingLimits().CheckStart(s.freeBytes()); lerr != nil {
@@ -288,6 +293,12 @@ func (s *svc) RecordingUploadBegin(ctx context.Context, req RecordingUploadBegin
 			return newError(CodeQueueFull, "%d recordings are already being uploaded.", all).
 				withLimit("recordings", all, recording.MaxOpenUploadsPerWorkspace).
 				withHint("wait for one to finish")
+		}
+
+		if project != nil {
+			if err := s.writeStandaloneRowsTx(ctx, tx, c, project); err != nil {
+				return err
+			}
 		}
 
 		if err := tx.Recordings().Insert(ctx, row); err != nil {

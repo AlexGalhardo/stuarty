@@ -1705,7 +1705,7 @@ export type RecordingContainer = "webm" | "mp4";
 export type RecordingUploadKind = "screen" | "camera";
 
 export interface RecordingUploadBeginRequest {
-	project_id: string;
+	project_id?: string;
 	container: RecordingContainer;
 	camera?: boolean;
 	label?: string;

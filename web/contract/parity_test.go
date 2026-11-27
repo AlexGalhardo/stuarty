@@ -261,7 +261,7 @@ var parity = []row{
 	{method: "ApprovalRuleSet", command: "approval:rule:set", route: "POST /approval-rules"},
 	{method: "ApprovalRuleRemove", command: "approval:rule:remove", route: "DELETE /approval-rules/{}"},
 	// Screen recording (SDD-025 section 11): no MCP tool of its own, the tool list is at its byte budget. A recording
-	// is read with job_get and stopped with job_cancel, as a job of kind capture; the list, the placement, starting,
+	// is read and listed with job_get and stopped with job_cancel; placement, starting,
 	// adding to the project and Not now have no tool (the last three are for a person).
 	{method: "RecordingSources", command: "recording:sources", route: "GET /recording/sources"},
 	{method: "RecordingStart", command: "recording:start", route: "POST /recordings"},
@@ -271,7 +271,7 @@ var parity = []row{
 	{method: "RecordingEvents", command: "recording:events", route: "GET /recordings/{}/events"},
 	{method: "RecordingCancel", command: "recording:cancel", route: "POST /recordings/{}/cancel"},
 	{method: "RecordingGet", tool: "job_get", command: "recording:show", route: "GET /recordings/{}"},
-	{method: "RecordingList", command: "recording:list", route: "GET /projects/{}/recordings"},
+	{method: "RecordingList", tool: "job_get", command: "recording:list", route: "GET /recordings"},
 	{method: "RecordingConfirm", command: "recording:confirm", route: "POST /recordings/{}/confirm"},
 	{method: "RecordingDismiss", command: "recording:dismiss", route: "POST /recordings/{}/dismiss"},
 	{method: "RecordingPlace", command: "recording:place", route: "POST /recordings/{}/place"},

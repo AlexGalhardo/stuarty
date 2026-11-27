@@ -192,7 +192,7 @@ Every UI epic in this section updates `docs/design/final/stuarty-redesign-final-
 | [114](114-image-editor-canva-photoshop-parity.md) | Image editor parity with Canva and Photoshop: Magic Resize, gradients, curved text, smart guides, vector frames and AI retouching | L | 27, 28, 29, 30, 86, 91, 116 | TODO |
 | [115](115-video-editor-capcut-premiere-resolve-parity.md) | Video editor parity with CapCut, Premiere Pro and DaVinci Resolve: speed ramps, stabilization, motion tracking, creator transitions, color wheels and beat-sync montage | L | 26, 31, 34, 53, 69, 71, 85, 114, 116 | TODO |
 | [116](116-figcraft-design-source-in-docs.md) | Preserve the FINAL FigCraft design system and frames in `docs/design/final/` | S | 99 | DONE (2026-11-27, `a5e2e2086`) |
-| [117](117-screen-recording-ui-and-record-page.md) | Screen recording UI: dedicated `/record` studio page, sidebar entry and standalone polish flow | L | 61, 62, 63, 65, 66, 75, 105, 116 | TODO |
+| [117](117-screen-recording-ui-and-record-page.md) | Screen recording UI: dedicated `/record` studio page, sidebar entry and standalone polish flow | L | 61, 62, 63, 65, 66, 75, 105, 116 | IN PROGRESS (the v0.61.0 studio, standalone capture and Chromium flow are implemented; full acceptance and specialist review are pending) |
 | [118](118-professional-sound-editor.md) | Professional Sound Editor: multi-track audio core, waveform and spectrogram UI, mastering FX rack, live recording and multi-format export | L | 34, 51, 58, 71, 105, 106, 116 | TODO |
 
 ## 2. Dependency graph

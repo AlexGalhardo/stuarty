@@ -62,6 +62,7 @@ describe("Sidebar", () => {
 			"Home",
 			"Projects",
 			"Writing",
+			"Record",
 			"Video editor",
 			"Image editor",
 			"History",

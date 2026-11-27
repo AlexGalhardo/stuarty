@@ -16,6 +16,7 @@ import {
 	Send,
 	ShieldCheck,
 	Sparkles,
+	Video,
 	Webhook,
 } from "lucide-react";
 
@@ -27,6 +28,7 @@ export const SECTION_KEYS = [
 	"edit-video",
 	"edit-image",
 	"write",
+	"record",
 	"visual-assets",
 	"video-assets",
 	"sound-assets",
@@ -51,6 +53,7 @@ const ICONS: Record<SectionKey, LucideIcon> = {
 	"edit-video": Clapperboard,
 	"edit-image": ImagePlus,
 	write: PenLine,
+	record: Video,
 	"visual-assets": Images,
 	"video-assets": Film,
 	"sound-assets": AudioLines,
@@ -121,8 +124,7 @@ function sectionItem(key: SectionKey): NavItem {
 }
 
 // The sidebar groups (SDD-012 section 23.4): a list over the keys of SECTION_KEYS plus the links to routes
-// that already exist, so the keys, the Go route test and the home keep their meaning. A route that no
-// epic has added yet (Record, Local models) is not here.
+// that already exist, so the keys, the Go route test and the home keep their meaning.
 export const NAV_GROUPS: readonly NavGroup[] = [
 	{
 		id: "create",
@@ -130,6 +132,7 @@ export const NAV_GROUPS: readonly NavGroup[] = [
 		items: [
 			sectionItem("projects"),
 			sectionItem("write"),
+			sectionItem("record"),
 			sectionItem("edit-video"),
 			sectionItem("edit-image"),
 			{

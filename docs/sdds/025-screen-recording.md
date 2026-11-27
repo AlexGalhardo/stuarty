@@ -514,13 +514,13 @@ Implements author decision D-160: screen recording is a first-class destination 
 
 ### 21.2 Workspace-wide recording listing
 
-`RecordingList` accepts an empty `project_id` to return recent recordings across the workspace, newest first (`created_ms DESC, id`). When the caller is scoped to a single project (`c.ProjectID != ""`), the service narrows the query to that project. In network mode (`c.OwnerUserID != ""`), the query joins `projects` and filters by `owner_user_id` so one user never sees another user's recordings. Every row still passes `recording.VisibleTo(review, isPerson(c))` so unconfirmed takes stay hidden from agents.
+`RecordingList` accepts an empty `project_id` to return recent recordings across the workspace, newest first (`created_ms DESC, id`). A project-scoped caller sees only that project. Network callers see only recordings of projects they own. Visibility follows section 4: pending takes expose metadata, and dismissed takes remain visible only to a person.
 
 Surfaces:
 
 - HTTP: `GET /api/v1/recordings` (workspace-wide) in addition to `GET /api/v1/projects/{id}/recordings` (per-project).
 - CLI: `stuarty recording:list [--project <id>]` (`--project` is optional; when omitted and `STUARTY_PROJECT` is unset, lists across the workspace).
-- MCP: unchanged (ADR-0051 keeps capture controls human-driven and preserves NFR-020 budget).
+- MCP: `job_get` with `recordings: true` lists the same recordings, optionally narrowed by `project_id`. Capture controls still require a person (ADR-0051).
 
 ### 21.3 The `/record` studio page
 

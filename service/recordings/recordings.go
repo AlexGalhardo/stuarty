@@ -59,6 +59,8 @@ type Store interface {
 	Update(ctx context.Context, r Row) error
 	// ListByProject is the recordings of a project, newest first.
 	ListByProject(ctx context.Context, projectID string) ([]Row, error)
+	// ListRecent returns the most recent recordings of the owner, or the local workspace when owner is empty.
+	ListRecent(ctx context.Context, owner string) ([]Row, error)
 	// ListByAssetHash is the recordings whose screen asset has that content hash, with no source label (the
 	// emptying of the trash needs none).
 	ListByAssetHash(ctx context.Context, hash string) ([]Row, error)

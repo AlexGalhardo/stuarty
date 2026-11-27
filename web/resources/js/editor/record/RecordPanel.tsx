@@ -39,13 +39,15 @@ import type { RecordFlow } from "./useRecordFlow";
 export default function RecordPanel({
 	flow,
 	onClose,
+	studio = false,
 }: {
 	flow: RecordFlow;
 	onClose: () => void;
+	studio?: boolean;
 }): ReactNode {
 	return (
 		<div className="flex flex-col gap-3" data-record-step={flow.view.step}>
-			<Step view={flow.view} flow={flow} onClose={onClose} />
+			<Step view={flow.view} flow={flow} onClose={onClose} studio={studio} />
 			<FailureNote failure={flow.failure as Failure | null} />
 		</div>
 	);
@@ -55,10 +57,12 @@ function Step({
 	view,
 	flow,
 	onClose,
+	studio,
 }: {
 	view: RecordView;
 	flow: RecordFlow;
 	onClose: () => void;
+	studio: boolean;
 }): ReactNode {
 	const t = useT();
 	const locale = useLocale();
@@ -124,6 +128,8 @@ function Step({
 					state={view.state}
 					busy={flow.busy}
 					onStop={() => void flow.stopBrowser()}
+					onPause={studio ? flow.toggleBrowserPause : undefined}
+					onCancel={studio ? flow.cancelBrowser : undefined}
 				/>
 			);
 		case "interrupted":
@@ -215,6 +221,16 @@ function Step({
 						>
 							{t("ui.editor.record.stop")}
 						</Button>
+						{studio && view.recording.state !== "finishing" && (
+							<Button
+								type="button"
+								variant="outline"
+								disabled={flow.busy}
+								onClick={() => void flow.remove()}
+							>
+								{t("ui.record.discard")}
+							</Button>
+						)}
 					</div>
 				</>
 			);
@@ -770,10 +786,14 @@ function BrowserLive({
 	state,
 	busy,
 	onStop,
+	onPause,
+	onCancel,
 }: {
 	state: RecorderState;
 	busy: boolean;
 	onStop: () => void;
+	onPause?: () => void;
+	onCancel?: () => Promise<void>;
 }): ReactNode {
 	const t = useT();
 	const sharing = (
@@ -794,6 +814,7 @@ function BrowserLive({
 	).filter(([, on]) => on);
 	const ending = endKey(state.upload.end);
 	const recording = state.phase === "recording";
+	const paused = state.phase === "paused";
 	return (
 		<>
 			<p
@@ -807,7 +828,9 @@ function BrowserLive({
 				/>
 				{recording
 					? t("ui.editor.record.recording")
-					: t("ui.editor.record.finishing")}
+					: paused
+						? t("ui.editor.record.paused")
+						: t("ui.editor.record.finishing")}
 				<span data-record-clock="" className="tabular-nums">
 					{t("ui.editor.record.elapsed", {
 						time: formatClock(state.elapsedMs),
@@ -847,15 +870,37 @@ function BrowserLive({
 				</p>
 			)}
 			<div className="flex flex-wrap gap-2">
+				{onPause !== undefined && (
+					<Button
+						type="button"
+						variant="outline"
+						disabled={busy || (!recording && !paused)}
+						onClick={onPause}
+					>
+						{paused
+							? t("ui.editor.record.resume")
+							: t("ui.editor.record.pause")}
+					</Button>
+				)}
 				<Button
 					type="button"
 					variant="destructive"
-					disabled={busy || !recording}
+					disabled={busy || (!recording && !paused)}
 					data-record-stop=""
 					onClick={onStop}
 				>
 					{t("ui.editor.record.stop")}
 				</Button>
+				{onCancel !== undefined && (
+					<Button
+						type="button"
+						variant="outline"
+						disabled={busy || (!recording && !paused)}
+						onClick={() => void onCancel()}
+					>
+						{t("ui.record.discard")}
+					</Button>
+				)}
 			</div>
 		</>
 	);

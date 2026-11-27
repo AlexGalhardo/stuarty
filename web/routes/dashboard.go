@@ -19,6 +19,10 @@ var dashboardSections = []string{}
 // dashboardPages installs the home and one empty-state route for each section
 // of dashboardSections. A handler only names the page; it computes nothing.
 func dashboardPages(r *router.Router) {
+	r.Get("/record", func(c *web.Ctx) error {
+		return inertia.Render(c, "Record/Index", inertia.Props{})
+	}).Name("record.index")
+
 	// Standalone video editor launcher (epic 105, SDD-012 section 23.1).
 	r.Get("/edit-video", func(c *web.Ctx) error {
 		return inertia.Render(c, "EditVideo/Index", inertia.Props{})
