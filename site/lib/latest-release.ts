@@ -10,8 +10,8 @@ export function dockerRunCommand(): string {
 	return [
 		"docker run --rm -p 127.0.0.1:7878:7878 -v stuarty:/data",
 		'-e APP_KEY="$(openssl rand -base64 32)"',
-		"-e STUARTY_ADMIN_EMAIL=admin@example.com",
-		"-e STUARTY_ADMIN_PASSWORD=choose-a-long-password",
+		"-e STUARTY_ADMIN_EMAIL=admin@stuarty.com",
+		'-e STUARTY_ADMIN_PASSWORD="admin@stuarty.com"',
 		`${IMAGE}:latest`,
 	].join(" \\\n  ");
 }
