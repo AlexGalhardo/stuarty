@@ -20,6 +20,7 @@ var Provenance = map[string]string{
 	"service.ProjectGoal.Relevant":              SourceProjectText,
 	"service.ProjectGoal.TimeBound":             SourceProjectText,
 	"service.ProjectCreateResult.Name":          SourceProjectText,
+	"service.StandaloneVideoResult.Name":        SourceProjectText,
 	"service.ProjectGetResult.Name":             SourceProjectText,
 	"service.ImportedAsset.Name":                SourceAssetName,
 	"assets.LibraryAsset.Name":                  SourceAssetName,

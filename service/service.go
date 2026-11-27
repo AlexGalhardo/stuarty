@@ -57,6 +57,13 @@ type Service interface {
 	ProjectTrash(ctx context.Context, req ProjectTrashRequest) (*ProjectStateResult, error)
 	ProjectRestore(ctx context.Context, req ProjectTrashRequest) (*ProjectStateResult, error)
 
+	// Standalone video sessions (SDD-005 section 5.12.5, epic 105): quick-open video editing without creating a
+	// production project first, with optional promotion to a full project.
+	StandaloneVideoList(ctx context.Context, req StandaloneVideoListRequest) (*ProjectListResult, error)
+	StandaloneVideoCreate(ctx context.Context, req StandaloneVideoCreateRequest) (*StandaloneVideoResult, error)
+	StandaloneVideoUpload(ctx context.Context, req StandaloneVideoUploadRequest) (*StandaloneVideoResult, error)
+	StandalonePromote(ctx context.Context, req StandalonePromoteRequest) (*ProjectUpdateResult, error)
+
 	Edit(ctx context.Context, req EditRequest) (*EditResult, error)
 	CommandHelp(ctx context.Context, req CommandHelpRequest) (*CommandHelpResult, error)
 
@@ -213,6 +220,8 @@ type Service interface {
 	ImageImport(ctx context.Context, req ImageImportRequest) (*ImageImportResult, error)
 	// ImageImportFile is ImageImport for a file that arrives as the bytes of a request (SDD-021 section 10.2); HTTP only.
 	ImageImportFile(ctx context.Context, req ImageImportFileRequest) (*ImageImportResult, error)
+	// ImageOpenFromAsset opens a standalone image document directly from a workspace asset hash (epic 105).
+	ImageOpenFromAsset(ctx context.Context, req ImageOpenFromAssetRequest) (*ImageImportResult, error)
 	// ImageFrame, ImageHistory and ImageFile are the reads of the image editor screen (SDD-012 section 24.3); HTTP only.
 	ImageFrame(ctx context.Context, req ImageFrameRequest) (*ImageFrameResult, error)
 	ImageHistory(ctx context.Context, req ImageHistoryRequest) (*ImageHistoryResult, error)

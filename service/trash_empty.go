@@ -148,7 +148,7 @@ func (s *svc) trashTargets(ctx context.Context, c Caller, req *TrashEmptyRequest
 
 	for {
 		heads, next, err := s.store.Productions().List(ctx, ProductionQuery{
-			State: ProjectTrashed, OwnerUserID: c.OwnerUserID, After: after, Limit: 200,
+			State: ProjectTrashed, IncludeStandalone: true, OwnerUserID: c.OwnerUserID, After: after, Limit: 200,
 		})
 		if err != nil {
 			return nil, asError(err)

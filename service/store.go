@@ -155,6 +155,8 @@ type ProjectRow struct {
 type ProjectQuery struct {
 	State          ProjectState // "" means active only
 	IncludeTrashed bool         // both states; wins over State
+	StandaloneOnly    bool         // true: only standalone video sessions (standalone = 1)
+	IncludeStandalone bool         // true: both regular productions and standalone sessions (e.g. TrashEmpty)
 	OwnerUserID    string       // network mode: only this user's projects, applied in SQL
 	ProjectID      string       // a key limited to one project: the timelines of that one
 	After          string       // opaque cursor from the previous page
@@ -213,6 +215,8 @@ type ProductionHead struct {
 	// from the items by core/project.
 	Kind    project.Intent
 	Skipped []project.StepID
+	// Standalone is true for a lightweight standalone video editor session (SDD-005 section 5.12.5, epic 105).
+	Standalone bool
 	// Timelines counts the active timeline items.
 	Timelines int
 	// Timeline is the head of the first active timeline by position; its ID is empty when there is none.
@@ -261,6 +265,9 @@ type ProductionRepo interface {
 	// SetContext writes the name, the description and the goal and sets updated_ms. ErrNotFound when there is no
 	// such project.
 	SetContext(ctx context.Context, id string, c project.Context, atMs int64) error
+	// Promote converts a standalone session into a full production project, clearing standalone and writing the
+	// validated context and kind in one statement (SDD-005 section 5.12.5).
+	Promote(ctx context.Context, id string, c project.Context, kind project.Intent, atMs int64) error
 	// SetKind writes the stored kind of the project and sets updated_ms. ErrNotFound when there is no such project.
 	SetKind(ctx context.Context, id string, kind project.Intent, atMs int64) error
 	// SetSkippedSteps writes the steps the person skipped and sets updated_ms. ErrNotFound when there is no such

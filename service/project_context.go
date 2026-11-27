@@ -245,7 +245,7 @@ func checkFollowedName(ctx context.Context, tx Tx, row *ProjectRow, next string)
 		return err
 	}
 
-	if head.Name != row.Name {
+	if head.Name != row.Name || head.Standalone {
 		return nil
 	}
 

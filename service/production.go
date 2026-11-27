@@ -506,6 +506,7 @@ func (s *svc) ProjectDescribe(ctx context.Context, req ProjectDescribeRequest) (
 		Description:     head.Description,
 		Goal:            ProjectGoal(head.Goal),
 		Complete:        contextOf(&head).Complete,
+		Standalone:      head.Standalone,
 		Kind:            string(workflow.Kind),
 		Production:      productionOf(rows),
 		Workflow:        workflow,

@@ -62,5 +62,6 @@ func All() []schema.Migration {
 		m20261125110000RecordingsAgentFlow(),
 		m20261125120000AssetSoundKind(),
 		m20261126100000AddApprovalCostIndexes(),
+		m20261127100000ProjectStandalone(),
 	}
 }

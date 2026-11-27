@@ -27,7 +27,7 @@ const firstTimeline = `(SELECT i.ref FROM project_items i
 
 const productionColumns = `p.id, p.name, p.state, p.created_ms, p.updated_ms, p.created_by, p.owner_user_id,
  p.trashed_ms, p.trashed_by, p.description, p.goal_specific, p.goal_measurable, p.goal_achievable, p.goal_relevant,
- p.goal_time_bound, p.goal_due, p.kind, p.skipped_steps,
+ p.goal_time_bound, p.goal_due, p.kind, p.skipped_steps, p.standalone,
  (SELECT count(*) FROM project_items i WHERE i.project_id = p.id AND i.kind = 'timeline' AND i.state = 'active'
   AND ` + ownTimeline + `),
  t.id, t.name, t.state, t.revision, t.schema_version, t.width, t.height, t.fps_num, t.fps_den,
@@ -90,6 +90,7 @@ func scanProduction(sc scanner, sl account.Sealer) (service.ProductionHead, erro
 		tBy, tOwner, tTrashedBy sql.NullString
 		tTrashedMs, tResync     sql.NullInt64
 		kind, skipped           string
+		standalone              int
 	)
 
 	err := sc.Scan(
@@ -111,6 +112,7 @@ func scanProduction(sc scanner, sl account.Sealer) (service.ProductionHead, erro
 		&h.Goal.Due,
 		&kind,
 		&skipped,
+		&standalone,
 		&h.Timelines,
 		&tID,
 		&tName,
@@ -142,7 +144,7 @@ func scanProduction(sc scanner, sl account.Sealer) (service.ProductionHead, erro
 	}
 
 	h.OwnerUserID, h.TrashedMs, h.TrashedBy = ptrString(owner), ptrInt64(trashedMs), ptrString(trashedBy)
-	h.Kind, h.Skipped = project.Intent(kind), project.ParseSkipped(skipped)
+	h.Kind, h.Skipped, h.Standalone = project.Intent(kind), project.ParseSkipped(skipped), standalone != 0
 
 	if tID.Valid {
 		h.Timeline = service.ProjectHead{
@@ -175,6 +177,14 @@ func productionFilter(q service.ProductionQuery) ([]string, []any) {
 		where, args = append(where, "p.state = ?"), append(args, string(q.State))
 	default:
 		where = append(where, "p.state = 'active'")
+	}
+
+	switch {
+	case q.StandaloneOnly:
+		where = append(where, "p.standalone = 1")
+	case q.IncludeStandalone:
+	default:
+		where = append(where, "p.standalone = 0")
 	}
 
 	if q.OwnerUserID != "" {
@@ -281,8 +291,9 @@ func (r productionRepo) Create(ctx context.Context, h service.ProductionHead) er
 		ctx,
 		`INSERT INTO projects
  (id, name, state, created_ms, updated_ms, created_by, owner_user_id, trashed_ms, trashed_by, description,
- goal_specific, goal_measurable, goal_achievable, goal_relevant, goal_time_bound, goal_due, kind, skipped_steps)
- VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+ goal_specific, goal_measurable, goal_achievable, goal_relevant, goal_time_bound, goal_due, kind, skipped_steps,
+ standalone)
+ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		h.ID,
 		h.Name,
 		stateOrActive(h.State),
@@ -301,6 +312,7 @@ func (r productionRepo) Create(ctx context.Context, h service.ProductionHead) er
 		h.Goal.Due,
 		storedKind(h.Kind),
 		project.JoinSkipped(h.Skipped),
+		boolInt(h.Standalone),
 	)
 	if isUnique(r.ex, err) {
 		return service.ErrExists
@@ -358,6 +370,33 @@ func (r productionRepo) SetContext(ctx context.Context, id string, c project.Con
 		`UPDATE projects SET name = ?, description = ?, goal_specific = ?, goal_measurable = ?, goal_achievable = ?,
  goal_relevant = ?, goal_time_bound = ?, goal_due = ?, updated_ms = ? WHERE id = ?`,
 		c.Name, s[0], s[1], s[2], s[3], s[4], s[5], c.Goal.Due, atMs, id))
+	if err != nil {
+		return err
+	}
+
+	if n == 0 {
+		return service.ErrNotFound
+	}
+
+	return nil
+}
+
+func (r productionRepo) Promote(
+	ctx context.Context,
+	id string,
+	c project.Context,
+	kind project.Intent,
+	atMs int64,
+) error {
+	s, err := sealContext(sealerOf(r.ex), id, c.Description, c.Goal)
+	if err != nil {
+		return err
+	}
+
+	n, err := rowsAffected(r.ex.ExecContext(ctx,
+		`UPDATE projects SET name = ?, description = ?, goal_specific = ?, goal_measurable = ?, goal_achievable = ?,
+ goal_relevant = ?, goal_time_bound = ?, goal_due = ?, kind = ?, standalone = 0, updated_ms = ? WHERE id = ?`,
+		c.Name, s[0], s[1], s[2], s[3], s[4], s[5], c.Goal.Due, storedKind(kind), atMs, id))
 	if err != nil {
 		return err
 	}
