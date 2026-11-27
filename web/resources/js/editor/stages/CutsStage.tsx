@@ -11,7 +11,8 @@ import type { ReactNode } from "react";
 import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { useT } from "@/lib/i18n";
+import { useLocale, useT } from "@/lib/i18n";
+import { localizeError } from "@/lib/localizeError";
 import type { CutsProposal } from "../api/types";
 import { thumbnailUrl } from "../api/urls";
 import FaceInstallDialog from "../inspector/panels/FaceInstallDialog";
@@ -20,7 +21,6 @@ import {
 	sharePercent,
 } from "../inspector/panels/verticalCutsModel";
 import { useRuntime } from "../state/EditorContext";
-import { errorHeadline } from "../ui/errorHeadline";
 import { type CutsState, useCutsState } from "./useCuts";
 
 // One proposal as a card (final design 27): the face badge, a vertical picture of the clip, its title, its range, its
@@ -121,6 +121,7 @@ function ProposalCard({
 // a person accepts, and nothing enters the timeline before that.
 export default function CutsStage({ onClose }: { onClose(): void }): ReactNode {
 	const t = useT();
+	const locale = useLocale();
 	const state = useCutsState();
 	if (state === null) return null;
 	const { phase } = state;
@@ -213,21 +214,32 @@ export default function CutsStage({ onClose }: { onClose(): void }): ReactNode {
 					{t("ui.editor.vertical_cuts.created", { count: state.created })}
 				</p>
 			)}
-			{phase.name === "failed" && (
-				<div role="alert" className="text-sm">
-					<p className="font-medium text-destructive">
-						{errorHeadline(t, phase.code)}
-					</p>
-					<p lang="en">
-						<UntrustedText>{phase.message}</UntrustedText>
-					</p>
-					{phase.hint !== undefined && (
-						<p lang="en" className="text-muted-foreground">
-							<UntrustedText>{phase.hint}</UntrustedText>
-						</p>
-					)}
-				</div>
-			)}
+			{phase.name === "failed" &&
+				(() => {
+					const err = localizeError(
+						t,
+						{
+							code: phase.code,
+							message: phase.message,
+							hint: phase.hint,
+						},
+						{ locale },
+					);
+					const lang = err.localized ? undefined : "en";
+					return (
+						<div role="alert" className="text-sm">
+							<p className="font-medium text-destructive">{err.headline}</p>
+							<p lang={lang}>
+								<UntrustedText>{err.message}</UntrustedText>
+							</p>
+							{err.hint !== undefined && (
+								<p lang={lang} className="text-muted-foreground">
+									<UntrustedText>{err.hint}</UntrustedText>
+								</p>
+							)}
+						</div>
+					);
+				})()}
 			{state.offer !== null && (
 				<FaceInstallDialog
 					offer={state.offer}

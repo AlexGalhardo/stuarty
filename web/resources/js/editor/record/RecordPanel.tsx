@@ -4,7 +4,8 @@ import { type Failure, FailureNote } from "@/components/Failure";
 import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { useT } from "@/lib/i18n";
+import { useLocale, useT } from "@/lib/i18n";
+import { localizeError } from "@/lib/localizeError";
 import type {
 	Recording,
 	RecordingProposal,
@@ -60,6 +61,7 @@ function Step({
 	onClose: () => void;
 }): ReactNode {
 	const t = useT();
+	const locale = useLocale();
 	switch (view.step) {
 		case "loading":
 			return (
@@ -296,15 +298,19 @@ function Step({
 					</div>
 				</>
 			);
-		case "failed":
+		case "failed": {
+			const recErr =
+				view.recording.error !== undefined
+					? localizeError(t, view.recording.error, { locale })
+					: null;
 			return (
 				<>
 					<p role="alert" className="text-sm font-medium text-destructive">
 						{t("ui.editor.record.failed")}
 					</p>
-					{view.recording.error !== undefined && (
-						<p lang="en" className="text-xs">
-							<UntrustedText>{view.recording.error.message}</UntrustedText>
+					{recErr !== null && (
+						<p lang={recErr.localized ? undefined : "en"} className="text-xs">
+							<UntrustedText>{recErr.message}</UntrustedText>
 						</p>
 					)}
 					<div className="flex gap-2">
@@ -317,6 +323,7 @@ function Step({
 					</div>
 				</>
 			);
+		}
 		case "kept":
 			return (
 				<>

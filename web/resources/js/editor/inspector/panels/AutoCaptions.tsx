@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { useLocale, useT } from "@/lib/i18n";
+import { localizeError } from "@/lib/localizeError";
 import { ApiError } from "../../api/errors";
 import {
 	captionFromTranscriptOperations,
@@ -17,7 +18,6 @@ import { useActions, useCanEdit } from "../../commands/useActions";
 import { useStore } from "../../state/createStore";
 import { useDocumentState, useRuntime } from "../../state/EditorContext";
 import { selectOrderedTrackIds } from "../../state/selectors";
-import { errorHeadline } from "../../ui/errorHeadline";
 import { trackLabel } from "../../ui/trackLabel";
 import Section from "../Section";
 import InstallDialog from "./InstallDialog";
@@ -320,41 +320,63 @@ export default function AutoCaptions({
 					</p>
 				</div>
 			)}
-			{phase.name === "failed" && (
-				<div role="alert" className="text-xs">
-					<p className="font-medium text-destructive">
-						{errorHeadline(t, phase.code)}
-					</p>
-					<p lang="en">
-						<UntrustedText>{phase.message}</UntrustedText>
-					</p>
-					{phase.hint !== undefined && (
-						<p lang="en" className="text-muted-foreground">
-							<UntrustedText>{phase.hint}</UntrustedText>
-						</p>
-					)}
-				</div>
-			)}
-			{unavailable !== null && (
-				<div role="alert" className="text-xs" data-unavailable>
-					<p className="font-medium text-destructive">
-						{errorHeadline(t, unavailable.code)}
-					</p>
-					{unavailable.hint !== undefined && (
-						<p lang="en" className="text-muted-foreground">
-							<UntrustedText>{unavailable.hint}</UntrustedText>
-						</p>
-					)}
-					<Button
-						type="button"
-						variant="link"
-						size="sm"
-						onClick={() => setInstallOpen(true)}
-					>
-						{t("ui.editor.auto_captions.open_install")}
-					</Button>
-				</div>
-			)}
+			{phase.name === "failed" &&
+				(() => {
+					const err = localizeError(
+						t,
+						{
+							code: phase.code,
+							message: phase.message,
+							hint: phase.hint,
+						},
+						{ locale },
+					);
+					const lang = err.localized ? undefined : "en";
+					return (
+						<div role="alert" className="text-xs">
+							<p className="font-medium text-destructive">{err.headline}</p>
+							<p lang={lang}>
+								<UntrustedText>{err.message}</UntrustedText>
+							</p>
+							{err.hint !== undefined && (
+								<p lang={lang} className="text-muted-foreground">
+									<UntrustedText>{err.hint}</UntrustedText>
+								</p>
+							)}
+						</div>
+					);
+				})()}
+			{unavailable !== null &&
+				(() => {
+					const err = localizeError(
+						t,
+						{
+							code: unavailable.code,
+							message: unavailable.message,
+							hint: unavailable.hint,
+						},
+						{ locale },
+					);
+					const lang = err.localized ? undefined : "en";
+					return (
+						<div role="alert" className="text-xs" data-unavailable>
+							<p className="font-medium text-destructive">{err.headline}</p>
+							{err.hint !== undefined && (
+								<p lang={lang} className="text-muted-foreground">
+									<UntrustedText>{err.hint}</UntrustedText>
+								</p>
+							)}
+							<Button
+								type="button"
+								variant="link"
+								size="sm"
+								onClick={() => setInstallOpen(true)}
+							>
+								{t("ui.editor.auto_captions.open_install")}
+							</Button>
+						</div>
+					);
+				})()}
 			<InstallDialog
 				unavailable={installOpen ? unavailable : null}
 				onClose={() => setInstallOpen(false)}

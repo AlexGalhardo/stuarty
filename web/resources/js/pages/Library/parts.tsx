@@ -2,7 +2,8 @@ import type { ReactNode } from "react";
 import { StatusBadge } from "@/components/StatusBadge";
 import UntrustedText from "@/components/UntrustedText";
 import { Badge } from "@/components/ui/badge";
-import { useT } from "@/lib/i18n";
+import { useLocale, useT } from "@/lib/i18n";
+import { localizeLintFinding } from "@/lib/localizeError";
 import type { LibraryEntry, LibraryFinding, LibraryKind } from "./client";
 
 // The state of an entry as a word and an icon (SDD-018 section 14, design-system section 7): what the service says,
@@ -58,6 +59,7 @@ export function Findings({
 	findings: readonly LibraryFinding[];
 }): ReactNode {
 	const t = useT();
+	const locale = useLocale();
 	if (findings.length === 0) {
 		return (
 			<p className="text-sm text-text-muted">{t("ui.library.lint.none")}</p>
@@ -65,34 +67,37 @@ export function Findings({
 	}
 	return (
 		<ul className="flex flex-col gap-1 text-sm">
-			{findings.map((finding) => (
-				<li
-					key={`${finding.code}:${finding.path ?? ""}:${finding.line ?? 0}`}
-					data-severity={finding.severity}
-					className="flex flex-wrap gap-x-2"
-				>
-					<Badge
-						variant={finding.severity === "error" ? "destructive" : "outline"}
+			{findings.map((finding) => {
+				const localized = localizeLintFinding(t, finding, locale);
+				return (
+					<li
+						key={`${finding.code}:${finding.path ?? ""}:${finding.line ?? 0}`}
+						data-severity={finding.severity}
+						className="flex flex-wrap gap-x-2"
 					>
-						{finding.severity === "error"
-							? t("ui.library.lint.error")
-							: t("ui.library.lint.warning")}
-					</Badge>
-					<code>{finding.code}</code>
-					{finding.path !== undefined && (
-						<span>
-							<UntrustedText>
-								{finding.line === undefined
-									? finding.path
-									: `${finding.path}:${finding.line}`}
-							</UntrustedText>
+						<Badge
+							variant={finding.severity === "error" ? "destructive" : "outline"}
+						>
+							{finding.severity === "error"
+								? t("ui.library.lint.error")
+								: t("ui.library.lint.warning")}
+						</Badge>
+						<code>{finding.code}</code>
+						{finding.path !== undefined && (
+							<span>
+								<UntrustedText>
+									{finding.line === undefined
+										? finding.path
+										: `${finding.path}:${finding.line}`}
+								</UntrustedText>
+							</span>
+						)}
+						<span lang={localized.localized ? undefined : "en"}>
+							<UntrustedText>{localized.message}</UntrustedText>
 						</span>
-					)}
-					<span lang="en">
-						<UntrustedText>{finding.message}</UntrustedText>
-					</span>
-				</li>
-			))}
+					</li>
+				);
+			})}
 		</ul>
 	);
 }

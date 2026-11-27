@@ -35,6 +35,7 @@ import {
 	subscribeDesktopBridge,
 } from "@/lib/desktopBridge";
 import { type Translate, useLocale, useT } from "@/lib/i18n";
+import { localizeLintFinding } from "@/lib/localizeError";
 import { createClient } from "../api/client";
 import { ApiError } from "../api/errors";
 import { HttpTransport } from "../api/http";
@@ -121,6 +122,7 @@ function FindingList({
 	onResync(captionId: string): void;
 }): ReactNode {
 	const t = useT();
+	const locale = useLocale();
 	if (findings.length === 0) return null;
 	return (
 		<section className="mb-3">
@@ -129,44 +131,48 @@ function FindingList({
 				{title} ({findings.length})
 			</h3>
 			<ul className="mt-1 flex flex-col gap-2">
-				{findings.map((finding) => (
-					<li
-						key={`${finding.code}:${finding.item ?? ""}:${finding.message}`}
-						className="text-xs"
-					>
-						<span className="font-medium">{lintName(t, finding.code)}</span>{" "}
-						<span className="font-mono">{finding.code}</span>{" "}
-						<span lang="en">
-							<UntrustedText>{finding.message}</UntrustedText>
-						</span>
-						{typeof finding.hint === "string" && (
-							<p lang="en" className="text-muted-foreground">
-								<UntrustedText>{finding.hint}</UntrustedText>
-							</p>
-						)}
-						{finding.item !== undefined && (
-							<Button
-								type="button"
-								variant="link"
-								size="sm"
-								onClick={() => onGo(finding.item as string)}
-							>
-								{t("ui.editor.export.go_to", { item: finding.item })}
-							</Button>
-						)}
-						{finding.code === "L_CAPTION_DESYNC" &&
-							finding.item !== undefined && (
+				{findings.map((finding) => {
+					const localized = localizeLintFinding(t, finding, locale);
+					const lang = localized.localized ? undefined : "en";
+					return (
+						<li
+							key={`${finding.code}:${finding.item ?? ""}:${finding.message}`}
+							className="text-xs"
+						>
+							<span className="font-medium">{lintName(t, finding.code)}</span>{" "}
+							<span className="font-mono">{finding.code}</span>{" "}
+							<span lang={lang}>
+								<UntrustedText>{localized.message}</UntrustedText>
+							</span>
+							{typeof localized.hint === "string" && (
+								<p lang={lang} className="text-muted-foreground">
+									<UntrustedText>{localized.hint}</UntrustedText>
+								</p>
+							)}
+							{finding.item !== undefined && (
 								<Button
 									type="button"
 									variant="link"
 									size="sm"
-									onClick={() => onResync(finding.item as string)}
+									onClick={() => onGo(finding.item as string)}
 								>
-									{t("ui.editor.auto_captions.resync")}
+									{t("ui.editor.export.go_to", { item: finding.item })}
 								</Button>
 							)}
-					</li>
-				))}
+							{finding.code === "L_CAPTION_DESYNC" &&
+								finding.item !== undefined && (
+									<Button
+										type="button"
+										variant="link"
+										size="sm"
+										onClick={() => onResync(finding.item as string)}
+									>
+										{t("ui.editor.auto_captions.resync")}
+									</Button>
+								)}
+						</li>
+					);
+				})}
 			</ul>
 		</section>
 	);
@@ -742,7 +748,7 @@ export default function ExportDialog({
 											<li key={check.name}>
 												<span className="font-mono">{check.name}</span>
 												{" · "}
-												<span lang="en">
+												<span>
 													<UntrustedText>
 														{t("ui.editor.export.check_line", {
 															expected: check.expected,
