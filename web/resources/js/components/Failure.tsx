@@ -1,18 +1,19 @@
 import { type ReactNode, useEffect, useRef } from "react";
 
 import UntrustedText from "@/components/UntrustedText";
-import { useT } from "@/lib/i18n";
+import { useLocale, useT } from "@/lib/i18n";
+import { localizeError } from "@/lib/localizeError";
 import { ApiError } from "../editor/api/errors";
-import { errorHeadline } from "../editor/ui/errorHeadline";
 
-// The error of an action of a page as it came, so the person sees the message
-// and the hint of the core; the headline is localized.
+// The error of an action of a page: localized through the catalogue when the
+// code/reason is known, falling back to the core's English only for unknown codes.
 export interface Failure {
 	code: string;
 	message: string;
 	hint?: string;
 	// The field the core says is wrong (`made_for_kids`), so the page can mark it.
 	path?: string;
+	details?: { readonly [key: string]: unknown };
 }
 
 export function failureOf(error: unknown): Failure {
@@ -22,6 +23,7 @@ export function failureOf(error: unknown): Failure {
 			message: error.message,
 			hint: error.hint,
 			path: error.path,
+			details: error.details,
 		};
 	}
 	throw error;
@@ -55,6 +57,7 @@ export function FailureNote({
 	id?: string;
 }): ReactNode {
 	const t = useT();
+	const locale = useLocale();
 	const note = useRef<HTMLDivElement>(null);
 	// In a long dialog the note can sit below the fold: it comes into view when it appears.
 	useEffect(() => {
@@ -62,6 +65,8 @@ export function FailureNote({
 			note.current?.scrollIntoView?.({ block: "nearest" });
 	}, [failure]);
 	if (failure === null) return null;
+	const text = localizeError(t, failure, { locale });
+	const lang = text.localized ? undefined : "en";
 	return (
 		<div
 			ref={note}
@@ -69,13 +74,13 @@ export function FailureNote({
 			role="alert"
 			className="mt-2 text-sm text-destructive"
 		>
-			<p className="font-medium">{errorHeadline(t, failure.code)}</p>
-			<p lang="en">
-				<UntrustedText>{failure.message}</UntrustedText>
-				{failure.hint !== undefined && (
+			<p className="font-medium">{text.headline}</p>
+			<p lang={lang}>
+				<UntrustedText>{text.message}</UntrustedText>
+				{text.hint !== undefined && (
 					<>
 						{" "}
-						<UntrustedText>{failure.hint}</UntrustedText>
+						<UntrustedText>{text.hint}</UntrustedText>
 					</>
 				)}
 			</p>

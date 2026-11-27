@@ -3,6 +3,7 @@ import { type ReactNode, useEffect, useState } from "react";
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
 import { Badge } from "@/components/ui/badge";
 import { useT } from "@/lib/i18n";
+import { localizeCaptionProblem } from "@/lib/localizeError";
 import type { CaptionValidateResult, WritingClient } from "./client";
 import { keyed } from "./keyed";
 import Panel from "./Panel";
@@ -122,11 +123,17 @@ export default function CaptionPanel({
 								)}
 								{variant.problems.length > 0 && (
 									<ul className="list-disc pl-5 text-destructive">
-										{variant.problems.map((problem) => (
-											<li key={problem.code} lang="en">
-												{problem.message}
-											</li>
-										))}
+										{variant.problems.map((problem) => {
+											const text = localizeCaptionProblem(t, problem);
+											return (
+												<li
+													key={problem.code}
+													lang={text.localized ? undefined : "en"}
+												>
+													{text.text}
+												</li>
+											);
+										})}
 									</ul>
 								)}
 							</div>

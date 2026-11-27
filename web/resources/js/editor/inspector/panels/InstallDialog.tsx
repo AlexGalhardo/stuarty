@@ -14,6 +14,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { useLocale, useT } from "@/lib/i18n";
+import { localizeError } from "@/lib/localizeError";
 import { ApiError } from "../../api/errors";
 import ErrorBody from "../../commands/ErrorBody";
 import { useRuntime } from "../../state/EditorContext";
@@ -147,16 +148,30 @@ export default function InstallDialog({
 				</DialogHeader>
 
 				<div className="flex flex-col gap-3 text-sm">
-					<div>
-						<p lang="en">
-							<UntrustedText>{unavailable.message}</UntrustedText>
-						</p>
-						{unavailable.hint !== undefined && (
-							<p lang="en" className="text-muted-foreground">
-								<UntrustedText>{unavailable.hint}</UntrustedText>
-							</p>
-						)}
-					</div>
+					{(() => {
+						const err = localizeError(
+							t,
+							{
+								code: unavailable.code,
+								message: unavailable.message,
+								hint: unavailable.hint,
+							},
+							{ locale },
+						);
+						const lang = err.localized ? undefined : "en";
+						return (
+							<div>
+								<p lang={lang}>
+									<UntrustedText>{err.message}</UntrustedText>
+								</p>
+								{err.hint !== undefined && (
+									<p lang={lang} className="text-muted-foreground">
+										<UntrustedText>{err.hint}</UntrustedText>
+									</p>
+								)}
+							</div>
+						);
+					})()}
 
 					{unavailable.missing.length > 0 && (
 						<div>

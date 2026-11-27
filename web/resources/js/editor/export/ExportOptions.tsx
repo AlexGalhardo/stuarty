@@ -2,13 +2,15 @@ import type { ReactNode } from "react";
 
 import UntrustedText from "@/components/UntrustedText";
 import { Label } from "@/components/ui/label";
-import { useT } from "@/lib/i18n";
+import { useLocale, useT } from "@/lib/i18n";
+import { localizeError } from "@/lib/localizeError";
 import type { ExportCapabilities, ExportOptions } from "../api/types";
 
 export interface Unsupported {
 	code: string;
 	message: string;
 	hint?: string;
+	details?: { readonly [key: string]: unknown };
 }
 
 const SELECT =
@@ -79,6 +81,10 @@ export default function ExportOptionsFields({
 	onChange(next: ExportOptions): void;
 }): ReactNode {
 	const t = useT();
+	const locale = useLocale();
+	const unsupportedText =
+		unsupported !== null ? localizeError(t, unsupported, { locale }) : null;
+	const unsupportedLang = unsupportedText?.localized ? undefined : "en";
 	const { formats } = capabilities;
 	const format = value.format ?? "mp4";
 	const rangeSet =
@@ -136,15 +142,15 @@ export default function ExportOptionsFields({
 					</Label>
 				</div>
 			)}
-			{unsupported !== null && (
+			{unsupported !== null && unsupportedText !== null && (
 				<div role="alert" className="text-xs text-destructive">
 					<p className="font-mono">{unsupported.code}</p>
-					<p lang="en">
-						<UntrustedText>{unsupported.message}</UntrustedText>
+					<p lang={unsupportedLang}>
+						<UntrustedText>{unsupportedText.message}</UntrustedText>
 					</p>
-					{unsupported.hint !== undefined && (
-						<p lang="en">
-							<UntrustedText>{unsupported.hint}</UntrustedText>
+					{unsupportedText.hint !== undefined && (
+						<p lang={unsupportedLang}>
+							<UntrustedText>{unsupportedText.hint}</UntrustedText>
 						</p>
 					)}
 				</div>

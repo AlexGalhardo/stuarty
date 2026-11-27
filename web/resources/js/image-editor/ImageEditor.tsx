@@ -8,7 +8,8 @@ import { type ReactNode, useEffect, useMemo, useState } from "react";
 
 import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
-import { useT } from "@/lib/i18n";
+import { useLocale, useT } from "@/lib/i18n";
+import { localizeError } from "@/lib/localizeError";
 import { browserTimers } from "../editor/api/events";
 import { HttpTransport } from "../editor/api/http";
 import { useShell } from "../shell/ShellContext";
@@ -143,9 +144,12 @@ export default function ImageEditor({
 
 function Shell({ live }: { live: boolean }): ReactNode {
 	const t = useT();
+	const locale = useLocale();
 	const doc = useImage((s) => s.doc);
 	const load = useImage((s) => s.load);
 	const error = useImage((s) => s.error);
+	const localizedError =
+		error !== null ? localizeError(t, error, { locale }) : null;
 	const open = useImage((s) => s.open);
 	const onKeys = useEditorKeys();
 	const failed = load === "failed";
@@ -187,9 +191,12 @@ function Shell({ live }: { live: boolean }): ReactNode {
 										<h2 className="m-0 text-sm font-semibold">
 											{t("ui.image.editor.failed")}
 										</h2>
-										{error !== null && (
-											<p lang="en" className="mt-1 text-sm">
-												<UntrustedText>{error.message}</UntrustedText>
+										{localizedError !== null && (
+											<p
+												lang={localizedError.localized ? undefined : "en"}
+												className="mt-1 text-sm"
+											>
+												<UntrustedText>{localizedError.message}</UntrustedText>
 											</p>
 										)}
 									</div>

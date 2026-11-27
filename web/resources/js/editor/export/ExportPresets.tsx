@@ -3,7 +3,8 @@ import type { ReactNode } from "react";
 
 import UntrustedText from "@/components/UntrustedText";
 import { Label } from "@/components/ui/label";
-import { useT } from "@/lib/i18n";
+import { useLocale, useT } from "@/lib/i18n";
+import { localizeExportCheck } from "@/lib/localizeError";
 import type {
 	CodecAvailability,
 	ExportCheckResult,
@@ -25,6 +26,7 @@ function PresetCheckLine({
 	check: PresetCheck | undefined;
 }): ReactNode {
 	const t = useT();
+	const locale = useLocale();
 	if (check === undefined) return null;
 	if (check === "pending") {
 		return (
@@ -49,20 +51,23 @@ function PresetCheckLine({
 				{t("ui.editor.export.presets.does_not_fit")}
 			</p>
 			<ul className="list-disc pl-5">
-				{check.findings.map((finding) => (
-					<li key={finding.code}>
-						<span className="font-mono">{finding.code}</span>{" "}
-						<span lang="en">
-							<UntrustedText>{finding.message}</UntrustedText>
-						</span>{" "}
-						<span className="text-muted-foreground">
-							{t("ui.editor.export.presets.limit_line", {
-								limit: finding.limit,
-								got: finding.got,
-							})}
-						</span>
-					</li>
-				))}
+				{check.findings.map((finding) => {
+					const text = localizeExportCheck(t, finding, locale);
+					return (
+						<li key={finding.code}>
+							<span className="font-mono">{finding.code}</span>{" "}
+							<span lang={text.localized ? undefined : "en"}>
+								<UntrustedText>{text.text}</UntrustedText>
+							</span>{" "}
+							<span className="text-muted-foreground">
+								{t("ui.editor.export.presets.limit_line", {
+									limit: finding.limit,
+									got: finding.got,
+								})}
+							</span>
+						</li>
+					);
+				})}
 			</ul>
 		</div>
 	);

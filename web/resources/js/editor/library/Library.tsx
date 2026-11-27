@@ -18,14 +18,14 @@ import {
 	getDesktopBridge,
 	subscribeDesktopBridge,
 } from "@/lib/desktopBridge";
-import { useT } from "@/lib/i18n";
+import { useLocale, useT } from "@/lib/i18n";
+import { localizeError } from "@/lib/localizeError";
 import { OPEN_IMPORT_EVENT } from "../commands/openImport";
 import { useCanEdit } from "../commands/useActions";
 import RecordDialog from "../record/RecordDialog";
 import { useStore } from "../state/createStore";
 import { useDocumentState, useRuntime } from "../state/EditorContext";
 import EmptyState from "../ui/EmptyState";
-import { errorHeadline } from "../ui/errorHeadline";
 import AssetCard, { type AssetDragStart } from "./AssetCard";
 import { createImportQueue, parsePastedPaths } from "./importPaths";
 import { PanelTitle } from "./PanelFrame";
@@ -42,6 +42,7 @@ export default function Library({
 	onAssetDragStart?: AssetDragStart;
 }): ReactNode {
 	const t = useT();
+	const locale = useLocale();
 	const canEdit = useCanEdit();
 	const runtime = useRuntime();
 	// A library still waiting for the project is loading, not empty.
@@ -214,19 +215,24 @@ export default function Library({
 					{t("ui.editor.library.drop")}
 				</p>
 			)}
-			{importError !== null && (
-				<div role="alert" className="text-xs text-destructive">
-					<p className="font-medium">{errorHeadline(t, importError.code)}</p>
-					<p lang="en">
-						<UntrustedText>{importError.message}</UntrustedText>
-					</p>
-					{importError.hint !== undefined && (
-						<p lang="en" className="text-muted-foreground">
-							<UntrustedText>{importError.hint}</UntrustedText>
-						</p>
-					)}
-				</div>
-			)}
+			{importError !== null &&
+				(() => {
+					const err = localizeError(t, importError, { locale });
+					const lang = err.localized ? undefined : "en";
+					return (
+						<div role="alert" className="text-xs text-destructive">
+							<p className="font-medium">{err.headline}</p>
+							<p lang={lang}>
+								<UntrustedText>{err.message}</UntrustedText>
+							</p>
+							{err.hint !== undefined && (
+								<p lang={lang} className="text-muted-foreground">
+									<UntrustedText>{err.hint}</UntrustedText>
+								</p>
+							)}
+						</div>
+					);
+				})()}
 			{loading ? (
 				<div aria-busy="true" className="flex flex-col gap-2">
 					<Skeleton className="h-16" />

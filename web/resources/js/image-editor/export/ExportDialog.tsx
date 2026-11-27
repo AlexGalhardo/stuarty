@@ -12,7 +12,8 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useT } from "@/lib/i18n";
+import { useLocale, useT } from "@/lib/i18n";
+import { localizeLintFinding } from "@/lib/localizeError";
 import { fileUrl } from "../api/imageApi";
 import type { Finding, ImageExportResult } from "../api/types";
 import {
@@ -67,6 +68,7 @@ export function ExportTool(): ReactNode {
 
 function ExportDialog({ onClose }: { onClose(): void }): ReactNode {
 	const t = useT();
+	const locale = useLocale();
 	const api = useImageApi();
 	const store = useImageStore();
 	const doc = useImage((s) => s.doc);
@@ -200,45 +202,50 @@ function ExportDialog({ onClose }: { onClose(): void }): ReactNode {
 						</p>
 					) : (
 						<ul className="flex max-h-40 flex-col gap-1 overflow-y-auto">
-							{findings.map((finding) => (
-								<li
-									key={`${finding.code}-${finding.item ?? ""}`}
-									className="flex items-start justify-between gap-2 rounded-md border border-border bg-surface p-2 text-sm"
-								>
-									<span className="min-w-0">
-										<strong>
-											{t(
-												blocks(finding)
-													? "ui.image.export.error"
-													: "ui.image.export.warning",
-											)}
-										</strong>
-										{": "}
-										<span lang="en">
-											<UntrustedText>
-												{withLayerName(
-													finding.message,
-													finding.item,
-													finding.item === undefined
-														? undefined
-														: findLayer(doc.layers, finding.item)?.name,
+							{findings.map((finding) => {
+								const localized = localizeLintFinding(t, finding, locale);
+								const layerName =
+									finding.item === undefined
+										? undefined
+										: findLayer(doc.layers, finding.item)?.name;
+								const text =
+									locale === "en"
+										? withLayerName(finding.message, finding.item, layerName)
+										: layerName !== undefined
+											? `${layerName}: ${localized.message}`
+											: localized.message;
+								return (
+									<li
+										key={`${finding.code}-${finding.item ?? ""}`}
+										className="flex items-start justify-between gap-2 rounded-md border border-border bg-surface p-2 text-sm"
+									>
+										<span className="min-w-0">
+											<strong>
+												{t(
+													blocks(finding)
+														? "ui.image.export.error"
+														: "ui.image.export.warning",
 												)}
-											</UntrustedText>
+											</strong>
+											{": "}
+											<span lang={localized.localized ? undefined : "en"}>
+												<UntrustedText>{text}</UntrustedText>
+											</span>
 										</span>
-									</span>
-									{finding.item !== undefined && (
-										<Button
-											type="button"
-											variant="outline"
-											size="xs"
-											data-testid="image-finding-go"
-											onClick={() => goTo(finding)}
-										>
-											{t("ui.image.export.go_to_layer")}
-										</Button>
-									)}
-								</li>
-							))}
+										{finding.item !== undefined && (
+											<Button
+												type="button"
+												variant="outline"
+												size="xs"
+												data-testid="image-finding-go"
+												onClick={() => goTo(finding)}
+											>
+												{t("ui.image.export.go_to_layer")}
+											</Button>
+										)}
+									</li>
+								);
+							})}
 						</ul>
 					)}
 					{blocked.length > 0 && (

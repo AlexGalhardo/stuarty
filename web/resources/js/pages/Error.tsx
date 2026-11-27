@@ -6,7 +6,8 @@ import { Wordmark } from "@/components/AuthCard";
 import { NumberedStep } from "@/components/NumberedStep";
 import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
-import { useT } from "@/lib/i18n";
+import { useLocale, useT } from "@/lib/i18n";
+import { localizeError } from "@/lib/localizeError";
 
 type Kind = "not_found" | "forbidden" | "server" | "generic";
 
@@ -35,7 +36,12 @@ export default function ErrorPage({
 	hint?: string;
 }): ReactNode {
 	const t = useT();
+	const locale = useLocale();
 	const kind = kindOf(status);
+	const localized =
+		code !== undefined
+			? localizeError(t, { code, message, hint }, { locale })
+			: null;
 	return (
 		<>
 			<Head title={`${status} ${t(`ui.error.title.${kind}`)}`} />
@@ -64,6 +70,15 @@ export default function ErrorPage({
 					<p className="text-base text-text-muted">
 						{t(`ui.error.lead.${kind}`)}
 					</p>
+					{localized?.localized && (
+						<div className="rounded-md border border-border bg-surface-sunken px-3 py-2 text-sm text-text">
+							<p className="font-medium">{localized.headline}</p>
+							<p className="mt-0.5 text-text-muted">{localized.message}</p>
+							{localized.hint !== undefined && (
+								<p className="mt-0.5 text-text-muted">{localized.hint}</p>
+							)}
+						</div>
+					)}
 					<div data-testid="error-next">
 						<p className="mb-2 text-sm font-semibold">
 							{t("ui.error.how_to_fix")}

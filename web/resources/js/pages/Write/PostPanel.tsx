@@ -4,6 +4,7 @@ import { type Failure, FailureNote, failureOf } from "@/components/Failure";
 import UntrustedText from "@/components/UntrustedText";
 import { Badge } from "@/components/ui/badge";
 import { useT } from "@/lib/i18n";
+import { localizePostIssue } from "@/lib/localizeError";
 import type { PostCheckResult, WritingClient } from "./client";
 import { keyed } from "./keyed";
 import Panel from "./Panel";
@@ -105,11 +106,18 @@ export default function PostPanel({
 								data-testid="post-issues"
 							>
 								{keyed(report.issues, (i) => `${i.path}:${i.code}`).map(
-									({ key, item }) => (
-										<li key={key} data-code={item.code} lang="en">
-											{item.path}: {item.message}
-										</li>
-									),
+									({ key, item }) => {
+										const text = localizePostIssue(t, item);
+										return (
+											<li
+												key={key}
+												data-code={item.code}
+												lang={text.localized ? undefined : "en"}
+											>
+												{text.text}
+											</li>
+										);
+									},
 								)}
 							</ul>
 						</div>
