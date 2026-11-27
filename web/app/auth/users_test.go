@@ -260,3 +260,27 @@ func TestAdminBootstrapRefusesAWeakPassword(t *testing.T) {
 		t.Errorf("err = %v, want ErrPasswordLen", err)
 	}
 }
+
+func TestAdminBootstrapAcceptsDocumentedMatchingDefaults(t *testing.T) {
+	users := newUsers(t)
+
+	const defaultCred = "admin@stuarty.com"
+
+	env := bootstrapEnv(map[string]string{
+		auth.EnvAdminEmail:    defaultCred,
+		auth.EnvAdminPassword: defaultCred,
+	})
+
+	if err := auth.BootstrapAdmin(t.Context(), users, env, slog.New(slog.DiscardHandler)); err != nil {
+		t.Fatalf("BootstrapAdmin(%q, %q) failed: %v", defaultCred, defaultCred, err)
+	}
+
+	u, err := users.ByEmail(t.Context(), defaultCred)
+	if err != nil || u.Role != service.RoleAdmin {
+		t.Fatalf("admin = %+v, %v", u, err)
+	}
+
+	if ok, err := users.Hasher.Verify(u.Password, defaultCred); err != nil || !ok {
+		t.Fatalf("Verify(%q) = %v, %v; want true, nil", defaultCred, ok, err)
+	}
+}
