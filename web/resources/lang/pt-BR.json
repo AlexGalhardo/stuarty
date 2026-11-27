@@ -11,6 +11,7 @@
       "stage": "Etapa {number} de {total}: {step}",
       "media_optional": "Mídia é opcional: um texto pode seguir sem imagem nem vídeo.",
       "go_current": "Ir para a etapa atual",
+      "go_to_step": "Ir para a etapa: {step}",
       "open_text": "Abrir o texto",
       "lead": {
         "undecided": "Da ideia à publicação: quem faz cada etapa, com qual ferramenta, e quanto custa.",
@@ -259,6 +260,7 @@
       }
     },
     "shell": {
+      "back": "Voltar",
       "menu": "Abrir a navegação",
       "chat": "Chat",
       "breadcrumb": {
@@ -4630,6 +4632,8 @@
         "audio": "Áudio",
         "lut": "Tabela de cor"
       },
+      "open_video_editor": "Abrir no editor de vídeo",
+      "open_image_editor": "Abrir no editor de imagem",
       "reusable_badge": "Reutilizável",
       "count": {
         "one": "{count} arquivo",
