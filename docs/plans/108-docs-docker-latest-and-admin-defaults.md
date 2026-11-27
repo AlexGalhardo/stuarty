@@ -70,9 +70,9 @@ Every Docker command in Stuarty's documentation, README, and website guides uses
 
 ## Tasks
 
-- [ ] 1. Audit every occurrence of `ghcr.io/alexgalhardo/stuarty:X.Y.Z`, `STUARTY_ADMIN_EMAIL`, and `STUARTY_ADMIN_PASSWORD` across `docs/`, `site/`, `deploy/`, and `README.md`, and update all quick-start and self-hosting pages to `:latest` and `admin@stuarty.com` / `"admin@stuarty.com"`. Verify: `git grep "ghcr.io/alexgalhardo/stuarty:X.Y.Z" -- docs/ site/ deploy/ README.md` returns 0 matches.
-- [ ] 2. Update `site/lib/latest-release.ts` and `site/scripts/latest-release.test.ts` (including a doc-lint assertion against `:X.Y.Z` in `site/content/docs/`). Verify: `cd site && bun test && bun run check:last-updated && bun run build`.
-- [ ] 3. Add a Go regression test in `web/app/auth/` verifying `BootstrapAdmin` creates the admin user cleanly when email and password are both `admin@stuarty.com`, and run `task lint`. Verify: `go test ./web/app/auth/...` and `task lint` exit 0.
+- [x] 1. Audit every occurrence of `ghcr.io/alexgalhardo/stuarty:X.Y.Z`, `STUARTY_ADMIN_EMAIL`, and `STUARTY_ADMIN_PASSWORD` across `docs/`, `site/`, `deploy/`, and `README.md`, and update all quick-start and self-hosting pages to `:latest` and `admin@stuarty.com` / `"admin@stuarty.com"`. Verify: `git grep "ghcr.io/alexgalhardo/stuarty:X.Y.Z" -- docs/ site/ deploy/ README.md` returns 0 matches.
+- [x] 2. Update `site/lib/latest-release.ts` and `site/scripts/latest-release.test.ts` (including a doc-lint assertion against `:X.Y.Z` in `site/content/docs/`). Verify: `cd site && bun test && bun run check:last-updated && bun run build`.
+- [x] 3. Add a Go regression test in `web/app/auth/` verifying `BootstrapAdmin` creates the admin user cleanly when email and password are both `admin@stuarty.com`, and run `task lint`. Verify: `go test ./web/app/auth/...` and `task lint` exit 0.
 
 ## Test strategy
 
