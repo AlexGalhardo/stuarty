@@ -747,11 +747,11 @@ ffmpeg -nostdin -protocol_whitelist file,pipe
 | Encoder | Options |
 | --- | --- |
 | `h264_nvenc`, `h264_qsv`, `h264_amf`, `h264_videotoolbox`, `h264_vaapi` | `-b:v 8M` up to 30 fps, `-b:v 12M` above; High profile. The input arguments and the final filter differ per encoder (`h264_vaapi` needs a device and `hwupload`; plain `format=yuv420p` fails there): the export uses the `INPUT_ARGS` and `FILTER` that encoder detection recorded for the chosen encoder (SDD-011 §8.4) |
-| `h264_mf` | `-b:v 12M` up to 30 fps, `-b:v 16M` above, because its software encoder measured lower quality at equal bitrate |
+| `h264_mf` | `-b:v 12M` up to 30 fps, `-b:v 16M` above, because its software encoder measured lower quality at equal bitrate; no `-bf` (Windows Media Foundation drivers reject `-bf 2` on portrait and some hardware sessions) |
 | `libopenh264` | `-b:v 8M` up to 30 fps, `-b:v 12M` above; `-profile:v high` when accepted, else the encoder's default; no `-bf` |
 | `libx264` (user's own FFmpeg, opt-in) | `-crf 18 -preset medium -profile:v high` |
 
-For sizes other than 1080p the bitrate scales with the pixel count relative to 1080×1920 (`base × w × h / (1080 × 1920)`), with a floor of 2M. `-bf` is omitted for `libopenh264`, which rejects it. The rate is given in `k` (`8000k`), and `-fflags +bitexact -flags +bitexact` are on, so two runs of the same plan with the same build give the same file. The video filter is `scale=out_color_matrix=bt709:out_range=tv` followed by the filter that encoder detection recorded.
+For sizes other than 1080p the bitrate scales with the pixel count relative to 1080×1920 (`base × w × h / (1080 × 1920)`), with a floor of 2M. `-bf` is omitted for `libopenh264` and `h264_mf`, which reject it. The rate is given in `k` (`8000k`), and `-fflags +bitexact -flags +bitexact` are on, so two runs of the same plan with the same build give the same file. The video filter is `scale=out_color_matrix=bt709:out_range=tv` followed by the filter that encoder detection recorded. When `STUARTY_ENCODER` is not forced and the primary candidate fails during encode with an encoder failure (`ReasonEncoder`), the export deletes the partial file, recreates the frame renderer and retries with the next `EncoderOK` candidate in `EncoderOrder` (epic 100). If all candidates fail (or a forced encoder fails), `E_EXPORT_FAILED` carries scrubbed `details.encoder`, `details.tried_encoders` and `details.encoder_reason`.
 
 5. **Progress.** After every frame written the job's progress is `frames written / N`, published at most 4 times per second.
 6. **Cancellation.** Cancelling the context closes the pipes and kills both process trees; the partial file is deleted; the job ends `cancelled`.
