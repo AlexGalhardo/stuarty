@@ -1,4 +1,4 @@
-import { useT } from "@/lib/i18n";
+import { useLocale, useT } from "@/lib/i18n";
 import { useOptionalRuntime } from "../state/EditorContext";
 import { readTimeDisplay } from "../state/prefs";
 import { selectFps, selectItem } from "../state/selectors";
@@ -9,19 +9,25 @@ import { formatTime, fpsOf } from "./units";
 // the item names and the time display of the open project.
 export function useErrorText(): (error: ErrorLike) => ErrorText {
 	const t = useT();
+	const locale = useLocale();
 	const runtime = useOptionalRuntime();
 	return (error) =>
-		errorText(t, error, {
-			itemName: (id) => {
-				const state = runtime?.documents.getState();
-				const item = state === undefined ? undefined : selectItem(state, id);
-				if (item === undefined) return id;
-				return item.name ?? t(`ui.editor.item.${item.type}`);
+		errorText(
+			t,
+			error,
+			{
+				itemName: (id) => {
+					const state = runtime?.documents.getState();
+					const item = state === undefined ? undefined : selectItem(state, id);
+					if (item === undefined) return id;
+					return item.name ?? t(`ui.editor.item.${item.type}`);
+				},
+				time: (frame) => {
+					const state = runtime?.documents.getState();
+					const fps = fpsOf(state === undefined ? undefined : selectFps(state));
+					return formatTime(frame, fps, readTimeDisplay());
+				},
 			},
-			time: (frame) => {
-				const state = runtime?.documents.getState();
-				const fps = fpsOf(state === undefined ? undefined : selectFps(state));
-				return formatTime(frame, fps, readTimeDisplay());
-			},
-		});
+			locale,
+		);
 }

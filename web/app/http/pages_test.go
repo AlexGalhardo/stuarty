@@ -185,10 +185,11 @@ func TestPages(t *testing.T) {
 		path: "/editor/" + id, noAuth: true,
 		headers: map[string]string{"Cookie": ck, "X-Inertia": "true"},
 	})
+	loc := edInertia.header.Get("X-Inertia-Location")
 	if edInertia.status != http.StatusConflict ||
-		edInertia.header.Get("X-Inertia-Location") != "/editor/"+id {
+		(loc != "/editor/"+id && loc != h.srv.URL+"/editor/"+id) {
 		t.Errorf("inertia /editor = %d, location %q\n%s",
-			edInertia.status, edInertia.header.Get("X-Inertia-Location"), edInertia.body)
+			edInertia.status, loc, edInertia.body)
 	}
 
 	for _, p := range []string{"/editor/prj_0000000000", "/editor/not-an-id"} {

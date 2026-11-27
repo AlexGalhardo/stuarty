@@ -114,19 +114,25 @@ describe("errorText (VV-126)", () => {
 		}
 	});
 
-	it("falls back to the server English without an entry or without the details", () => {
+	it("localizes known codes without details in pt-BR and falls back only for unknown future codes", () => {
 		for (const error of [
 			{ code: "E_NOT_FOUND", message: "Item itm_z not found", hint: "h" },
 			{ code: "E_OVERLAP", message: "Item overlaps", hint: "h" },
 			{ code: "E_VALIDATION", message: "bad", hint: "h", details: {} },
-			{ code: "E_UNKNOWN_FUTURE", message: "bad", hint: "h" },
 		]) {
 			const text = run("pt-BR", error);
-			expect(text).toEqual({
-				message: error.message,
-				hint: "h",
-				localized: false,
-			});
+			expect(text.localized).toBe(true);
+			expect(text.message).not.toBe(error.message);
 		}
+		const unknown = run("pt-BR", {
+			code: "E_UNKNOWN_FUTURE",
+			message: "bad",
+			hint: "h",
+		});
+		expect(unknown).toEqual({
+			message: "bad",
+			hint: "h",
+			localized: false,
+		});
 	});
 });
