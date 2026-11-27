@@ -99,8 +99,9 @@ export default function SceneBar({
 	project = null,
 	connected,
 	busy,
+	chatOpen,
 	onAnswer,
-	onOpenChat,
+	onToggleChat,
 	next = null,
 }: {
 	model: SceneModel;
@@ -111,8 +112,9 @@ export default function SceneBar({
 	// whether an agent profile exists: null until the list was read
 	connected: boolean | null;
 	busy: boolean;
+	chatOpen: boolean;
 	onAnswer(requestId: string, answer: "allow" | "reject"): void;
-	onOpenChat(): void;
+	onToggleChat(): void;
 }): ReactNode {
 	const t = useT();
 	const { privileged } = useSession();
@@ -282,19 +284,6 @@ export default function SceneBar({
 				)}
 			</Slot>
 			<div className="ms-auto flex flex-wrap items-center gap-2 max-md:w-full max-md:justify-end">
-				{variant === "none" && (
-					<Button
-						type="button"
-						size="sm"
-						variant="outline"
-						onClick={onOpenChat}
-						data-testid="scene-open-chat"
-					>
-						{connected === false
-							? t("ui.shell.scene.connect")
-							: t("ui.shell.scene.open_chat")}
-					</Button>
-				)}
 				{asking && (
 					<>
 						<Button
@@ -320,15 +309,21 @@ export default function SceneBar({
 						</Button>
 					</>
 				)}
-				{variant !== "none" && !asking && (
+				{!asking && (
 					<Button
 						type="button"
 						size="sm"
-						variant="ghost"
-						onClick={onOpenChat}
+						variant={variant === "none" ? "outline" : "ghost"}
+						aria-expanded={chatOpen}
+						aria-controls="chat-panel"
+						onClick={onToggleChat}
 						data-testid="scene-open-chat"
 					>
-						{t("ui.shell.scene.open_chat")}
+						{t(
+							chatOpen
+								? "ui.shell.scene.close_chat"
+								: "ui.shell.scene.open_chat",
+						)}
 					</Button>
 				)}
 			</div>

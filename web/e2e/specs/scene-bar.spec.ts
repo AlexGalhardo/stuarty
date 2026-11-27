@@ -281,7 +281,18 @@ test.describe("scene bar", () => {
 		);
 		await expect(page.getByTestId("scene-tool")).toContainText("None in use");
 		await expect(page.getByTestId("scene-allow")).toHaveCount(0);
-		await expect(bar).toContainText("Open chat");
+		const chat = bar.getByTestId("scene-open-chat");
+		await expect(chat).toHaveAccessibleName("Open Chat");
+		await expect(chat).toHaveAttribute("aria-expanded", "false");
+
+		await chat.click();
+		await expect(page.getByTestId("chat-panel")).toBeVisible();
+		await expect(chat).toHaveAccessibleName("Close Chat");
+		await expect(chat).toHaveAttribute("aria-expanded", "true");
+
+		await chat.click();
+		await expect(page.getByTestId("chat-panel")).toBeHidden();
+		await expect(chat).toHaveAccessibleName("Open Chat");
 	});
 
 	// The activity strip makes the chat panel taller: in a short window the panel scrolls, so the composer is reached

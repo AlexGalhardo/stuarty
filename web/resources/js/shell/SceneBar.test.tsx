@@ -26,7 +26,11 @@ const events = (...list: Partial<ChatEvent>[]): ChatEvent[] =>
 
 function draw(
 	model: SceneModel,
-	options: { connected?: boolean | null; privileged?: boolean } = {},
+	options: {
+		connected?: boolean | null;
+		privileged?: boolean;
+		chatOpen?: boolean;
+	} = {},
 ): string {
 	return renderToString(
 		<Frame privileged={options.privileged ?? true}>
@@ -34,8 +38,9 @@ function draw(
 				model={model}
 				connected={options.connected ?? true}
 				busy={false}
+				chatOpen={options.chatOpen ?? false}
 				onAnswer={() => undefined}
-				onOpenChat={() => undefined}
+				onToggleChat={() => undefined}
 			/>
 		</Frame>,
 	);
@@ -71,12 +76,16 @@ describe("SceneBar variants", () => {
 		expect(html).toMatch(/data-testid="scene-tool".*None in use/s);
 		expect(html).not.toContain("Not reported");
 		expect(html).not.toContain("scene-allow");
-		expect(html).toContain("Open chat");
+		expect(html).toContain("Open Chat");
 	});
 
-	test("none with no agent connected offers to connect one", () => {
-		expect(draw(sceneOf(null, []), { connected: false })).toContain(
-			"Connect an agent",
+	test("the chat button describes its current action, including when setup is needed", () => {
+		const model = sceneOf(null, []);
+		expect(draw(model, { connected: false })).toMatch(
+			/aria-expanded="false"[^>]*data-testid="scene-open-chat"[^>]*>Open Chat/,
+		);
+		expect(draw(model, { connected: false, chatOpen: true })).toMatch(
+			/aria-expanded="true"[^>]*data-testid="scene-open-chat"[^>]*>Close Chat/,
 		);
 	});
 
@@ -364,8 +373,9 @@ describe("SceneBar variants", () => {
 					project="<b>Launch</b>"
 					connected
 					busy={false}
+					chatOpen={false}
 					onAnswer={() => undefined}
-					onOpenChat={() => undefined}
+					onToggleChat={() => undefined}
 				/>
 			</Frame>,
 		);

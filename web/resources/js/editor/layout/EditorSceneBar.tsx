@@ -104,7 +104,7 @@ export function EditorShellFrame({
 // reading the same session of the agent for this project, so a permission is answered here without leaving. The
 // bar reports what the service says; Allow and Deny send the call the chat panel sends.
 export default function EditorSceneBar(): ReactNode {
-	const { chat } = useShell();
+	const { chat, chatOpen, setChatOpen } = useShell();
 	const open = useOpenEditorChat();
 	return (
 		<SceneBar
@@ -114,8 +114,9 @@ export default function EditorSceneBar(): ReactNode {
 				chat.profiles === null ? null : chat.profiles.profiles.length > 0
 			}
 			busy={chat.busy}
+			chatOpen={chatOpen}
 			onAnswer={(requestId, answer) => void chat.answer(requestId, answer)}
-			onOpenChat={open}
+			onToggleChat={() => (chatOpen ? setChatOpen(false) : open())}
 		/>
 	);
 }
