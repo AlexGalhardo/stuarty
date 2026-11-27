@@ -1,5 +1,6 @@
 import { type ReactNode, useState } from "react";
 
+import { FieldLabel } from "@/components/FieldHelp";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -9,7 +10,6 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useT } from "@/lib/i18n";
 import { useActions } from "../commands/useActions";
@@ -51,19 +51,27 @@ export default function AddCaptionDialog({
 					}}
 				>
 					<div className="flex flex-col gap-1">
-						<Label htmlFor="caption-text">{t("ui.editor.caption.text")}</Label>
+						<FieldLabel
+							htmlFor="caption-text"
+							label={t("ui.editor.caption.text")}
+							help={t("ui.help.g5.add_caption_text_help")}
+						/>
 						<Textarea
 							id="caption-text"
+							placeholder={t("ui.help.g5.add_caption_text_ph")}
 							value={text}
 							onChange={(event) => setText(event.target.value)}
 						/>
 					</div>
 					<div className="flex flex-col gap-1">
-						<Label htmlFor="caption-duration">
-							{t("ui.editor.caption.duration")}
-						</Label>
+						<FieldLabel
+							htmlFor="caption-duration"
+							label={t("ui.editor.caption.duration")}
+							help={t("ui.help.g5.add_caption_dur_help")}
+						/>
 						<Input
 							id="caption-duration"
+							placeholder={t("ui.help.g5.add_caption_dur_ph")}
 							value={duration}
 							onChange={(event) => setDuration(event.target.value)}
 						/>

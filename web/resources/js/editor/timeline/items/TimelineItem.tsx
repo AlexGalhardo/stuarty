@@ -67,6 +67,8 @@ function RenameField({
 		<Input
 			autoFocus
 			aria-label={t("ui.editor.edit.rename_label")}
+			placeholder={t("ui.help.g5.rename_inline_ph")}
+			title={t("ui.help.g5.rename_inline_help")}
 			defaultValue={initial}
 			maxLength={120}
 			className="h-6 min-w-0 flex-1 px-1 text-xs text-foreground"

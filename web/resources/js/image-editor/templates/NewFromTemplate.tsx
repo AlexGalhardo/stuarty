@@ -3,6 +3,7 @@ import { type FormEvent, type ReactNode, useEffect, useState } from "react";
 
 import { EmptyState } from "@/components/EmptyState";
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
+import { FieldLabel } from "@/components/FieldHelp";
 import { SectionTitle } from "@/components/SectionTitle";
 import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
@@ -164,11 +165,14 @@ export default function NewFromTemplate({ api }: { api: ImageApi }): ReactNode {
 							</select>
 						</div>
 						<div className="flex flex-col gap-1">
-							<Label htmlFor="image-template-name">
-								{t("ui.image.index.name")}
-							</Label>
+							<FieldLabel
+								htmlFor="image-template-name"
+								label={t("ui.image.index.name")}
+								help={t("ui.help.g5.img_tpl_name_help")}
+							/>
 							<Input
 								id="image-template-name"
+								placeholder={t("ui.help.g5.img_tpl_name_ph")}
 								value={name}
 								maxLength={120}
 								onChange={(event) => setName(event.target.value)}
@@ -192,6 +196,8 @@ export default function NewFromTemplate({ api }: { api: ImageApi }): ReactNode {
 								{slot.kind === "text" ? (
 									<Input
 										id={id}
+										placeholder={t("ui.help.g5.img_tpl_slot_ph")}
+										title={t("ui.help.g5.img_tpl_slot_help")}
 										value={values[slot.name]?.text ?? ""}
 										onChange={(event) =>
 											setValues({

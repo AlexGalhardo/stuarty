@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 import { Input } from "@/components/ui/input";
+import { useT } from "@/lib/i18n";
 import type { CommitResult } from "./commitField";
 import { FieldRow } from "./FieldFrame";
 import { useCommitField } from "./useCommitField";
@@ -19,6 +20,7 @@ export default function TextField({
 	disabled?: boolean;
 	maxLength?: number;
 }): ReactNode {
+	const t = useT();
 	const binding = useCommitField(stored, commit);
 	return (
 		<FieldRow label={label} state={binding}>
@@ -26,6 +28,7 @@ export default function TextField({
 				<Input
 					{...binding.input}
 					id={ids.control}
+					placeholder={t("ui.help.g5.text_value_ph")}
 					aria-describedby={binding.error ? ids.message : undefined}
 					disabled={disabled}
 					maxLength={maxLength}

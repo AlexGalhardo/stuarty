@@ -102,6 +102,8 @@ export default function ColorField({
 							autoComplete="off"
 							spellCheck={false}
 							disabled={disabled}
+							placeholder={t("ui.help.g5.color_hex_ph")}
+							title={t("ui.help.g5.color_hex_help")}
 							aria-describedby={binding.error ? ids.message : undefined}
 							className="h-8 min-w-0 flex-1 font-mono"
 						/>

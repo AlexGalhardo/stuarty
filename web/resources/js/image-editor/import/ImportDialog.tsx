@@ -1,6 +1,7 @@
 import { type FormEvent, type ReactNode, useState } from "react";
 
 import { type Failure, FailureNote } from "@/components/Failure";
+import { FieldLabel } from "@/components/FieldHelp";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -87,9 +88,11 @@ export default function ImportDialog({
 						</p>
 					</div>
 					<div className="flex flex-col gap-1">
-						<Label htmlFor="image-import-path">
-							{t("ui.image.import.path")}
-						</Label>
+						<FieldLabel
+							htmlFor="image-import-path"
+							label={t("ui.image.import.path")}
+							help={t("ui.help.g5.img_import_path_help")}
+						/>
 						<Input
 							id="image-import-path"
 							value={path}
@@ -99,9 +102,11 @@ export default function ImportDialog({
 						/>
 					</div>
 					<div className="flex flex-col gap-1">
-						<Label htmlFor="image-import-name">
-							{t("ui.image.import.name")}
-						</Label>
+						<FieldLabel
+							htmlFor="image-import-name"
+							label={t("ui.image.import.name")}
+							help={t("ui.help.g5.img_import_name_help")}
+						/>
 						<Input
 							id="image-import-name"
 							value={name}

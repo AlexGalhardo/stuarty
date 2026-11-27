@@ -64,6 +64,7 @@ function NumberCell({
 	disabled: boolean;
 	commit(draft: string): Promise<CommitResult>;
 }): ReactNode {
+	const t = useT();
 	const binding = useCommitField(String(stored), commit);
 	return (
 		<div className="flex min-w-14 flex-1 flex-col gap-0.5">
@@ -75,6 +76,8 @@ function NumberCell({
 					inputMode="decimal"
 					autoComplete="off"
 					spellCheck={false}
+					placeholder={t("ui.help.g5.bezier_num_ph")}
+					title={t("ui.help.g5.bezier_num_help")}
 					className="mt-0.5 h-7 min-w-14 px-1 font-mono text-xs"
 				/>
 			</Label>

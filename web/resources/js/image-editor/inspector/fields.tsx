@@ -104,6 +104,8 @@ export function NumberField({
 					id={id}
 					data-testid={testId}
 					inputMode="numeric"
+					placeholder={t("ui.help.g5.img_num_ph")}
+					title={t("ui.help.g5.img_num_help")}
 					value={draft}
 					disabled={disabled}
 					aria-invalid={bad || undefined}
@@ -164,6 +166,7 @@ export function TextField({
 	testId?: string;
 }): ReactNode {
 	const id = useId();
+	const t = useT();
 	const { draft, edit: setDraft, run } = useDraft(value);
 	const commit = (): void => {
 		if (draft !== value) run(onCommit, draft);
@@ -188,6 +191,8 @@ export function TextField({
 				<textarea
 					{...common}
 					rows={3}
+					placeholder={t("ui.help.g5.text_multiline_ph")}
+					title={t("ui.help.g5.img_text_help")}
 					onKeyDown={(event) => {
 						if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
 							event.preventDefault();
@@ -199,6 +204,8 @@ export function TextField({
 			) : (
 				<Input
 					{...common}
+					placeholder={t("ui.help.g5.text_value_ph")}
+					title={t("ui.help.g5.img_text_help")}
 					className="font-mono text-xs"
 					onKeyDown={(event) => {
 						if (event.key === "Enter") {
@@ -331,7 +338,12 @@ export function ColorField({
 					data-testid={testId}
 					value={draft}
 					disabled={disabled}
-					placeholder={allowEmpty ? t("ui.image.inspector.none") : undefined}
+					placeholder={
+						allowEmpty
+							? t("ui.image.inspector.none")
+							: t("ui.help.g5.color_hex_ph")
+					}
+					title={t("ui.help.g5.color_hex_help")}
 					onChange={(event) => setDraft(event.target.value)}
 					onBlur={commit}
 					onKeyDown={(event) => {

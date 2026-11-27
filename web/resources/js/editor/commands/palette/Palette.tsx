@@ -292,6 +292,7 @@ export default function Palette({
 								}
 								aria-label={t("ui.editor.palette.search")}
 								placeholder={t("ui.editor.palette.search")}
+								title={t("ui.help.g5.palette_search_help")}
 								className="h-10 pl-8"
 								value={query}
 								onChange={(event) => {

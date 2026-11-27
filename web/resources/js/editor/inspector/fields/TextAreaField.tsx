@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 import { Textarea } from "@/components/ui/textarea";
+import { useT } from "@/lib/i18n";
 import type { CommitResult } from "./commitField";
 import { FieldRow } from "./FieldFrame";
 import { useCommitField } from "./useCommitField";
@@ -20,6 +21,7 @@ export default function TextAreaField({
 	disabled?: boolean;
 	maxLength?: number;
 }): ReactNode {
+	const t = useT();
 	const binding = useCommitField(stored, commit);
 	const { field } = binding;
 	return (
@@ -30,6 +32,7 @@ export default function TextAreaField({
 					value={binding.text}
 					disabled={disabled}
 					maxLength={maxLength}
+					placeholder={t("ui.help.g5.text_multiline_ph")}
 					aria-busy={binding.busy}
 					aria-invalid={binding.error ? true : undefined}
 					aria-describedby={binding.error ? ids.message : undefined}

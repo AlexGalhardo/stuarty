@@ -1,6 +1,7 @@
 import { CircleAlert, CircleCheck, Clapperboard, Copy } from "lucide-react";
 import { type ReactNode, useId, useState } from "react";
 
+import { FieldLabel } from "@/components/FieldHelp";
 import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,19 +22,30 @@ const SELECT =
 function Field({
 	label,
 	hint,
+	help,
 	children,
 }: {
 	label: string;
 	hint?: string;
+	help?: string;
 	children: (id: string, describedBy: string | undefined) => ReactNode;
 }): ReactNode {
 	const id = useId();
 	const hintId = hint === undefined ? undefined : `${id}-hint`;
 	return (
 		<div className="flex flex-col gap-1">
-			<Label htmlFor={id} className="text-xs">
-				{label}
-			</Label>
+			{help !== undefined ? (
+				<FieldLabel
+					htmlFor={id}
+					label={label}
+					help={help}
+					className="text-xs"
+				/>
+			) : (
+				<Label htmlFor={id} className="text-xs">
+					{label}
+				</Label>
+			)}
 			{children(id, hintId)}
 			{hint !== undefined && (
 				<p id={hintId} className="text-xs text-muted-foreground">
@@ -118,22 +130,30 @@ export default function MotionPanel(): ReactNode {
 			>
 				<StepHeading n={1}>{t("ui.editor.handoff.step_brief")}</StepHeading>
 				<div className="grid grid-cols-2 gap-2">
-					<Field label={t("ui.editor.handoff.from")}>
+					<Field
+						label={t("ui.editor.handoff.from")}
+						help={t("ui.help.g5.handoff_from_help")}
+					>
 						{(id) => (
 							<Input
 								id={id}
 								value={from}
 								placeholder={t("ui.editor.handoff.from_placeholder")}
+								title={t("ui.help.g5.handoff_from_help")}
 								onChange={(event) => setFrom(event.target.value)}
 							/>
 						)}
 					</Field>
-					<Field label={t("ui.editor.handoff.until")}>
+					<Field
+						label={t("ui.editor.handoff.until")}
+						help={t("ui.help.g5.handoff_until_help")}
+					>
 						{(id) => (
 							<Input
 								id={id}
 								value={until}
 								placeholder={t("ui.editor.handoff.until_placeholder")}
+								title={t("ui.help.g5.handoff_until_help")}
 								onChange={(event) => setUntil(event.target.value)}
 							/>
 						)}
@@ -277,34 +297,50 @@ export default function MotionPanel(): ReactNode {
 						<Input
 							id={id}
 							aria-describedby={describedBy}
+							placeholder={t("ui.help.g5.handoff_path_ph")}
 							value={path}
 							onChange={(event) => setPath(event.target.value)}
 						/>
 					)}
 				</Field>
-				<Field label={t("ui.editor.handoff.source")}>
+				<Field
+					label={t("ui.editor.handoff.source")}
+					help={t("ui.help.g5.handoff_source_help")}
+				>
 					{(id) => (
 						<Input
 							id={id}
+							placeholder={t("ui.help.g5.handoff_source_ph")}
+							title={t("ui.help.g5.handoff_source_help")}
 							value={source}
 							onChange={(event) => setSource(event.target.value)}
 						/>
 					)}
 				</Field>
 				<div className="grid grid-cols-2 gap-2">
-					<Field label={t("ui.editor.handoff.engine")}>
+					<Field
+						label={t("ui.editor.handoff.engine")}
+						help={t("ui.help.g5.handoff_engine_help")}
+					>
 						{(id) => (
 							<Input
 								id={id}
+								placeholder={t("ui.help.g5.handoff_engine_ph")}
+								title={t("ui.help.g5.handoff_engine_help")}
 								value={engine}
 								onChange={(event) => setEngine(event.target.value)}
 							/>
 						)}
 					</Field>
-					<Field label={t("ui.editor.handoff.engine_version")}>
+					<Field
+						label={t("ui.editor.handoff.engine_version")}
+						help={t("ui.help.g5.handoff_ver_help")}
+					>
 						{(id) => (
 							<Input
 								id={id}
+								placeholder={t("ui.help.g5.handoff_ver_ph")}
+								title={t("ui.help.g5.handoff_ver_help")}
 								value={engineVersion}
 								onChange={(event) => setEngineVersion(event.target.value)}
 							/>
@@ -319,6 +355,7 @@ export default function MotionPanel(): ReactNode {
 						<Input
 							id={id}
 							aria-describedby={describedBy}
+							placeholder={t("ui.help.g5.handoff_key_ph")}
 							value={renderKey}
 							onChange={(event) => setRenderKey(event.target.value)}
 						/>

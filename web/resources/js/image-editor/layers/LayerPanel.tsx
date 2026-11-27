@@ -500,6 +500,7 @@ function RenameField({
 	label: string;
 	onDone(name: string | null): void;
 }): ReactNode {
+	const t = useT();
 	const [text, setText] = useState(value);
 	const ref = useRef<HTMLInputElement>(null);
 	useEffect(() => {
@@ -509,6 +510,8 @@ function RenameField({
 		<input
 			ref={ref}
 			aria-label={label}
+			placeholder={t("ui.help.g5.rename_inline_ph")}
+			title={t("ui.help.g5.rename_inline_help")}
 			value={text}
 			maxLength={120}
 			onChange={(event) => setText(event.target.value)}

@@ -155,7 +155,9 @@ export default function FindBar(): ReactNode {
 					role="searchbox"
 					value={query}
 					aria-label={t("ui.editor.find.label")}
+					aria-describedby="editor-find-status"
 					placeholder={t("ui.editor.find.placeholder")}
+					title={t("ui.editor.find.hint")}
 					onChange={(event) => {
 						setQuery(event.target.value);
 						setCurrent(-1);
@@ -171,7 +173,11 @@ export default function FindBar(): ReactNode {
 					<X aria-hidden="true" />
 				</Button>
 			</div>
-			<p role="status" className="text-xs text-muted-foreground">
+			<p
+				id="editor-find-status"
+				role="status"
+				className="text-xs text-muted-foreground"
+			>
 				{query.trim() === ""
 					? t("ui.editor.find.hint")
 					: matches.length === 0

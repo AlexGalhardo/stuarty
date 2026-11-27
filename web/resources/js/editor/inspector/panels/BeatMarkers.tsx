@@ -1,8 +1,8 @@
 import { type ReactNode, useState } from "react";
 
+import { FieldLabel } from "@/components/FieldHelp";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useT } from "@/lib/i18n";
 import { markBeatsOperations } from "../../commands/builders";
 import { useActions, useCanEdit } from "../../commands/useActions";
@@ -44,13 +44,17 @@ export default function BeatMarkers({ itemId }: { itemId: string }): ReactNode {
 				}}
 			/>
 			<div className="flex flex-col gap-1">
-				<Label htmlFor={`beats-label-${itemId}`} className="text-xs">
-					{t("ui.editor.audio.beats_label")}
-				</Label>
+				<FieldLabel
+					htmlFor={`beats-label-${itemId}`}
+					label={t("ui.editor.audio.beats_label")}
+					help={t("ui.help.g5.beats_label_help")}
+					className="text-xs"
+				/>
 				<Input
 					id={`beats-label-${itemId}`}
 					value={label}
 					maxLength={60}
+					placeholder={t("ui.help.g5.beats_label_ph")}
 					disabled={!canEdit}
 					className="h-8"
 					onChange={(event) => setLabel(event.target.value)}

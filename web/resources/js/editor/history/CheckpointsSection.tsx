@@ -1,10 +1,10 @@
 import { type FormEvent, type ReactNode, useEffect, useState } from "react";
 
+import { FieldLabel } from "@/components/FieldHelp";
 import UntrustedText from "@/components/UntrustedText";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useT } from "@/lib/i18n";
 import { ApiError } from "../api/errors";
 import type { Checkpoint } from "../api/types";
@@ -89,13 +89,17 @@ export default function CheckpointsSection({
 			</h3>
 			<form className="flex flex-wrap items-end gap-2" onSubmit={add}>
 				<div className="flex min-w-28 flex-1 flex-col gap-1">
-					<Label htmlFor="checkpoint-name" className="text-xs">
-						{t("ui.editor.history.checkpoint_label")}
-					</Label>
+					<FieldLabel
+						htmlFor="checkpoint-name"
+						label={t("ui.editor.history.checkpoint_label")}
+						help={t("ui.help.g5.checkpoint_help")}
+						className="text-xs"
+					/>
 					<Input
 						id="checkpoint-name"
 						value={name}
 						maxLength={60}
+						placeholder={t("ui.help.g5.checkpoint_ph")}
 						disabled={!canEdit}
 						onChange={(e) => setName(e.target.value)}
 					/>

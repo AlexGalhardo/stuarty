@@ -1,5 +1,6 @@
 import { type ReactNode, useEffect, useState } from "react";
 
+import { FieldLabel } from "@/components/FieldHelp";
 import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -59,35 +60,44 @@ function SlotRow({ row }: { row: Row }): ReactNode {
 			) : (
 				<div className="flex items-end gap-2">
 					<div className="flex min-w-0 flex-1 flex-col gap-1">
-						<Label htmlFor={id} className="text-xs">
-							{row.kind === "media"
-								? t("ui.editor.slots.asset")
-								: t("ui.editor.slots.text")}
-						</Label>
 						{row.kind === "media" ? (
-							<select
-								id={id}
-								value={draft}
-								disabled={!canEdit}
-								className="h-8 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30"
-								onChange={(event) => setDraft(event.target.value)}
-							>
-								<option value="">{t("ui.editor.slots.choose")}</option>
-								{Object.values(assets ?? {}).map((asset) => (
-									<option key={asset.id} value={asset.id}>
-										{shown.get(asset.id) ?? asset.name}
-									</option>
-								))}
-							</select>
+							<>
+								<Label htmlFor={id} className="text-xs">
+									{t("ui.editor.slots.asset")}
+								</Label>
+								<select
+									id={id}
+									value={draft}
+									disabled={!canEdit}
+									className="h-8 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30"
+									onChange={(event) => setDraft(event.target.value)}
+								>
+									<option value="">{t("ui.editor.slots.choose")}</option>
+									{Object.values(assets ?? {}).map((asset) => (
+										<option key={asset.id} value={asset.id}>
+											{shown.get(asset.id) ?? asset.name}
+										</option>
+									))}
+								</select>
+							</>
 						) : (
-							<Input
-								id={id}
-								value={draft}
-								maxLength={2000}
-								disabled={!canEdit}
-								className="h-8"
-								onChange={(event) => setDraft(event.target.value)}
-							/>
+							<>
+								<FieldLabel
+									htmlFor={id}
+									label={t("ui.editor.slots.text")}
+									help={t("ui.help.g5.slot_text_help")}
+									className="text-xs"
+								/>
+								<Input
+									id={id}
+									value={draft}
+									maxLength={2000}
+									placeholder={t("ui.help.g5.slot_text_ph")}
+									disabled={!canEdit}
+									className="h-8"
+									onChange={(event) => setDraft(event.target.value)}
+								/>
+							</>
 						)}
 					</div>
 					<Button

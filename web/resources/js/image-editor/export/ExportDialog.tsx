@@ -2,6 +2,7 @@ import { Download } from "lucide-react";
 import { type ReactNode, useState } from "react";
 
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
+import { FieldLabel } from "@/components/FieldHelp";
 import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
 import {
@@ -174,14 +175,17 @@ function ExportDialog({ onClose }: { onClose(): void }): ReactNode {
 						</label>
 					)}
 					{takesQuality && (
-						<div className="flex w-24 flex-col gap-1">
-							<Label htmlFor="image-export-quality">
-								{t("ui.image.export.quality")}
-							</Label>
+						<div className="flex w-28 flex-col gap-1">
+							<FieldLabel
+								htmlFor="image-export-quality"
+								label={t("ui.image.export.quality")}
+								help={t("ui.help.g5.img_export_quality_help")}
+							/>
 							<Input
 								id="image-export-quality"
 								data-testid="image-export-quality"
 								inputMode="numeric"
+								placeholder={t("ui.help.g5.img_export_quality_ph")}
 								value={quality}
 								onChange={(event) => setQuality(event.target.value)}
 							/>

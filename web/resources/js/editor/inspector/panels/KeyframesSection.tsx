@@ -109,12 +109,16 @@ function ValueCell({
 	commit(draft: string): Promise<CommitResult>;
 	disabled: boolean;
 }): ReactNode {
+	const t = useT();
 	const binding = useCommitField(stored, commit);
 	return (
 		<div className="flex min-w-20 flex-1 flex-col gap-0.5">
 			<Input
 				{...binding.input}
 				aria-label={label}
+				aria-describedby={binding.error ? `${label}-message` : undefined}
+				placeholder={t("ui.help.g5.kf_value_ph")}
+				title={t("ui.help.g5.kf_value_help")}
 				disabled={disabled}
 				autoComplete="off"
 				spellCheck={false}

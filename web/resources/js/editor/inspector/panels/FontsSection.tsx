@@ -1,6 +1,7 @@
 import { X } from "lucide-react";
 import { type ReactNode, useState } from "react";
 
+import { FieldLabel } from "@/components/FieldHelp";
 import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -99,13 +100,17 @@ export default function FontsSection(): ReactNode {
 				</div>
 			)}
 			<div className="flex flex-col gap-1">
-				<Label htmlFor="font-family" className="text-xs">
-					{t("ui.editor.fonts.family")}
-				</Label>
+				<FieldLabel
+					htmlFor="font-family"
+					label={t("ui.editor.fonts.family")}
+					help={t("ui.help.g5.font_family_help")}
+					className="text-xs"
+				/>
 				<Input
 					id="font-family"
 					value={family}
 					maxLength={60}
+					placeholder={t("ui.help.g5.font_family_ph")}
 					disabled={!canEdit}
 					className="h-8"
 					onChange={(event) => setFamily(event.target.value)}
@@ -151,12 +156,16 @@ export default function FontsSection(): ReactNode {
 				</div>
 			)}
 			<div className="flex flex-col gap-1">
-				<Label htmlFor="font-hash" className="text-xs">
-					{t("ui.editor.fonts.hash")}
-				</Label>
+				<FieldLabel
+					htmlFor="font-hash"
+					label={t("ui.editor.fonts.hash")}
+					help={t("ui.help.g5.font_hash_help")}
+					className="text-xs"
+				/>
 				<Input
 					id="font-hash"
 					value={hash}
+					placeholder={t("ui.help.g5.font_hash_ph")}
 					disabled={!canEdit}
 					className="h-8 font-mono"
 					aria-invalid={error === null ? undefined : true}

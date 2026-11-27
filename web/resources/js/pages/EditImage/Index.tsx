@@ -10,6 +10,7 @@ import {
 
 import { EmptyState } from "@/components/EmptyState";
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
+import { FieldLabel } from "@/components/FieldHelp";
 import { ListRow } from "@/components/ListRow";
 import { LoadingState } from "@/components/LoadingState";
 import { PageHeader } from "@/components/PageHeader";
@@ -175,7 +176,11 @@ export default function Index(): ReactNode {
 						data-testid="image-new-form"
 					>
 						<div className="flex flex-col gap-1">
-							<Label htmlFor="image-new-name">{t("ui.image.index.name")}</Label>
+							<FieldLabel
+								htmlFor="image-new-name"
+								label={t("ui.image.index.name")}
+								help={t("ui.help.g5.img_new_name_help")}
+							/>
 							<Input
 								id="image-new-name"
 								value={name}
@@ -202,24 +207,30 @@ export default function Index(): ReactNode {
 						</div>
 						{preset === CUSTOM && (
 							<>
-								<div className="flex w-24 flex-col gap-1">
-									<Label htmlFor="image-new-width">
-										{t("ui.image.index.width")}
-									</Label>
+								<div className="flex w-28 flex-col gap-1">
+									<FieldLabel
+										htmlFor="image-new-width"
+										label={t("ui.image.index.width")}
+										help={t("ui.help.g5.img_dim_w_help")}
+									/>
 									<Input
 										id="image-new-width"
 										inputMode="numeric"
+										placeholder={t("ui.help.g5.img_dim_w_ph")}
 										value={width}
 										onChange={(event) => setWidth(event.target.value)}
 									/>
 								</div>
-								<div className="flex w-24 flex-col gap-1">
-									<Label htmlFor="image-new-height">
-										{t("ui.image.index.height")}
-									</Label>
+								<div className="flex w-28 flex-col gap-1">
+									<FieldLabel
+										htmlFor="image-new-height"
+										label={t("ui.image.index.height")}
+										help={t("ui.help.g5.img_dim_h_help")}
+									/>
 									<Input
 										id="image-new-height"
 										inputMode="numeric"
+										placeholder={t("ui.help.g5.img_dim_h_ph")}
 										value={height}
 										onChange={(event) => setHeight(event.target.value)}
 									/>

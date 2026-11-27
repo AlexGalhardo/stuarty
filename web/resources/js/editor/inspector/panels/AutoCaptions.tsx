@@ -1,5 +1,6 @@
 import { type ReactNode, useEffect, useRef, useState } from "react";
 
+import { FieldLabel } from "@/components/FieldHelp";
 import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -223,40 +224,52 @@ export default function AutoCaptions({
 						];
 					})}
 				</select>
-				<Label htmlFor={`auto-words-${itemId}`} className="text-xs">
-					{t("ui.editor.auto_captions.max_words")}
-				</Label>
+				<FieldLabel
+					htmlFor={`auto-words-${itemId}`}
+					label={t("ui.editor.auto_captions.max_words")}
+					help={t("ui.help.g5.auto_words_help")}
+					className="text-xs"
+				/>
 				<Input
 					id={`auto-words-${itemId}`}
 					value={maxWords}
 					inputMode="numeric"
 					autoComplete="off"
+					placeholder={t("ui.help.g5.auto_words_ph")}
 					disabled={!canEdit || busy}
 					aria-invalid={words === null ? true : undefined}
 					className="h-8 px-2 text-sm"
 					onChange={(event) => setMaxWords(event.target.value)}
 				/>
-				<Label htmlFor={`auto-chars-${itemId}`} className="text-xs">
-					{t("ui.editor.auto_captions.max_chars")}
-				</Label>
+				<FieldLabel
+					htmlFor={`auto-chars-${itemId}`}
+					label={t("ui.editor.auto_captions.max_chars")}
+					help={t("ui.help.g5.auto_chars_help")}
+					className="text-xs"
+				/>
 				<Input
 					id={`auto-chars-${itemId}`}
 					value={maxChars}
 					inputMode="numeric"
 					autoComplete="off"
+					placeholder={t("ui.help.g5.auto_chars_ph")}
 					disabled={!canEdit || busy}
 					aria-invalid={chars === null ? true : undefined}
 					className="h-8 px-2 text-sm"
 					onChange={(event) => setMaxChars(event.target.value)}
 				/>
-				<Label htmlFor={`auto-gap-${itemId}`} className="text-xs">
-					{t("ui.editor.auto_captions.max_gap")}
-				</Label>
+				<FieldLabel
+					htmlFor={`auto-gap-${itemId}`}
+					label={t("ui.editor.auto_captions.max_gap")}
+					help={t("ui.help.g5.auto_gap_help")}
+					className="text-xs"
+				/>
 				<Input
 					id={`auto-gap-${itemId}`}
 					value={maxGap}
 					autoComplete="off"
 					spellCheck={false}
+					placeholder={t("ui.help.g5.auto_gap_ph")}
 					disabled={!canEdit || busy}
 					aria-invalid={gap.ok ? undefined : true}
 					className="h-8 px-2 font-mono text-sm"

@@ -1,6 +1,6 @@
 import { type ReactNode, useState } from "react";
 
-import { Label } from "@/components/ui/label";
+import { FieldLabel } from "@/components/FieldHelp";
 import { Textarea } from "@/components/ui/textarea";
 import { useT } from "@/lib/i18n";
 import type { ApiError } from "../../api/errors";
@@ -55,10 +55,15 @@ function JsonTextarea({
 	const invalid = parse(text) === null;
 	return (
 		<div className="flex flex-col gap-1.5">
-			<Label htmlFor="palette-args">{t("ui.editor.palette.args_json")}</Label>
+			<FieldLabel
+				htmlFor="palette-args"
+				label={t("ui.editor.palette.args_json")}
+				help={t("ui.help.g5.palette_json_help")}
+			/>
 			<Textarea
 				id="palette-args"
 				className="min-h-32 font-mono text-xs"
+				placeholder={t("ui.help.g5.palette_json_ph")}
 				spellCheck={false}
 				aria-invalid={invalid}
 				value={text}

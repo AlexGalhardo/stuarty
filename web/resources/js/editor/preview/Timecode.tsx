@@ -1,4 +1,5 @@
 import { type ReactNode, useEffect, useRef } from "react";
+import { useT } from "@/lib/i18n";
 import { readTimeDisplay } from "../state/prefs";
 import { formatTime } from "../ui/timeFormat";
 
@@ -47,6 +48,7 @@ export function LiveTimecode({
 	parse: (text: string) => number | null;
 	onSeek: (frame: number) => void;
 }): ReactNode {
+	const t = useT();
 	const ref = useRef<HTMLInputElement>(null);
 	const latest = useRef(initial);
 	useEffect(
@@ -74,6 +76,8 @@ export function LiveTimecode({
 			ref={ref}
 			type="text"
 			aria-label={label}
+			placeholder={t("ui.help.g5.timecode_ph")}
+			title={t("ui.help.g5.timecode_help")}
 			defaultValue={formatTime(initial, fps, readTimeDisplay())}
 			spellCheck={false}
 			autoComplete="off"

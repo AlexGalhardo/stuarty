@@ -1,5 +1,6 @@
 import { type ReactNode, useState } from "react";
 
+import { FieldLabel } from "@/components/FieldHelp";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -105,27 +106,35 @@ function RepeatForm({ itemId }: { itemId: string }): ReactNode {
 				</select>
 				{mode === "copies" ? (
 					<>
-						<Label htmlFor="repeat-copies" className="text-xs">
-							{t("ui.editor.repeat.copies")}
-						</Label>
+						<FieldLabel
+							htmlFor="repeat-copies"
+							label={t("ui.editor.repeat.copies")}
+							help={t("ui.help.g5.repeat_copies_help")}
+							className="text-xs"
+						/>
 						<Input
 							id="repeat-copies"
 							value={copies}
 							inputMode="numeric"
 							autoComplete="off"
+							placeholder={t("ui.help.g5.repeat_copies_ph")}
 							className="h-8"
 							onChange={(event) => setCopies(event.target.value)}
 						/>
 					</>
 				) : (
 					<>
-						<Label htmlFor="repeat-until" className="text-xs">
-							{t("ui.editor.repeat.until")}
-						</Label>
+						<FieldLabel
+							htmlFor="repeat-until"
+							label={t("ui.editor.repeat.until")}
+							help={t("ui.help.g5.repeat_until_help")}
+							className="text-xs"
+						/>
 						<Input
 							id="repeat-until"
 							value={until}
 							autoComplete="off"
+							placeholder={t("ui.help.g5.repeat_until_ph")}
 							className="h-8"
 							onChange={(event) => setUntil(event.target.value)}
 						/>
