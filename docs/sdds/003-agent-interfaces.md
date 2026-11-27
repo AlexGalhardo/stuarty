@@ -182,6 +182,7 @@ type Service interface {
 	FontList(ctx context.Context, req FontListRequest) (*FontListResult, error)              // SDD-012 §4.2 (`getFonts`)
 	AssetList(ctx context.Context, req AssetListRequest) (*AssetListResult, error)           // the files of the workspace by hash, VV-117
 	AuditList(ctx context.Context, req AuditListRequest) (*AuditListResult, error)           // SDD-005 §5.9, scope admin
+	ActivityList(ctx context.Context, req ActivityListRequest) (*ActivityListResult, error)  // epic 111, scope read
 	TrashEmpty(ctx context.Context, req TrashEmptyRequest) (*TrashEmptyResult, error)        // SDD-005 §13.3, HTTP only
 	KeyCreate(ctx context.Context, req KeyCreateRequest) (*KeyCreateResult, error)           // SDD-007 §4.2, HTTP only
 	KeyList(ctx context.Context, req KeyListRequest) (*KeyListResult, error)                 // SDD-007 §4.2, HTTP only
@@ -1258,6 +1259,8 @@ type PlanWindowResult = plan.WindowPlan
 `PlanWindow` (scope `read`) also records, for the project, the bitmap keys of the window. The bitmap route serves only a key that the plan of that same project handed out: a key of another project, a key the server forgot at a restart and a malformed key all answer `E_NOT_FOUND` (404) with the same body, so the route is no oracle for the existence of a bitmap elsewhere. A key is a content hash, not a secret; the project in the path and the remembered (project, key) pair are the access check.
 
 **Audit (RF-134).** Actions that are not a document batch (trash and restore, emptying the trash, imports, jobs, key management) are recorded in the `audit` table with their actor (SDD-005 §5.9, §13.1); document batches are recorded in the append-only log read by `HistoryList`. `AuditList` (HTTP `GET /audit`, CLI `audit`, scope `admin`) reads that record; it has no MCP tool (§7.1, E-3).
+
+**Activity history (epic 111).** `ActivityList` combines audit entries and document revision metadata (SDD-005 §5.9). It requires `read`, respects the local workspace lock, and limits network access to records the caller owns. With a project-bound key the project is implicit and asking for another project returns `E_FORBIDDEN`. The feed accepts `actor_kind` (`human`, `agent`, `system`), `domain`, `cursor`, and `limit` (default 50, maximum 200). On MCP use `history` with `action=activity`, optional `project_id`, `actor` for actor kind, and `area` for domain. Project activity uses `/projects/{id}/activity` because `/projects/{id}/history` reads the existing timeline revision history.
 
 `command.CaptionWord` is the word object of `caption.add` (SDD-002 §B.7). A `TemplateInstantiate` that leaves required slots unfilled succeeds (the project is created) and reports them in `Unfilled` and as `L_SLOT_UNFILLED` findings, per RF-051. The `asset_id` of a media `SlotValue` is looked up among the active assets of the projects the caller can see (the owner, a key limited to one project sees only that one, trashed projects excluded); its snapshot is re-added to the new project in the same batch under the same `ast_` identifier. An asset that is not visible is `E_NOT_FOUND` with the message of an asset that does not exist, never a hint that it exists. Every template operation is refused to a key limited to one project.
 
@@ -3983,6 +3986,7 @@ Every command that reads or edits a timeline (those whose result is about one do
 | `brand:show` | `brand:show` | none | none | `BrandKit` (SDD-005 §5.11) |
 | `brand:set` | `brand:set --kit <file\|->` | `--kit` string, required: a JSON object `{logo?, colors?, fonts?}` that replaces the kit (an unknown member, or an object with none of the three, is `E_VALIDATION`; `{"colors": {}}` clears the kit) | the kit, with `--kit -` | `BrandKit` |
 | `audit` | `audit [--project <id>] [--cursor c] [--limit n]` | `--project` string, only the entries of one project; `--cursor`; `--limit` int 50. Scope `admin` | none | `AuditListResult` |
+| `activity` | `activity [--project <id>] [--actor all\|human\|agent\|system] [--domain <domain>] [--cursor c] [--limit n]` | `--project` string; `--actor`; `--domain`; `--cursor`; `--limit` int 50. Scope `read` | none | `ActivityListResult` |
 | `events` | `events --project <id> [--from-id n] [--since n] [--count n]` | `--from-id` string, the `Last-Event-ID`; `--since` int, a revision (the `since` query); `--count` int 0 (until interrupted) | none | one JSON object per line (NDJSON), each `{"id","name","data"}`; the only command whose `--json` output is not one document |
 | `version` | `version` | none | none | `{"version","text"}`; prints `stuarty <version>` and needs no workspace or server (the image build checks it against the tag) |
 | `serve` | `serve` | vukem's `serve` flags (address from `STUARTY_ADDR`) | none | none |
@@ -4277,6 +4281,8 @@ Success codes are the `Op.Status`. Error statuses are the table of SDD-000 §8; 
 | `assets.get`, `assets.uses` | `GET /assets/{hash}`, `GET /assets/{hash}/uses` | `cursor`, `limit` (uses) | none | 200 `AssetResult`, 200 `AssetUsesResult` | read | 400 `E_VALIDATION` for a bad hash; 404 `E_NOT_FOUND` |
 | `assets.set`, `assets.tag` | `PUT /assets/{hash}`, `POST /assets/{hash}/tags` | none | `{description?, rights_note?, reusable?}`, `{add?, remove?}` | 200 `AssetResult` | media | 400 `E_VALIDATION` with `details.reason` (SDD-011 §14.2) |
 | `audit.list` | `GET /audit` | `cursor`, `limit` | none | 200 `AuditListResult` (the audit record of RF-134: actions outside a document batch, with their actor, SDD-005 §5.9) | admin | none |
+| `history.list` | `GET /history` | `project_id`, `actor_kind`, `domain`, `cursor`, `limit` | none | 200 `ActivityListResult` (global or project-filtered activity timeline with actor classification and sanitized details, epic 111) | read | none |
+| `projects.activity.list` | `GET /projects/{id}/activity` | `actor_kind`, `domain`, `cursor`, `limit` | none | 200 `ActivityListResult` (activity timeline scoped to one project, epic 111) | read | none |
 | `images.revert` | `POST /images/{id}/revert` | none | `{revision \| checkpoint, base_revision?, dry_run?}` | 200 `ImageRevertResult` | edit | 404 `E_NOT_FOUND` (image, checkpoint); 409 `E_REVISION_CONFLICT`; 422 `E_VALIDATION`, `E_INVALID_STATE`, `E_LIMIT` |
 | `images.diff` | `GET /images/{id}/diff` | `from` or `from_checkpoint`, `until` | none | 200 `ImageDiffResult` | read | 404 `E_NOT_FOUND`; 422 `E_VALIDATION`, `E_INVALID_STATE`, `E_LIMIT` |
 | `images.checkpoints.list` | `GET /images/{id}/checkpoints` | none | none | 200 `ImageCheckpointListResult` | read | 404 `E_NOT_FOUND` |
@@ -4504,6 +4510,7 @@ Every `Service` operation has an encoding on each surface. The table is the proo
 | `AssetRename` | `media_import` (called with a `hash`, no `paths` and `info.name`) | `asset:rename` | `POST /assets/{hash}/rename` |
 | `AssetReveal` | none (exception E-6) | `asset:path` (always `E_PRIVILEGED_SESSION`) | `POST /assets/{hash}/reveal` (local mode, a person only) |
 | `AuditList` | none (exception E-3) | `audit` | `GET /audit` (scope `admin`) |
+| `ActivityList` | `history` with `action=activity` | `activity` | `GET /history`, `GET /projects/{id}/activity` (scope `read`) |
 | `TrashEmpty` | none (exception E-4) | none (exception E-4) | `POST /trash/empty` |
 | `KeyCreate`, `KeyList`, `KeyRevoke` | none (exception E-4) | none | `POST /keys`, `GET /keys`, `DELETE /keys/{key_id}` |
 | `FontImport` | `font_import` (VV-024) | `font:import` | `POST /fonts` |

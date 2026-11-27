@@ -261,3 +261,125 @@ func TestAuditList(t *testing.T) {
 		}
 	}
 }
+
+func TestActivityList(t *testing.T) {
+	e := newEnv(t)
+	a, b := e.newProject("Project Alpha"), e.newProject("Project Beta")
+
+	agentCaller := callerOf("local:chat-claude", "", service.ScopeRead, service.ScopeEdit)
+	if _, err := e.svc.ProjectTrash(agentCaller, service.ProjectTrashRequest{ProjectID: a}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := e.svc.ProjectRestore(e.as(ui), service.ProjectTrashRequest{ProjectID: a}); err != nil {
+		t.Fatal(err)
+	}
+
+	// Read-only caller (no admin scope) can read activity history.
+	readOnly := callerOf("key:r", "", service.ScopeRead)
+	all, err := e.svc.ActivityList(readOnly, service.ActivityListRequest{})
+	if err != nil || len(all.Entries) < 3 {
+		t.Fatalf("activity = %+v, %v", all, err)
+	}
+
+	// Filter by agent actor_kind returns only agent-attributed entries.
+	agents, err := e.svc.ActivityList(readOnly, service.ActivityListRequest{ActorKind: "agent"})
+	if err != nil || len(agents.Entries) == 0 {
+		t.Fatalf("agent entries = %+v, %v", agents, err)
+	}
+	for _, en := range agents.Entries {
+		if en.ActorKind != "agent" {
+			t.Errorf("expected actor_kind=agent, got %+v", en)
+		}
+	}
+
+	// Filter by project returns only that project's entries with resolved project_name.
+	onlyA, err := e.svc.ActivityList(readOnly, service.ActivityListRequest{ProjectID: a})
+	if err != nil || len(onlyA.Entries) == 0 {
+		t.Fatalf("project A entries = %+v, %v", onlyA, err)
+	}
+	for _, en := range onlyA.Entries {
+		if en.ProjectID != a || en.ProjectName != "Project Alpha" {
+			t.Errorf("unexpected entry in project A history: %+v", en)
+		}
+	}
+
+	// Project-scoped key cannot read another project's history.
+	keyForA := service.WithCaller(t.Context(), service.Caller{
+		Actor: "key:a", ProjectID: a, Scopes: []string{service.ScopeRead},
+	})
+	if _, err := e.svc.ActivityList(
+		keyForA,
+		service.ActivityListRequest{ProjectID: b},
+	); code(
+		err,
+	) != service.CodeForbidden {
+		t.Errorf("project-scoped key on another project = %v, want E_FORBIDDEN", err)
+	}
+
+	// Validation errors reject unknown actor_kind and domain.
+	if _, err := e.svc.ActivityList(
+		readOnly,
+		service.ActivityListRequest{ActorKind: "bot"},
+	); code(
+		err,
+	) != "E_VALIDATION" {
+		t.Errorf("invalid actor_kind = %v, want E_VALIDATION", err)
+	}
+	if _, err := e.svc.ActivityList(
+		readOnly,
+		service.ActivityListRequest{Domain: "unknown"},
+	); code(
+		err,
+	) != "E_VALIDATION" {
+		t.Errorf("invalid domain = %v, want E_VALIDATION", err)
+	}
+
+	// Network-mode user isolation: Alice sees only her own projects' activity.
+	alice := callerOf("user:alice", "alice", service.AllScopes...)
+	mine, err := testproject.CreateWithTimeline(alice, e.svc, "Alice Production")
+	if err != nil {
+		t.Fatal(err)
+	}
+	got, err := e.svc.ActivityList(alice, service.ActivityListRequest{})
+	if err != nil || len(got.Entries) == 0 {
+		t.Fatalf("alice activity = %+v, %v", got, err)
+	}
+	for _, en := range got.Entries {
+		if en.ProjectID != mine.ProjectID {
+			t.Errorf("alice sees another user's entry: %+v", en)
+		}
+	}
+}
+
+func TestActivityListPagesAcrossAuditAndTimelineRevisions(t *testing.T) {
+	e := newEnv(t)
+	project := e.newProject("Activity Before")
+	e.mustEdit(ui, project, 0, op("project.rename", `{"name":"Activity After"}`))
+
+	req := service.ActivityListRequest{ProjectID: project, Limit: 1}
+	seen := map[string]bool{}
+	sawRevision, sawCreate := false, false
+	for range 10 {
+		page, err := e.svc.ActivityList(e.as(ui), req)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, entry := range page.Entries {
+			if seen[entry.ID] || entry.ProjectID != project {
+				t.Fatalf("unexpected entry: %+v", entry)
+			}
+			seen[entry.ID] = true
+			sawCreate = sawCreate || entry.Action == "project.create"
+			sawRevision = sawRevision || (entry.Action == "timeline.edit" &&
+				entry.Revision == 1 && entry.SubjectID == project)
+		}
+		if page.NextCursor == nil {
+			if !sawRevision || !sawCreate {
+				t.Fatalf("revision = %v, create = %v", sawRevision, sawCreate)
+			}
+			return
+		}
+		req.Cursor = *page.NextCursor
+	}
+	t.Fatal("activity pagination did not end")
+}

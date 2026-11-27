@@ -151,6 +151,59 @@ func auditText(res *service.AuditListResult) string {
 	return b.String()
 }
 
+var activityCmd = &spec{
+	name:    "activity",
+	summary: "list global or project activity history",
+	usage: []string{
+		"stuarty activity [--project <id>] [--actor all|human|agent|system] [--domain <domain>] [--cursor c] [--limit n]",
+	},
+	example: "stuarty activity --actor agent --limit 20 --json",
+	flags: append([]flagDef{
+		{Name: "project", Kind: kindString, Usage: "only the entries of this project"},
+		{Name: "actor", Kind: kindString, Usage: "filter by actor kind (all, human, agent, system)"},
+		{
+			Name:  "domain",
+			Kind:  kindString,
+			Usage: "filter by domain (project, video, image, asset, writing, publish, approval, agent, connection, account, workspace)",
+		},
+	}, pageFlags("50")...),
+	run: func(ctx context.Context, c *call) (*output, error) {
+		res, err := c.svc.ActivityList(ctx, service.ActivityListRequest{
+			ProjectID: c.args.str("project"),
+			ActorKind: c.args.str("actor"),
+			Domain:    c.args.str("domain"),
+			Cursor:    c.args.str("cursor"),
+			Limit:     c.args.integer("limit"),
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		return &output{value: res, text: activityHistoryText(res)}, nil
+	},
+}
+
+func activityHistoryText(res *service.ActivityListResult) string {
+	var b strings.Builder
+
+	fmt.Fprintf(&b, "activity (%d entries)", len(res.Entries))
+
+	for i := range res.Entries {
+		e := &res.Entries[i]
+		fmt.Fprintf(&b, "\n%s %s [%s:%s] %s %s", e.ID, e.At, e.ActorKind, e.ActorLabel, e.Domain, e.Action)
+
+		if e.ProjectID != "" {
+			b.WriteString(" " + e.ProjectID)
+		}
+	}
+
+	if res.NextCursor != nil {
+		b.WriteString("\nmore: --cursor " + *res.NextCursor)
+	}
+
+	return b.String()
+}
+
 var transcribeCmd = &spec{
 	name:     "transcribe",
 	timeline: true,

@@ -736,6 +736,7 @@ type AuditRow struct {
 type AuditRepo interface {
 	Append(ctx context.Context, row AuditRow) error
 	List(ctx context.Context, projectID string, beforeID int64, limit int) ([]AuditRow, error) // projectID "" means all
+	ActivityPage(ctx context.Context, query ActivityPageQuery) ([]ActivityRow, error)
 }
 
 // Fonts and the brand kit (SDD-005 section 5.11)

@@ -1,6 +1,6 @@
 ---
 title: "history"
-description: "History, undo and redo. Change log (action=list, newest first, with actor; actor, cursor, limit: list only); undo/redo your own latest step (one per call); revert to a revision or checkpoint as a new step (dry_run previews); diff two revisions; checkpoints, checkpoint, rename_checkpoint, remove_checkpoint name revisions."
+description: "History, undo and redo. Timeline revisions: list, undo, redo, revert, diff or manage checkpoints."
 wide: true
 ---
 
@@ -10,7 +10,7 @@ wide: true
 
 <RefMain>
 
-Change log (action=list, newest first, with actor; actor, cursor, limit: list only); undo/redo your own latest step (one per call); revert to a revision or checkpoint as a new step (dry_run previews); diff two revisions; checkpoints, checkpoint, rename_checkpoint, remove_checkpoint name revisions. Undo skips (and reports) others' later changes. domain=image (image_id): all but list.
+Timeline revisions: list, undo, redo, revert, diff or manage checkpoints. Undo skips later changes by others. For images use domain=image and image_id. action=activity lists workspace or project activity; actor filters by kind, area by domain.
 
 ## Behaviour
 
@@ -31,8 +31,9 @@ These are the annotations of the tool definition, the hints a client uses to dec
 | `image_id` | `string` | no | pattern `^img_[0-9a-hjkmnp-tv-z]{10}$` |
 | `project_id` | `string` | no | pattern `^prj_[0-9a-hjkmnp-tv-z]{10}$` |
 | `timeline_id` | `string` | no | pattern `^prj_[0-9a-hjkmnp-tv-z]{10}$` |
-| `action` | `string`, one of 9 values | no | default `"list"` |
+| `action` | `string`, one of 10 values | no | default `"list"` |
 | `actor` | `string` | no |  |
+| `area` | `string` | no |  |
 | `cursor` | `string` | no |  |
 | `limit` | `integer` | no | min 1; max 100; default `20` |
 | `revision` | `integer` | no | min 1 |
@@ -48,7 +49,7 @@ A result has a text block, written for the model, and structured content with th
 
 | Member | Type | Always present | Notes |
 | --- | --- | --- | --- |
-| `revision` | `integer` | yes |  |
+| `revision` | `integer` | no |  |
 | `kind` | `undo`, `redo`, `revert` | no |  |
 | `entries` | array of `object` | no |  |
 | `skipped` | array of `object` | no |  |

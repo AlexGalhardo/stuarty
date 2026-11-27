@@ -982,6 +982,8 @@ Rows are deleted only when their owner is deleted by `TrashEmpty`.
 
 RF-134 asks that every operation record its actor in a record that cannot be edited. Edits are in `operations`. Everything else that changes state is recorded here: one row per action, written in the same transaction as the action.
 
+`ActivityList` reads the audit log alongside `operations`, `image_operations`, and saved or reverted `text_revisions`. The feed derives `timeline.<kind>`, `image.<kind>`, and `text.<source>` from the revision metadata, without opening document snapshots, operation payloads, or text bodies. It uses the event time and source key for stable newest-first pagination. Only allowlisted numeric and boolean audit details enter the feed.
+
 ```sql
 CREATE TABLE audit (
   id         INTEGER PRIMARY KEY AUTOINCREMENT,

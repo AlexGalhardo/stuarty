@@ -554,6 +554,8 @@ func (h *apiHandler) registerAll() {
 	register(h, "chat.sessions.delete", h.chatDelete)
 	register(h, "system.get", h.systemGet)
 	register(h, "audit.list", h.auditList)
+	register(h, "history.list", h.historyList)
+	register(h, "projects.activity.list", h.projectActivityList)
 	register(h, "system.launch", h.systemLaunch)
 	register(h, "system.scheduler", h.systemScheduler)
 	register(h, "system.capture", h.systemCapture)

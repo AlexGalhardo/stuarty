@@ -4,6 +4,8 @@ import type {
 	AccountCreateRequest,
 	AccountRecoveryKey,
 	AccountState,
+	ActivityListResult,
+	ActivityQuery,
 	AgentProfile,
 	AgentProfileListResult,
 	ApprovalListResult,
@@ -336,6 +338,11 @@ export interface ApiClient {
 	getOpenApi(): Promise<unknown>;
 	getSystem(query?: SystemQuery): Promise<SystemResult>;
 	listAudit(query?: AuditQuery): Promise<AuditListResult>;
+	listHistory(query?: ActivityQuery): Promise<ActivityListResult>;
+	listProjectActivity(
+		id: string,
+		query?: ActivityQuery,
+	): Promise<ActivityListResult>;
 	getTools(): Promise<ToolsStatusResult>;
 	installTool(request: InstallToolRequest): Promise<InstallToolResult>;
 	createKey(request: KeyCreateRequest): Promise<KeyCreateResult>;
@@ -470,7 +477,11 @@ export interface ApiClient {
 	// An administrator session; any other caller gets E_FORBIDDEN.
 	listUsers(): Promise<UserListResult>;
 	listTrashedProjects(): Promise<ProjectListResult>;
-	listProjects(): Promise<ProjectListResult>;
+	listProjects(q?: {
+		cursor?: string;
+		limit?: number;
+		state?: "active" | "trashed" | "all";
+	}): Promise<ProjectListResult>;
 	createProject(
 		input: ProjectContextInput & { kind?: ProjectCreateKind },
 	): Promise<ProjectCreateResult>;
@@ -908,6 +919,18 @@ export function createClient(
 				`/audit${query({ project_id: q.projectId, cursor: q.cursor, limit: q.limit })}`,
 				READ_TIMEOUT_MS,
 			),
+		listHistory: (q = {}) =>
+			call(
+				"GET",
+				`/history${query({ project_id: q.projectId, actor_kind: q.actorKind, domain: q.domain, cursor: q.cursor, limit: q.limit })}`,
+				READ_TIMEOUT_MS,
+			),
+		listProjectActivity: (id, q = {}) =>
+			call(
+				"GET",
+				`${project(id)}/activity${query({ actor_kind: q.actorKind, domain: q.domain, cursor: q.cursor, limit: q.limit })}`,
+				READ_TIMEOUT_MS,
+			),
 		getTools: () => call("GET", "/system/tools", READ_TIMEOUT_MS),
 		installTool: (request) =>
 			call("POST", "/system/tools/install", EDIT_TIMEOUT_MS, request),
@@ -1192,7 +1215,8 @@ export function createClient(
 			call("PUT", "/cost/ceilings", EDIT_TIMEOUT_MS, request),
 		revokeKey: (keyId) =>
 			call("DELETE", `/keys/${encodeURIComponent(keyId)}`, EDIT_TIMEOUT_MS),
-		listProjects: () => call("GET", "/projects", READ_TIMEOUT_MS),
+		listProjects: (q = {}) =>
+			call("GET", `/projects${query(q)}`, READ_TIMEOUT_MS),
 		listTrashedProjects: () =>
 			call("GET", "/projects?state=trashed", READ_TIMEOUT_MS),
 		createProject: (input) => call("POST", "/projects", EDIT_TIMEOUT_MS, input),

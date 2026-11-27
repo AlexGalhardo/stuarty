@@ -345,6 +345,8 @@ func callService(ctx context.Context, svc service.Service, s step) (any, error) 
 		return invoke(ctx, s, svc.VoiceList)
 	case "AuditList":
 		return invoke(ctx, s, svc.AuditList)
+	case "ActivityList":
+		return invoke(ctx, s, svc.ActivityList)
 	case "ToolsInstall":
 		return invoke(ctx, s, svc.ToolsInstall)
 	case "ProjectBundleExport":
@@ -755,6 +757,15 @@ func toolCall(s step) (tool string, args map[string]any, err error) {
 		}
 
 		return "project_item", args, nil
+	case "ActivityList":
+		args["action"] = "activity"
+		for from, to := range map[string]string{"actor_kind": "actor", "domain": "area"} {
+			if value, ok := args[from]; ok {
+				args[to] = value
+				delete(args, from)
+			}
+		}
+		return "history", args, nil
 	case "ProjectTrash", "ProjectRestore":
 		delete(args, "dry_run")
 
@@ -1628,6 +1639,8 @@ func commandOf(s step) (name string, argv []string, stdin string, err error) {
 		return "voice:list", []string{a.ConnectionID}, "", nil
 	case "AuditList":
 		return "audit", flag("project", a.ProjectID), "", nil
+	case "ActivityList":
+		return "activity", flag("project", a.ProjectID), "", nil
 	case "ToolsInstall":
 		return "tools:install", append([]string{a.Name}, "--yes"), "", nil
 	case "ProjectDescribe":

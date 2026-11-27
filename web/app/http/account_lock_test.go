@@ -84,6 +84,12 @@ func TestAccountLaunchOpensTheSignInWhileLocked(t *testing.T) {
 	if res := a.get("/api/v1/projects"); res.status != http.StatusLocked {
 		t.Fatalf("the token while locked = %d", res.status)
 	}
+
+	for _, path := range []string{"/api/v1/history", "/api/v1/projects/prj_aaaaaaaaaa/activity"} {
+		if res := a.get(path); res.status != http.StatusLocked || res.json(t)["code"] != "E_LOCKED" {
+			t.Fatalf("history while locked at %s = %d %s", path, res.status, res.body)
+		}
+	}
 }
 
 type agentTokens map[string]agenthost.Grant

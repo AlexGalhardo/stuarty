@@ -37,6 +37,11 @@ func dashboardPages(r *router.Router) {
 		return inertia.Render(c, "Write/Index", inertia.Props{})
 	}).Name("write.index")
 
+	// Global Activity History page (epic 111, SDD-012 section 23.4): reads /api/v1/history.
+	r.Get("/history", func(c *web.Ctx) error {
+		return inertia.Render(c, "History/Index", inertia.Props{})
+	}).Name("history.index")
+
 	r.Get("/{$}", func(c *web.Ctx) error {
 		return inertia.Render(c, "Dashboard/Home", inertia.Props{})
 	}).Name("home")

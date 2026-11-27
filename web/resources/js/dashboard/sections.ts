@@ -4,6 +4,7 @@ import {
 	Clapperboard,
 	Film,
 	Folder,
+	History,
 	ImagePlus,
 	Images,
 	KeyRound,
@@ -131,6 +132,12 @@ export const NAV_GROUPS: readonly NavGroup[] = [
 			sectionItem("write"),
 			sectionItem("edit-video"),
 			sectionItem("edit-image"),
+			{
+				id: "history",
+				href: "/history",
+				icon: History,
+				label: "ui.nav.history",
+			},
 		],
 	},
 	{

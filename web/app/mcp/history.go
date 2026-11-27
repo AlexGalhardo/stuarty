@@ -17,6 +17,7 @@ type historyArgs struct {
 	TimelineID string `json:"timeline_id"`
 	Action     string `json:"action"`
 	Actor      string `json:"actor"`
+	Area       string `json:"area"`
 	Revision   int64  `json:"revision"`
 	Until      int64  `json:"until"`
 	Name       string `json:"name"`

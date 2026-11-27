@@ -6,6 +6,24 @@ import (
 	"testing"
 )
 
+func TestHistoryActivity(t *testing.T) {
+	t.Parallel()
+
+	cs := connect(t, newService(t), Options{Session: "aaaaaa"}, "claude-code")
+	project := createProject(t, cs, "Activity project")
+	res := ok(t, call(t, cs, "history", map[string]any{
+		"action": "activity", "project_id": project, "area": "project", "actor": "agent", "limit": 1,
+	}))
+	entries, _ := structured(t, res)["entries"].([]any)
+	if len(entries) != 1 {
+		t.Fatalf("activity entries = %v", entries)
+	}
+	entry, _ := entries[0].(map[string]any)
+	if entry["project_id"] != project || entry["domain"] != "project" || entry["actor_label"] != "claude-code" {
+		t.Errorf("unexpected activity: %v", entry)
+	}
+}
+
 // TestHistoryRevertDiffAndCheckpoints is the flow of epic 36 on the tool: name the state, let work happen, read
 // what changed, preview and go back, and take the revert back with undo.
 func TestHistoryRevertDiffAndCheckpoints(t *testing.T) {

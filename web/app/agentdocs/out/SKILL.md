@@ -73,6 +73,7 @@ Every operation is listed by the guide of its domain: `agent:docs --print guide:
 - `doctor [--full] [--verify] [--bundle] [--gc]`
 - `fonts`
 - `audit [--project <id>] [--cursor c] [--limit n]`
+- `activity [--project <id>] [--actor all|human|agent|system] [--domain <domain>] [--cursor c] [--limit n]`
 - `tools:install <name> [--model <model>] [--force] [--yes] [--timeout d]`
 - `token:rotate`
 - `font:import <path>`

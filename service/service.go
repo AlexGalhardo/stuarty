@@ -160,6 +160,7 @@ type Service interface {
 	// processors (SDD-004 section 7.1, epic 34).
 	AudioMeasure(ctx context.Context, req AudioMeasureRequest) (*AudioMeasureResult, error)
 	AuditList(ctx context.Context, req AuditListRequest) (*AuditListResult, error)
+	ActivityList(ctx context.Context, req ActivityListRequest) (*ActivityListResult, error)
 
 	// Doctor is the diagnostic report (SDD-003 section 2, SDD-011 section 8.6).
 	Doctor(ctx context.Context, req DoctorRequest) (*DoctorResult, error)

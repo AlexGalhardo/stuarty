@@ -2177,6 +2177,10 @@ Settings and Log out stay in the footer, as the local account leaves them (ADR-0
 
 **Focus and landmarks.** The first `Tab` stop is the skip link (to `#main`); then the sidebar, the top bar, the main region, the scene bar and the dock. The banner landmark is the top bar; the sidebar is a plain `div` that holds the product mark, a `nav` labelled `ui.nav.label` and the footer, so the page has one banner, one `nav`, one `main`, the scene bar `region` and the chat `complementary`. A change of page moves the focus to `main`, as before.
 
+#### Activity history (epic 111)
+
+The History sidebar item opens `/history`. The same timeline is present in project details. Both pages use the `ActivityList` read model and provide actor and domain filters, with a project filter on the global page. Entries are grouped by local date, and the client translates action codes from the activity catalogue. Names and actor labels render through `UntrustedText`. Document revisions link to their editor, and the feed requests more entries with an opaque cursor.
+
 ### 23.5 The asset libraries (epic 81)
 
 Video, Visual and Sound Assets are one library seen through the `section` filter (section 23.1), so a creator learns it once. All three are `assetlibrary/AssetLibrary.tsx` over the frame `LibraryFrame` (the window title and a `PageHeader`: one h1, its sentence and the generate action), the filters `LibraryFilters` (search, tag, the origin as radios, reusable only, Apply and Clear: the same four in each library, sent as a query; which files match is the service's answer), `MediaCard` (video and visual: the poster, the duration the service reported, the name, the origin as an icon and a word, the reusable mark, the size and the tags), `SoundRow` (the name, duration, size, origin, mark and tags, a waveform drawn from the `peaks` route and a native player) and the detail `AssetDetail`.

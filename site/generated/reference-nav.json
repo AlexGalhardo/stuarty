@@ -351,7 +351,9 @@
     {
       "tag": "Audit",
       "pages": [
-        "audit.list"
+        "audit.list",
+        "history.list",
+        "projects.activity.list"
       ]
     }
   ],

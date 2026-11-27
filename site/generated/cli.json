@@ -1608,6 +1608,49 @@
       ]
     },
     {
+      "name": "activity",
+      "domain": "workspace",
+      "summary": "list global or project activity history",
+      "usage": [
+        "stuarty activity [--project <id>] [--actor all|human|agent|system] [--domain <domain>] [--cursor c] [--limit n]"
+      ],
+      "example": "stuarty activity --actor agent --limit 20 --json",
+      "flags": [
+        {
+          "name": "project",
+          "type": "string",
+          "usage": "only the entries of this project"
+        },
+        {
+          "name": "actor",
+          "type": "string",
+          "usage": "filter by actor kind (all, human, agent, system)"
+        },
+        {
+          "name": "domain",
+          "type": "string",
+          "usage": "filter by domain (project, video, image, asset, writing, publish, approval, agent, connection, account, workspace)"
+        },
+        {
+          "name": "cursor",
+          "type": "string",
+          "usage": "continue a list from this cursor"
+        },
+        {
+          "name": "limit",
+          "type": "integer",
+          "default": "50",
+          "usage": "items per page"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
       "name": "tools:install",
       "domain": "workspace",
       "summary": "download a helper such as the transcription program",

@@ -1014,6 +1014,30 @@ Example:
 stuarty audit --limit 20 --json
 ```
 
+## `activity`
+
+List global or project activity history
+
+```text
+stuarty activity [--project <id>] [--actor all|human|agent|system] [--domain <domain>] [--cursor c] [--limit n]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--project` | string |  | only the entries of this project |
+| `--actor` | string |  | filter by actor kind (all, human, agent, system) |
+| `--domain` | string |  | filter by domain (project, video, image, asset, writing, publish, approval, agent, connection, account, workspace) |
+| `--cursor` | string |  | continue a list from this cursor |
+| `--limit` | integer | `50` | items per page |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty activity --actor agent --limit 20 --json
+```
+
 ## `tools:install`
 
 Download a helper such as the transcription program

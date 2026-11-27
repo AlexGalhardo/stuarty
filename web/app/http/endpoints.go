@@ -1100,6 +1100,14 @@ var Endpoints = []Endpoint{
 		Service: "AuditList", Status: 200, Summary: "List the audit table",
 	},
 	{
+		ID: "history.list", Method: http.MethodGet, Path: "/history", Scope: service.ScopeRead,
+		Service: "ActivityList", Status: 200, Summary: "List global or project activity history",
+	},
+	{
+		ID: "projects.activity.list", Method: http.MethodGet, Path: "/projects/{id}/activity", Scope: service.ScopeRead,
+		Service: "ActivityList", Status: 200, Summary: "List activity history of a project",
+	},
+	{
 		ID: "projects.plan", Method: http.MethodGet, Path: "/projects/{id}/plan", Scope: service.ScopeRead,
 		Service: "PlanWindow", Uncounted: true, Status: 200, Summary: "Read the render plan of a window",
 	},

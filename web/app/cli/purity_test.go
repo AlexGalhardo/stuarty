@@ -213,6 +213,10 @@ func (s stub) AuditList(context.Context, service.AuditListRequest) (*service.Aud
 	return reply[service.AuditListResult](s.err)
 }
 
+func (s stub) ActivityList(context.Context, service.ActivityListRequest) (*service.ActivityListResult, error) {
+	return reply[service.ActivityListResult](s.err)
+}
+
 func (s stub) ToolsInstall(context.Context, service.ToolsInstallRequest) (*service.ToolsInstallResult, error) {
 	return reply[service.ToolsInstallResult](s.err)
 }

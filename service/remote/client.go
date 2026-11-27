@@ -839,6 +839,24 @@ func (c *Client) AuditList(ctx context.Context, req service.AuditListRequest) (*
 	)
 }
 
+// ActivityList implements service.Service.
+func (c *Client) ActivityList(
+	ctx context.Context,
+	req service.ActivityListRequest,
+) (*service.ActivityListResult, error) {
+	q := url.Values{}
+	setIf(q, "project_id", req.ProjectID)
+	setIf(q, "actor_kind", req.ActorKind)
+	setIf(q, "domain", req.Domain)
+
+	return get[service.ActivityListResult](
+		ctx,
+		c,
+		"/history",
+		pageQuery(q, service.Page{Cursor: req.Cursor, Limit: req.Limit}),
+	)
+}
+
 // ExportFile implements service.Service. The file is a path in the workspace of
 // the server; a client reads the bytes from GET /jobs/{job_id}/file instead.
 func (*Client) ExportFile(context.Context, service.ExportFileRequest) (*service.File, error) {

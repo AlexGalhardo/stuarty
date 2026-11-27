@@ -39,6 +39,8 @@ A creator can click **History** in the main sidebar at any time to see a clear, 
 
 ## Technical design
 
+The workspace feed uses `stuarty activity` and `GET /api/v1/projects/{id}/activity` alongside the established `history` CLI command and `GET /api/v1/projects/{id}/history` timeline revision endpoint. On MCP, the existing `history` tool serves the feed through `action=activity`.
+
 1. **Unified Activity Read Model (`service/activity_history.go`)**:
    - Request `ActivityListRequest`:
      - `ProjectID` (optional — empty for global `/history`, set for per-project history)

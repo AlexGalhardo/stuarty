@@ -108,6 +108,7 @@ var parity = []row{
 	// is absent in network mode (SDD-003 exception E-6, SDD-011 section 14.10).
 	{method: "AssetReveal", command: "asset:path", route: "POST /assets/{}/reveal"},
 	{method: "AuditList", command: "audit", route: "GET /audit"},
+	{method: "ActivityList", tool: "history", command: "activity", route: "GET /history"},
 	{method: "ExportFile", route: "GET /jobs/{}/file", httpOnly: true},
 	// The CLI command tools:install is for the person at the terminal and has
 	// no MCP tool (SDD-007 section 6.8, SDD-003 section 7.1).

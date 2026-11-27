@@ -244,7 +244,7 @@ func (s *svc) PublicationDuplicate(ctx context.Context, req PublicationDuplicate
 		return nil, err
 	}
 
-	p, derr := s.pubs.Duplicate(ctx, req)
+	p, derr := s.pubs.Duplicate(publicationActivity(ctx, "publication.duplicate"), req)
 	if derr != nil {
 		return nil, callerError(c, publicationError(derr))
 	}

@@ -681,6 +681,24 @@ func TestPublicationIsAnItemOfItsProject(t *testing.T) {
 	c.clock.advance(time.Hour)
 	c.tick()
 
+	activity, err := c.svc.ActivityList(c.as(token), service.ActivityListRequest{
+		ProjectID: c.project, Domain: "publish",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	wantActions := map[string]bool{"publication.create": false, "publication.schedule": false}
+	for _, entry := range activity.Entries {
+		if _, known := wantActions[entry.Action]; known && entry.SubjectID == p.ID {
+			wantActions[entry.Action] = true
+		}
+	}
+	for action, found := range wantActions {
+		if !found {
+			t.Errorf("missing %s for %s in %+v", action, p.ID, activity.Entries)
+		}
+	}
+
 	if res = describe(); item(res).Status != "published" || res.Production.Published != 1 ||
 		res.Production.PendingApprovals != 0 {
 		t.Fatalf("published: item %+v, production %+v", item(res), res.Production)

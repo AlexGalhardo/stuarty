@@ -2,6 +2,7 @@ import { Head, Link, router, usePage } from "@inertiajs/react";
 import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp } from "lucide-react";
 import { type FormEvent, type ReactNode, useRef, useState } from "react";
 
+import { ActivityTimeline } from "@/components/ActivityTimeline";
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
 import { StatusBadge } from "@/components/StatusBadge";
 import UntrustedText from "@/components/UntrustedText";
@@ -730,6 +731,15 @@ export default function ProjectShow() {
 						</ul>
 					</section>
 				)}
+				<section
+					aria-labelledby="project-history-title"
+					className="flex flex-col gap-3"
+				>
+					<h2 id="project-history-title" className="text-lg font-semibold">
+						{t("ui.history.project_title")}
+					</h2>
+					<ActivityTimeline projectId={project.id} />
+				</section>
 			</div>
 		</>
 	);
