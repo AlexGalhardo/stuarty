@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 
+import { DesktopUpdateControl } from "@/components/DesktopUpdateControl";
 import ReleaseMark from "@/components/ReleaseMark";
 import ThemeToggle from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
@@ -416,6 +417,7 @@ function SidebarBody({
 				url={url}
 				collapsed={collapsed}
 			/>
+			<DesktopUpdateControl variant="sidebar" collapsed={collapsed} />
 			<div
 				className={cn(
 					"flex items-center gap-1",

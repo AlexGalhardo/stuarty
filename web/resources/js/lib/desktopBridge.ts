@@ -22,6 +22,11 @@ export interface DesktopBridge {
 	closeTeleprompter?: () => Promise<unknown>;
 	// The native menu calls an action id of the editor menu (SDD-012 section 6.4).
 	onMenuAction?: (callback: (action: string) => void) => Unsubscribe;
+	// Desktop in-app updater controls on Login and the sidebar footer (epic 101).
+	getUpdateState?: () => Promise<unknown>;
+	checkForUpdates?: () => Promise<unknown>;
+	installUpdate?: () => Promise<unknown>;
+	setAutoUpdate?: (enabled: boolean) => Promise<unknown>;
 }
 
 // The shell runs its script after the page loads, so the bridge can appear
@@ -160,4 +165,103 @@ export async function writeBackground(
 export function subscribeDesktopBridge(listener: () => void): Unsubscribe {
 	window.addEventListener(DESKTOP_READY_EVENT, listener);
 	return () => window.removeEventListener(DESKTOP_READY_EVENT, listener);
+}
+
+export type DesktopUpdateStatus =
+	| "idle"
+	| "checking"
+	| "available"
+	| "up_to_date"
+	| "downloading"
+	| "installing"
+	| "offline"
+	| "unconfigured"
+	| "error";
+
+const UPDATE_STATUSES: ReadonlySet<string> = new Set([
+	"idle",
+	"checking",
+	"available",
+	"up_to_date",
+	"downloading",
+	"installing",
+	"offline",
+	"unconfigured",
+	"error",
+]);
+
+export interface DesktopUpdateState {
+	current_version: string;
+	available_version?: string;
+	release_notes?: string;
+	auto_update: boolean;
+	status: DesktopUpdateStatus;
+	progress?: number;
+	error?: string;
+}
+
+export function canUpdate(bridge: DesktopBridge | null): boolean {
+	return (
+		typeof bridge?.getUpdateState === "function" &&
+		typeof bridge?.checkForUpdates === "function" &&
+		typeof bridge?.installUpdate === "function" &&
+		typeof bridge?.setAutoUpdate === "function"
+	);
+}
+
+export function parseUpdateState(value: unknown): DesktopUpdateState | null {
+	if (typeof value !== "object" || value === null) return null;
+	const v = value as Record<string, unknown>;
+	if (
+		typeof v.current_version !== "string" ||
+		typeof v.auto_update !== "boolean" ||
+		typeof v.status !== "string" ||
+		!UPDATE_STATUSES.has(v.status)
+	) {
+		return null;
+	}
+	return {
+		current_version: v.current_version,
+		auto_update: v.auto_update,
+		status: v.status as DesktopUpdateStatus,
+		...(typeof v.available_version === "string" && v.available_version !== ""
+			? { available_version: v.available_version }
+			: {}),
+		...(typeof v.release_notes === "string" && v.release_notes !== ""
+			? { release_notes: v.release_notes }
+			: {}),
+		...(typeof v.progress === "number" ? { progress: v.progress } : {}),
+		...(typeof v.error === "string" && v.error !== ""
+			? { error: v.error }
+			: {}),
+	};
+}
+
+export async function readUpdateState(
+	bridge: DesktopBridge | null,
+): Promise<DesktopUpdateState | null> {
+	if (!bridge?.getUpdateState) return null;
+	return parseUpdateState(await bridge.getUpdateState());
+}
+
+export async function checkDesktopUpdates(
+	bridge: DesktopBridge | null,
+): Promise<DesktopUpdateState | null> {
+	if (!bridge?.checkForUpdates) return null;
+	return parseUpdateState(await bridge.checkForUpdates());
+}
+
+export async function installDesktopUpdate(
+	bridge: DesktopBridge | null,
+): Promise<DesktopUpdateState | null> {
+	if (!bridge?.installUpdate) return null;
+	return parseUpdateState(await bridge.installUpdate());
+}
+
+export async function writeAutoUpdate(
+	bridge: DesktopBridge | null,
+	enabled: boolean,
+): Promise<DesktopUpdateState | null> {
+	if (!bridge?.setAutoUpdate) return null;
+	return parseUpdateState(await bridge.setAutoUpdate(enabled));
 }

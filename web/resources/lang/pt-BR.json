@@ -259,6 +259,22 @@
         "template_import": "Importa um arquivo de modelo."
       }
     },
+    "desktop_update": {
+      "title": "Atualizações do aplicativo",
+      "check": "Atualizar para última versão",
+      "install": "Atualizar para v{version}",
+      "auto_label": "Atualizar automaticamente online",
+      "status": {
+        "available": "A versão v{version} está pronta para instalar.",
+        "up_to_date": "Você já está na última versão estável.",
+        "checking": "Verificando atualizações...",
+        "downloading": "Baixando atualização ({progress}%)...",
+        "installing": "Instalando atualização...",
+        "offline": "Sem internet. Conecte-se para verificar atualizações.",
+        "unconfigured": "Atualizações automáticas não estão ativas nesta compilação.",
+        "error": "Não foi possível verificar atualizações."
+      }
+    },
     "shell": {
       "back": "Voltar",
       "menu": "Abrir a navegação",
