@@ -276,6 +276,18 @@ func TestAssetRenameAnOpenEditorShowsTheNewNameAndNothingBreaks(t *testing.T) {
 		len(list.Assets) != 1 || list.Assets[0].AssetID != in.AssetID {
 		t.Errorf("media list = %+v, %v", list, err)
 	}
+
+	history, err := m.svc.ActivityList(ctx, service.ActivityListRequest{ProjectID: project, Domain: "asset"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	seen := make(map[string]string)
+	for _, entry := range history.Entries {
+		seen[entry.Action] = entry.SubjectID
+	}
+	if seen["media.import"] != in.AssetID || seen["asset.rename.project"] != in.Hash {
+		t.Errorf("project activity = %+v, want import and scoped rename", history.Entries)
+	}
 }
 
 // A file that has no active use, only a use in a trash, is not in the library: the rename says why and what to do.

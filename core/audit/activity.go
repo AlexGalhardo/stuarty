@@ -150,6 +150,14 @@ func humanLabel(actor string) string {
 func ClassifyDomain(action string) string {
 	a := strings.ToLower(strings.TrimSpace(action))
 	switch {
+	case strings.HasPrefix(a, "job.image."):
+		return DomainImage
+	case strings.HasPrefix(a, "job.text."):
+		return DomainWriting
+	case strings.HasPrefix(a, "job.voice."):
+		return DomainAsset
+	case strings.HasPrefix(a, "job.publish."):
+		return DomainPublish
 	case strings.HasPrefix(a, "project."), strings.HasPrefix(a, "template."):
 		return DomainProject
 	case strings.HasPrefix(a, "timeline."),

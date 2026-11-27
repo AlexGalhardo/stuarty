@@ -210,6 +210,10 @@ Every operation belongs to one **domain**. The domain names are fixed here; a ne
 
 Rules: a command (an operation of a registry in `core/command`) takes its domain from the registry that holds it (`command.NewRegistry(domain)`); the registry refuses a command whose own `Domain` differs, and a registry with no domain. The timeline registry is `video`, the image registry `image`. A Service operation has its domain in the table `service.OperationDomains`, and `TestOperationDomains` fails when a Service method has none. The `domain` argument of an MCP tool (SDD-003 section 4.8) takes these names; a missing one means `video`.
 
+### 1.2 Activity History action codes
+
+`ActivityList` keeps the action codes of the audit table. The feed additionally uses `timeline.<kind>`, `image.<kind>`, `text.<source>`, `media.import`, `job.<kind>.requested`, `job.<kind>.<state>`, `chat.tool_call`, and `publication.published` for events from other durable records. A terminal job state is `succeeded`, `failed`, or `cancelled`. Asset metadata changes use `asset.info.set` and `asset.tags.set`. Workspace and project rename rows use `asset.rename` and `asset.rename.project`, respectively. Chat controls use `chat.send`, `chat.cancel`, and `chat.permission.answer`.
+
 ## 2. Identifiers
 
 | Prefix | Object | Defined in |

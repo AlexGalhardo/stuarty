@@ -982,7 +982,11 @@ Rows are deleted only when their owner is deleted by `TrashEmpty`.
 
 RF-134 asks that every operation record its actor in a record that cannot be edited. Edits are in `operations`. Everything else that changes state is recorded here: one row per action, written in the same transaction as the action.
 
-`ActivityList` reads the audit log alongside `operations`, `image_operations`, and saved or reverted `text_revisions`. The feed derives `timeline.<kind>`, `image.<kind>`, and `text.<source>` from the revision metadata, without opening document snapshots, operation payloads, or text bodies. It uses the event time and source key for stable newest-first pagination. Only allowlisted numeric and boolean audit details enter the feed.
+`ActivityList` reads audit rows alongside video, image and text revisions, the first project link of a file, job requests and terminal states, recorded agent tool calls, and publication sends. Revision actions are `timeline.<kind>`, `image.<kind>`, and `text.<source>`. Source metadata produces `media.import`, `job.<kind>.requested`, `job.<kind>.<state>`, `chat.tool_call`, and `publication.published`. A recorded `job.start` already covers the corresponding request. Asset metadata changes and chat controls write audit rows. The global view shows one `asset.rename` per rename, and the involved project views show their own `asset.rename.project` rows.
+
+The read uses timestamps and source keys for stable newest-first pagination. Document snapshots, job inputs and results, chat bodies, and publication payloads stay sealed. Only allowlisted numeric and boolean audit details enter the feed. A historical action can be included while its audit row or source metadata still exists.
+
+Deleting or pruning an agent session archives its tool-call metadata before dropping the transcript. The archived row keeps the same session and sequence key for pagination. The archive keeps the actor identifier and never copies tool names, arguments, transcripts or other text.
 
 ```sql
 CREATE TABLE audit (

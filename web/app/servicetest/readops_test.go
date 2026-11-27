@@ -2,16 +2,20 @@ package servicetest
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"path/filepath"
 	"slices"
 	"strings"
 	"testing"
+	"time"
 
+	"github.com/AlexGalhardo/stuarty/core/chat"
 	"github.com/AlexGalhardo/stuarty/core/command"
 	"github.com/AlexGalhardo/stuarty/core/plan"
 	"github.com/AlexGalhardo/stuarty/core/timeline"
 	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/agenthost"
 	"github.com/AlexGalhardo/stuarty/service/testproject"
 )
 
@@ -382,4 +386,81 @@ func TestActivityListPagesAcrossAuditAndTimelineRevisions(t *testing.T) {
 		req.Cursor = *page.NextCursor
 	}
 	t.Fatal("activity pagination did not end")
+}
+
+func TestActivityListReadsJobAndAgentMetadata(t *testing.T) {
+	e := newEnv(t)
+	project := e.newProject("Activity metadata")
+	ctx := e.as(ui)
+	start := time.Unix(1_789_000_000, 0).UTC()
+	at := start.UnixMilli()
+	const private = "PRIVATE_TEST_PROMPT"
+	const jobID, sessionID = "job_activity", "cht_abcdefghjk"
+
+	err := e.store.Write(ctx, func(ctx context.Context, tx service.Tx) error {
+		job := service.JobRow{
+			ID: jobID, Kind: service.JobImageGenerate, ProjectID: &project, Actor: "local:chat-abcdefghjk",
+			State: service.JobQueued, CreatedMs: at, UpdatedMs: at,
+			Input: json.RawMessage(`{"prompt":"` + private + `"}`),
+		}
+		if err := tx.Jobs().CreateLimited(ctx, job, nil); err != nil {
+			return err
+		}
+		if ok, err := tx.Jobs().Claim(ctx, jobID, at); err != nil {
+			return err
+		} else if !ok {
+			return fmt.Errorf("job %s was not claimed", jobID)
+		}
+		if ok, err := tx.Jobs().Finish(ctx, jobID, service.JobSucceeded, job.Input, nil, at+1); err != nil {
+			return err
+		} else if !ok {
+			return fmt.Errorf("job %s was not finished", jobID)
+		}
+		if err := tx.Chat().SessionCreate(ctx, agenthost.Session{
+			ID: sessionID, ProjectID: project, Profile: "stub", StartedBy: ui,
+			State: chat.StateIdle, CreatedAt: start, UpdatedAt: start,
+		}); err != nil {
+			return err
+		}
+		return tx.Chat().EventUpsert(ctx, sessionID, chat.Event{
+			Seq: 1, At: start, Kind: chat.KindToolCall, Tool: &chat.Tool{Title: private},
+		})
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	res, err := e.svc.ActivityList(ctx, service.ActivityListRequest{ProjectID: project, ActorKind: "agent"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := make(map[string]string)
+	var toolID string
+	for _, entry := range res.Entries {
+		got[entry.Action] = entry.Domain
+		if entry.Action == "chat.tool_call" {
+			toolID = entry.ID
+			if entry.ActorLabel != "stub" {
+				t.Errorf("unexpected agent display name: %q", entry.ActorLabel)
+			}
+		}
+	}
+	if got["job.image.generate.requested"] != "image" || got["job.image.generate.succeeded"] != "image" ||
+		got["chat.tool_call"] != "agent" || len(got) != 3 {
+		t.Fatalf("unexpected activity: %+v", res.Entries)
+	}
+	body, err := json.Marshal(res)
+	if err != nil || strings.Contains(string(body), private) {
+		t.Fatalf("private content in activity response: %v", err)
+	}
+
+	if err := e.store.Write(ctx, func(ctx context.Context, tx service.Tx) error {
+		return tx.Chat().SessionDelete(ctx, sessionID)
+	}); err != nil {
+		t.Fatal(err)
+	}
+	archived, err := e.svc.ActivityList(ctx, service.ActivityListRequest{ProjectID: project, Domain: "agent"})
+	if err != nil || len(archived.Entries) != 1 || archived.Entries[0].ID != toolID {
+		t.Fatalf("expected one tool action with its original ID after deleting the session: %+v, %v", archived, err)
+	}
 }
