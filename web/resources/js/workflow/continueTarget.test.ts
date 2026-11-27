@@ -13,6 +13,9 @@ describe("continueTarget", () => {
 		expect(continueTarget("editing", "prj_aaaaaaaaaa")).toBe(
 			"/editor/prj_aaaaaaaaaa",
 		);
+		expect(
+			continueTarget("editing", "prj_aaaaaaaaaa", undefined, "image"),
+		).toBe("/edit-image");
 		expect(continueTarget("approval", "prj_aaaaaaaaaa")).toBe("/approvals");
 		expect(continueTarget("publication", "prj_aaaaaaaaaa")).toBe("/publish");
 		expect(continueTarget("briefing", "prj_aaaaaaaaaa")).toBe(

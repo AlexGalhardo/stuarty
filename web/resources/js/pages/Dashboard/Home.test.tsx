@@ -176,6 +176,16 @@ describe("the home", () => {
 		);
 		expect(html).toContain("Open project");
 		expect(html).toContain("You are at Edit.");
+		// Every step dot in the workflow trail links directly to that stage's editing page.
+		expect(html).toContain('data-testid="home-trail-step-briefing"');
+		expect(html).toContain('data-testid="home-trail-step-editing"');
+		expect(html).toContain('data-testid="home-trail-step-publication"');
+		expect(html).toMatch(
+			/<a[^>]*href="\/editor\/prj_aaaaaaaaaa"[^>]*data-testid="home-trail-step-editing"/,
+		);
+		expect(html).toMatch(
+			/<a[^>]*data-testid="home-trail-step-publication"[^>]*href="\/publish"/,
+		);
 	});
 
 	test("the studio has six areas that link to pages that exist", () => {

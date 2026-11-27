@@ -1,4 +1,4 @@
-import type { StepId } from "./types";
+import type { ProjectKind, StepId } from "./types";
 
 // The page that goes on from the step the service says is current. It is a link, not a rule: which step is current
 // is the service's word, and this only says where a person works on that kind of step. A text step opens the text
@@ -7,6 +7,7 @@ export function continueTarget(
 	step: StepId,
 	projectId: string,
 	textItemId?: string,
+	projectKind?: ProjectKind,
 ): string {
 	const id = encodeURIComponent(projectId);
 	switch (step) {
@@ -19,7 +20,7 @@ export function continueTarget(
 		case "recording":
 		case "editing":
 		case "finishing":
-			return `/editor/${id}`;
+			return projectKind === "image" ? "/edit-image" : `/editor/${id}`;
 		case "approval":
 			return "/approvals";
 		case "publication":

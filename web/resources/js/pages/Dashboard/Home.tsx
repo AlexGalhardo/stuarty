@@ -241,7 +241,12 @@ function InProgress({
 	const target =
 		step === undefined
 			? null
-			: continueTarget(step.id, project.id, project.text_summary?.item_id);
+			: continueTarget(
+					step.id,
+					project.id,
+					project.text_summary?.item_id,
+					workflow?.kind,
+				);
 	return (
 		<section
 			aria-labelledby="home-progress"
@@ -314,7 +319,11 @@ function InProgress({
 				</p>
 			) : (
 				<div className="max-md:order-2">
-					<HomeTrail workflow={workflow} />
+					<HomeTrail
+						workflow={workflow}
+						projectId={project.id}
+						textItemId={project.text_summary?.item_id}
+					/>
 				</div>
 			)}
 		</section>
