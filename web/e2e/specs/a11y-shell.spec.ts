@@ -28,7 +28,16 @@ test.describe("a11y-shell", () => {
 				await page.setViewportSize(size);
 				await page.goto("/");
 				await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-				await expect(page.getByTestId("scene-bar")).toBeVisible();
+				const scene = page.getByTestId("scene-bar");
+				if (size.width < 768) {
+					await expect(scene).toBeHidden();
+					await page.getByTestId("chat-toggle").click();
+					await expect(page.getByTestId("chat-panel")).toBeVisible();
+					await page.keyboard.press("Escape");
+					await expect(page.getByTestId("chat-panel")).toBeHidden();
+				} else {
+					await expect(scene).toBeVisible();
+				}
 				const found: string[] = [];
 				const scan = async (what: string): Promise<void> => {
 					// A sheet still fading in has text halfway to its colour, which axe reads as low contrast:

@@ -80,4 +80,21 @@ describe("ActivityTimeline", () => {
 		expect(html).toContain('data-testid="history-empty"');
 		expect(html).toContain("Nenhuma atividade registrada");
 	});
+
+	test("localizes job outcomes and puts the internal identifier in the details", () => {
+		const entry: ActivityEntry = {
+			...sampleEntries[0],
+			domain: "image",
+			action: "job.image.generate.succeeded",
+			subject_id: "job_123",
+		};
+		const html = drawForTest(
+			<ActivityTimeline initialEntries={[entry]} />,
+			"pt-BR",
+		);
+		expect(html).toContain("Tarefa concluída");
+		expect(html).toMatch(
+			/<details[^>]*>.*Detalhes da ação.*job_123.*<\/details>/,
+		);
+	});
 });

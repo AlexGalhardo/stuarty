@@ -1,4 +1,16 @@
+import { mkdirSync } from "node:fs";
+import { join } from "node:path";
+import AxeBuilder from "@axe-core/playwright";
+import type { Page } from "@playwright/test";
+
 import { caller, expect, makeProject, projectBody, test } from "./helpers";
+
+async function capture(page: Page, name: string): Promise<void> {
+	const dir = process.env.STUARTY_SHOT_DIR;
+	if (!dir) return;
+	mkdirSync(dir, { recursive: true });
+	await page.screenshot({ path: join(dir, `history-${name}.png`) });
+}
 
 // End-to-end verification for epic 111: global Activity History in the sidebar
 // (/history) and per-project History section on /projects/{id}, in both en and pt-BR.
@@ -84,4 +96,71 @@ test.describe("activity history (epic 111)", () => {
 		await expect(timeline).toContainText("Projeto criado");
 		await expect(timeline).toContainText("Projeto Histórico PT");
 	});
+
+	for (const locale of ["en", "pt-BR"] as const) {
+		for (const theme of ["dark", "light"] as const) {
+			test(`review global and project history at desktop and mobile in ${locale} ${theme}`, async ({
+				page,
+			}) => {
+				await page.addInitScript(
+					({ lang, palette }) => {
+						localStorage.setItem("vv.lang", lang);
+						localStorage.setItem("theme", palette);
+					},
+					{ lang: locale, palette: theme },
+				);
+
+				const person = await caller(page.request);
+				const agent = await caller(page.request, "chat-history-design");
+				const project = await makeProject(person, "Launch Trailer");
+				const id = project.project_id as string;
+				const head = await person("GET", `/projects/${id}?detail=document`);
+				await agent("POST", `/projects/${id}/edit`, {
+					base_revision: head.revision,
+					operations: [
+						{ op: "project.rename", args: { name: "Launch Trailer Cut" } },
+					],
+				});
+
+				for (const width of [1440, 390]) {
+					await page.setViewportSize({ width, height: 900 });
+					for (const view of ["global", "project"] as const) {
+						const target = view === "global" ? "/history" : `/projects/${id}`;
+						const section =
+							view === "global"
+								? "activity-timeline"
+								: "project-activity-timeline";
+						await page.goto(target);
+						const timeline = page.getByTestId(section);
+						await expect(
+							timeline.getByTestId("history-entry").first(),
+						).toBeVisible();
+						if (view === "project") {
+							await page
+								.getByRole("heading", {
+									name:
+										locale === "en"
+											? "Project history"
+											: "Histórico do projeto",
+									exact: true,
+								})
+								.evaluate((heading) =>
+									heading.scrollIntoView({ block: "start" }),
+								);
+						}
+						const fits = await timeline.evaluate(
+							(el) => el.scrollWidth <= el.clientWidth + 1,
+						);
+						expect(fits).toBe(true);
+						const { violations } = await new AxeBuilder({ page })
+							.include(`[data-testid="${section}"]`)
+							.withTags(["wcag2a", "wcag2aa", "wcag21aa"])
+							.analyze();
+						expect(violations).toEqual([]);
+						await capture(page, `${view}-${locale}-${theme}-${width}`);
+					}
+				}
+			});
+		}
+	}
 });

@@ -54,7 +54,18 @@ export function actionLabel(t: Translate, action: string): string {
 	const slug = action.toLowerCase().replace(/[^a-z0-9]+/g, "_");
 	const key = `ui.history.action.${slug}`;
 	const text = t(key);
-	return text === key ? t("ui.history.action.unknown") : text;
+	if (text !== key) return text;
+
+	const jobPhase = action.startsWith("job.")
+		? action.split(".").at(-1)
+		: undefined;
+	if (jobPhase !== undefined) {
+		const phaseKey = `ui.history.action.job_${jobPhase}`;
+		const phaseLabel = t(phaseKey);
+		if (phaseLabel !== phaseKey) return phaseLabel;
+	}
+
+	return t("ui.history.action.unknown");
 }
 
 function formatDayHeading(iso: string, locale: string): string {
@@ -211,6 +222,10 @@ export function ActivityTimeline({
 
 	const filterIdPrefix =
 		projectId !== undefined ? `project-history-${projectId}` : "global-history";
+	const filtered =
+		actorKind !== "all" ||
+		domain !== "all" ||
+		selectedProject !== (projectId ?? "");
 
 	return (
 		<div
@@ -312,88 +327,111 @@ export function ActivityTimeline({
 					className="flex flex-col items-center gap-2 rounded-lg border border-dashed border-border p-8 text-center"
 				>
 					<Clock aria-hidden="true" className="size-6 text-text-muted" />
-					<p className="text-sm font-medium">{t("ui.history.empty.title")}</p>
+					<p className="text-sm font-medium">
+						{t(
+							filtered
+								? "ui.history.empty.filtered_title"
+								: "ui.history.empty.title",
+						)}
+					</p>
 					<p className="text-sm text-text-muted">
-						{t("ui.history.empty.hint")}
+						{t(
+							filtered
+								? "ui.history.empty.filtered_hint"
+								: "ui.history.empty.hint",
+						)}
 					</p>
 				</div>
 			) : (
 				<div className="flex flex-col gap-5">
 					{grouped.map((group) => (
 						<section key={group.day} className="flex flex-col gap-2">
-							<h3 className="text-xs font-semibold tracking-wider text-text-muted uppercase">
+							<h3 className="flex items-center gap-3 text-sm font-semibold text-text-muted after:h-px after:flex-1 after:bg-border">
 								{group.day}
 							</h3>
-							<ol className="flex flex-col gap-2">
+							<ol className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-surface">
 								{group.items.map((entry) => (
 									<li
 										key={entry.id}
 										data-testid="history-entry"
 										data-actor-kind={entry.actor_kind}
 										data-domain={entry.domain}
-										className="flex flex-col gap-1.5 rounded-lg border border-border bg-surface p-3 text-sm"
+										className="grid min-w-0 gap-x-4 gap-y-1.5 px-3 py-3 text-sm sm:grid-cols-[5.5rem_minmax(0,1fr)] sm:px-4"
 									>
-										<div className="flex flex-wrap items-center gap-2">
-											<StatusBadge status={actorBadgeStatus(entry.actor_kind)}>
-												{t(`ui.history.actor.${entry.actor_kind}`)}
-											</StatusBadge>
-											<Badge variant="outline">
-												{t(`ui.history.domain.${entry.domain}`)}
-											</Badge>
-											<span className="font-medium text-text">
-												{actionLabel(t, entry.action)}
-											</span>
-											<span className="ml-auto text-xs text-text-muted [font-variant-numeric:tabular-nums]">
-												{formatTime(entry.at, locale)}
-											</span>
-										</div>
+										<time
+											dateTime={entry.at}
+											className="pt-0.5 text-xs tabular-nums text-text-muted"
+										>
+											{formatTime(entry.at, locale)}
+										</time>
+										<div className="flex min-w-0 flex-col gap-1.5">
+											<div className="flex flex-wrap items-center gap-2">
+												<span className="font-medium text-text">
+													{actionLabel(t, entry.action)}
+												</span>
+												<StatusBadge
+													status={actorBadgeStatus(entry.actor_kind)}
+												>
+													{t(`ui.history.actor.${entry.actor_kind}`)}
+												</StatusBadge>
+												<Badge variant="outline">
+													{t(`ui.history.domain.${entry.domain}`)}
+												</Badge>
+											</div>
 
-										<div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-text-muted">
-											<span>
-												{t("ui.history.by")}{" "}
-												<UntrustedText>{entry.actor_label}</UntrustedText>
-											</span>
-											{projectId === undefined &&
-												entry.project_id !== undefined && (
-													<Link
-														href={`/projects/${encodeURIComponent(entry.project_id)}`}
+											<div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-text-muted">
+												<span>
+													{t("ui.history.by")}{" "}
+													<UntrustedText>{entry.actor_label}</UntrustedText>
+												</span>
+												{projectId === undefined &&
+													entry.project_id !== undefined && (
+														<Link
+															href={`/projects/${encodeURIComponent(entry.project_id)}`}
+															className="font-medium text-accent-text underline-offset-2 hover:underline"
+														>
+															<UntrustedText>
+																{entry.project_name || entry.project_id}
+															</UntrustedText>
+														</Link>
+													)}
+												{entry.revision !== undefined && (
+													<a
+														href={subjectHref(entry)}
 														className="font-medium text-accent-text underline-offset-2 hover:underline"
 													>
-														<UntrustedText>
-															{entry.project_name || entry.project_id}
-														</UntrustedText>
-													</Link>
+														{t("ui.history.revision", {
+															revision: entry.revision,
+														})}
+													</a>
 												)}
-											{entry.revision !== undefined && (
-												<a
-													href={subjectHref(entry)}
-													className="font-medium text-accent-text underline-offset-2 hover:underline"
-												>
-													{t("ui.history.revision", {
-														revision: entry.revision,
-													})}
-												</a>
-											)}
-											{entry.revision === undefined &&
-												entry.subject_id !== undefined && (
-													<span className="font-mono text-text-subtle">
-														<UntrustedText>{entry.subject_id}</UntrustedText>
-													</span>
-												)}
-										</div>
+											</div>
 
-										{entry.details !== undefined && (
-											<details className="pt-1 text-xs text-text-muted">
-												<summary className="cursor-pointer font-medium">
-													{t("ui.history.details")}
-												</summary>
-												<pre className="mt-1 max-h-32 overflow-auto rounded bg-surface-sunken p-2 font-mono text-xs">
-													<UntrustedText>
-														{JSON.stringify(entry.details, null, 2)}
-													</UntrustedText>
-												</pre>
-											</details>
-										)}
+											{(entry.details !== undefined ||
+												(entry.revision === undefined &&
+													entry.subject_id !== undefined)) && (
+												<details className="pt-1 text-xs text-text-muted">
+													<summary className="cursor-pointer font-medium">
+														{t("ui.history.details")}
+													</summary>
+													{entry.subject_id !== undefined && (
+														<div className="mt-1">
+															{t("ui.history.identifier")}{" "}
+															<UntrustedText className="break-all font-mono">
+																{entry.subject_id}
+															</UntrustedText>
+														</div>
+													)}
+													{entry.details !== undefined && (
+														<pre className="mt-1 max-h-32 overflow-auto rounded bg-surface-sunken p-2 font-mono text-xs">
+															<UntrustedText>
+																{JSON.stringify(entry.details, null, 2)}
+															</UntrustedText>
+														</pre>
+													)}
+												</details>
+											)}
+										</div>
 									</li>
 								))}
 							</ol>

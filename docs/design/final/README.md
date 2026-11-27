@@ -26,7 +26,10 @@ Bulk exported PNG captures are intentionally omitted from version control to kee
 - **Product screens (104 frames across dark and light at `1440x900`)**: core sections 1–21 (including Publishing in month, week, and list views), Production workflow (`22`), Notification center (`23`), Screen recording (`24a`–`24f`), Finishing & editor stages (`25`–`30`), Local models (`31`), External motion (`32`), and Text-only project flow (`33a`–`33h`).
 - **States (133 frames)**: empty, loading, error, and all five agent states (`working`, `waiting`, `denied`, `done`, `failed`).
 - **Responsive (`1280x800` and `390x844`)**: Home, Chat, Approvals, Publishing, Notification center, drawer navigation, and mobile Screen Recording notice.
+- **Activity History (`34a` and `34b`)**: global and per-project views at `1440x900` and mobile `390x844`, in English and Brazilian Portuguese, in both themes. The editable frames use the shared color tokens.
 - **Landing & docs frames**: English marketing and documentation shells at `1440` and `390` in both themes.
+
+The 390 px screens use the top bar for Chat and Notifications. The agent scene bar appears on desktop and wider layouts.
 
 ## Updating the design in future UI epics
 

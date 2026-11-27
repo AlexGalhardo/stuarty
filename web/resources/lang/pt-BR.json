@@ -5623,9 +5623,12 @@
       "load_more": "Carregar mais",
       "by": "Por",
       "details": "Detalhes da ação",
+      "identifier": "Identificador",
       "empty": {
         "title": "Nenhuma atividade registrada ainda",
-        "hint": "Edições, importações, gerações, aprovações e publicações vão aparecer aqui."
+        "hint": "Edições, importações, gerações, aprovações e publicações vão aparecer aqui.",
+        "filtered_title": "Nenhuma atividade corresponde a estes filtros",
+        "filtered_hint": "Altere um filtro para ver mais atividades."
       },
       "filter": {
         "actor": "Autor",

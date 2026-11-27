@@ -883,6 +883,8 @@ Data-free components under `web/resources/js/components/`, built on the tokens o
 
 **The scene bar** (`shell/SceneBar.tsx`, in every page and in the editors through `EditorSceneBar`) has, in order: the agent and its state, "Skill", "Tool", "Next" (the step after this one, in words, when the page passes `next`; otherwise "No next step reported", never a guess) and, for a request that waits, "Recusar" and "Permitir" (a person's session only). The label is "Skill", not a translation of it. `SceneBar` keeps the `none`, `idle`, `working`, `waiting`, `denied`, `done` and `failed` variants.
 
+The scene bar appears at 768 px and wider. On narrow screens the top bar provides Chat and Notifications, including pending agent requests.
+
 **The trail** (`workflow/`) draws the steps the service reports and decides nothing. The rule that no step is done after the current one is in `core/project` (SDD-005 section 5.12.4).
 
 ## 5. Iconography, illustration and the product mark

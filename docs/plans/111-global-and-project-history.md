@@ -62,11 +62,11 @@ The workspace feed uses `stuarty activity` and `GET /api/v1/projects/{id}/activi
 
 ## Tasks
 
-- [ ] 1. Specify `ActivityHistoryList`, `/history`, `/api/v1/history`, `/api/v1/projects/{project_id}/history`, and canonical action codes in SDD-000, SDD-003, SDD-005, and SDD-012. Verify: `task lint:md` exits 0.
-- [ ] 2. Implement pure classification and filter validation rules in `core/audit/` (or `core/history/`) with table tests. Verify: `go test ./core/...` passes.
-- [ ] 3. Implement `service/activity_history.go` (global + per-project query, actor/domain filtering, network-mode owner isolation, audit coverage audit for key mutations, zero secret/sealed-data leaks). Verify: `go test ./service/... -run "Audit|History|Activity"` passes.
+- [x] 1. Specify `ActivityList`, `/history`, `/api/v1/history`, `/api/v1/projects/{id}/activity`, and canonical action codes in SDD-000, SDD-003, SDD-005, and SDD-012. Verify: `task lint:md` exits 0.
+- [x] 2. Implement pure classification and filter validation rules in `core/audit/` with table tests. Verify: `go test ./core/...` passes.
+- [x] 3. Implement `service/activity_history.go` with the global and per-project queries, filters, ownership checks, and metadata listed in the coverage review. Verify: `go test ./service/... -run "Audit|History|Activity"` and the focused activity integration tests pass.
 - [ ] 4. Expose HTTP routes, CLI `stuarty history`, MCP read action (within NFR-020), and `GET /history` Inertia route; add `history` to `sections.ts` and `breadcrumb.ts`. Verify: `go test ./web/app/... ./web/routes/... ./web/contract/...`, `go test -run TestSecurity_ ./...`, and `go run ./internal/tools/surfacebudget` pass.
-- [ ] 5. Build `ActivityTimeline.tsx`, `pages/History/Index.tsx`, and integrate per-project History into `pages/Projects/Show.tsx`; add full `en.json` and `pt-BR.json` translations for all action codes and filters. Verify: `cd web && bun run typecheck && bun run check:thin-client && bun run check:i18n && bunx vitest run`.
+- [x] 5. Build `ActivityTimeline.tsx`, `pages/History/Index.tsx`, and the section in `pages/Projects/Show.tsx`. Localize the action labels and filters in English and Brazilian Portuguese. Verify: `cd web && bun run typecheck && bun run check:thin-client && bun run check:i18n && bunx vitest run`.
 - [ ] 6. Add Playwright E2E tests verifying: (a) clicking **History** in the main sidebar shows recent human and agent actions globally with working filters; (b) opening a project's History section shows only that project's actions and updates after an edit. Verify: `task lint`, `task test`, `task test:web`, and the Playwright history specs pass.
 
 ## Test strategy
@@ -74,6 +74,17 @@ The workspace feed uses `stuarty activity` and `GET /api/v1/projects/{id}/activi
 - Unit tests: actor classification (`local:chat-*` -> `agent`, browser session -> `human`, scheduler/system -> `system`), cursor pagination, filter validation.
 - Security tests: network-mode user A cannot see user B's global or project history; project-scoped API key cannot read another project's history (`E_FORBIDDEN`); locked local workspace returns `E_LOCKED`; no secret or credential ever appears in history details.
 - Web & E2E: Vitest tests for `ActivityTimeline`, `History/Index`, and `Projects/Show` history section; Playwright spec performing human + agent actions across 2 projects and verifying global `/history` vs per-project filtering.
+
+## Coverage review
+
+| Area | Activity source |
+| --- | --- |
+| Projects and assets | Project and workflow audit rows, the file's first project link, workspace metadata changes, and project-scoped renames |
+| Video, images and writing | Document and text revisions, draft generation audit, and job requests and outcomes |
+| Approvals, connections and publishing | Existing approval and connection audit, publication mutations, and successful target sends |
+| Hosted agents | Session and control audit plus tool-call metadata, retained when the transcript is pruned or deleted |
+
+History uses source records that still exist. Previously purged jobs, project links and chat transcripts cannot be reconstructed. Pending requests and external publishing are exercised with fixtures. The design master includes editable `34a` and `34b` frames and the browser spec checks both views in both themes and locales at 1440 and 390 px, including accessibility and overflow.
 
 ## Acceptance criteria
 
