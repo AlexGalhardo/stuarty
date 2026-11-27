@@ -249,8 +249,9 @@ test("Logout locks the studio: the pages and the API answer with the sign-in and
 
 	await page.getByTestId("account-logout").click();
 	await expect(page).toHaveURL(/\/account\/signin$/);
-	await expect(page.getByText(/Locked for inactivity/)).toBeVisible();
 	await expect(page.getByTestId("signin-account")).toContainText("stuart");
+	await expect(page.getByTestId("signin-switch-account")).toBeVisible();
+	await expect(page.getByText(/Locked for inactivity/)).toHaveCount(0);
 	await looksRight(page, "unlock");
 
 	await page.goto("/projects");

@@ -1,5 +1,5 @@
 import { Head, usePage } from "@inertiajs/react";
-import { Lock, LockOpen } from "lucide-react";
+import { LockOpen } from "lucide-react";
 import { type FormEvent, type ReactNode, useState } from "react";
 
 import { AuthCard } from "@/components/AuthCard";
@@ -17,12 +17,9 @@ import { HttpTransport } from "../../editor/api/http";
 // e-mail and the password unlock the studio. The password goes to the server and nowhere else.
 export default function SignIn(): ReactNode {
 	const t = useT();
-	// The page is also served while the studio is open, to a browser with no session or a session that is not a
-	// person's (the link of the account settings); only the server's state may say the studio is locked.
+	// With an account the studio already knows, the card names it and only the password is asked;
+	// the person can always switch to another account, even when the studio is locked (epic 103).
 	const account = usePage<SharedProps>().props.account;
-	const locked = account?.state === "locked";
-	// With an account the studio already knows, the card names it and only the password is asked (the final design);
-	// the person can still sign in with another account.
 	const known = account?.username ? account.username : null;
 	const [other, setOther] = useState(false);
 	const asKnown = known !== null && !other;
@@ -54,24 +51,16 @@ export default function SignIn(): ReactNode {
 			<Head title={t("ui.account.signin.title")} />
 			<AuthCard
 				title={
-					locked
-						? t("ui.account.signin.locked_title")
-						: asKnown
-							? t("ui.account.signin.welcome")
-							: t("ui.account.signin.title")
+					asKnown
+						? t("ui.account.signin.welcome")
+						: t("ui.account.signin.title")
 				}
 				description={
-					locked
-						? t("ui.account.signin.locked_intro")
-						: asKnown
-							? t("ui.account.signin.welcome_intro")
-							: t("ui.account.signin.intro_open")
+					asKnown
+						? t("ui.account.signin.welcome_intro")
+						: t("ui.account.signin.intro_open")
 				}
-				icon={locked ? Lock : undefined}
-				iconTone="warning"
-				footer={
-					locked ? t("ui.account.signin.locked_footer") : t("ui.account.footer")
-				}
+				footer={t("ui.account.footer")}
 			>
 				<form
 					onSubmit={(event) => void submit(event)}
@@ -118,19 +107,28 @@ export default function SignIn(): ReactNode {
 					<FailureNote id="signin-error" failure={failure} />
 					<Button type="submit" size="lg" disabled={busy}>
 						<LockOpen aria-hidden="true" />
-						{locked
-							? t("ui.account.signin.locked_unlock")
-							: t("ui.account.signin.submit")}
+						{t("ui.account.signin.submit")}
 					</Button>
 				</form>
 				<p className="flex flex-col items-center gap-2 text-sm">
-					{known !== null && !other && !locked ? (
+					{known !== null && !other ? (
 						<button
 							type="button"
+							data-testid="signin-switch-account"
 							className="underline underline-offset-4 max-md:py-3"
 							onClick={() => setOther(true)}
 						>
 							{t("ui.account.signin.other_account")}
+						</button>
+					) : null}
+					{known !== null && other ? (
+						<button
+							type="button"
+							data-testid="signin-use-known"
+							className="underline underline-offset-4 max-md:py-3"
+							onClick={() => setOther(false)}
+						>
+							{t("ui.account.signin.use_known", { name: known })}
 						</button>
 					) : null}
 					<a

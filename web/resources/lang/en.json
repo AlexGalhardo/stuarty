@@ -3681,11 +3681,8 @@
         "intro_open": "Sign in with your password to work in Stuarty as yourself.",
         "welcome": "Good to see you again",
         "welcome_intro": "Type your password to open your studio.",
-        "locked_title": "Stuarty is locked",
-        "locked_intro": "Locked for inactivity. Your work is saved.",
-        "locked_unlock": "Unlock",
-        "locked_footer": "While locked, nothing in the workspace is reachable: no agents, CLI or API.",
-        "other_account": "Sign in with another account",
+        "other_account": "Switch account",
+        "use_known": "Sign in as {name}",
         "submit": "Sign in",
         "forgot": "I forgot my password"
       },
@@ -3694,7 +3691,8 @@
         "intro": "Type the recovery key you saved and choose a new password. Your data stays as it is.",
         "key": "Recovery key",
         "new_password": "New password",
-        "submit": "Set the new password"
+        "submit": "Set the new password",
+        "back_to_login": "Back to sign in"
       },
       "reason": {
         "too_short": "It is too short.",
