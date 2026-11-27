@@ -159,6 +159,7 @@ func run() error {
 	// macOS shows the application menu; Windows and Linux show a menu per window,
 	// and without win.SetMenu the window has no menu bar.
 	up := newUpdater(app)
+	br.up.Store(up)
 	app.OnShutdown(up.launcher.Close)
 	menu := buildMenu(app, win, ws, up, bg.quit)
 	app.Menu.SetApplicationMenu(menu)

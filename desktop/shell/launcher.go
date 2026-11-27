@@ -3,6 +3,9 @@ package shell
 import (
 	"context"
 	"errors"
+	"net"
+	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -73,6 +76,10 @@ type Launcher struct {
 	stopLoop   context.CancelFunc
 	installing bool
 	declined   map[string]bool
+	status     string
+	lastOffer  *update.Offer
+	lastErr    string
+	progress   int
 	wg         sync.WaitGroup
 }
 
@@ -82,7 +89,12 @@ func NewLauncher(cfg LauncherConfig) *Launcher {
 		cfg.After = time.After
 	}
 
-	l := &Launcher{cfg: cfg, settings: cfg.Settings, declined: map[string]bool{}}
+	status := "idle"
+	if cfg.Client == nil {
+		status = "unconfigured"
+	}
+
+	l := &Launcher{cfg: cfg, settings: cfg.Settings, declined: map[string]bool{}, status: status}
 	if cfg.RolledBack != "" {
 		l.declined[cfg.RolledBack] = true
 	}
@@ -261,6 +273,137 @@ func (l *Launcher) offer(ctx context.Context, offer *update.Offer) {
 	})
 }
 
+// SetProgress records the download progress percentage for the UI bridge (epic 101).
+func (l *Launcher) SetProgress(done, total int64) {
+	if total <= 0 {
+		return
+	}
+	pct := int(min(max(done*100/total, 0), 100))
+
+	l.mu.Lock()
+	l.progress = pct
+	if l.installing {
+		l.status = "downloading"
+	}
+	l.mu.Unlock()
+}
+
+// State returns the current updater snapshot for window.vukemDesktop (epic 101).
+func (l *Launcher) State() UpdateState {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+
+	st := UpdateState{
+		CurrentVersion: l.cfg.Current,
+		AutoUpdate:     l.settings.AutoCheck(),
+		Status:         l.status,
+		Progress:       l.progress,
+		Error:          l.lastErr,
+	}
+	if l.lastOffer != nil {
+		st.AvailableVersion = l.lastOffer.Version
+		st.ReleaseNotes = strings.TrimSpace(l.lastOffer.Notes)
+	}
+	return st
+}
+
+// CheckState runs a signed feed check and updates the bridge state without popping a native dialog.
+func (l *Launcher) CheckState(ctx context.Context) UpdateState {
+	if l.cfg.Client == nil {
+		l.mu.Lock()
+		l.status = "unconfigured"
+		l.lastErr = ""
+		l.mu.Unlock()
+		return l.State()
+	}
+
+	l.mu.Lock()
+	if l.installing {
+		l.mu.Unlock()
+		return l.State()
+	}
+	l.status = "checking"
+	l.lastErr = ""
+	l.mu.Unlock()
+
+	offer, err := l.cfg.Client.CheckNow(ctx)
+
+	l.mu.Lock()
+	switch {
+	case err == nil && offer != nil:
+		l.lastOffer = offer
+		l.status = "available"
+		l.lastErr = ""
+	case errors.Is(err, update.ErrNotNewer):
+		l.lastOffer = nil
+		l.status = "up_to_date"
+		l.lastErr = ""
+	case errors.Is(err, update.ErrNotConfigured):
+		l.status = "unconfigured"
+		l.lastErr = ""
+	case isOfflineError(err):
+		l.status = "offline"
+		l.lastErr = ""
+	default:
+		l.status = "error"
+		if err != nil {
+			l.lastErr = err.Error()
+		}
+	}
+	l.mu.Unlock()
+
+	return l.State()
+}
+
+// InstallAvailable downloads, verifies and applies the available update (checking first if none is cached).
+func (l *Launcher) InstallAvailable(ctx context.Context) UpdateState {
+	if l.cfg.Client == nil {
+		return l.State()
+	}
+
+	l.mu.Lock()
+	offer := l.lastOffer
+	busy := l.installing
+	l.mu.Unlock()
+
+	if busy {
+		return l.State()
+	}
+
+	if offer == nil {
+		st := l.CheckState(ctx)
+		if st.Status != "available" {
+			return st
+		}
+		l.mu.Lock()
+		offer = l.lastOffer
+		l.mu.Unlock()
+	}
+
+	if offer != nil {
+		l.install(ctx, offer)
+	}
+
+	return l.State()
+}
+
+func isOfflineError(err error) bool {
+	if err == nil {
+		return false
+	}
+	if _, ok := errors.AsType[net.Error](err); ok {
+		return true
+	}
+	if errors.Is(err, os.ErrDeadlineExceeded) || errors.Is(err, context.DeadlineExceeded) {
+		return true
+	}
+	msg := strings.ToLower(err.Error())
+	return strings.Contains(msg, "no such host") ||
+		strings.Contains(msg, "network is unreachable") ||
+		strings.Contains(msg, "connection refused") ||
+		strings.Contains(msg, "dial tcp")
+}
+
 // install downloads, verifies and installs in the background. One install at a time.
 func (l *Launcher) install(ctx context.Context, offer *update.Offer) {
 	l.mu.Lock()
@@ -271,6 +414,9 @@ func (l *Launcher) install(ctx context.Context, offer *update.Offer) {
 	}
 
 	l.installing = true
+	l.status = "downloading"
+	l.progress = 0
+	l.lastErr = ""
 	l.mu.Unlock()
 
 	l.wg.Go(func() {
@@ -280,6 +426,13 @@ func (l *Launcher) install(ctx context.Context, offer *update.Offer) {
 
 		l.mu.Lock()
 		l.installing = false
+		if err != nil {
+			l.status = "error"
+			l.lastErr = err.Error()
+		} else {
+			l.status = "installing"
+			l.progress = 100
+		}
 		l.mu.Unlock()
 
 		if err != nil {
