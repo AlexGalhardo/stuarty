@@ -1,9 +1,8 @@
-//go:build !linux && !darwin
+//go:build !linux && !darwin && !windows
 
 package shell
 
 import "os/exec"
 
-// prepareCommand has nothing to do here: Windows ties the child to the shell with a job object
-// (bindToShell), and other systems rely on Stop.
+// prepareCommand has nothing to do on other operating systems; Stop handles shutdown.
 func prepareCommand(*exec.Cmd) {}
