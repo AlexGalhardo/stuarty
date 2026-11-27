@@ -3,6 +3,7 @@ import type { ComponentType, ReactNode } from "react";
 
 import RenameMenu from "@/components/RenameMenu";
 import UntrustedText from "@/components/UntrustedText";
+import { ContextMenuItem } from "@/components/ui/context-menu";
 import { cn } from "@/lib/cn";
 import { formatDate } from "@/lib/format";
 import { useLocale, useT } from "@/lib/i18n";
@@ -30,6 +31,21 @@ function hasPicture(asset: LibraryAsset): boolean {
 	);
 }
 
+// Destination route when double-clicking or choosing "Open in editor" on an asset card.
+export function assetEditorTarget(asset: LibraryAsset): string | null {
+	const hash = encodeURIComponent(asset.hash);
+	if (asset.kind === "video") {
+		if (asset.poster?.timeline_id) {
+			return `/editor/${encodeURIComponent(asset.poster.timeline_id)}?asset=${hash}`;
+		}
+		return `/edit-video?asset=${hash}`;
+	}
+	if (asset.kind === "image") {
+		return `/edit-image?asset=${hash}`;
+	}
+	return null;
+}
+
 // One file of the video and visual libraries: its picture, the name, where it came from, whether it is
 // reusable, its size and its tags. Everything is what the service listed; the card decides nothing. Its
 // poster stays a plain button so the file opens with Enter, and the menu is the rename menu of epic 60 with
@@ -38,6 +54,7 @@ export function MediaCard({
 	asset,
 	selected,
 	onOpen,
+	onOpenEditor,
 	onRenamed,
 	reveal,
 	onReveal,
@@ -45,6 +62,8 @@ export function MediaCard({
 	asset: LibraryAsset;
 	selected: boolean;
 	onOpen(): void;
+	// Double-click or context-menu action to open the asset directly in its editor (epic 104).
+	onOpenEditor?(asset: LibraryAsset): void;
 	// The file was renamed: the page reads the list again, which the service orders by name.
 	onRenamed?(): void;
 	// What the person may do with the folder of the file, and the call that does it (epic 94).
@@ -54,6 +73,12 @@ export function MediaCard({
 	const t = useT();
 	const locale = useLocale();
 	const Fallback = KIND_ICON[asset.kind] ?? FileImage;
+	const editorLabel =
+		asset.kind === "video"
+			? t("ui.assets.open_video_editor")
+			: asset.kind === "image"
+				? t("ui.assets.open_image_editor")
+				: null;
 	return (
 		<RenameMenu
 			name={asset.name}
@@ -70,18 +95,30 @@ export function MediaCard({
 				)
 			}
 			extra={
-				reveal !== undefined && (
-					<RevealMenuItem
-						reveal={reveal}
-						onSelect={() => onReveal?.(asset.hash)}
-					/>
-				)
+				<>
+					{onOpenEditor !== undefined && editorLabel !== null && (
+						<ContextMenuItem onSelect={() => onOpenEditor(asset)}>
+							{editorLabel}
+						</ContextMenuItem>
+					)}
+					{reveal !== undefined && (
+						<RevealMenuItem
+							reveal={reveal}
+							onSelect={() => onReveal?.(asset.hash)}
+						/>
+					)}
+				</>
 			}
 		>
 			<li>
 				<button
 					type="button"
 					onClick={onOpen}
+					onDoubleClick={
+						onOpenEditor !== undefined && editorLabel !== null
+							? () => onOpenEditor(asset)
+							: undefined
+					}
 					aria-pressed={selected}
 					data-asset-hash={asset.hash}
 					className={cn(

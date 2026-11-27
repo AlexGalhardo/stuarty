@@ -2,7 +2,7 @@ import { renderToString } from "react-dom/server";
 import { describe, expect, test } from "vitest";
 import { I18nProvider } from "@/lib/i18n";
 import { ApiError } from "../../editor/api/errors";
-import { CalendarView } from "./CalendarView";
+import { CalendarView, shouldOpenDayOnDoubleClick } from "./CalendarView";
 import { dateRange, daysOf, queryRange } from "./calendar";
 import { createCalendarApi, exportHref } from "./calendarApi";
 import { DayView } from "./DayView";
@@ -294,6 +294,16 @@ describe("the month and the week open a day", () => {
 		expect(html).toContain("data-quiet");
 		expect(html).toContain('data-testid="calendar-day-quiet"');
 		expect(html).toContain("series");
+	});
+
+	test("double-click opens the day on cell background but not on a post chip or day button", () => {
+		const fakeEl = (matches: boolean): EventTarget =>
+			({
+				closest: () => (matches ? {} : null),
+			}) as unknown as EventTarget;
+		expect(shouldOpenDayOnDoubleClick(fakeEl(false))).toBe(true);
+		expect(shouldOpenDayOnDoubleClick(fakeEl(true))).toBe(false);
+		expect(shouldOpenDayOnDoubleClick(null)).toBe(true);
 	});
 });
 

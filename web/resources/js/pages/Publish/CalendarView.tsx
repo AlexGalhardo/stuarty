@@ -24,6 +24,21 @@ interface Entry {
 	target: Publication["targets"][number];
 }
 
+// Double-clicking a calendar day cell opens that single day view, except when the
+// click originated inside a post chip or the day-number button itself.
+export function shouldOpenDayOnDoubleClick(
+	target: EventTarget | null,
+): boolean {
+	if (target === null || typeof target !== "object") return true;
+	const el = target as { closest?: (selector: string) => unknown };
+	if (typeof el.closest !== "function") return true;
+	return (
+		el.closest(
+			'[data-testid="target-chip"], [data-testid="calendar-day-open"]',
+		) === null
+	);
+}
+
 // The month and the week of the calendar (SDD-020 section 30). A target is a button on the day of its time in the
 // zone of the person. A person drags it to another day, or does the same with the keyboard: Space takes it, the
 // arrow keys move it by a day (left and right) or an hour (up and down), Enter drops it and Escape lets it go. The
@@ -191,6 +206,14 @@ export function CalendarView({
 									gridRow: `1 / span ${rows}`,
 									gridTemplateRows: "subgrid",
 								}}
+								onDoubleClick={(event) => {
+									if (
+										onOpenDay !== undefined &&
+										shouldOpenDayOnDoubleClick(event.target)
+									) {
+										onOpenDay(day.key);
+									}
+								}}
 								onDragOver={(event) => event.preventDefault()}
 								onDrop={(event) => {
 									event.preventDefault();
@@ -307,6 +330,14 @@ export function CalendarView({
 									!day.inMonth && "bg-muted/40 text-muted-foreground",
 									day.key === now && "bg-accent-soft",
 								)}
+								onDoubleClick={(event) => {
+									if (
+										onOpenDay !== undefined &&
+										shouldOpenDayOnDoubleClick(event.target)
+									) {
+										onOpenDay(day.key);
+									}
+								}}
 								onDragOver={(event) => event.preventDefault()}
 								onDrop={(event) => {
 									event.preventDefault();
