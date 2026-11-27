@@ -26,6 +26,8 @@ func TestInboxStreamEndsAfterAnUnchangedSnapshotOrReadError(t *testing.T) {
 		{name: "read failed", err: errors.New("the caller can no longer read the inbox")},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
 			e := New(nil, Options{})
 			t.Cleanup(e.Close)
 			live := make(chan sse.Event, 2)
