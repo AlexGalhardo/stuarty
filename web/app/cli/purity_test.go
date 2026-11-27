@@ -480,7 +480,10 @@ func (s stub) LibraryReindex(context.Context, service.LibraryReindexRequest) (*s
 	return reply[service.LibraryReindexResult](s.err)
 }
 
-func (s stub) StandaloneVideoList(context.Context, service.StandaloneVideoListRequest) (*service.ProjectListResult, error) {
+func (s stub) StandaloneVideoList(
+	context.Context,
+	service.StandaloneVideoListRequest,
+) (*service.ProjectListResult, error) {
 	return reply[service.ProjectListResult](s.err)
 }
 

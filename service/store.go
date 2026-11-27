@@ -153,14 +153,14 @@ type ProjectRow struct {
 
 // ProjectQuery selects a page of the project listing.
 type ProjectQuery struct {
-	State          ProjectState // "" means active only
-	IncludeTrashed bool         // both states; wins over State
+	State             ProjectState // "" means active only
+	IncludeTrashed    bool         // both states; wins over State
 	StandaloneOnly    bool         // true: only standalone video sessions (standalone = 1)
 	IncludeStandalone bool         // true: both regular productions and standalone sessions (e.g. TrashEmpty)
-	OwnerUserID    string       // network mode: only this user's projects, applied in SQL
-	ProjectID      string       // a key limited to one project: the timelines of that one
-	After          string       // opaque cursor from the previous page
-	Limit          int          // 1 to 200; 0 means 50
+	OwnerUserID       string       // network mode: only this user's projects, applied in SQL
+	ProjectID         string       // a key limited to one project: the timelines of that one
+	After             string       // opaque cursor from the previous page
+	Limit             int          // 1 to 200; 0 means 50
 }
 
 // ProjectUpdate is what a commit writes to the project row.

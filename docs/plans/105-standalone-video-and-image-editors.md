@@ -62,12 +62,12 @@ A creator can open **Edit Video** (`/edit-video`) or **Edit Image** (`/edit-imag
 
 ## Tasks
 
-- [ ] 1. Specify standalone video and image sessions in SDD-000, SDD-005, SDD-012, and SDD-021 (including migration schema, API/CLI/MCP contracts, and `surfacebudget` check). Verify: `task lint:md` exits 0.
-- [ ] 2. Add `standalone` support in `core/project/`, DB migration, and `service/` (`StandaloneVideoCreate`, `StandaloneVideoList`, `StandalonePromote`, `ImageOpenFromAsset`) with unit and integration tests. Verify: `go test ./core/project/... ./service/... ./web/database/...` passes.
-- [ ] 3. Expose HTTP routes, CLI commands, and MCP actions with full contract/parity tests; remove `"edit-video"` from `dashboardSections` placeholder in `web/routes/dashboard.go` and update `TestDashboardSectionsMatchTheSidebar`. Verify: `go test ./web/app/... ./web/routes/... ./web/contract/...` and `go run ./internal/tools/surfacebudget` pass.
-- [ ] 4. Build `web/resources/js/pages/EditVideo/Index.tsx` (drag-and-drop, file picker, blank presets, recent standalone edits, `?asset=<hash>` auto-open) and add the "Save as Project" promote action in the video editor for standalone sessions. Verify: `cd web && bun run typecheck && bun run check:thin-client && bunx vitest run`.
-- [ ] 5. Upgrade `web/resources/js/pages/EditImage/Index.tsx` with top-level instant drag-and-drop, file picker, and `?asset=<hash>` direct opening; add `en.json` and `pt-BR.json` strings. Verify: `cd web && bun run check:i18n && bunx vitest run`.
-- [ ] 6. Add Playwright E2E tests proving a user can drop a video in `/edit-video`, edit and export it with zero pre-created projects, and drop an image in `/edit-image`, edit and export it with zero pre-created projects. Verify: `task lint`, `task test`, `task test:web`, and the Playwright specs pass.
+- [x] 1. Specify standalone video and image sessions in SDD-000, SDD-005, SDD-012, and SDD-021 (including migration schema, API/CLI/MCP contracts, and `surfacebudget` check). Verify: `task lint:md` exits 0.
+- [x] 2. Add `standalone` support in `core/project/`, DB migration, and `service/` (`StandaloneVideoCreate`, `StandaloneVideoList`, `StandalonePromote`, `ImageOpenFromAsset`) with unit and integration tests. Verify: `go test ./core/project/... ./service/... ./web/database/...` passes.
+- [x] 3. Expose HTTP routes, CLI commands, and MCP actions with full contract/parity tests; remove `"edit-video"` from `dashboardSections` placeholder in `web/routes/dashboard.go` and update `TestDashboardSectionsMatchTheSidebar`. Verify: `go test ./web/app/... ./web/routes/... ./web/contract/...` and `go run ./internal/tools/surfacebudget` pass.
+- [x] 4. Build `web/resources/js/pages/EditVideo/Index.tsx` (drag-and-drop, file picker, blank presets, recent standalone edits, `?asset=<hash>` auto-open) and add the "Save as Project" promote action in the video editor for standalone sessions. Verify: `cd web && bun run typecheck && bun run check:thin-client && bunx vitest run`.
+- [x] 5. Upgrade `web/resources/js/pages/EditImage/Index.tsx` with top-level instant drag-and-drop, file picker, and `?asset=<hash>` direct opening; add `en.json` and `pt-BR.json` strings. Verify: `cd web && bun run check:i18n && bunx vitest run`.
+- [x] 6. Add Playwright E2E tests proving a user can drop a video in `/edit-video`, edit and export it with zero pre-created projects, and drop an image in `/edit-image`, edit and export it with zero pre-created projects. Verify: `task lint`, `task test`, `task test:web`, and the Playwright specs pass.
 
 ## Test strategy
 

@@ -31,12 +31,12 @@ type editorBootstrap struct {
 	ProjectID  string         `json:"project_id"`
 	Standalone bool           `json:"standalone,omitempty"`
 	Mode       string         `json:"mode"`
-	APIBase   string         `json:"api_base"`
-	Locale    string         `json:"locale"`
-	Locales   []string       `json:"locales"`
-	Messages  map[string]any `json:"messages"`
-	User      *struct{}      `json:"user"`
-	Version   string         `json:"version"`
+	APIBase    string         `json:"api_base"`
+	Locale     string         `json:"locale"`
+	Locales    []string       `json:"locales"`
+	Messages   map[string]any `json:"messages"`
+	User       *struct{}      `json:"user"`
+	Version    string         `json:"version"`
 	// Session is what sharedProps gives the other pages: whether this session may answer what only a person
 	// answers. It only shows controls (the scene bar under the timeline, epic 85); the service decides each call.
 	Session editorSession `json:"session"`

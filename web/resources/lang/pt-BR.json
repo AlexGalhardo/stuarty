@@ -6099,7 +6099,7 @@
       }
     },
     "edit_video": {
-      "title": "Editar vídeo",
+      "title": "Editor de vídeo",
       "intro": "Solte um arquivo de vídeo para começar a editar na hora, ou abra uma linha do tempo em branco sem criar um projeto antes.",
       "dropzone_section": "Abrir arquivo de vídeo",
       "drop_title": "Solte um arquivo de vídeo aqui",

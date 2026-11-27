@@ -253,6 +253,8 @@ export default function Index(): ReactNode {
 							ref={fileInputRef}
 							type="file"
 							accept="video/*"
+							tabIndex={-1}
+							aria-label={t("ui.edit_video.choose_file")}
 							className="sr-only"
 							data-testid="edit-video-file-input"
 							onChange={handleFileChange}

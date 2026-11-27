@@ -10,8 +10,9 @@ import (
 const DefaultStandaloneName = "Untitled edit"
 
 const (
-	// MinFrameSide and MaxFrameSide match the timeline frame bounds (SDD-001 / core/command settings.set).
+	// MinFrameSide is the minimum allowed timeline frame width or height (SDD-001 / core/command settings.set).
 	MinFrameSide = 16
+	// MaxFrameSide is the maximum allowed timeline frame width or height (SDD-001 / core/command settings.set).
 	MaxFrameSide = 4096
 )
 
