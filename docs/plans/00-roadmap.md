@@ -176,7 +176,7 @@ Every UI epic in this section updates `docs/design/final/stuarty-redesign-final-
 | Epic | Title | Size | Depends on | Status |
 | --- | --- | --- | --- | --- |
 | [100](100-windows-silent-processes-and-export.md) | Windows silent child processes, FFmpeg shim resolution and reliable video export | M | 46, 98 | DONE (2026-11-27, `2f46b534a`..`430667880`; Scoop shim verified live + `TestExportWithTheDetectedEncoder` and desktop `-H windowsgui` build pass) |
-| [101](101-installer-naming-and-desktop-updater.md) | Explicit web-localhost installer naming and desktop in-app auto-updater | M | 100 | DONE (2026-11-27; `stuarty-web-localhost-X-Y-Z.exe`/`.AppImage`, update bridge, Login + Sidebar controls, Go/Vitest/Playwright verified) |
+| [101](101-installer-naming-and-desktop-updater.md) | Explicit web-localhost installer naming and desktop in-app auto-updater | M | 100 | DONE (2026-11-27, `117de27ca`..`d8928a1aa`; `stuarty-web-localhost-X-Y-Z.exe`/`.AppImage`, update bridge, Login + Sidebar controls, Go/Vitest/Playwright verified) |
 | [102](102-critical-ui-bug-fixes.md) | Critical UI bug fixes: workflow navigation, collapsed sidebar version and empty-state layout | S | 75, 79, 99 | DONE (2026-11-27, `3d8d10821`..`bc1cb73bd` + Playwright E2E) |
 | [103](103-login-and-recovery-polish.md) | Login, password recovery and account switching polish | S | 57, 84 | DONE (2026-11-27, `092916646`..`5dbf40e8c` + Playwright `account` E2E) |
 | [104](104-navigation-and-shortcuts.md) | Global back navigation, double-click shortcuts and clickable workflow steps | M | 102 | DONE (2026-11-27, `34753f3c0`..`ae83cd931` + Playwright E2E) |
@@ -188,10 +188,10 @@ Every UI epic in this section updates `docs/design/final/stuarty-redesign-final-
 | [110](110-drive-figma-and-creative-mcps.md) | Native Google Drive, Figma and open-source creative MCP connectors (ArtCraft, OpenPencil and custom MCPs) | L | 04, 84, 106, 116 | TODO |
 | [111](111-global-and-project-history.md) | Global and per-project Activity History | M | 06, 75, 79, 116 | TODO |
 | [112](112-universal-input-help.md) | Universal input placeholders, contextual tooltips and explanatory help cards | M | 74, 99, 116 | TODO |
-| [113](113-portuguese-error-localization.md) | Complete Portuguese localization of all error messages, hints and diagnostics | M | 74, 99 | TODO |
+| [113](113-portuguese-error-localization.md) | Complete Portuguese localization of all error messages, hints and diagnostics | M | 74, 99 | DONE (2026-11-27; `localizeError`, 60 `E_*` + 45 `L_*` + 8 `X_*` + job phases + `check:error-i18n` + Playwright `pt-BR` E2E verified) |
 | [114](114-image-editor-canva-photoshop-parity.md) | Image editor parity with Canva and Photoshop: Magic Resize, gradients, curved text, smart guides, vector frames and AI retouching | L | 27, 28, 29, 30, 86, 91, 116 | TODO |
 | [115](115-video-editor-capcut-premiere-resolve-parity.md) | Video editor parity with CapCut, Premiere Pro and DaVinci Resolve: speed ramps, stabilization, motion tracking, creator transitions, color wheels and beat-sync montage | L | 26, 31, 34, 53, 69, 71, 85, 114, 116 | TODO |
-| [116](116-figcraft-design-source-in-docs.md) | Preserve the FINAL FigCraft design system and frames in `docs/design/final/` | S | 99 | DONE (2026-11-27) |
+| [116](116-figcraft-design-source-in-docs.md) | Preserve the FINAL FigCraft design system and frames in `docs/design/final/` | S | 99 | DONE (2026-11-27, `a5e2e2086`) |
 | [117](117-screen-recording-ui-and-record-page.md) | Screen recording UI: dedicated `/record` studio page, sidebar entry and standalone polish flow | L | 61, 62, 63, 65, 66, 75, 105, 116 | TODO |
 | [118](118-professional-sound-editor.md) | Professional Sound Editor: multi-track audio core, waveform and spectrogram UI, mastering FX rack, live recording and multi-format export | L | 34, 51, 58, 71, 105, 106, 116 | TODO |
 
