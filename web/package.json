@@ -17,6 +17,7 @@
     "check:thin-client": "node scripts/check-thin-client.ts",
     "format": "biome format --write resources/js e2e",
     "check:i18n": "node scripts/check-i18n.ts",
+    "check:error-i18n": "bun scripts/check-error-i18n.ts",
     "check:contrast": "bun scripts/check-contrast.ts",
     "e2e": "vite build --mode e2e && playwright test -c e2e/playwright.config.ts"
   },
