@@ -1716,6 +1716,15 @@
         "E_WORKSPACE_LOCKED": "The workspace is locked",
         "E_PAYLOAD_TOO_LARGE": "Request too large",
         "E_TRANSCRIBE_UNAVAILABLE": "Transcription is not available",
+        "E_TRANSCRIBE_FAILED": "Transcription failed",
+        "E_APPROVAL_EXPIRED": "Approval expired",
+        "E_CLIENT_CLOSED": "Request cancelled",
+        "E_CONNECTION_DESTINATION": "Destination not allowed",
+        "E_CONNECTION_NOT_FOUND": "Connection not found",
+        "E_METHOD_NOT_ALLOWED": "Method not allowed",
+        "E_RATE_LIMITED": "Too many requests",
+        "E_VAULT_LOCKED": "Vault is locked",
+        "E_WEBHOOK_NOT_FOUND": "Webhook not found",
         "unknown": "Something went wrong",
         "detail": {
           "overlap": "It would overlap {item}.",
@@ -5044,6 +5053,22 @@
         "failed": "The draft failed.",
         "no_connection": "Connect an AI provider that writes text first.",
         "open_connections": "Open Connections"
+      },
+      "caption_problem": {
+        "empty": "The caption variant has no visible text.",
+        "too_long": "The text has {actual} units, above the limit of {limit}.",
+        "too_many_hashtags": "The text has {actual} hashtags, above the limit of {limit}.",
+        "too_many_mentions": "The text has {actual} mentions, above the limit of {limit}.",
+        "forbidden_character": "The text contains {actual} character(s) forbidden by this network.",
+        "unknown_network": "This network is not in the limits table."
+      },
+      "post_issue": {
+        "required": "The field {path} is required.",
+        "too_long": "The field {path} exceeds the maximum length.",
+        "too_many": "The field {path} has too many entries.",
+        "invalid": "The field {path} has an invalid value.",
+        "unknown_asset": "The field {path} references an unknown asset.",
+        "external_image": "The field {path} uses an external image URL instead of a library asset."
       }
     },
     "library": {
@@ -5224,6 +5249,367 @@
         }
       },
       "search_bar": "Filter the list"
+    },
+    "errors": {
+      "message": {
+        "E_AGENT_NOT_FOUND": "The requested agent profile does not exist.",
+        "E_AGENT_UNAVAILABLE": "The agent could not be started or reached.",
+        "E_APPROVAL_EXPIRED": "The approval request expired before it was answered.",
+        "E_APPROVAL_NOT_FOUND": "The approval request or rule does not exist.",
+        "E_ASSET_NOT_READY": "The media file is still being prepared.",
+        "E_CANCELLED": "The job was cancelled.",
+        "E_CAPTURE_FAILED": "The screen recording ended with an error.",
+        "E_CAPTURE_UNAVAILABLE": "Screen recording is not available in this environment.",
+        "E_CHAT_NOT_FOUND": "The conversation does not exist or is not accessible.",
+        "E_CLIENT_CLOSED": "The request was closed before it finished.",
+        "E_CONNECTION_DESTINATION": "The connection does not allow requests to that destination.",
+        "E_CONNECTION_NOT_FOUND": "The connection does not exist or was removed.",
+        "E_COST_CEILING": "The estimated cost exceeds a configured spending ceiling.",
+        "E_EXPORT_FAILED": "The export could not be completed.",
+        "E_FFMPEG_MISSING": "No usable FFmpeg binary was found on this machine.",
+        "E_FILE_NOT_FOUND": "The file does not exist or cannot be read.",
+        "E_FONT_UNKNOWN": "The selected font is not available in this workspace.",
+        "E_FORBIDDEN": "You do not have permission to perform this action.",
+        "E_ID_EXISTS": "An item with that identifier already exists.",
+        "E_IDEMPOTENCY_MISMATCH": "This request was repeated with different parameters.",
+        "E_IN_USE": "This item is still in use and cannot be removed.",
+        "E_INGEST_FAILED": "The media file could not be imported.",
+        "E_INTERNAL": "An unexpected internal error occurred.",
+        "E_INVALID_STATE": "This action is not allowed in the current state.",
+        "E_INVALID_TIME": "The time value is not valid.",
+        "E_LIMIT": "A limit of the document was reached.",
+        "E_LIMIT_EXCEEDED": "A workspace limit was exceeded.",
+        "E_LINT_BLOCKING": "The project has blocking errors that stop the export.",
+        "E_LOCKED": "Stuarty is locked. Unlock it with your password to continue.",
+        "E_METHOD_NOT_ALLOWED": "This route does not accept that request method.",
+        "E_NETWORK": "Could not reach the Stuarty server.",
+        "E_NO_ENCODER": "No supported video encoder works on this machine.",
+        "E_NOT_EMPTY": "This container is not empty.",
+        "E_NOT_FOUND": "The requested item could not be found.",
+        "E_NOTHING_TO_REDO": "There is no step to redo.",
+        "E_NOTHING_TO_UNDO": "There is no step to undo.",
+        "E_OUT_OF_SOURCE": "The requested range extends outside the source media.",
+        "E_OVERLAP": "This item would overlap another item on the same track.",
+        "E_PATH_NOT_ALLOWED": "That file path is outside the allowed folders.",
+        "E_PAYLOAD_TOO_LARGE": "The request body is larger than the allowed limit.",
+        "E_PRICE_UNKNOWN": "No price is configured for that model, so the cost cannot be estimated.",
+        "E_PRIVILEGED_SESSION": "This action can only be run by a person signed in to the Stuarty interface.",
+        "E_PROVIDER": "The AI provider refused or failed the request.",
+        "E_PUBLISH": "The social network refused or failed the publication.",
+        "E_QUEUE_FULL": "Too many jobs are running at once.",
+        "E_RATE_LIMITED": "Too many requests were sent in a short time.",
+        "E_RECORDING_NOT_FOUND": "The recording does not exist or is no longer available.",
+        "E_REVISION_CONFLICT": "Someone else edited this document after you opened it.",
+        "E_SLOT": "A template slot was filled with an invalid value.",
+        "E_TRANSCRIBE_FAILED": "The transcription ran and failed.",
+        "E_TRANSCRIBE_UNAVAILABLE": "No transcription provider or helper is installed.",
+        "E_TYPE_MISMATCH": "This item cannot be placed on that kind of track.",
+        "E_UNAUTHORIZED": "Your session ended or the credentials are invalid.",
+        "E_UNKNOWN_COMMAND": "This command is not recognized.",
+        "E_UNSUPPORTED_MEDIA": "This file is not a media format that FFmpeg can decode.",
+        "E_VALIDATION": "One or more values are invalid.",
+        "E_VAULT_LOCKED": "The credential vault cannot be opened right now.",
+        "E_VERIFY_FAILED": "The exported file failed verification and was deleted.",
+        "E_WEBHOOK_NOT_FOUND": "The webhook or delivery record does not exist.",
+        "E_WORKSPACE_LOCKED": "Another Stuarty process currently owns this workspace."
+      },
+      "hint": {
+        "E_AGENT_UNAVAILABLE": "Check the agent configuration in Settings and verify it is signed in.",
+        "E_APPROVAL_EXPIRED": "Submit the action again to request a new approval.",
+        "E_ASSET_NOT_READY": "Wait a moment for preparation to finish and try again.",
+        "E_CAPTURE_FAILED": "Check that the source window or screen is still open and try again.",
+        "E_CAPTURE_UNAVAILABLE": "Use the Stuarty desktop app on a supported system or check FFmpeg.",
+        "E_COST_CEILING": "Review your spending ceilings in Approvals and costs.",
+        "E_EXPORT_FAILED": "Run \"stuarty doctor\" and try exporting again; if it keeps failing, share the doctor output.",
+        "E_FFMPEG_MISSING": "Install FFmpeg or point STUARTY_FFMPEG to a valid binary, then run \"stuarty doctor\".",
+        "E_FILE_NOT_FOUND": "Check that the file still exists and that Stuarty can read it.",
+        "E_FONT_UNKNOWN": "Choose a bundled font or import the font into your brand kit.",
+        "E_FORBIDDEN": "Check your account role or API key scopes.",
+        "E_IN_USE": "Remove references to this item first, then try again.",
+        "E_INGEST_FAILED": "Check that the file is not corrupted and uses a standard codec.",
+        "E_LINT_BLOCKING": "Fix the listed problems, then run the export again.",
+        "E_LOCKED": "Sign in with your account password to unlock the workspace.",
+        "E_NETWORK": "Check that Stuarty is running and try again.",
+        "E_NO_ENCODER": "Run \"stuarty doctor\" to see which encoders are available on this machine.",
+        "E_NOT_EMPTY": "Move or remove the items inside it first.",
+        "E_PATH_NOT_ALLOWED": "Choose a file inside an allowed folder or upload it through the app.",
+        "E_PAYLOAD_TOO_LARGE": "Split the request into smaller batches or use a smaller file.",
+        "E_PRICE_UNKNOWN": "Add a price for this model in Settings before running the generation.",
+        "E_PRIVILEGED_SESSION": "Complete this step directly in the Stuarty interface.",
+        "E_PROVIDER": "Check your connection settings and try again in a moment.",
+        "E_PUBLISH": "Check the connected account status and limits, then try again.",
+        "E_QUEUE_FULL": "Wait for a running job to finish and try again.",
+        "E_RATE_LIMITED": "Wait a few seconds and try again.",
+        "E_REVISION_CONFLICT": "Reload the latest version and apply your change again.",
+        "E_SLOT": "Check the required slot type and fill it with a valid value.",
+        "E_TRANSCRIBE_FAILED": "Try again with clear audio or check the transcription provider settings.",
+        "E_TRANSCRIBE_UNAVAILABLE": "Install the local transcription model or configure a transcription API.",
+        "E_UNAUTHORIZED": "Sign in again to continue.",
+        "E_UNSUPPORTED_MEDIA": "Convert the file to MP4, MOV, PNG, JPG, WAV, or MP3 and import it again.",
+        "E_VALIDATION": "Review the highlighted fields and try again.",
+        "E_VAULT_LOCKED": "Unlock Stuarty or check your workspace vault key.",
+        "E_VERIFY_FAILED": "Try exporting again; if it keeps failing, report it with the output of \"stuarty doctor\".",
+        "E_WORKSPACE_LOCKED": "Close the other Stuarty instance or wait for it to release the workspace."
+      },
+      "reason": {
+        "E_EXPORT_FAILED": {
+          "encoder_failed": "The video encoder failed.",
+          "decoder_failed": "A media source could not be decoded during export.",
+          "render_failed": "A frame of the project could not be composed.",
+          "audio_failed": "The audio of the project could not be mixed.",
+          "timeout": "The export took longer than its deadline and was ended.",
+          "stalled": "The export stopped making progress and was ended.",
+          "publish_failed": "The finished export file could not be saved to the output folder.",
+          "bad_output_dir": "The export output folder is not valid or writable.",
+          "bad_format": "The requested export format is not supported.",
+          "size_limit": "The exported file exceeded the maximum size limit and was deleted.",
+          "unsupported_size": "The selected video encoder does not support this project's resolution or frame rate.",
+          "webp_unavailable": "WebP export is unavailable because FFmpeg lacks the libwebp encoder."
+        },
+        "E_NO_ENCODER": {
+          "codec_unavailable": "No supported encoder for the requested codec works on this machine."
+        },
+        "E_PROVIDER": {
+          "auth": "The AI provider rejected the stored credentials.",
+          "rate_limited": "The AI provider rate limit was reached.",
+          "bad_request": "The AI provider rejected the request parameters.",
+          "unavailable": "The AI provider is temporarily unavailable.",
+          "unreadable": "The AI provider returned an unreadable response.",
+          "refused": "The AI provider refused this prompt.",
+          "timeout": "The AI provider did not respond in time."
+        },
+        "E_PUBLISH": {
+          "quota": "The social network publishing quota was reached.",
+          "not_eligible": "This account is not eligible to publish this content.",
+          "auth": "The social network connection needs to be re-authenticated.",
+          "invalid": "The social network rejected the post metadata or media.",
+          "rejected": "The social network rejected this publication.",
+          "unavailable": "The social network is temporarily unavailable."
+        },
+        "E_AGENT_UNAVAILABLE": {
+          "not_found": "The agent executable could not be found.",
+          "start_failed": "The agent process failed to start.",
+          "exited": "The agent process exited unexpectedly.",
+          "timeout": "The agent did not respond in time.",
+          "protocol": "The agent sent an invalid protocol message.",
+          "protocol_version": "This agent version is not compatible with Stuarty.",
+          "no_http_mcp": "This agent does not support HTTP MCP connections.",
+          "sign_in_required": "Sign in to this agent before starting a chat session.",
+          "limit": "The maximum number of active agent sessions was reached."
+        },
+        "E_CAPTURE_UNAVAILABLE": {
+          "platform": "Native screen capture is not available on this operating system.",
+          "web": "Native capture requires the Stuarty desktop app.",
+          "network_mode": "Native screen capture is disabled in network mode.",
+          "ffmpeg_missing": "Screen capture requires FFmpeg to be installed.",
+          "helper_missing": "The screen capture helper is not installed.",
+          "protocol_version": "The installed capture helper version does not match Stuarty."
+        },
+        "E_CAPTURE_FAILED": {
+          "source_gone": "The selected window or display closed during the recording.",
+          "unsupported": "The selected capture source is not supported.",
+          "encoder_failed": "The recording encoder failed.",
+          "io": "Could not write the recording file to disk.",
+          "helper_lost": "The capture helper stopped unexpectedly.",
+          "no_frames": "No video frames were captured from the selected source.",
+          "protocol": "The capture helper sent an unexpected message.",
+          "assemble": "The recorded browser chunks could not be assembled into a readable file.",
+          "ffmpeg_missing": "FFmpeg is required to finalize the recording."
+        },
+        "E_SLOT": {
+          "unknown_slot": "The template does not define that slot.",
+          "wrong_kind": "The value does not match the kind expected by this slot.",
+          "invalid_value": "The value provided for this slot is not valid.",
+          "missing": "A required template slot was not filled."
+        },
+        "E_COST_CEILING": {
+          "per_item": "This request exceeds the maximum cost allowed per item.",
+          "per_day": "This request would exceed the daily spending ceiling.",
+          "invalid": "The cost estimate is invalid."
+        },
+        "E_ASSET_NOT_READY": {
+          "peaks_pending": "Audio waveform peaks are still being generated."
+        },
+        "E_INGEST_FAILED": {
+          "decode_failed": "The video or image stream could not be decoded.",
+          "audio_decode_failed": "The audio stream could not be decoded.",
+          "verification_failed": "The imported file did not pass integrity verification."
+        },
+        "E_TRANSCRIBE_FAILED": {
+          "output_missing": "The transcription finished without producing a transcript file.",
+          "exit_code": "The transcription helper exited with an error.",
+          "output_too_large": "The transcription output exceeded the maximum allowed size."
+        },
+        "E_NOT_FOUND": {
+          "in_trash": "This item is in the trash.",
+          "network_mode": "This action is not available in network mode."
+        },
+        "E_FILE_NOT_FOUND": {
+          "file_missing": "The stored file is missing from disk."
+        },
+        "E_PATH_NOT_ALLOWED": {
+          "outside_media_root": "The file resolves outside the workspace media folder.",
+          "link_unresolved": "The file link could not be safely resolved."
+        },
+        "E_LOCKED": {
+          "locked": "Stuarty is locked. Unlock it with your password to continue."
+        },
+        "E_VALIDATION": {
+          "preset_mismatch": "This project does not fit the selected export preset.",
+          "origin_kind_unknown": "The asset origin kind is not recognized.",
+          "source_required": "A source reference is required for this asset origin.",
+          "rights_note_required": "A rights note is required for this asset.",
+          "provider_required": "An AI provider name is required for generated assets.",
+          "model_required": "A model name is required for generated assets.",
+          "too_long": "This value is longer than allowed.",
+          "cost_invalid": "The cost value is not valid.",
+          "tags_invalid": "One or more tags are invalid.",
+          "kind_unknown": "The requested media kind is not recognized.",
+          "section_unknown": "The requested library section is not recognized.",
+          "origin_member_not_allowed": "This origin field is only allowed for externally rendered assets.",
+          "origin_member_invalid": "This origin field has an invalid format.",
+          "name_invalid": "The name is empty, too long, or contains forbidden characters.",
+          "sound_kind_unknown": "The sound category must be music, voice, or effect.",
+          "sound_kind_not_allowed": "A sound category can only be set on audio files.",
+          "checksum_mismatch": "A recorded chunk failed checksum verification."
+        }
+      },
+      "reason_hint": {
+        "E_EXPORT_FAILED": {
+          "size_limit": "Export a shorter project or raise STUARTY_MAX_EXPORT_BYTES.",
+          "unsupported_size": "Try another resolution, frame rate, or codec, or run \"stuarty doctor\".",
+          "webp_unavailable": "Export as PNG or JPEG, or install an FFmpeg build with libwebp."
+        },
+        "E_AGENT_UNAVAILABLE": {
+          "sign_in_required": "Open the agent and sign in, then try connecting again.",
+          "not_found": "Install the agent or check its configuration in Settings."
+        },
+        "E_CAPTURE_UNAVAILABLE": {
+          "helper_missing": "Reinstall the Stuarty desktop app to restore the capture helper.",
+          "web": "Open this project in the Stuarty desktop app to record your screen."
+        },
+        "E_PROVIDER": {
+          "auth": "Open Connections and update the API key or sign in again.",
+          "rate_limited": "Wait a moment before sending another request.",
+          "refused": "Adjust the prompt and try again."
+        },
+        "E_PUBLISH": {
+          "auth": "Open Connections and reconnect the social account.",
+          "quota": "Wait until the network resets your publishing quota."
+        },
+        "E_NOT_FOUND": {
+          "in_trash": "Restore the item from the trash first."
+        }
+      }
+    },
+    "lint": {
+      "message": {
+        "L_EMPTY_TIMELINE": "The timeline has no items to export.",
+        "L_GAP": "There is an empty gap between clips on the timeline.",
+        "L_BLACK_FRAMES": "The timeline contains frames with no visible video.",
+        "L_MEDIA_MISSING": "A media file referenced on the timeline is missing.",
+        "L_MEDIA_UNREADY": "A media file on the timeline is still being prepared.",
+        "L_SOURCE_RANGE": "A clip reads past the end of its source media.",
+        "L_ODD_DIMENSIONS": "The video width or height is an odd number of pixels.",
+        "L_SILENT_EXPORT": "The exported video will have no audible sound.",
+        "L_SLIVER": "A clip or item is extremely short.",
+        "L_OCCLUDED": "An item is completely covered by another layer above it.",
+        "L_AUDIO_OVERLAP": "Two audio items overlap on the timeline.",
+        "L_SAFE_AREA": "Text or graphics extend outside the safe viewing area.",
+        "L_OFF_FRAME": "An item sits completely outside the video frame.",
+        "L_TRANSITION_EMPTY": "A transition has no adjacent clip to blend.",
+        "L_CAPTION_DESYNC": "Captions no longer match the timing of the clip.",
+        "L_SLOT_UNFILLED": "A required template slot has not been filled yet.",
+        "L_AUDIO_CLIP": "Audio peaks exceed 0 dBFS and may distort.",
+        "L_LOUDNESS": "Overall loudness is outside the target range.",
+        "L_DURATION_LIMIT": "The timeline exceeds the configured duration limit.",
+        "L_ALPHA_MISSING": "Transparency was declared for a source without an alpha channel.",
+        "L_AUDIO_LIMITER_NOT_LAST": "The limiter is not the final processor in the audio chain.",
+        "L_AUDIO_NOISE_REDUCTION_REPEATED": "Noise reduction is applied more than once in the same chain.",
+        "L_IMAGE_EMPTY_SLOT": "A required image template slot is still empty.",
+        "L_IMAGE_TEXT_OUTSIDE": "A text layer extends outside the image canvas.",
+        "L_IMAGE_TEXT_SMALL": "A text layer may be too small to read comfortably.",
+        "L_IMAGE_LOW_CONTRAST": "A text layer has low contrast against its background.",
+        "L_IMAGE_UPSCALED": "An image layer is scaled well above its original resolution.",
+        "L_IMAGE_TEXT_NO_GLYPH": "The selected font is missing one or more characters in this text.",
+        "L_SKILL_NO_SKILL_MD": "The skill folder is missing its SKILL.md file.",
+        "L_SKILL_FRONT_MATTER": "The skill front matter is missing or invalid.",
+        "L_SKILL_NAME": "The skill name is missing or invalid.",
+        "L_SKILL_NAME_MISMATCH": "The skill name does not match its folder name.",
+        "L_SKILL_DESCRIPTION": "The skill description is missing.",
+        "L_SKILL_DESCRIPTION_LENGTH": "The skill description is outside the allowed length.",
+        "L_SKILL_BODY_EMPTY": "The skill body has no instructions.",
+        "L_SKILL_REFERENCE_MISSING": "A file referenced by the skill does not exist.",
+        "L_SKILL_REFERENCE_ESCAPES": "A referenced file path escapes the skill folder.",
+        "L_SKILL_CREDENTIAL": "The skill appears to contain an embedded secret or credential.",
+        "L_SKILL_REMOTE_EXEC": "The skill contains a remote execution pattern that is blocked.",
+        "L_SKILL_HIDDEN_TEXT": "The skill contains hidden or invisible characters.",
+        "L_SKILL_SIZE": "The skill file exceeds the maximum allowed size.",
+        "L_SKILL_HTML_COMMENT": "The skill contains an HTML comment.",
+        "L_SKILL_SCRIPT": "The skill includes executable script files.",
+        "L_SKILL_ALLOWED_TOOLS": "The skill declares an invalid allowed-tools entry.",
+        "L_SKILL_LICENSE": "The skill front matter does not declare a license."
+      },
+      "hint": {
+        "L_EMPTY_TIMELINE": "Add at least one clip, image, or text item before exporting.",
+        "L_GAP": "Close the gap or place a background clip under it.",
+        "L_BLACK_FRAMES": "Check for empty spaces or hidden tracks at that position.",
+        "L_MEDIA_MISSING": "Re-import the file or replace the clip source.",
+        "L_MEDIA_UNREADY": "Wait until import finishes, then check again.",
+        "L_SOURCE_RANGE": "Trim the clip so it stays within the source duration.",
+        "L_ODD_DIMENSIONS": "Use even width and height values in the project settings.",
+        "L_SILENT_EXPORT": "Unmute an audio track or add voice or music if sound is expected.",
+        "L_SLIVER": "Extend or remove the very short item.",
+        "L_OCCLUDED": "Move the item above the covering layer or adjust opacity.",
+        "L_AUDIO_OVERLAP": "Adjust volume, ducking, or timing so both tracks stay clear.",
+        "L_SAFE_AREA": "Move the item further inside the frame margins.",
+        "L_OFF_FRAME": "Reset the item's position or bring it back inside the frame.",
+        "L_TRANSITION_EMPTY": "Move the transition onto a cut between two clips or remove it.",
+        "L_CAPTION_DESYNC": "Use Resync captions to align them with the clip again.",
+        "L_SLOT_UNFILLED": "Open the Slots panel and fill every required slot.",
+        "L_AUDIO_CLIP": "Lower the clip gain or add a limiter to prevent distortion.",
+        "L_LOUDNESS": "Adjust the loudness target or apply a voice preset.",
+        "L_DURATION_LIMIT": "Shorten the timeline to fit within the target limit.",
+        "L_ALPHA_MISSING": "Disable alpha or replace the source with a file that has transparency.",
+        "L_AUDIO_LIMITER_NOT_LAST": "Move the limiter to the end of the audio processor chain.",
+        "L_AUDIO_NOISE_REDUCTION_REPEATED": "Keep only one noise reduction processor on the item."
+      }
+    },
+    "export_check": {
+      "message": {
+        "X_DURATION_TOO_LONG": "The video is too long for this preset ({got}; maximum {limit}).",
+        "X_DURATION_TOO_SHORT": "The video is too short for this preset ({got}; minimum {limit}).",
+        "X_FPS_TOO_HIGH": "The frame rate is too high for this preset ({got}; maximum {limit}).",
+        "X_FPS_TOO_LOW": "The frame rate is too low for this preset ({got}; minimum {limit}).",
+        "X_RESOLUTION_TOO_SMALL": "The resolution is smaller than this preset requires ({got}; minimum {limit}).",
+        "X_RESOLUTION_TOO_LARGE": "The resolution exceeds this preset's limit ({got}; maximum {limit}).",
+        "X_ASPECT_RATIO": "The aspect ratio ({got}) does not match this preset ({limit}).",
+        "X_SIZE_TOO_LARGE": "The estimated or exported file size ({got}) exceeds the limit ({limit})."
+      }
+    },
+    "jobs": {
+      "phase": {
+        "rendering_percent": "Rendering ({percent}%)",
+        "exporting_of": "Exporting {current} of {total}",
+        "writing_bundle": "Writing the bundle",
+        "rendering_frame": "Rendering the frame",
+        "starting_face_helper": "Starting the face helper",
+        "looking_for_faces": "Looking for faces",
+        "writing_face_track": "Writing the face track",
+        "peaks": "Building audio waveform",
+        "uploading": "Uploading",
+        "checking_provider": "Checking the provider",
+        "transcribing": "Transcribing",
+        "writing_transcript": "Writing the transcript",
+        "probing": "Inspecting media",
+        "normalizing": "Normalizing media",
+        "proxy": "Building preview proxy",
+        "thumbnails": "Creating thumbnails",
+        "silence": "Detecting silence",
+        "loudness": "Measuring loudness",
+        "speech": "Detecting speech",
+        "beats": "Detecting beats"
+      }
     }
   }
 }

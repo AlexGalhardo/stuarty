@@ -371,7 +371,7 @@ func editorPage(c *web.Ctx, d *httpapi.Deps, app *vukem.App) error {
 	// link ever visits it with X-Inertia: true, force a full browser navigation instead of returning raw HTML
 	// that Inertia would display inside a blank white iframe overlay (epic 102).
 	if c.Header("X-Inertia") == "true" {
-		return inertia.Location(c, c.Request().URL.RequestURI())
+		return inertia.Location(c, "/editor/"+id)
 	}
 
 	locale := i18n.Locale(c.Context())
@@ -384,7 +384,8 @@ func editorPage(c *web.Ctx, d *httpapi.Deps, app *vukem.App) error {
 	return c.Render("editor", map[string]any{"Bootstrap": editorBootstrap{
 		ProjectID: id, Mode: "local", APIBase: httpapi.BasePath, Locale: locale, Locales: app.I18n.Locales(),
 		Messages: app.I18n.Messages(locale, "ui.editor.", "ui.common.", "ui.theme.", "ui.nav.",
-			"ui.shell.", "ui.chat.", "ui.agent_activity.", "ui.session."),
+			"ui.shell.", "ui.chat.", "ui.agent_activity.", "ui.session.",
+			"ui.errors.", "ui.lint.", "ui.export_check.", "ui.jobs."),
 		Version: d.Version,
 		Session: editorSession{Privileged: person.Browser},
 	}})
