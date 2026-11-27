@@ -1,4 +1,5 @@
 import { Head } from "@inertiajs/react";
+import { ArrowLeft } from "lucide-react";
 import { type FormEvent, type ReactNode, useState } from "react";
 
 import { AuthCard } from "@/components/AuthCard";
@@ -51,7 +52,6 @@ export default function Recover(): ReactNode {
 			<AuthCard
 				title={t("ui.account.recover.title")}
 				description={t("ui.account.recover.intro")}
-				footer={t("ui.account.footer")}
 			>
 				<form
 					onSubmit={(event) => void submit(event)}
@@ -90,6 +90,12 @@ export default function Recover(): ReactNode {
 					<FailureNote id="recover-error" failure={failure} />
 					<Button type="submit" disabled={busy}>
 						{t("ui.account.recover.submit")}
+					</Button>
+					<Button asChild variant="ghost" data-testid="recover-back-login">
+						<a href="/account/signin">
+							<ArrowLeft aria-hidden="true" />
+							{t("ui.account.recover.back_to_login")}
+						</a>
 					</Button>
 				</form>
 			</AuthCard>

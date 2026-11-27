@@ -3681,11 +3681,8 @@
         "intro_open": "Entre com a sua senha para usar o Stuarty como você mesmo.",
         "welcome": "Que bom ver você de novo",
         "welcome_intro": "Digite a sua senha para abrir o seu estúdio.",
-        "locked_title": "O Stuarty está bloqueado",
-        "locked_intro": "Bloqueio por inatividade. Seu trabalho está salvo.",
-        "locked_unlock": "Desbloquear",
-        "locked_footer": "Bloqueado, nada do espaço fica acessível: nem agentes, CLI ou API.",
-        "other_account": "Entrar com outra conta",
+        "other_account": "Mudar de conta",
+        "use_known": "Entrar como {name}",
         "submit": "Entrar",
         "forgot": "Esqueci a minha senha"
       },
@@ -3694,7 +3691,8 @@
         "intro": "Digite a chave de recuperação que você guardou e escolha uma senha nova. Os seus dados ficam como estão.",
         "key": "Chave de recuperação",
         "new_password": "Senha nova",
-        "submit": "Definir a senha nova"
+        "submit": "Definir a senha nova",
+        "back_to_login": "Voltar para Login"
       },
       "reason": {
         "too_short": "Está curto demais.",

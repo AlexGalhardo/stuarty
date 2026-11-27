@@ -153,14 +153,17 @@ describe("the sign-in and recovery pages", () => {
 		expect(html).toContain('href="/account/recover"');
 	});
 
-	test("the sign-in says the studio is locked only when the server says so", () => {
+	test("the sign-in omits inactivity lock banners and keeps switch account visible even when locked", () => {
 		const withIntro = (node: React.ReactNode): string =>
 			renderToString(
 				<I18nProvider
 					messages={{
 						...messages,
-						"ui.account.signin.locked_intro": "Locked until you sign in.",
-						"ui.account.signin.welcome_intro": "Sign in as yourself.",
+						"ui.account.footer": "On your computer. Your way.",
+						"ui.account.signin.welcome": "Good to see you again",
+						"ui.account.signin.welcome_intro":
+							"Type your password to open your studio.",
+						"ui.account.signin.other_account": "Switch account",
 					}}
 					locale="en"
 					locales={["en"]}
@@ -169,19 +172,38 @@ describe("the sign-in and recovery pages", () => {
 				</I18nProvider>,
 			);
 		const locked = withIntro(<SignIn />);
-		expect(locked).toContain("Locked until you sign in.");
+		expect(locked).toContain("Good to see you again");
+		expect(locked).toContain("Type your password to open your studio.");
+		expect(locked).toContain('data-testid="signin-switch-account"');
+		expect(locked).toContain("Switch account");
+		expect(locked).not.toContain("Locked for inactivity");
+		expect(locked).not.toContain("While locked");
 		shared.account = { state: "unlocked", username: "ana" };
 		const open = withIntro(<SignIn />);
 		shared.account = { state: "locked", username: "ana" };
-		expect(open).toContain("Sign in as yourself.");
-		expect(open).not.toContain("Locked until");
+		expect(open).toContain('data-testid="signin-switch-account"');
 	});
 
-	test("the recovery asks for the key and a new password twice, with an eye on each", () => {
-		const html = render(<Recover />);
+	test("the recovery asks for the key and a new password twice, links back to login and omits the tagline footer", () => {
+		const html = renderToString(
+			<I18nProvider
+				messages={{
+					...messages,
+					"ui.account.footer": "On your computer. Your way.",
+					"ui.account.recover.back_to_login": "Back to sign in",
+				}}
+				locale="en"
+				locales={["en"]}
+			>
+				<Recover />
+			</I18nProvider>,
+		);
 		expect(html).toMatch(/<input[^>]*id="recover-key"/);
 		expect(html).toContain('data-testid="recover-password-eye"');
 		expect(html).toContain('data-testid="recover-confirmation-eye"');
+		expect(html).toContain('href="/account/signin"');
+		expect(html).toContain("Back to sign in");
+		expect(html).not.toContain("On your computer. Your way.");
 	});
 });
 

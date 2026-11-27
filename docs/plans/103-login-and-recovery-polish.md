@@ -53,9 +53,9 @@ The Sign In and Password Recovery screens stay clean and focused: redundant lock
 
 ## Tasks
 
-- [ ] 1. Update SDD-012 §2.1.1 to document the streamlined Sign In card, always-available switch-account toggle, and Recover back-to-login button without footer tagline. Verify: `task lint:md` exits 0.
-- [ ] 2. Update `Account/SignIn.tsx` to remove the three locked-state copy strings and enable the "Switch account" button in both locked and unlocked states, with a toggle back to the known account. Verify: `cd web && bunx vitest run resources/js/pages/Account/Account.test.tsx`.
-- [ ] 3. Update `Account/Recover.tsx` to remove `footer={t("ui.account.footer")}` and add the "Back to Login" button linking to `/account/signin`. Verify: `cd web && bunx vitest run resources/js/pages/Account/Account.test.tsx`.
+- [x] 1. Update SDD-012 §2.1.1 to document the streamlined Sign In card, always-available switch-account toggle, and Recover back-to-login button without footer tagline. Verify: `task lint:md` exits 0.
+- [x] 2. Update `Account/SignIn.tsx` to remove the three locked-state copy strings and enable the "Switch account" button in both locked and unlocked states, with a toggle back to the known account. Verify: `cd web && bunx vitest run resources/js/pages/Account/Account.test.tsx`.
+- [x] 3. Update `Account/Recover.tsx` to remove `footer={t("ui.account.footer")}` and add the "Back to Login" button linking to `/account/signin`. Verify: `cd web && bunx vitest run resources/js/pages/Account/Account.test.tsx`.
 - [ ] 4. Update `en.json` and `pt-BR.json` and adjust any existing Playwright E2E assertions in `web/e2e/specs/` that looked for the removed locked banners. Verify: `cd web && bun run typecheck && bun run check:thin-client && bun run check:i18n && bunx vitest run` and the account Playwright spec pass.
 
 ## Test strategy
