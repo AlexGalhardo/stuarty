@@ -5,10 +5,10 @@ import { type FormEvent, type ReactNode, useState } from "react";
 import { AuthCard } from "@/components/AuthCard";
 import { DesktopUpdateControl } from "@/components/DesktopUpdateControl";
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
+import { FieldLabel } from "@/components/FieldHelp";
 import PasswordField from "@/components/PasswordField";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useT } from "@/lib/i18n";
 import type { SharedProps } from "@/types";
 import { createClient } from "../../editor/api/client";
@@ -82,15 +82,18 @@ export default function SignIn(): ReactNode {
 						</div>
 					) : (
 						<div className="flex flex-col gap-2">
-							<Label htmlFor="signin-identity">
-								{t("ui.account.identity")}
-							</Label>
+							<FieldLabel
+								htmlFor="signin-identity"
+								label={t("ui.account.identity")}
+								help={t("ui.help.g1.identity_help")}
+							/>
 							<Input
 								id="signin-identity"
 								required
 								autoComplete="username"
 								autoCapitalize="none"
 								spellCheck={false}
+								placeholder={t("ui.help.g1.identity_ph")}
 								aria-invalid={failure === null ? undefined : true}
 								aria-describedby={failure === null ? undefined : "signin-error"}
 								value={identity}

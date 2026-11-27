@@ -2,10 +2,10 @@ import { router } from "@inertiajs/react";
 import { type FormEvent, type ReactNode, useState } from "react";
 
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
+import { FieldLabel } from "@/components/FieldHelp";
 import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useT } from "@/lib/i18n";
 import { createClient } from "../../editor/api/client";
 import { HttpTransport } from "../../editor/api/http";
@@ -155,11 +155,14 @@ export function BundleImport(): ReactNode {
 			>
 				<div className="flex items-end gap-2">
 					<div className="flex flex-1 flex-col gap-1">
-						<Label htmlFor="bundle-import-path">
-							{t("ui.projects.bundle.path")}
-						</Label>
+						<FieldLabel
+							htmlFor="bundle-import-path"
+							label={t("ui.projects.bundle.path")}
+							help={t("ui.help.g2.bundle_path_help")}
+						/>
 						<Input
 							id="bundle-import-path"
+							placeholder={t("ui.help.g2.bundle_path_ph")}
 							autoComplete="off"
 							spellCheck={false}
 							value={path}

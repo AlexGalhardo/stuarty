@@ -7,11 +7,11 @@ import {
 } from "react";
 
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
+import { FieldLabel } from "@/components/FieldHelp";
 import { Notice } from "@/components/Notice";
 import { OptionSelect } from "@/components/OptionSelect";
 import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useLocale, useT } from "@/lib/i18n";
 import { formatMoney } from "../../dashboard/approval/money";
@@ -237,11 +237,14 @@ export default function DraftPanel({
 						))}
 					</fieldset>
 					<div className="flex min-w-0 max-w-full flex-col gap-1">
-						<Label htmlFor="draft-instruction">
-							{t("ui.write.draft.instruction")}
-						</Label>
+						<FieldLabel
+							htmlFor="draft-instruction"
+							label={t("ui.write.draft.instruction")}
+							help={t("ui.help.g2.write_draft_help")}
+						/>
 						<Textarea
 							id="draft-instruction"
+							placeholder={t("ui.help.g2.write_draft_ph")}
 							rows={3}
 							value={instruction}
 							onChange={(event) => setInstruction(event.target.value)}

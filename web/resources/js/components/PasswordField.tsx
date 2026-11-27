@@ -2,9 +2,9 @@ import { Eye, EyeOff } from "lucide-react";
 import { type ReactNode, useState } from "react";
 
 import FieldErrors from "@/components/FieldErrors";
+import { FieldLabel } from "@/components/FieldHelp";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useT } from "@/lib/i18n";
 
 // A password field with the eye that shows and hides what was typed (SDD-012 section 2.1.1). The eye is a
@@ -16,6 +16,8 @@ export default function PasswordField({
 	value,
 	onChange,
 	autoComplete,
+	placeholder,
+	help,
 	reasons = [],
 }: {
 	id: string;
@@ -23,6 +25,8 @@ export default function PasswordField({
 	value: string;
 	onChange(next: string): void;
 	autoComplete: "new-password" | "current-password";
+	placeholder?: string;
+	help?: string;
 	reasons?: readonly string[];
 }): ReactNode {
 	const t = useT();
@@ -30,7 +34,11 @@ export default function PasswordField({
 	const invalid = reasons.length > 0;
 	return (
 		<div className="flex flex-col gap-2">
-			<Label htmlFor={id}>{label}</Label>
+			<FieldLabel
+				htmlFor={id}
+				label={label}
+				help={help ?? t("ui.help.g1.password_help")}
+			/>
 			<div className="flex items-center gap-2">
 				<Input
 					id={id}
@@ -39,6 +47,7 @@ export default function PasswordField({
 					autoComplete={autoComplete}
 					spellCheck={false}
 					autoCapitalize="none"
+					placeholder={placeholder ?? t("ui.help.g1.password_ph")}
 					aria-invalid={invalid ? true : undefined}
 					aria-describedby={invalid ? `${id}-errors` : undefined}
 					value={value}

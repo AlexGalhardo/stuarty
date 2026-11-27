@@ -7,10 +7,10 @@ import {
 	useSyncExternalStore,
 } from "react";
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
+import { FieldLabel } from "@/components/FieldHelp";
 import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
 	canPickTemplate,
 	cleanPaths,
@@ -150,11 +150,14 @@ function TemplateRow({
 					className="flex items-end gap-2"
 				>
 					<div className="flex flex-1 flex-col gap-1">
-						<Label htmlFor={`from-${template.template_id}`}>
-							{t("ui.projects.name")}
-						</Label>
+						<FieldLabel
+							htmlFor={`from-${template.template_id}`}
+							label={t("ui.projects.name")}
+							help={t("ui.help.g2.template_name_help")}
+						/>
 						<Input
 							id={`from-${template.template_id}`}
+							placeholder={t("ui.help.g2.template_name_ph")}
 							required
 							maxLength={NAME_MAX}
 							autoComplete="off"
@@ -320,11 +323,14 @@ export default function Templates(): ReactNode {
 				className="mt-4 flex items-end gap-2"
 			>
 				<div className="flex flex-1 flex-col gap-1">
-					<Label htmlFor="template-import-path">
-						{t("ui.projects.templates.import_path")}
-					</Label>
+					<FieldLabel
+						htmlFor="template-import-path"
+						label={t("ui.projects.templates.import_path")}
+						help={t("ui.help.g2.template_path_help")}
+					/>
 					<Input
 						id="template-import-path"
+						placeholder={t("ui.help.g2.template_path_ph")}
 						autoComplete="off"
 						value={path}
 						onChange={(event) => setPath(event.target.value)}

@@ -8,6 +8,7 @@ import {
 	failureIsAbout,
 	failureOf,
 } from "@/components/Failure";
+import { FieldLabel } from "@/components/FieldHelp";
 import { StatusBadge } from "@/components/StatusBadge";
 import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
@@ -721,9 +722,14 @@ export function PublicationEditor({
 							</select>
 						</div>
 						<div className="flex flex-col gap-2">
-							<Label htmlFor="pub-title">{t("ui.social.post_title")}</Label>
+							<FieldLabel
+								htmlFor="pub-title"
+								label={t("ui.social.post_title")}
+								help={t("ui.help.g2.pub_title_help")}
+							/>
 							<Input
 								id="pub-title"
+								placeholder={t("ui.help.g2.pub_title_ph")}
 								required
 								autoComplete="off"
 								value={title}
@@ -814,11 +820,14 @@ export function PublicationEditor({
 										</option>
 									))}
 								</select>
-								<Label htmlFor="pub-still-image">
-									{t("ui.social.thumbnail_image")}
-								</Label>
+								<FieldLabel
+									htmlFor="pub-still-image"
+									label={t("ui.social.thumbnail_image")}
+									help={t("ui.help.g2.pub_still_help")}
+								/>
 								<Input
 									id="pub-still-image"
+									placeholder={t("ui.help.g2.pub_still_ph")}
 									value={still}
 									onChange={(event) => setStill(event.target.value.trim())}
 								/>
@@ -826,9 +835,14 @@ export function PublicationEditor({
 						)}
 					</div>
 					<div className="flex flex-col gap-2">
-						<Label htmlFor="pub-text">{t("ui.publish.editor.caption")}</Label>
+						<FieldLabel
+							htmlFor="pub-text"
+							label={t("ui.publish.editor.caption")}
+							help={t("ui.help.g2.pub_caption_help")}
+						/>
 						<Textarea
 							id="pub-text"
+							placeholder={t("ui.help.g2.pub_caption_ph")}
 							value={text}
 							onChange={(event) => setText(event.target.value)}
 						/>
@@ -950,9 +964,11 @@ export function PublicationEditor({
 									</h4>
 									<div className="grid gap-3 sm:grid-cols-2">
 										<div className="flex flex-col gap-1">
-											<Label htmlFor={`${d.key}-at`}>
-												{t("ui.publish.editor.at")}
-											</Label>
+											<FieldLabel
+												htmlFor={`${d.key}-at`}
+												label={t("ui.publish.editor.at")}
+												help={t("ui.help.g2.pub_at_help")}
+											/>
 											<Input
 												id={`${d.key}-at`}
 												type="datetime-local"
@@ -963,11 +979,14 @@ export function PublicationEditor({
 											/>
 										</div>
 										<div className="flex flex-col gap-1">
-											<Label htmlFor={`${d.key}-zone`}>
-												{t("ui.publish.editor.zone")}
-											</Label>
+											<FieldLabel
+												htmlFor={`${d.key}-zone`}
+												label={t("ui.publish.editor.zone")}
+												help={t("ui.help.g2.pub_zone_help")}
+											/>
 											<Input
 												id={`${d.key}-zone`}
+												placeholder={t("ui.help.g2.pub_zone_ph")}
 												list="publish-zones"
 												autoComplete="off"
 												value={d.zone}
@@ -977,12 +996,15 @@ export function PublicationEditor({
 											/>
 										</div>
 										<div className="flex flex-col gap-1">
-											<Label htmlFor={`${d.key}-late`}>
-												{t("ui.publish.editor.late")}
-											</Label>
+											<FieldLabel
+												htmlFor={`${d.key}-late`}
+												label={t("ui.publish.editor.late")}
+												help={t("ui.help.g2.pub_late_help")}
+											/>
 											<Input
 												id={`${d.key}-late`}
 												type="number"
+												placeholder={t("ui.help.g2.pub_late_ph")}
 												min={0}
 												max={1440}
 												value={d.late}
@@ -1014,11 +1036,14 @@ export function PublicationEditor({
 											</div>
 										) : (
 											<div className="flex flex-col gap-1">
-												<Label htmlFor={`${d.key}-title`}>
-													{t("ui.publish.editor.target_title")}
-												</Label>
+												<FieldLabel
+													htmlFor={`${d.key}-title`}
+													label={t("ui.publish.editor.target_title")}
+													help={t("ui.help.g2.pub_target_title_help")}
+												/>
 												<Input
 													id={`${d.key}-title`}
+													placeholder={t("ui.help.g2.pub_target_title_ph")}
 													autoComplete="off"
 													value={d.title}
 													onChange={(event) =>
@@ -1032,11 +1057,14 @@ export function PublicationEditor({
 								{!isPost && (
 									<>
 										<div className="flex flex-col gap-1">
-											<Label htmlFor={`${d.key}-description`}>
-												{t("ui.publish.editor.target_description")}
-											</Label>
+											<FieldLabel
+												htmlFor={`${d.key}-description`}
+												label={t("ui.publish.editor.target_description")}
+												help={t("ui.help.g2.pub_target_desc_help")}
+											/>
 											<Textarea
 												id={`${d.key}-description`}
+												placeholder={t("ui.help.g2.pub_target_desc_ph")}
 												value={d.description}
 												onChange={(event) =>
 													patch(d.key, { description: event.target.value })
@@ -1044,11 +1072,14 @@ export function PublicationEditor({
 											/>
 										</div>
 										<div className="flex flex-col gap-1">
-											<Label htmlFor={`${d.key}-tags`}>
-												{t("ui.social.tags")}
-											</Label>
+											<FieldLabel
+												htmlFor={`${d.key}-tags`}
+												label={t("ui.social.tags")}
+												help={t("ui.help.g2.pub_tags_help")}
+											/>
 											<Input
 												id={`${d.key}-tags`}
+												placeholder={t("ui.help.g2.pub_tags_ph")}
 												autoComplete="off"
 												value={d.tags}
 												onChange={(event) =>
@@ -1289,7 +1320,11 @@ function DuplicateBox({
 			data-testid="duplicate-box"
 		>
 			<div className="flex flex-col gap-1">
-				<Label htmlFor="duplicate-at">{t("ui.publish.duplicate.at")}</Label>
+				<FieldLabel
+					htmlFor="duplicate-at"
+					label={t("ui.publish.duplicate.at")}
+					help={t("ui.help.g2.pub_dup_at_help")}
+				/>
 				<Input
 					id="duplicate-at"
 					type="datetime-local"

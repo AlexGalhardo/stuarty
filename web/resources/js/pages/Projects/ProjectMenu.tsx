@@ -2,6 +2,7 @@ import { MoreVertical } from "lucide-react";
 import { type FormEvent, type ReactNode, useState } from "react";
 
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
+import { FieldLabel } from "@/components/FieldHelp";
 import UntrustedText from "@/components/UntrustedText";
 import {
 	AlertDialog,
@@ -28,7 +29,6 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useT } from "@/lib/i18n";
 import type { ProjectSummary } from "@/types";
 import { createClient } from "../../editor/api/client";
@@ -138,11 +138,14 @@ export default function ProjectMenu({
 						onSubmit={(event) => void submitRename(event)}
 					>
 						<div className="flex flex-col gap-1">
-							<Label htmlFor={`rename-${project.id}`}>
-								{t("ui.projects.name")}
-							</Label>
+							<FieldLabel
+								htmlFor={`rename-${project.id}`}
+								label={t("ui.projects.name")}
+								help={t("ui.help.g2.project_rename_help")}
+							/>
 							<Input
 								id={`rename-${project.id}`}
+								placeholder={t("ui.help.g2.project_rename_ph")}
 								value={name}
 								maxLength={NAME_MAX}
 								required

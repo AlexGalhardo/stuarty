@@ -4,6 +4,7 @@ import { type FormEvent, type ReactNode, useRef, useState } from "react";
 
 import { ActivityTimeline } from "@/components/ActivityTimeline";
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
+import { FieldHint, FieldLabel } from "@/components/FieldHelp";
 import { StatusBadge } from "@/components/StatusBadge";
 import UntrustedText from "@/components/UntrustedText";
 import { Badge } from "@/components/ui/badge";
@@ -333,11 +334,14 @@ function ItemRow({
 						onSubmit={(event) => void submitRename(event)}
 					>
 						<div className="flex flex-col gap-1">
-							<Label htmlFor={`item-title-${item.id}`}>
-								{t("ui.projects.overview.item_title")}
-							</Label>
+							<FieldLabel
+								htmlFor={`item-title-${item.id}`}
+								label={t("ui.projects.overview.item_title")}
+								help={t("ui.help.g2.item_title_help")}
+							/>
 							<Input
 								id={`item-title-${item.id}`}
+								placeholder={t("ui.help.g2.item_title_ph")}
 								value={title}
 								maxLength={TITLE_MAX}
 								required
@@ -428,11 +432,14 @@ function AddItem({
 				))}
 			</fieldset>
 			<div className="flex flex-col gap-1">
-				<Label htmlFor="new-item-title">
-					{t("ui.projects.overview.item_title")}
-				</Label>
+				<FieldLabel
+					htmlFor="new-item-title"
+					label={t("ui.projects.overview.item_title")}
+					help={t("ui.help.g2.item_title_help")}
+				/>
 				<Input
 					id="new-item-title"
+					placeholder={t("ui.help.g2.item_title_ph")}
 					value={title}
 					maxLength={TITLE_MAX}
 					required
@@ -442,11 +449,14 @@ function AddItem({
 			</div>
 			{kind === "text" ? (
 				<div className="flex flex-col gap-1">
-					<Label htmlFor="new-item-text">
-						{t("ui.projects.overview.item_text")}
-					</Label>
+					<FieldLabel
+						htmlFor="new-item-text"
+						label={t("ui.projects.overview.item_text")}
+						help={t("ui.help.g2.item_text_help")}
+					/>
 					<Textarea
 						id="new-item-text"
+						placeholder={t("ui.help.g2.item_text_ph")}
 						value={text}
 						onChange={(event) => setText(event.target.value)}
 					/>
@@ -649,8 +659,12 @@ export default function ProjectShow() {
 							id="brief-text"
 							value={draft}
 							placeholder={t("ui.projects.overview.brief_empty")}
+							aria-describedby="brief-text-hint"
 							onChange={(event) => setDraft(event.target.value)}
 						/>
+						<FieldHint id="brief-text-hint">
+							{t("ui.help.g2.brief_text_help")}
+						</FieldHint>
 						<div>
 							<Button type="submit" disabled={saving || draft === brief.text}>
 								{t("ui.projects.overview.brief_save")}

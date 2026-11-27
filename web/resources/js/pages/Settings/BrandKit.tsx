@@ -9,6 +9,7 @@ import {
 } from "react";
 
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
+import { FieldLabel } from "@/components/FieldHelp";
 import { LoadingState } from "@/components/LoadingState";
 import { Notice } from "@/components/Notice";
 import { PageHeader, PageHeaderAction } from "@/components/PageHeader";
@@ -278,6 +279,8 @@ export default function BrandKitPage(): ReactNode {
 														aria-label={t("ui.brand.color_value", {
 															index: index + 1,
 														})}
+														title={t("ui.help.g1.brand_color_hex_help")}
+														placeholder={t("ui.help.g1.brand_color_hex_ph")}
 														value={row.value}
 														maxLength={9}
 														autoComplete="off"
@@ -382,11 +385,14 @@ export default function BrandKitPage(): ReactNode {
 										onSubmit={(event) => void importFont(event)}
 										className="flex flex-col gap-2"
 									>
-										<Label htmlFor="brand-font-path">
-											{t("ui.brand.font_path")}
-										</Label>
+										<FieldLabel
+											htmlFor="brand-font-path"
+											label={t("ui.brand.font_path")}
+											help={t("ui.help.g1.brand_font_path_help")}
+										/>
 										<Input
 											id="brand-font-path"
+											placeholder={t("ui.help.g1.brand_font_path_ph")}
 											value={path}
 											autoComplete="off"
 											spellCheck={false}
@@ -394,11 +400,14 @@ export default function BrandKitPage(): ReactNode {
 										/>
 										<div className="flex flex-wrap items-end gap-2">
 											<div className="flex min-w-40 flex-1 flex-col gap-1">
-												<Label htmlFor="brand-font-family">
-													{t("ui.brand.font_family")}
-												</Label>
+												<FieldLabel
+													htmlFor="brand-font-family"
+													label={t("ui.brand.font_family")}
+													help={t("ui.help.g1.brand_font_family_help")}
+												/>
 												<Input
 													id="brand-font-family"
+													placeholder={t("ui.help.g1.brand_font_family_ph")}
 													value={family}
 													maxLength={60}
 													autoComplete="off"
@@ -479,9 +488,11 @@ export default function BrandKitPage(): ReactNode {
 										</select>
 									</div>
 									<div className="flex flex-col gap-2">
-										<Label htmlFor="brand-logo-hash">
-											{t("ui.brand.logo_hash")}
-										</Label>
+										<FieldLabel
+											htmlFor="brand-logo-hash"
+											label={t("ui.brand.logo_hash")}
+											help={t("ui.help.g1.brand_logo_hash_help")}
+										/>
 										<Input
 											id="brand-logo-hash"
 											value={logo}

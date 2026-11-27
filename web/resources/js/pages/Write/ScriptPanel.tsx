@@ -1,9 +1,9 @@
 import { type ReactNode, useEffect, useState } from "react";
 
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
+import { FieldLabel } from "@/components/FieldHelp";
 import UntrustedText from "@/components/UntrustedText";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useT } from "@/lib/i18n";
 import type { ScriptEstimateResult, WritingClient } from "./client";
 import { keyed } from "./keyed";
@@ -71,11 +71,16 @@ export default function ScriptPanel({
 			headingId="script-heading"
 		>
 			<div className="flex flex-wrap items-center gap-2">
-				<Label htmlFor="script-pace">{t("ui.write.script.pace")}</Label>
+				<FieldLabel
+					htmlFor="script-pace"
+					label={t("ui.write.script.pace")}
+					help={t("ui.help.g2.write_pace_help")}
+				/>
 				<Input
 					id="script-pace"
 					type="number"
 					inputMode="numeric"
+					placeholder={t("ui.help.g2.write_pace_ph")}
 					className="w-24"
 					value={pace}
 					onChange={(event) => setPace(event.target.value)}

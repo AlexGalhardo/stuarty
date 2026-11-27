@@ -10,11 +10,11 @@ import {
 import { createPortal } from "react-dom";
 
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
+import { FieldLabel } from "@/components/FieldHelp";
 import { PageHeaderAction } from "@/components/PageHeader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useT } from "@/lib/i18n";
@@ -347,9 +347,14 @@ export default function TextEditor({
 							</p>
 						</div>
 						<div className="flex flex-col gap-1">
-							<Label htmlFor="text-title">{t("ui.write.editor.title")}</Label>
+							<FieldLabel
+								htmlFor="text-title"
+								label={t("ui.write.editor.title")}
+								help={t("ui.help.g2.write_title_help")}
+							/>
 							<Input
 								id="text-title"
+								placeholder={t("ui.help.g2.write_title_ph")}
 								value={title}
 								maxLength={120}
 								required
@@ -368,9 +373,14 @@ export default function TextEditor({
 						</TabsList>
 						<TabsContent value="edit">
 							<div className="flex flex-col gap-1">
-								<Label htmlFor="text-body">{t("ui.write.editor.body")}</Label>
+								<FieldLabel
+									htmlFor="text-body"
+									label={t("ui.write.editor.body")}
+									help={t("ui.help.g2.write_body_help")}
+								/>
 								<Textarea
 									id="text-body"
+									placeholder={t("ui.help.g2.write_body_ph")}
 									rows={22}
 									value={body}
 									className="font-mono leading-7"

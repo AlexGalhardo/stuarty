@@ -1,6 +1,7 @@
 import { Moon, Plus } from "lucide-react";
 import { type ReactNode, useEffect, useState } from "react";
 
+import { FieldLabel } from "@/components/FieldHelp";
 import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -450,7 +451,11 @@ function QuickEdit({
 		>
 			<div className="grid gap-2 sm:grid-cols-2">
 				<div className="flex flex-col gap-1">
-					<Label htmlFor={`${id}-time`}>{t("ui.publish.day.time")}</Label>
+					<FieldLabel
+						htmlFor={`${id}-time`}
+						label={t("ui.publish.day.time")}
+						help={t("ui.help.g2.day_time_help")}
+					/>
 					<Input
 						id={`${id}-time`}
 						type="time"
@@ -481,11 +486,15 @@ function QuickEdit({
 				</div>
 			</div>
 			<div className="flex flex-col gap-1">
-				<Label htmlFor={`${id}-text`}>{t("ui.publish.day.text")}</Label>
+				<FieldLabel
+					htmlFor={`${id}-text`}
+					label={t("ui.publish.day.text")}
+					help={t("ui.help.g2.day_text_help")}
+				/>
 				<Textarea
 					id={`${id}-text`}
 					value={text}
-					placeholder={publication.text ?? ""}
+					placeholder={publication.text || t("ui.help.g2.pub_caption_ph")}
 					onChange={(event) => setText(event.target.value)}
 				/>
 			</div>
@@ -541,9 +550,14 @@ function DayPlan({
 			data-testid="day-plan"
 		>
 			<div className="flex flex-col gap-1">
-				<Label htmlFor="day-note">{t("ui.publish.day.note")}</Label>
+				<FieldLabel
+					htmlFor="day-note"
+					label={t("ui.publish.day.note")}
+					help={t("ui.help.g2.day_note_help")}
+				/>
 				<Textarea
 					id="day-note"
+					placeholder={t("ui.help.g2.day_note_ph")}
 					maxLength={2000}
 					rows={5}
 					value={text}
