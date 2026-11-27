@@ -63,11 +63,11 @@ Users downloading Stuarty can immediately tell the desktop application (`stuarty
 
 ## Tasks
 
-- [ ] 1. Update SDD-009 (§10.5, §18) and SDD-012 (§13.1, §23.4) with the `stuarty-web-localhost-X-Y-Z.exe` filename and the desktop update bridge contract. Verify: `task lint:md` exits 0.
-- [ ] 2. Rename the standalone localhost installer output in `.config/installers/windows/stuarty.iss`, Linux/macOS installer scripts, `.github/workflows/installers.yml`, `.github/workflows/release.yml`, `scripts/release-verify.sh`, and `site/` download references. Verify: `go test ./desktop/service/...` passes and grep confirms zero stale `OutputBaseFilename=stuarty-{#FileVersion}` occurrences.
-- [ ] 3. Extend `desktop/shell/` and `desktop/shell/app/` (`bridge.go`, `updates.go`, `launcher.go`, `updater.go`) with `getUpdateState`, `checkForUpdates`, `installUpdate`, and `setAutoUpdate`, including offline detection and automatic check/apply scheduling when toggled on. Verify: `go test ./desktop/...` passes.
-- [ ] 4. Implement `web/resources/js/lib/desktopBridge.ts` update methods and `web/resources/js/components/DesktopUpdateControl.tsx`, wire into `Account/SignIn.tsx`, `Auth/Login.tsx`, and `dashboard/Sidebar.tsx`, and add `en.json` + `pt-BR.json` translations. Verify: `cd web && bun run typecheck && bun run check:thin-client && bun run check:i18n && bunx vitest run`.
-- [ ] 5. Add unit and Playwright tests with a mocked `window.vukemDesktop` covering Login screen update button, sidebar footer update button, auto-update toggle persistence, offline state, and hidden state in plain browsers. Verify: `task test:web` and the new Playwright spec pass.
+- [x] 1. Update SDD-009 (§10.5, §18) and SDD-012 (§13.1, §23.4) with the `stuarty-web-localhost-X-Y-Z.exe` filename and the desktop update bridge contract. Verify: `task lint:md` exits 0.
+- [x] 2. Rename the standalone localhost installer output in `.config/installers/windows/stuarty.iss`, Linux/macOS installer scripts, `.github/workflows/installers.yml`, `.github/workflows/release.yml`, `scripts/release-verify.sh`, and `site/` download references. Verify: `go test ./desktop/service/...` passes and grep confirms zero stale `OutputBaseFilename=stuarty-{#FileVersion}` occurrences.
+- [x] 3. Extend `desktop/shell/` and `desktop/shell/app/` (`bridge.go`, `updates.go`, `launcher.go`, `updater.go`) with `getUpdateState`, `checkForUpdates`, `installUpdate`, and `setAutoUpdate`, including offline detection and automatic check/apply scheduling when toggled on. Verify: `go test ./desktop/...` passes.
+- [x] 4. Implement `web/resources/js/lib/desktopBridge.ts` update methods and `web/resources/js/components/DesktopUpdateControl.tsx`, wire into `Account/SignIn.tsx`, `Auth/Login.tsx`, and `dashboard/Sidebar.tsx`, and add `en.json` + `pt-BR.json` translations. Verify: `cd web && bun run typecheck && bun run check:thin-client && bun run check:i18n && bunx vitest run`.
+- [x] 5. Add unit and Playwright tests with a mocked `window.vukemDesktop` covering Login screen update button, sidebar footer update button, auto-update toggle persistence, offline state, and hidden state in plain browsers. Verify: `task test:web` and the new Playwright spec pass.
 
 ## Test strategy
 

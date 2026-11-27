@@ -176,7 +176,7 @@ Every UI epic in this section updates `docs/design/final/stuarty-redesign-final-
 | Epic | Title | Size | Depends on | Status |
 | --- | --- | --- | --- | --- |
 | [100](100-windows-silent-processes-and-export.md) | Windows silent child processes, FFmpeg shim resolution and reliable video export | M | 46, 98 | DONE (2026-11-27, `2f46b534a`..`430667880`; Scoop shim verified live + `TestExportWithTheDetectedEncoder` and desktop `-H windowsgui` build pass) |
-| [101](101-installer-naming-and-desktop-updater.md) | Explicit web-localhost installer naming and desktop in-app auto-updater | M | 100 | TODO |
+| [101](101-installer-naming-and-desktop-updater.md) | Explicit web-localhost installer naming and desktop in-app auto-updater | M | 100 | DONE (2026-11-27; `stuarty-web-localhost-X-Y-Z.exe`/`.AppImage`, update bridge, Login + Sidebar controls, Go/Vitest/Playwright verified) |
 | [102](102-critical-ui-bug-fixes.md) | Critical UI bug fixes: workflow navigation, collapsed sidebar version and empty-state layout | S | 75, 79, 99 | DONE (2026-11-27, `3d8d10821`..`bc1cb73bd` + Playwright E2E) |
 | [103](103-login-and-recovery-polish.md) | Login, password recovery and account switching polish | S | 57, 84 | DONE (2026-11-27, `092916646`..`5dbf40e8c` + Playwright `account` E2E) |
 | [104](104-navigation-and-shortcuts.md) | Global back navigation, double-click shortcuts and clickable workflow steps | M | 102 | DONE (2026-11-27, `34753f3c0`..`ae83cd931` + Playwright E2E) |
