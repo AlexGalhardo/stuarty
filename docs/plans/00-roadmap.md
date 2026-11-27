@@ -160,6 +160,41 @@ Work that earlier epics left open and the author decided to do in epics of their
 | [98](98-ship-and-adopt-the-own-ffmpeg.md) | Ship the own FFmpeg build in the installers and adopt it | M | 46 | IN PROGRESS (tasks 1 to 4 merged 2026-11-25, `8b7fb80aa`; the setup compiled with the own FFmpeg, a real install and tasks 5 and 6 wait for CI and the author) |
 | [99](99-finish-the-final-design.md) | Finish the final design where the screens are still partial | L | 96, 98 | DONE (2026-11-25, `03f100d72`..`a7f70d4ec`; groups A, B, C and D merged; landing and README recaptured) |
 
+### 1.9 Product feedback of 2026-11-27 (author decision D-160)
+
+Epics created from the author's real-world testing of v0.60.0 (`stuarty-desktop-0-60-0.exe` and `stuarty-0-60-0.exe`) and the web feature-gap research against Canva, Photoshop, CapCut, Premiere Pro and DaVinci Resolve.
+
+At five seniors (respecting shared files in `.agents/rules/plans.md` section 4, especially `web/resources/lang/*.json`, `docs/sdds/000-shared-definitions.md` and `renderer/`):
+
+- **Wave A (start immediately, disjoint modules):** `116` (preserve FINAL FigCraft design in `docs/design/final/` — small and fast so all subsequent UI epics edit FigCraft cleanly), `100` (desktop/engine Windows processes & export), `102` (critical UI bugs), `108` (docs/site Docker `:latest` & admin defaults), `109` (AI image/video providers).
+- **Wave B (after Wave A):** `101` (installer naming & desktop updater, after `100` and `102`), `103` (login & recovery polish, coordinate `SignIn.tsx` with `101`), `104` (back button, double-click & workflow dots, after `102`), `105` (standalone video & image editors, after `116`), `106` (project-independent asset imports & library copy modal, after `116`).
+- **Wave C:** `107` (OAuth-first agent connections; task 1 stops for author approval of ADR-0054), `110` (Google Drive, Figma & open-source creative MCPs, after `106`), `111` (global & per-project Activity History, after `116`), `117` (dedicated `/record` screen recording studio page & sidebar entry, after `105` and `116`), `114` (image editor Canva/Photoshop parity — owns `renderer/`).
+- **Wave D (closing & sequential `renderer/` / `lang/*.json`):** `115` (video editor CapCut/Premiere/Resolve parity — after `114` so only one epic touches `renderer/` at a time), `118` (professional Sound Editor `/edit-sound` & SDD-026, after `105`, `106` and `116`), `112` (universal input placeholders, tooltips & help cards — after new UI forms land), `113` (100% Portuguese error localization — coordinate `lang/*.json` merge sequentially with `112`).
+
+Every UI epic in this section updates `docs/design/final/stuarty-redesign-final-trilha.figcraft` (preserved by epic 116) for any new screen or layout change.
+
+| Epic | Title | Size | Depends on | Status |
+| --- | --- | --- | --- | --- |
+| [100](100-windows-silent-processes-and-export.md) | Windows silent child processes, FFmpeg shim resolution and reliable video export | M | 46, 98 | TODO |
+| [101](101-installer-naming-and-desktop-updater.md) | Explicit web-localhost installer naming and desktop in-app auto-updater | M | 100 | TODO |
+| [102](102-critical-ui-bug-fixes.md) | Critical UI bug fixes: workflow navigation, collapsed sidebar version and empty-state layout | S | 75, 79, 99 | TODO |
+| [103](103-login-and-recovery-polish.md) | Login, password recovery and account switching polish | S | 57, 84 | TODO |
+| [104](104-navigation-and-shortcuts.md) | Global back navigation, double-click shortcuts and clickable workflow steps | M | 102 | TODO |
+| [105](105-standalone-video-and-image-editors.md) | Standalone video and image editors without a pre-created project | L | 06, 28, 85, 86, 116 | TODO |
+| [106](106-project-independent-asset-imports.md) | Project-independent drag-and-drop asset imports, library copy prompt and project allocation details | L | 08, 81, 94, 116 | TODO |
+| [107](107-oauth-first-agent-connections.md) | OAuth-first agent connections and secondary API key mode | L | 12, 14, 83, 84, 116 | TODO |
+| [108](108-docs-docker-latest-and-admin-defaults.md) | Documentation and website Docker `:latest` image and simplified default admin credentials | S | 25, 40, 87 | TODO |
+| [109](109-native-ai-media-providers.md) | Native AI image and video generation providers (Higgsfield, fal.ai, Replicate, Runway, Kling, Luma, FLUX, Ideogram, Recraft and ElevenLabs) | L | 10, 11, 84, 116 | TODO |
+| [110](110-drive-figma-and-creative-mcps.md) | Native Google Drive, Figma and open-source creative MCP connectors (ArtCraft, OpenPencil and custom MCPs) | L | 04, 84, 106, 116 | TODO |
+| [111](111-global-and-project-history.md) | Global and per-project Activity History | M | 06, 75, 79, 116 | TODO |
+| [112](112-universal-input-help.md) | Universal input placeholders, contextual tooltips and explanatory help cards | M | 74, 99, 116 | TODO |
+| [113](113-portuguese-error-localization.md) | Complete Portuguese localization of all error messages, hints and diagnostics | M | 74, 99 | TODO |
+| [114](114-image-editor-canva-photoshop-parity.md) | Image editor parity with Canva and Photoshop: Magic Resize, gradients, curved text, smart guides, vector frames and AI retouching | L | 27, 28, 29, 30, 86, 91, 116 | TODO |
+| [115](115-video-editor-capcut-premiere-resolve-parity.md) | Video editor parity with CapCut, Premiere Pro and DaVinci Resolve: speed ramps, stabilization, motion tracking, creator transitions, color wheels and beat-sync montage | L | 26, 31, 34, 53, 69, 71, 85, 114, 116 | TODO |
+| [116](116-figcraft-design-source-in-docs.md) | Preserve the FINAL FigCraft design system and frames in `docs/design/final/` | S | 99 | TODO |
+| [117](117-screen-recording-ui-and-record-page.md) | Screen recording UI: dedicated `/record` studio page, sidebar entry and standalone polish flow | L | 61, 62, 63, 65, 66, 75, 105, 116 | TODO |
+| [118](118-professional-sound-editor.md) | Professional Sound Editor: multi-track audio core, waveform and spectrogram UI, mastering FX rack, live recording and multi-format export | L | 34, 51, 58, 71, 105, 106, 116 | TODO |
+
 ## 2. Dependency graph
 
 ```text
@@ -216,6 +251,7 @@ New specifications have their numbers reserved here, so that epics running side 
 | SDD-019 writing | 17 |
 | SDD-020 publishing | 18 (connectors), 20 (publications and the scheduler) |
 | SDD-021 image documents | 27 |
+| SDD-026 audio documents and Sound Editor | 118 |
 
 ## 4. After the epics
 
@@ -321,6 +357,35 @@ New specifications have their numbers reserved here, so that epics running side 
 | NFR-063, NFR-064 (one adapter per network or provider; contract tests) | 09, 18 |
 | NFR-065 (accessibility of every section) | 41 |
 | NFR-066 (a small-model agent completes the flow) | 38 |
+
+### 6.6 Product feedback of 2026-11-27 (author decision D-160)
+
+| Feedback item | Epics |
+| --- | --- |
+| Explicit web-localhost installer name (`stuarty-web-localhost-X-Y-Z.exe`) | 101 |
+| 1. Hide Windows terminal when launching desktop localhost server | 100 |
+| 2. Global Back button on every screen | 104 |
+| 3. Login lock copy removal, Recover back-to-login button, switch account button | 103 |
+| 4. Standalone single-use video and image editors without pre-created projects | 105 |
+| 5. Project-independent drag-and-drop/file-picker asset imports, library save, project allocation details, copy-to-library confirmation modal | 106 |
+| 6. OAuth/web-first agent connections with API key secondary (no binary path required) | 107 |
+| 7. Desktop update-to-latest button on Login and sidebar footer + online auto-update toggle | 101 |
+| 8. Docs and site always use `ghcr.io/alexgalhardo/stuarty:latest` and matching `admin@stuarty.com` credentials | 108 |
+| 9. Fix blank white screen when continuing workflow from Home (`/projects/...` -> `/editor/...`) | 102 |
+| 10. Fix Windows Terminal / `0x800700e8` Scoop FFmpeg shim pipe failure | 100 |
+| 11. Hide product version string in collapsed sidebar | 102 |
+| 12. Fix video export `E_EXPORT_FAILED` with encoder fallback and actionable diagnostics | 100 |
+| 13. Fix Prompts empty-state step text alignment and border overflow | 102 |
+| 14. Remove `"No seu computador. Do seu jeito."` from password recovery footer | 103 |
+| 15. Native Higgsfield + popular AI image/video providers, Google Drive, Figma, and open-source creative MCPs (ArtCraft, OpenPencil) | 109, 110 |
+| 16. Missing high-demand Canva, Photoshop and video editor (CapCut/Premiere/Resolve) features | 114, 115 |
+| 17. Example placeholders and tooltips/help cards on every input across the app | 112 |
+| 18. Double-click shortcuts (calendar day, video/image assets) and clickable Home workflow step dots | 104 |
+| 19 & 19a. Global History in main sidebar and per-project History inside every project | 111 |
+| 20. Translate all remaining English error notices, messages and hints to Portuguese | 113 |
+| 21. Preserve FINAL FigCraft design system & frames in `docs/design/final/` and use FigCraft for new UIs | 116 |
+| 22. Dedicated Screen Recording UI (`/record` page, sidebar button, Home quick action, polish take flow) | 117 |
+| 23. Professional Sound Editor (`/edit-sound`, multi-track core, waveform/spectrogram, mastering FX rack, LUFS) | 118 |
 
 ## 7. What happened to the earlier plans
 
