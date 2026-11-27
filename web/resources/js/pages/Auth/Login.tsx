@@ -4,9 +4,9 @@ import { type FormEvent, type ReactNode, useState } from "react";
 import { AuthCard } from "@/components/AuthCard";
 import { DesktopUpdateControl } from "@/components/DesktopUpdateControl";
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
+import { FieldLabel } from "@/components/FieldHelp";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useT } from "@/lib/i18n";
 import { safeNext } from "@/lib/safeNext";
 import { createClient } from "../../editor/api/client";
@@ -46,12 +46,17 @@ export default function Login(): ReactNode {
 					className="flex flex-col gap-4"
 				>
 					<div className="flex flex-col gap-2">
-						<Label htmlFor="login-email">{t("ui.login.email")}</Label>
+						<FieldLabel
+							htmlFor="login-email"
+							label={t("ui.login.email")}
+							help={t("ui.help.g1.login_email_help")}
+						/>
 						<Input
 							id="login-email"
 							type="email"
 							required
 							autoComplete="username"
+							placeholder={t("ui.help.g1.login_email_ph")}
 							aria-invalid={failure === null ? undefined : true}
 							aria-describedby={failure === null ? undefined : "login-error"}
 							value={email}
@@ -59,12 +64,17 @@ export default function Login(): ReactNode {
 						/>
 					</div>
 					<div className="flex flex-col gap-2">
-						<Label htmlFor="login-password">{t("ui.login.password")}</Label>
+						<FieldLabel
+							htmlFor="login-password"
+							label={t("ui.login.password")}
+							help={t("ui.help.g1.login_password_help")}
+						/>
 						<Input
 							id="login-password"
 							type="password"
 							required
 							autoComplete="current-password"
+							placeholder={t("ui.help.g1.login_password_ph")}
 							aria-invalid={failure === null ? undefined : true}
 							aria-describedby={failure === null ? undefined : "login-error"}
 							value={password}

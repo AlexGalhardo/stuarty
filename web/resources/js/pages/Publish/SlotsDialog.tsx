@@ -1,6 +1,7 @@
 import { type ReactNode, useState } from "react";
 
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
+import { FieldLabel, HelpCard } from "@/components/FieldHelp";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -73,6 +74,10 @@ export function SlotsDialog({
 					<DialogTitle>{t("ui.publish.slots.title")}</DialogTitle>
 					<DialogDescription>{t("ui.publish.slots.intro")}</DialogDescription>
 				</DialogHeader>
+				<HelpCard
+					title={t("ui.help.g2.slots_card_title")}
+					description={t("ui.help.g2.slots_card_body")}
+				/>
 				{rules.length === 0 ? (
 					<p
 						className="text-sm text-muted-foreground"
@@ -164,7 +169,11 @@ export function SlotsDialog({
 						</select>
 					</div>
 					<div className="flex flex-col gap-1">
-						<Label htmlFor="slot-time">{t("ui.publish.slots.time")}</Label>
+						<FieldLabel
+							htmlFor="slot-time"
+							label={t("ui.publish.slots.time")}
+							help={t("ui.help.g2.slots_time_help")}
+						/>
 						<Input
 							id="slot-time"
 							type="time"
@@ -174,9 +183,14 @@ export function SlotsDialog({
 						/>
 					</div>
 					<div className="flex flex-col gap-1">
-						<Label htmlFor="slot-zone">{t("ui.publish.editor.zone")}</Label>
+						<FieldLabel
+							htmlFor="slot-zone"
+							label={t("ui.publish.editor.zone")}
+							help={t("ui.help.g2.slots_zone_help")}
+						/>
 						<Input
 							id="slot-zone"
+							placeholder={t("ui.help.g2.slots_zone_ph")}
 							autoComplete="off"
 							value={where}
 							onChange={(event) => setWhere(event.target.value)}

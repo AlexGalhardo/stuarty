@@ -11,11 +11,11 @@ import {
 
 import { EmptyState } from "@/components/EmptyState";
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
+import { FieldLabel } from "@/components/FieldHelp";
 import { OptionSelect } from "@/components/OptionSelect";
 import { PageHeader, PageHeaderAction } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useT } from "@/lib/i18n";
 import { confirmDiscard } from "@/lib/unsaved";
 import { HttpTransport } from "../../editor/api/http";
@@ -294,9 +294,14 @@ function NewText({
 					/>
 				</div>
 				<div className="flex min-w-0 max-w-full flex-col gap-1">
-					<Label htmlFor="new-title">{t("ui.write.new_form.name")}</Label>
+					<FieldLabel
+						htmlFor="new-title"
+						label={t("ui.write.new_form.name")}
+						help={t("ui.help.g2.write_new_title_help")}
+					/>
 					<Input
 						id="new-title"
+						placeholder={t("ui.help.g2.write_new_title_ph")}
 						value={title}
 						maxLength={120}
 						required

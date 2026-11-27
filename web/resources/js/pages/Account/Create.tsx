@@ -5,6 +5,7 @@ import { type FormEvent, type ReactNode, useState } from "react";
 import { AuthCard, type AuthStep } from "@/components/AuthCard";
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
 import FieldErrors from "@/components/FieldErrors";
+import { FieldLabel } from "@/components/FieldHelp";
 import { Notice } from "@/components/Notice";
 import PasswordField from "@/components/PasswordField";
 import RecoveryKeyBox from "@/components/RecoveryKeyBox";
@@ -116,12 +117,17 @@ export default function Create(): ReactNode {
 					className="flex flex-col gap-4"
 				>
 					<div className="flex flex-col gap-2">
-						<Label htmlFor="account-username">{t("ui.account.username")}</Label>
+						<FieldLabel
+							htmlFor="account-username"
+							label={t("ui.account.username")}
+							help={t("ui.help.g1.username_help")}
+						/>
 						<Input
 							id="account-username"
 							autoComplete="username"
 							autoCapitalize="none"
 							spellCheck={false}
+							placeholder={t("ui.help.g1.username_ph")}
 							aria-invalid={usernameReasons.length > 0 ? true : undefined}
 							aria-describedby="account-username-hint account-username-errors"
 							value={username}
@@ -136,11 +142,16 @@ export default function Create(): ReactNode {
 						/>
 					</div>
 					<div className="flex flex-col gap-2">
-						<Label htmlFor="account-email">{t("ui.account.email")}</Label>
+						<FieldLabel
+							htmlFor="account-email"
+							label={t("ui.account.email")}
+							help={t("ui.help.g1.email_help")}
+						/>
 						<Input
 							id="account-email"
 							type="email"
 							autoComplete="email"
+							placeholder={t("ui.help.g1.email_ph")}
 							aria-invalid={emailReasons.length > 0 ? true : undefined}
 							aria-describedby="account-email-hint account-email-errors"
 							value={email}
@@ -165,6 +176,7 @@ export default function Create(): ReactNode {
 					<PasswordField
 						id="account-confirmation"
 						label={t("ui.account.confirmation")}
+						placeholder={t("ui.help.g1.confirm_password_ph")}
 						value={confirmation}
 						onChange={setConfirmation}
 						autoComplete="new-password"

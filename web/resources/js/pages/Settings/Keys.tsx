@@ -10,6 +10,7 @@ import {
 
 import { EmptyState } from "@/components/EmptyState";
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
+import { FieldLabel, HelpCard } from "@/components/FieldHelp";
 import { Notice } from "@/components/Notice";
 import { PageHeader } from "@/components/PageHeader";
 import { SectionTitle } from "@/components/SectionTitle";
@@ -17,7 +18,6 @@ import { StatusBadge } from "@/components/StatusBadge";
 import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { formatDateTime } from "@/lib/format";
 import { useLocale, useT } from "@/lib/i18n";
 import { createClient } from "../../editor/api/client";
@@ -266,19 +266,32 @@ export default function SettingsKeys(): ReactNode {
 							onSubmit={(event) => void create(event)}
 							className="mt-4 flex flex-col gap-4"
 						>
+							<HelpCard
+								title={t("ui.help.g1.key_card_title")}
+								description={t("ui.help.g1.key_card_body")}
+							/>
 							<div className="flex flex-col gap-2">
-								<Label htmlFor="key-name">{t("ui.keys.name")}</Label>
+								<FieldLabel
+									htmlFor="key-name"
+									label={t("ui.keys.name")}
+									help={t("ui.help.g1.key_name_help")}
+								/>
 								<Input
 									id="key-name"
 									required
 									maxLength={NAME_MAX}
 									autoComplete="off"
+									placeholder={t("ui.help.g1.key_name_ph")}
 									value={name}
 									onChange={(event) => setName(event.target.value)}
 								/>
 							</div>
 							<div className="flex flex-col gap-2">
-								<Label htmlFor="key-project">{t("ui.keys.project")}</Label>
+								<FieldLabel
+									htmlFor="key-project"
+									label={t("ui.keys.project")}
+									help={t("ui.help.g1.key_project_help")}
+								/>
 								<Input
 									id="key-project"
 									autoComplete="off"

@@ -4,10 +4,10 @@ import { type FormEvent, type ReactNode, useState } from "react";
 
 import { AuthCard } from "@/components/AuthCard";
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
+import { FieldLabel, HelpCard } from "@/components/FieldHelp";
 import PasswordField from "@/components/PasswordField";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useT } from "@/lib/i18n";
 import { createClient } from "../../editor/api/client";
 import { HttpTransport } from "../../editor/api/http";
@@ -53,18 +53,27 @@ export default function Recover(): ReactNode {
 				title={t("ui.account.recover.title")}
 				description={t("ui.account.recover.intro")}
 			>
+				<HelpCard
+					title={t("ui.help.g1.recovery_card_title")}
+					description={t("ui.help.g1.recovery_card_body")}
+				/>
 				<form
 					onSubmit={(event) => void submit(event)}
 					noValidate
 					className="flex flex-col gap-4"
 				>
 					<div className="flex flex-col gap-2">
-						<Label htmlFor="recover-key">{t("ui.account.recover.key")}</Label>
+						<FieldLabel
+							htmlFor="recover-key"
+							label={t("ui.account.recover.key")}
+							help={t("ui.help.g1.recovery_key_help")}
+						/>
 						<Input
 							id="recover-key"
 							autoComplete="off"
 							autoCapitalize="characters"
 							spellCheck={false}
+							placeholder={t("ui.help.g1.recovery_key_ph")}
 							aria-invalid={failure === null ? undefined : true}
 							aria-describedby={failure === null ? undefined : "recover-error"}
 							value={key}
@@ -82,6 +91,7 @@ export default function Recover(): ReactNode {
 					<PasswordField
 						id="recover-confirmation"
 						label={t("ui.account.confirmation")}
+						placeholder={t("ui.help.g1.confirm_password_ph")}
 						value={confirmation}
 						onChange={setConfirmation}
 						autoComplete="new-password"

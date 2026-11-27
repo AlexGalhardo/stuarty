@@ -1,6 +1,7 @@
 import { type FormEvent, type ReactNode, useState } from "react";
 
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
+import { FieldLabel } from "@/components/FieldHelp";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -92,9 +93,11 @@ export default function AddMedia({
 						onSubmit={(event) => void submit(event)}
 					>
 						<div className="flex flex-col gap-1">
-							<Label htmlFor="add-media-title">
-								{t("ui.projects.add_media.name")}
-							</Label>
+							<FieldLabel
+								htmlFor="add-media-title"
+								label={t("ui.projects.add_media.name")}
+								help={t("ui.help.g2.add_media_title_help")}
+							/>
 							<Input
 								id="add-media-title"
 								value={title}

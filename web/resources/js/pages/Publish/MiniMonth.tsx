@@ -1,9 +1,9 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { type ReactNode, useState } from "react";
 
+import { FieldLabel } from "@/components/FieldHelp";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/cn";
 import { useLocale, useT } from "@/lib/i18n";
 import { monthDays, today } from "./calendar";
@@ -138,7 +138,11 @@ export function MiniMonth({
 				}}
 			>
 				<div className="flex min-w-0 flex-1 flex-col gap-1">
-					<Label htmlFor="mini-go">{t("ui.publish.mini.go_label")}</Label>
+					<FieldLabel
+						htmlFor="mini-go"
+						label={t("ui.publish.mini.go_label")}
+						help={t("ui.help.g2.mini_go_help")}
+					/>
 					<Input
 						id="mini-go"
 						type="date"

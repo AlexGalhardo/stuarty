@@ -1,9 +1,9 @@
 import { type FormEvent, type ReactNode, useState } from "react";
 
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
+import { FieldLabel } from "@/components/FieldHelp";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useT } from "@/lib/i18n";
 import { useUnsavedGuard } from "@/lib/unsaved";
@@ -94,6 +94,7 @@ function Field({
 					min={q.min}
 					max={q.max}
 					step={1}
+					placeholder={t("ui.help.g2.briefing_num_ph")}
 					value={value}
 					required={q.required}
 					aria-describedby={`${id}-hint`}
@@ -107,6 +108,7 @@ function Field({
 				<Input
 					id={id}
 					type="date"
+					title={t("ui.help.g2.briefing_field_help")}
 					value={value}
 					required={q.required}
 					className="w-fit"
@@ -118,6 +120,8 @@ function Field({
 			control = (
 				<Textarea
 					id={id}
+					placeholder={t("ui.help.g2.briefing_text_ph")}
+					title={t("ui.help.g2.briefing_field_help")}
 					value={value}
 					maxLength={q.max_chars}
 					required={q.required}
@@ -129,10 +133,17 @@ function Field({
 
 	return (
 		<div className="flex flex-col gap-1" data-question={q.id}>
-			<Label htmlFor={id}>
-				{t(questionKey(set, q.id))}{" "}
-				<span className="font-normal text-muted-foreground">({need})</span>
-			</Label>
+			<FieldLabel
+				htmlFor={id}
+				labelText={t(questionKey(set, q.id))}
+				help={t("ui.help.g2.briefing_field_help")}
+				label={
+					<>
+						{t(questionKey(set, q.id))}{" "}
+						<span className="font-normal text-muted-foreground">({need})</span>
+					</>
+				}
+			/>
 			{control}
 			{(q.kind === "seconds" || q.kind === "words") && (
 				<p id={`${id}-hint`} className="text-xs text-muted-foreground">

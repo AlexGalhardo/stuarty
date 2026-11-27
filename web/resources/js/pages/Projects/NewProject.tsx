@@ -1,5 +1,6 @@
 import { type ReactNode, useState } from "react";
 
+import { FieldLabel } from "@/components/FieldHelp";
 import { Segment } from "@/components/Segment";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,7 +12,6 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useT } from "@/lib/i18n";
 import {
 	CHOICE_ICON,
@@ -79,9 +79,11 @@ export default function NewProject({
 					}}
 				>
 					<div className="flex flex-col gap-1">
-						<Label htmlFor="new-project-name">
-							{t("ui.projects.new_project.name")}
-						</Label>
+						<FieldLabel
+							htmlFor="new-project-name"
+							label={t("ui.projects.new_project.name")}
+							help={t("ui.help.g2.new_project_name_help")}
+						/>
 						<Input
 							id="new-project-name"
 							value={name}
