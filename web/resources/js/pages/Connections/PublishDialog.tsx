@@ -7,6 +7,7 @@ import {
 	failureIsAbout,
 	failureOf,
 } from "@/components/Failure";
+import { FieldLabel } from "@/components/FieldHelp";
 import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
 import {
@@ -250,30 +251,43 @@ export function PublishDialog({
 							</div>
 						)}
 						<div className="flex flex-col gap-2">
-							<Label htmlFor="publish-title">{t("ui.social.post_title")}</Label>
+							<FieldLabel
+								htmlFor="publish-title"
+								label={t("ui.social.post_title")}
+								help={t("ui.help.g4.pub_quick_title_help")}
+							/>
 							<Input
 								id="publish-title"
 								required
 								autoComplete="off"
+								placeholder={t("ui.help.g4.pub_quick_title_ph")}
 								value={title}
 								onChange={(event) => setTitle(event.target.value)}
 							/>
 						</div>
 						<div className="flex flex-col gap-2">
-							<Label htmlFor="publish-description">
-								{t("ui.social.description")}
-							</Label>
+							<FieldLabel
+								htmlFor="publish-description"
+								label={t("ui.social.description")}
+								help={t("ui.help.g4.pub_quick_desc_help")}
+							/>
 							<Textarea
 								id="publish-description"
+								placeholder={t("ui.help.g4.pub_quick_desc_ph")}
 								value={description}
 								onChange={(event) => setDescription(event.target.value)}
 							/>
 						</div>
 						<div className="flex flex-col gap-2">
-							<Label htmlFor="publish-tags">{t("ui.social.tags")}</Label>
+							<FieldLabel
+								htmlFor="publish-tags"
+								label={t("ui.social.tags")}
+								help={t("ui.help.g2.pub_tags_help")}
+							/>
 							<Input
 								id="publish-tags"
 								autoComplete="off"
+								placeholder={t("ui.help.g2.pub_tags_ph")}
 								value={tags}
 								onChange={(event) => setTags(event.target.value)}
 							/>

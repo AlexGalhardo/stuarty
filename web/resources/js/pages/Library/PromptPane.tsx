@@ -3,9 +3,9 @@ import { type FormEvent, type ReactNode, useEffect, useState } from "react";
 
 import { DetailPanel } from "@/components/DetailPanel";
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
+import { FieldLabel, HelpCard } from "@/components/FieldHelp";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useT } from "@/lib/i18n";
 import { useUnsavedGuard } from "@/lib/unsaved";
@@ -144,11 +144,21 @@ export default function PromptPane({
 				}
 			>
 				<form id="prompt-form" className="flex flex-col gap-4" onSubmit={save}>
+					<HelpCard
+						title={t("ui.help.g3.prompt_card_title")}
+						description={t("ui.help.g3.prompt_card_body")}
+						examples={["{{topic}}", "{{audience}}"]}
+					/>
 					{name === null && (
 						<div className="flex flex-col gap-1">
-							<Label htmlFor="prompt-name">{t("ui.library.field.name")}</Label>
+							<FieldLabel
+								htmlFor="prompt-name"
+								label={t("ui.library.field.name")}
+								help={t("ui.help.g3.prompt_name_help")}
+							/>
 							<Input
 								id="prompt-name"
+								placeholder={t("ui.help.g3.prompt_name_ph")}
 								value={newName}
 								maxLength={64}
 								required
@@ -160,11 +170,14 @@ export default function PromptPane({
 						</div>
 					)}
 					<div className="flex flex-col gap-1">
-						<Label htmlFor="prompt-description">
-							{t("ui.library.field.description")}
-						</Label>
+						<FieldLabel
+							htmlFor="prompt-description"
+							label={t("ui.library.field.description")}
+							help={t("ui.help.g3.prompt_desc_help")}
+						/>
 						<Input
 							id="prompt-description"
+							placeholder={t("ui.help.g3.prompt_desc_ph")}
 							value={description}
 							maxLength={200}
 							required
@@ -172,9 +185,14 @@ export default function PromptPane({
 						/>
 					</div>
 					<div className="flex flex-col gap-1">
-						<Label htmlFor="prompt-body">{t("ui.library.field.body")}</Label>
+						<FieldLabel
+							htmlFor="prompt-body"
+							label={t("ui.library.field.body")}
+							help={t("ui.help.g3.prompt_body_help")}
+						/>
 						<Textarea
 							id="prompt-body"
+							placeholder={t("ui.help.g3.prompt_body_ph")}
 							rows={10}
 							value={body}
 							required
@@ -187,9 +205,14 @@ export default function PromptPane({
 						</p>
 					</div>
 					<div className="flex flex-col gap-1">
-						<Label htmlFor="prompt-tags">{t("ui.library.field.tags")}</Label>
+						<FieldLabel
+							htmlFor="prompt-tags"
+							label={t("ui.library.field.tags")}
+							help={t("ui.help.g3.tags_csv_help")}
+						/>
 						<Input
 							id="prompt-tags"
+							placeholder={t("ui.help.g3.tags_csv_ph")}
 							value={tags}
 							onChange={(e) => setTags(e.target.value)}
 						/>
@@ -216,11 +239,16 @@ export default function PromptPane({
 						)}
 						{variables.map((variable) => (
 							<div key={variable} className="flex flex-col gap-1">
-								<Label htmlFor={`value-${variable}`}>
-									{t("ui.library.prompt.value", { name: variable })}
-								</Label>
+								<FieldLabel
+									htmlFor={`value-${variable}`}
+									label={t("ui.library.prompt.value", { name: variable })}
+									help={t("ui.help.g3.prompt_var_help")}
+								/>
 								<Input
 									id={`value-${variable}`}
+									placeholder={t("ui.help.g3.prompt_var_ph", {
+										name: variable,
+									})}
 									value={values[variable] ?? ""}
 									onChange={(e) =>
 										setValues((was) => ({

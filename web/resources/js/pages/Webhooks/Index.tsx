@@ -10,6 +10,7 @@ import {
 import { DetailPanel } from "@/components/DetailPanel";
 import { EmptyState } from "@/components/EmptyState";
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
+import { FieldLabel, HelpCard } from "@/components/FieldHelp";
 import { ListRow } from "@/components/ListRow";
 import { Notice } from "@/components/Notice";
 import { PageHeader, PageHeaderAction } from "@/components/PageHeader";
@@ -28,7 +29,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { formatDateTime } from "@/lib/format";
 import { useLocale, useT } from "@/lib/i18n";
 import { createClient } from "../../editor/api/client";
@@ -466,26 +466,38 @@ export default function Webhooks(): ReactNode {
 									onSubmit={(event) => void create(event)}
 									className="flex flex-col gap-4 text-text"
 								>
+									<HelpCard
+										title={t("ui.help.g4.webhook_card_title")}
+										description={t("ui.help.g4.webhook_card_body")}
+									/>
 									<div className="flex flex-col gap-2">
-										<Label htmlFor="webhook-name">
-											{t("ui.webhooks.name")}
-										</Label>
+										<FieldLabel
+											htmlFor="webhook-name"
+											label={t("ui.webhooks.name")}
+											help={t("ui.help.g4.webhook_name_help")}
+										/>
 										<Input
 											id="webhook-name"
 											required
 											maxLength={NAME_MAX}
 											autoComplete="off"
+											placeholder={t("ui.help.g4.webhook_name_ph")}
 											value={name}
 											onChange={(event) => setName(event.target.value)}
 										/>
 									</div>
 									<div className="flex flex-col gap-2">
-										<Label htmlFor="webhook-url">{t("ui.webhooks.url")}</Label>
+										<FieldLabel
+											htmlFor="webhook-url"
+											label={t("ui.webhooks.url")}
+											help={t("ui.help.g4.webhook_url_help")}
+										/>
 										<Input
 											id="webhook-url"
 											required
 											type="url"
 											autoComplete="off"
+											placeholder={t("ui.help.g4.webhook_url_ph")}
 											value={url}
 											onChange={(event) => setUrl(event.target.value)}
 										/>

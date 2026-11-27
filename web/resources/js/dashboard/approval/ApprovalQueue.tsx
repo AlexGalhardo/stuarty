@@ -2,11 +2,11 @@ import { Link } from "@inertiajs/react";
 import { Check, Lock, X } from "lucide-react";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 
+import { FieldLabel } from "@/components/FieldHelp";
 import { StatusBadge } from "@/components/StatusBadge";
 import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/cn";
 import { formatDateTime } from "@/lib/format";
 import { useLocale, useT } from "@/lib/i18n";
@@ -217,12 +217,16 @@ export function ApprovalItem({
 				</p>
 				{rejecting && (
 					<div className="flex min-w-48 flex-col gap-1">
-						<Label htmlFor={`reason-${request.id}`} className="text-xs">
-							{t("ui.approvals.reason")}
-						</Label>
+						<FieldLabel
+							htmlFor={`reason-${request.id}`}
+							label={t("ui.approvals.reason")}
+							labelClassName="text-xs"
+							help={t("ui.help.g3.approval_reason_help")}
+						/>
 						<Input
 							autoFocus
 							id={`reason-${request.id}`}
+							placeholder={t("ui.help.g3.approval_reason_ph")}
 							autoComplete="off"
 							maxLength={500}
 							value={reason}

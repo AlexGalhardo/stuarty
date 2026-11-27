@@ -74,6 +74,7 @@ export default function RenameAssetDialog({
 						</Label>
 						<Input
 							id="rename-asset-name"
+							placeholder={t("ui.help.g3.rename_asset_ph")}
 							value={value}
 							autoFocus
 							aria-describedby="rename-asset-hint"

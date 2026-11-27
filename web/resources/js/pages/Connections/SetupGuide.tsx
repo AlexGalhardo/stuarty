@@ -1,10 +1,10 @@
 import { type FormEvent, type ReactNode, useState } from "react";
 
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
+import { FieldLabel } from "@/components/FieldHelp";
 import { NumberedStep } from "@/components/NumberedStep";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useT } from "@/lib/i18n";
 import { PersonOnlyNote, useSession } from "@/lib/session";
 import { createClient } from "../../editor/api/client";
@@ -144,23 +144,28 @@ export function SetupGuide({
 				{!again && (
 					<>
 						<div className="flex flex-col gap-2">
-							<Label htmlFor="social-client-id">
-								{t("ui.social.client_id")}
-							</Label>
+							<FieldLabel
+								htmlFor="social-client-id"
+								label={t("ui.social.client_id")}
+								help={t("ui.help.g4.social_client_id_help")}
+							/>
 							<Input
 								id="social-client-id"
 								required
 								aria-invalid={failure === null ? undefined : true}
 								aria-describedby={failure === null ? undefined : "setup-error"}
 								autoComplete="off"
+								placeholder={t("ui.help.g4.social_client_id_ph")}
 								value={clientId}
 								onChange={(event) => setClientId(event.target.value)}
 							/>
 						</div>
 						<div className="flex flex-col gap-2">
-							<Label htmlFor="social-client-secret">
-								{t("ui.social.client_secret")}
-							</Label>
+							<FieldLabel
+								htmlFor="social-client-secret"
+								label={t("ui.social.client_secret")}
+								help={t("ui.help.g4.social_client_secret_help")}
+							/>
 							<Input
 								id="social-client-secret"
 								required
@@ -168,6 +173,7 @@ export function SetupGuide({
 								aria-describedby={failure === null ? undefined : "setup-error"}
 								type="password"
 								autoComplete="off"
+								placeholder={t("ui.help.g4.social_client_secret_ph")}
 								value={clientSecret}
 								onChange={(event) => setClientSecret(event.target.value)}
 							/>
@@ -176,13 +182,16 @@ export function SetupGuide({
 							</p>
 						</div>
 						<div className="flex flex-col gap-2">
-							<Label htmlFor="social-label">
-								{t("ui.social.account_label")}
-							</Label>
+							<FieldLabel
+								htmlFor="social-label"
+								label={t("ui.social.account_label")}
+								help={t("ui.help.g4.social_label_help")}
+							/>
 							<Input
 								id="social-label"
 								maxLength={60}
 								autoComplete="off"
+								placeholder={t("ui.help.g4.social_label_ph")}
 								value={label}
 								onChange={(event) => setLabel(event.target.value)}
 							/>

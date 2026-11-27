@@ -1,11 +1,11 @@
 import { type ReactNode, useCallback, useEffect, useState } from "react";
 
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
+import { FieldLabel } from "@/components/FieldHelp";
 import { SectionTitle } from "@/components/SectionTitle";
 import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useLocale, useT } from "@/lib/i18n";
 import { PersonOnlyNote, useSession } from "@/lib/session";
 import {
@@ -132,25 +132,31 @@ export function PriceEditor({
 			</p>
 			<div className="flex flex-wrap items-end gap-2">
 				<div className="flex flex-col gap-1">
-					<Label htmlFor={`price-post-${account.connection_id}`}>
-						{t("ui.social.price_post", { currency: price.currency })}
-					</Label>
+					<FieldLabel
+						htmlFor={`price-post-${account.connection_id}`}
+						label={t("ui.social.price_post", { currency: price.currency })}
+						help={t("ui.help.g4.social_price_post_help")}
+					/>
 					<Input
 						id={`price-post-${account.connection_id}`}
 						inputMode="decimal"
 						className="w-28"
+						placeholder={t("ui.help.g4.social_price_post_ph")}
 						value={post}
 						onChange={(event) => setPost(event.target.value)}
 					/>
 				</div>
 				<div className="flex flex-col gap-1">
-					<Label htmlFor={`price-link-${account.connection_id}`}>
-						{t("ui.social.price_link", { currency: price.currency })}
-					</Label>
+					<FieldLabel
+						htmlFor={`price-link-${account.connection_id}`}
+						label={t("ui.social.price_link", { currency: price.currency })}
+						help={t("ui.help.g4.social_price_link_help")}
+					/>
 					<Input
 						id={`price-link-${account.connection_id}`}
 						inputMode="decimal"
 						className="w-28"
+						placeholder={t("ui.help.g4.social_price_link_ph")}
 						value={link}
 						onChange={(event) => setLink(event.target.value)}
 					/>
