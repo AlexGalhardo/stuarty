@@ -1742,6 +1742,14 @@
       "back": "Voltar aos projetos",
       "revision": "Rev {revision}",
       "saved_auto": "Salvo automaticamente: {time}",
+      "promote": {
+        "button": "Salvar como projeto",
+        "title": "Salvar edição avulsa como projeto",
+        "intro": "Transforme esta edição de vídeo avulsa em um projeto completo com descrição e meta SMART. Todas as edições, clipes e histórico continuam intactos.",
+        "submit": "Salvar como projeto",
+        "saving": "Salvando projeto…",
+        "success": "Salvo como projeto {name}."
+      },
       "connection": {
         "connecting": "Conectando",
         "live": "Ao vivo",
@@ -6065,8 +6073,35 @@
         "publication_cancel": "Publicação cancelada",
         "publication_duplicate": "Publicação duplicada",
         "publication_published": "Publicação enviada",
+        "project_promote": "Edição avulsa promovida a projeto",
         "unknown": "Ação no espaço de trabalho"
       }
+    },
+    "edit_video": {
+      "title": "Editar vídeo",
+      "intro": "Solte um arquivo de vídeo para começar a editar na hora, ou abra uma linha do tempo em branco sem criar um projeto antes.",
+      "dropzone_section": "Abrir arquivo de vídeo",
+      "drop_title": "Solte um arquivo de vídeo aqui",
+      "drop_subtitle": "MP4, MOV ou WebM — o Stuarty cria uma linha do tempo avulsa no formato do seu vídeo e coloca o clipe na faixa V1.",
+      "choose_file": "Escolher arquivo de vídeo",
+      "opening_video": "Abrindo vídeo no editor…",
+      "uploading_video": "Enviando {name} e preparando a linha do tempo…",
+      "creating_blank": "Criando linha do tempo avulsa em branco…",
+      "opening_asset": "Carregando arquivo da biblioteca no editor de vídeo…",
+      "presets_title": "Começar com linha do tempo em branco",
+      "presets_intro": "Escolha uma proporção para abrir uma linha do tempo avulsa vazia imediatamente.",
+      "preset": {
+        "9:16": "Vertical curto",
+        "16:9": "Widescreen horizontal",
+        "1:1": "Vídeo quadrado",
+        "4:5": "Retrato para feed"
+      },
+      "recent_title": "Edições avulsas recentes",
+      "recent_intro": "Edições avulsas não poluem sua lista de Projetos até você escolher Salvar como projeto.",
+      "loading": "Carregando edições avulsas…",
+      "empty_title": "Nenhuma edição avulsa de vídeo ainda",
+      "empty": "Solte um vídeo acima ou comece uma linha do tempo em branco. Você pode exportar imediatamente ou promover para projeto completo depois.",
+      "standalone_badge": "Avulso"
     }
   }
 }

@@ -1742,6 +1742,14 @@
       "back": "Back to projects",
       "revision": "Rev {revision}",
       "saved_auto": "Saved automatically: {time}",
+      "promote": {
+        "button": "Save as Project",
+        "title": "Save standalone edit as a project",
+        "intro": "Turn this standalone video edit into a full production project with a description and SMART goal. All timeline edits, clips, and history stay intact.",
+        "submit": "Save as Project",
+        "saving": "Saving project…",
+        "success": "Saved as project {name}."
+      },
       "connection": {
         "connecting": "Connecting",
         "live": "Live",
@@ -6065,8 +6073,35 @@
         "publication_cancel": "Publication canceled",
         "publication_duplicate": "Publication duplicated",
         "publication_published": "Publication sent",
+        "project_promote": "Standalone edit promoted to project",
         "unknown": "Workspace action"
       }
+    },
+    "edit_video": {
+      "title": "Edit video",
+      "intro": "Drop a video file to start editing right away, or open a blank timeline without creating a project first.",
+      "dropzone_section": "Open a video file",
+      "drop_title": "Drop a video file here",
+      "drop_subtitle": "MP4, MOV, or WebM — Stuarty creates a standalone timeline matching your footage and places it on V1.",
+      "choose_file": "Choose video file",
+      "opening_video": "Opening video in the editor…",
+      "uploading_video": "Uploading {name} and preparing timeline…",
+      "creating_blank": "Creating blank standalone timeline…",
+      "opening_asset": "Loading library asset into the video editor…",
+      "presets_title": "Start with a blank timeline",
+      "presets_intro": "Pick an aspect ratio to open an empty standalone timeline immediately.",
+      "preset": {
+        "9:16": "Vertical short",
+        "16:9": "Widescreen video",
+        "1:1": "Square video",
+        "4:5": "Portrait feed"
+      },
+      "recent_title": "Recent standalone edits",
+      "recent_intro": "Standalone edits stay out of your Projects list until you choose Save as Project.",
+      "loading": "Loading standalone edits…",
+      "empty_title": "No standalone video edits yet",
+      "empty": "Drop a video above or start a blank timeline. You can export immediately or promote any edit to a full project later.",
+      "standalone_badge": "Standalone"
     }
   }
 }

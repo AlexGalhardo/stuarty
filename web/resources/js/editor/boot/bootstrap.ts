@@ -4,6 +4,7 @@ import type { Message } from "@/lib/i18n";
 // 2.2). The server owns it; the editor only validates its shape.
 export interface EditorBootstrap {
 	project_id: string;
+	standalone?: boolean;
 	mode: "local" | "network";
 	api_base: string;
 	locale: string;
@@ -43,6 +44,7 @@ export function parseBootstrap(
 	}
 	return {
 		project_id,
+		...(raw.standalone === true ? { standalone: true } : {}),
 		mode,
 		api_base,
 		locale,

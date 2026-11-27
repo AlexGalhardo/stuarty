@@ -2559,3 +2559,35 @@ export interface PublishResult {
 	state: "processing" | "published";
 	thumbnail_error?: string;
 }
+
+export interface StandaloneVideoCreateRequest {
+	name?: string;
+	preset?: "9:16" | "16:9" | "1:1" | "4:5";
+	fps?: string;
+	path?: string;
+	asset_hash?: string;
+	wait_ms?: number;
+}
+
+export interface StandaloneVideoResult {
+	project_id: string;
+	timeline_id: string;
+	name: string;
+	standalone: boolean;
+	revision: number;
+	width: number;
+	height: number;
+	fps: string;
+	track_id?: string;
+	asset_id?: string;
+	asset_hash?: string;
+	asset_state?: string;
+	clip_id?: string;
+	job_id?: string;
+	created: boolean;
+	text: string;
+}
+
+export interface StandalonePromoteRequest extends ProjectContextInput {
+	kind?: ProjectCreateKind;
+}

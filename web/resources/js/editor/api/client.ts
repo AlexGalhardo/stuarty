@@ -119,6 +119,9 @@ import type {
 	SocialNetworkListResult,
 	SocialPriceRequest,
 	SocialSelectRequest,
+	StandalonePromoteRequest,
+	StandaloneVideoCreateRequest,
+	StandaloneVideoResult,
 	SystemQuery,
 	SystemResult,
 	TemplateInstantiateRequest,
@@ -482,6 +485,27 @@ export interface ApiClient {
 		limit?: number;
 		state?: "active" | "trashed" | "all";
 	}): Promise<ProjectListResult>;
+	listStandaloneVideos(q?: {
+		cursor?: string;
+		limit?: number;
+		state?: "active" | "trashed" | "all";
+	}): Promise<ProjectListResult>;
+	createStandaloneVideo(
+		request: StandaloneVideoCreateRequest,
+	): Promise<StandaloneVideoResult>;
+	uploadStandaloneVideo(
+		file: File,
+		options?: {
+			name?: string;
+			preset?: "9:16" | "16:9" | "1:1" | "4:5";
+			fps?: string;
+			wait_ms?: number;
+		},
+	): Promise<StandaloneVideoResult>;
+	promoteStandaloneVideo(
+		projectId: string,
+		input: StandalonePromoteRequest,
+	): Promise<ProjectUpdateResult>;
 	createProject(
 		input: ProjectContextInput & { kind?: ProjectCreateKind },
 	): Promise<ProjectCreateResult>;
@@ -1324,5 +1348,37 @@ export function createClient(
 			call("POST", "/templates/import", EDIT_TIMEOUT_MS, { path }),
 		saveTemplate: (request) =>
 			call("POST", "/templates", EDIT_TIMEOUT_MS, request),
+		listStandaloneVideos: (q) =>
+			call(
+				"GET",
+				`/standalone/videos${query({ cursor: q?.cursor, limit: q?.limit, state: q?.state })}`,
+				READ_TIMEOUT_MS,
+			),
+		createStandaloneVideo: (request) =>
+			call("POST", "/standalone/videos", UPLOAD_TIMEOUT_MS, request),
+		uploadStandaloneVideo: (file, options) => {
+			const qs = query({
+				file_name: file.name,
+				name: options?.name,
+				preset: options?.preset,
+				fps: options?.fps,
+				wait_ms: options?.wait_ms,
+			});
+			return call(
+				"POST",
+				`/standalone/videos/upload${qs}`,
+				UPLOAD_TIMEOUT_MS,
+				undefined,
+				undefined,
+				file,
+			);
+		},
+		promoteStandaloneVideo: (id, input) =>
+			call(
+				"POST",
+				`/standalone/videos/${encodeURIComponent(id)}/promote`,
+				EDIT_TIMEOUT_MS,
+				input,
+			),
 	};
 }

@@ -1,6 +1,7 @@
 import {
 	ArrowLeft,
 	Check,
+	FolderPlus,
 	History,
 	Loader,
 	MessagesSquare,
@@ -31,6 +32,7 @@ import ActivityIndicator from "./ActivityIndicator";
 import CompositionBreadcrumb from "./CompositionBreadcrumb";
 import EditorMenu from "./EditorMenu";
 import { useOpenEditorChat } from "./EditorSceneBar";
+import PromoteProjectDialog from "./PromoteProjectDialog";
 
 type Shown =
 	| "connecting"
@@ -189,21 +191,30 @@ function AgentActions(): ReactNode {
 export default function TopBar({
 	onLocaleChange,
 	agent = false,
+	standalone = false,
 }: {
 	onLocaleChange(locale: string): void;
 	// the page has a session of the agent: the bell and Chat are drawn
 	agent?: boolean;
+	// standalone video session (epic 105): offers "Save as Project" promotion
+	standalone?: boolean;
 }): ReactNode {
 	const t = useT();
 	const name = useDocumentState((s) => s.document?.name);
 	const revision = useDocumentState((s) => s.revision);
 	const status = useDocumentState((s) => s.status);
 	const connection = useDocumentState((s) => s.connection);
+	const [isStandalone, setIsStandalone] = useState(standalone);
+	const [promoteOpen, setPromoteOpen] = useState(false);
 	const currentUrl =
 		typeof window === "undefined"
 			? "/editor"
 			: `${window.location.pathname}${window.location.search}`;
-	const back = useBackNavigation(currentUrl, "/projects", "document");
+	const back = useBackNavigation(
+		currentUrl,
+		isStandalone ? "/edit-video" : "/projects",
+		"document",
+	);
 
 	const shown: Shown =
 		status === "failed"
@@ -266,6 +277,18 @@ export default function TopBar({
 			<SavedIndicator live={shown === "live"} />
 			<div className="ml-auto flex shrink-0 items-center gap-2">
 				<ActivityIndicator />
+				{isStandalone && (
+					<Button
+						type="button"
+						variant="outline"
+						size="sm"
+						onClick={() => setPromoteOpen(true)}
+						data-testid="editor-promote-project"
+					>
+						<FolderPlus aria-hidden="true" className="size-4" />
+						{t("ui.editor.promote.button")}
+					</Button>
+				)}
 				<PaletteButton />
 				{agent && <AgentActions />}
 				<ExportButton />
@@ -273,6 +296,14 @@ export default function TopBar({
 				<LocaleSelect onChange={onLocaleChange} />
 				<ThemeToggle />
 			</div>
+			{isStandalone && (
+				<PromoteProjectDialog
+					open={promoteOpen}
+					initialName={name ?? ""}
+					onOpenChange={setPromoteOpen}
+					onPromoted={() => setIsStandalone(false)}
+				/>
+			)}
 		</header>
 	);
 }
