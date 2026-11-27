@@ -31,7 +31,9 @@ describe("FieldHelp primitives (epic 112)", () => {
 		expect(html).toContain('for="api-key-name"');
 		expect(html).toContain("Key name");
 		expect(html).toContain('type="button"');
-		expect(html).toContain('aria-label="More information about Key name"');
+		expect(html).toContain(
+			'<span class="sr-only">More information about Key name</span>',
+		);
 		expect(html).toContain('data-slot="field-help-trigger"');
 		expect(html).toContain('aria-hidden="true"');
 	});
@@ -43,7 +45,7 @@ describe("FieldHelp primitives (epic 112)", () => {
 				help="Controls output video quality."
 			/>,
 		);
-		expect(html).toContain('aria-label="Explain bitrate"');
+		expect(html).toContain('<span class="sr-only">Explain bitrate</span>');
 		expect(html).toContain("size-6");
 	});
 

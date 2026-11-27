@@ -58,7 +58,7 @@ Every single form input across Stuarty—from account setup and project creation
 - [x] 2. Enrich all inputs in Group 1 (Account, Auth, Settings, Brand Kit) and Group 2 (Projects, Write, Publish) with concrete localized placeholders, tooltips, and form help cards in `en.json` and `pt-BR.json`. Verify: `cd web && bun run typecheck && bun run check:i18n && bunx vitest run`.
 - [x] 3. Enrich all inputs in Group 3 (Assets, Library, Skills, Prompts, Memory, Chat, Approvals) and Group 4 (Connections, Providers, Social, Blog, Webhooks) with placeholders, tooltips, and help cards. Verify: `cd web && bun run typecheck && bun run check:i18n && bunx vitest run`.
 - [x] 4. Enrich all inputs in Group 5 (Video Editor & Image Editor inspectors, dialogs, forms) with placeholders and tooltips. Verify: `cd web && bun run typecheck && bun run check:thin-client && bun run check:i18n && bunx vitest run`.
-- [ ] 5. Implement `web/scripts/check-input-help.ts` (wired to `bun run check:input-help` in `web/package.json`) and verify zero violations across the entire frontend, plus run axe accessibility checks on key pages in Playwright. Verify: `cd web && bun run check:input-help`, `task lint`, `task test:web`, and Playwright a11y specs pass.
+- [x] 5. Implement `web/scripts/check-input-help.ts` (wired to `bun run check:input-help` in `web/package.json`) and verify zero violations across the entire frontend, plus run axe accessibility checks on key pages in Playwright. Verify: `cd web && bun run check:input-help`, `task lint`, `task test:web`, and Playwright a11y specs pass.
 
 ## Test strategy
 

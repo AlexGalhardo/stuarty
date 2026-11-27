@@ -29,7 +29,6 @@ export function FieldHelpTip({
 		<Tooltip>
 			<TooltipTrigger
 				type="button"
-				aria-label={ariaLabel}
 				data-slot="field-help-trigger"
 				className={cn(
 					"inline-flex size-6 shrink-0 items-center justify-center rounded-full text-text-muted hover:bg-surface-hover hover:text-text",
@@ -37,6 +36,7 @@ export function FieldHelpTip({
 				)}
 			>
 				<CircleHelp aria-hidden="true" className="size-3.5" />
+				<span className="sr-only">{ariaLabel}</span>
 			</TooltipTrigger>
 			<TooltipContent
 				side={side}
