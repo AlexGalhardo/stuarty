@@ -1739,11 +1739,12 @@ Each definition below is the exact object `tools/list` returns for that tool (`t
 ```json
 {
   "name":"project_list",
-  "description":"Projects, newest first, a line each: id, name, revision, size, duration. next_cursor as cursor gives more.",
+  "description":"List projects newest first (standalone=true for standalone video edits).",
   "inputSchema":{
     "type":"object",
     "properties":{
       "state":{"enum":["active","trashed","all"],"default":"active"},
+      "standalone":{"type":"boolean"},
       "cursor":{"type":"string"},
       "limit":{"type":"integer","minimum":1,"maximum":100,"default":20}
     },
@@ -1786,7 +1787,7 @@ prj_2x5c8d1f4g "Coffee ad" r17 1080x1920 30fps 21.5s/645f items=48
 ```json
 {
   "name": "project_create",
-  "description": "A project, no timeline yet (project_item add timeline). name 4-32 letters/digits, description 64-1024, goal: SMART parts 16-280 each + due YYYY-MM-DD; all required, agents read them first. from copies one. preset, fps: ignored.",
+  "description": "Create project (name 4-32, description 64-1024, SMART goal 16-280 + due YYYY-MM-DD). from copies one. standalone=true opens a standalone video (optional path/asset_hash/preset/fps).",
   "inputSchema": {
     "type": "object",
     "properties": {
@@ -1805,6 +1806,15 @@ prj_2x5c8d1f4g "Coffee ad" r17 1080x1920 30fps 21.5s/645f items=48
           "video",
           "image"
         ]
+      },
+      "standalone": {
+        "type": "boolean"
+      },
+      "path": {
+        "type": "string"
+      },
+      "asset_hash": {
+        "type": "string"
       },
       "preset": {},
       "fps": {},
@@ -3415,7 +3425,7 @@ The `image` tool is the image documents of SDD-021 behind one tool, as `template
 ```json
 {
   "name": "project_item",
-  "description": "add: timeline (id: timeline_id), text, output (export job_id); move, rename, trash, restore: item_id; brief: read, or write text (empty clears); briefing: questions or answers {id: text}, production_kind (project's); text: list, read (item_id) or write (text, title, text_kind); revisions (revision, until); revert (revision); check: caption (network), script (wpm), post; update: title=name, text=description, goal; skip/unskip: title=step.",
+  "description": "add: timeline, text, output(job_id); move/rename/trash/restore: item_id; brief: read or write text; briefing: questions/answers, production_kind; text: list/read/write(text,title,text_kind); revisions/revert; check: caption(network)/script(wpm)/post; update/promote: title=name, text=description, goal; skip/unskip: title=step.",
   "inputSchema": {
     "type": "object",
     "properties": {
@@ -3433,6 +3443,7 @@ The `image` tool is the image documents of SDD-021 behind one tool, as `template
           "revert",
           "check",
           "update",
+          "promote",
           "skip",
           "unskip"
         ]

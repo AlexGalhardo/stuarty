@@ -7015,6 +7015,9 @@
           "project_id": {
             "type": "string"
           },
+          "standalone": {
+            "type": "boolean"
+          },
           "state": {
             "type": "string"
           },
@@ -7124,6 +7127,9 @@
           "revision": {
             "format": "int64",
             "type": "integer"
+          },
+          "standalone": {
+            "type": "boolean"
           },
           "state": {
             "type": "string"
@@ -7437,6 +7443,9 @@
           "revision": {
             "format": "int64",
             "type": "integer"
+          },
+          "standalone": {
+            "type": "boolean"
           },
           "state": {
             "type": "string"
@@ -9498,6 +9507,64 @@
                 "type": "null"
               }
             ]
+          }
+        },
+        "type": "object"
+      },
+      "StandaloneVideoResult": {
+        "properties": {
+          "asset_hash": {
+            "type": "string"
+          },
+          "asset_id": {
+            "type": "string"
+          },
+          "asset_state": {
+            "type": "string"
+          },
+          "clip_id": {
+            "type": "string"
+          },
+          "created": {
+            "type": "boolean"
+          },
+          "fps": {
+            "type": "string"
+          },
+          "height": {
+            "type": "integer"
+          },
+          "job_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "project_id": {
+            "type": "string"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "standalone": {
+            "type": "boolean"
+          },
+          "text": {
+            "type": "string"
+          },
+          "timeline_id": {
+            "type": "string"
+          },
+          "track_id": {
+            "type": "string"
+          },
+          "untrusted_notice": {
+            "type": "string"
+          },
+          "width": {
+            "type": "integer"
           }
         },
         "type": "object"
@@ -20797,6 +20864,93 @@
           }
         ],
         "summary": "Create an image document, blank or from a template"
+      }
+    },
+    "/api/v1/images/from-asset": {
+      "post": {
+        "operationId": "images.from_asset",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "asset_hash": {
+                    "description": "sha256: content hash of an image in the workspace library.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "dry_run": {
+                    "type": "boolean"
+                  },
+                  "height": {
+                    "description": "Optional canvas height (1 to 4096).",
+                    "type": "integer"
+                  },
+                  "name": {
+                    "description": "Optional title for the new image document.",
+                    "type": "string"
+                  },
+                  "preset": {
+                    "description": "Optional canvas preset.",
+                    "type": "string"
+                  },
+                  "wait_ms": {
+                    "description": "Milliseconds to wait for ingest (0 to 25000).",
+                    "type": "integer"
+                  },
+                  "width": {
+                    "description": "Optional canvas width (1 to 4096).",
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "asset_hash"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImageImportResult"
+                }
+              }
+            },
+            "description": "Created"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Open a standalone image document directly from a workspace asset hash"
       }
     },
     "/api/v1/images/import": {
@@ -33061,6 +33215,361 @@
           }
         ],
         "summary": "Choose the Page or Instagram account a sign-in reached (a person in the browser only)"
+      }
+    },
+    "/api/v1/standalone/videos": {
+      "get": {
+        "operationId": "standalone.videos.list",
+        "parameters": [
+          {
+            "description": "active (default), trashed or all.",
+            "in": "query",
+            "name": "state",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The next_cursor of the previous page.",
+            "in": "query",
+            "name": "cursor",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The page size; the default depends on the operation.",
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectListResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List standalone video editor sessions"
+      },
+      "post": {
+        "operationId": "standalone.videos.create",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "asset_hash": {
+                    "description": "sha256: content hash of an existing library asset.",
+                    "type": "string"
+                  },
+                  "dry_run": {
+                    "type": "boolean"
+                  },
+                  "fps": {
+                    "description": "Frame rate such as 30 or 30000/1001.",
+                    "type": "string"
+                  },
+                  "id": {
+                    "description": "Optional caller-chosen prj_ identifier.",
+                    "type": "string"
+                  },
+                  "name": {
+                    "description": "Title for the standalone edit (1 to 120 characters).",
+                    "type": "string"
+                  },
+                  "path": {
+                    "description": "Absolute path to a video file on the server machine.",
+                    "type": "string"
+                  },
+                  "preset": {
+                    "description": "9:16, 1:1, 16:9 or 4:5.",
+                    "type": "string"
+                  },
+                  "wait_ms": {
+                    "description": "Milliseconds to wait for ingest (0 to 25000).",
+                    "type": "integer"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandaloneVideoResult"
+                }
+              }
+            },
+            "description": "Created"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a standalone video editor session from a preset, path or library asset"
+      }
+    },
+    "/api/v1/standalone/videos/upload": {
+      "post": {
+        "operationId": "standalone.videos.upload",
+        "parameters": [
+          {
+            "description": "File name of the uploaded video.",
+            "in": "query",
+            "name": "file_name",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Optional title for the standalone edit.",
+            "in": "query",
+            "name": "name",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Optional canvas preset (9:16, 1:1, 16:9 or 4:5).",
+            "in": "query",
+            "name": "preset",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Optional frame rate (e.g. 30 or 30000/1001).",
+            "in": "query",
+            "name": "fps",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Wait up to this many milliseconds for ingest to finish.",
+            "in": "query",
+            "name": "wait_ms",
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Validate and report, change nothing.",
+            "in": "query",
+            "name": "dry_run",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/octet-stream": {
+              "schema": {
+                "format": "binary",
+                "type": "string"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "file": {
+                    "format": "binary",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "file"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandaloneVideoResult"
+                }
+              }
+            },
+            "description": "Created"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Upload a video file and open a standalone video editor session"
+      }
+    },
+    "/api/v1/standalone/videos/{id}/promote": {
+      "post": {
+        "operationId": "standalone.videos.promote",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "description": {
+                    "description": "64 to 1024 characters.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "dry_run": {
+                    "type": "boolean"
+                  },
+                  "goal": {
+                    "$ref": "#/components/schemas/ProjectGoal"
+                  },
+                  "kind": {
+                    "description": "video (default), text, image or undecided.",
+                    "type": "string"
+                  },
+                  "name": {
+                    "description": "4 to 32 letters, digits and single spaces.",
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name",
+                  "description",
+                  "goal"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectUpdateResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Promote a standalone video session into a full production project"
       }
     },
     "/api/v1/system": {

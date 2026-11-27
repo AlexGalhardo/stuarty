@@ -98,6 +98,7 @@ func (h *apiHandler) completeOpenAPI(doc *openapi.Document) {
 	describeHeavyOperations(doc)
 	describeStepBodies(doc)
 	describeImageFileImport(doc)
+	describeStandaloneVideoUpload(doc)
 
 	op, ok := doc.Components.Schemas["Operation"]
 	if !ok {
@@ -451,6 +452,56 @@ func describeImageFileImport(doc *openapi.Document) {
 					"idempotency_key",
 					"Makes a retry return the first answer; the Idempotency-Key header does the same.",
 				),
+				{
+					Name: "dry_run", In: "query", Description: "Validate and report, change nothing.",
+					Schema: openapi.Schema{"type": "boolean"},
+				},
+			}
+		}
+	}
+}
+
+func describeStandaloneVideoUpload(doc *openapi.Document) {
+	for _, item := range doc.Paths {
+		for _, op := range item {
+			if op == nil || op.OperationID != "standalone.videos.upload" {
+				continue
+			}
+
+			op.RequestBody = &openapi.RequestBody{
+				Required: true,
+				Content: map[string]openapi.MediaType{
+					"application/octet-stream": {Schema: openapi.Schema{"type": "string", "format": "binary"}},
+					"multipart/form-data": {Schema: openapi.Schema{
+						"type": "object",
+						"properties": map[string]any{
+							"file": map[string]any{"type": "string", "format": "binary"},
+						},
+						"required": []string{"file"},
+					}},
+				},
+			}
+
+			str := func(name, desc string) openapi.Parameter {
+				return openapi.Parameter{
+					Name:        name,
+					In:          "query",
+					Description: desc,
+					Schema:      openapi.Schema{"type": "string"},
+				}
+			}
+
+			op.Parameters = []openapi.Parameter{
+				str("file_name", "File name of the uploaded video."),
+				str("name", "Optional title for the standalone edit."),
+				str("preset", "Optional canvas preset (9:16, 1:1, 16:9 or 4:5)."),
+				str("fps", "Optional frame rate (e.g. 30 or 30000/1001)."),
+				{
+					Name:        "wait_ms",
+					In:          "query",
+					Description: "Wait up to this many milliseconds for ingest to finish.",
+					Schema:      openapi.Schema{"type": "integer", "minimum": 0},
+				},
 				{
 					Name: "dry_run", In: "query", Description: "Validate and report, change nothing.",
 					Schema: openapi.Schema{"type": "boolean"},
