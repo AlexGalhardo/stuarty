@@ -65,9 +65,9 @@ The workspace feed uses `stuarty activity` and `GET /api/v1/projects/{id}/activi
 - [x] 1. Specify `ActivityList`, `/history`, `/api/v1/history`, `/api/v1/projects/{id}/activity`, and canonical action codes in SDD-000, SDD-003, SDD-005, and SDD-012. Verify: `task lint:md` exits 0.
 - [x] 2. Implement pure classification and filter validation rules in `core/audit/` with table tests. Verify: `go test ./core/...` passes.
 - [x] 3. Implement `service/activity_history.go` with the global and per-project queries, filters, ownership checks, and metadata listed in the coverage review. Verify: `go test ./service/... -run "Audit|History|Activity"` and the focused activity integration tests pass.
-- [ ] 4. Expose HTTP routes, CLI `stuarty history`, MCP read action (within NFR-020), and `GET /history` Inertia route; add `history` to `sections.ts` and `breadcrumb.ts`. Verify: `go test ./web/app/... ./web/routes/... ./web/contract/...`, `go test -run TestSecurity_ ./...`, and `go run ./internal/tools/surfacebudget` pass.
+- [x] 4. Expose HTTP routes, CLI `stuarty history`, MCP read action (within NFR-020), and `GET /history` Inertia route; add `history` to `sections.ts` and `breadcrumb.ts`. Verify: `go test ./web/app/... ./web/routes/... ./web/contract/...`, `go test -run TestSecurity_ ./...`, and `go run ./internal/tools/surfacebudget` pass.
 - [x] 5. Build `ActivityTimeline.tsx`, `pages/History/Index.tsx`, and the section in `pages/Projects/Show.tsx`. Localize the action labels and filters in English and Brazilian Portuguese. Verify: `cd web && bun run typecheck && bun run check:thin-client && bun run check:i18n && bunx vitest run`.
-- [ ] 6. Add Playwright E2E tests verifying: (a) clicking **History** in the main sidebar shows recent human and agent actions globally with working filters; (b) opening a project's History section shows only that project's actions and updates after an edit. Verify: `task lint`, `task test`, `task test:web`, and the Playwright history specs pass.
+- [x] 6. Add Playwright E2E tests verifying: (a) clicking **History** in the main sidebar shows recent human and agent actions globally with working filters; (b) opening a project's History section shows only that project's actions and updates after an edit. Verify: `task lint`, `task test`, `task test:web`, and the Playwright history specs pass.
 
 ## Test strategy
 
