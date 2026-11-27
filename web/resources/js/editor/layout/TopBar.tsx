@@ -21,6 +21,7 @@ import { cn } from "@/lib/cn";
 import { useLocale, useT } from "@/lib/i18n";
 import NotificationBell from "../../shell/NotificationBell";
 import { useShell } from "../../shell/ShellContext";
+import { useBackNavigation } from "../../shell/useBackNavigation";
 import PaletteButton from "../commands/palette/PaletteButton";
 import ShortcutsButton from "../commands/ShortcutsDialog";
 import { useActions, useCanEdit } from "../commands/useActions";
@@ -196,6 +197,11 @@ export default function TopBar({
 	const revision = useDocumentState((s) => s.revision);
 	const status = useDocumentState((s) => s.status);
 	const connection = useDocumentState((s) => s.connection);
+	const currentUrl =
+		typeof window === "undefined"
+			? "/editor"
+			: `${window.location.pathname}${window.location.search}`;
+	const back = useBackNavigation(currentUrl, "/projects", "document");
 
 	const shown: Shown =
 		status === "failed"
@@ -221,7 +227,15 @@ export default function TopBar({
 				<img src="/icon.png" alt="" className="size-7" />
 			</a>
 			<Button asChild variant="ghost" size="icon-sm">
-				<a href="/projects" aria-label={t("ui.editor.back")}>
+				<a
+					href={back.target ?? "/projects"}
+					aria-label={t("ui.editor.back")}
+					data-testid="editor-back"
+					onClick={(event) => {
+						event.preventDefault();
+						back.goBack();
+					}}
+				>
 					<ArrowLeft aria-hidden="true" />
 				</a>
 			</Button>

@@ -50,4 +50,14 @@ describe("TopBar", () => {
 			html.indexOf('data-testid="chat-toggle"'),
 		);
 	});
+
+	test("renders the Back button disabled on Home with no history and enabled on subpages", () => {
+		const homeHtml = draw("/");
+		expect(homeHtml).toContain('data-testid="topbar-back"');
+		expect(homeHtml).toMatch(/disabled=""[^>]*data-testid="topbar-back"/);
+
+		const subHtml = draw("/publish");
+		expect(subHtml).toContain('data-testid="topbar-back"');
+		expect(subHtml).not.toMatch(/disabled=""[^>]*data-testid="topbar-back"/);
+	});
 });

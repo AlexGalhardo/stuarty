@@ -11,6 +11,7 @@
       "stage": "Stage {number} of {total}: {step}",
       "media_optional": "Media is optional: a text can go on with no image or video.",
       "go_current": "Go to the current stage",
+      "go_to_step": "Go to step: {step}",
       "open_text": "Open the text",
       "lead": {
         "undecided": "From idea to publication: who does each stage, with which tool, and what it costs.",
@@ -259,6 +260,7 @@
       }
     },
     "shell": {
+      "back": "Back",
       "menu": "Open the navigation",
       "chat": "Chat",
       "breadcrumb": {
@@ -4630,6 +4632,8 @@
         "audio": "Audio",
         "lut": "Colour table"
       },
+      "open_video_editor": "Open in video editor",
+      "open_image_editor": "Open in image editor",
       "reusable_badge": "Reusable",
       "count": {
         "one": "{count} file",

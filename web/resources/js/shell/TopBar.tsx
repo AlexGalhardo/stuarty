@@ -1,5 +1,5 @@
 import { Link } from "@inertiajs/react";
-import { ChevronRight, Menu, MessagesSquare } from "lucide-react";
+import { ArrowLeft, ChevronRight, Menu, MessagesSquare } from "lucide-react";
 import { Fragment, type ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -7,9 +7,10 @@ import { cn } from "@/lib/cn";
 import { useT } from "@/lib/i18n";
 import { breadcrumbOf } from "./breadcrumb";
 import { useShell } from "./ShellContext";
+import { fallbackBackHref, useBackNavigation } from "./useBackNavigation";
 
 // The top bar of every dashboard page (SDD-012 section 23.4): the way to the navigation on a phone, the
-// breadcrumb, the slot of the bell and the Chat button. It is the banner of the page.
+// Back button, the breadcrumb, the slot of the bell and the Chat button. It is the banner of the page.
 export default function TopBar({
 	url,
 	drawer,
@@ -28,6 +29,7 @@ export default function TopBar({
 	const t = useT();
 	const { chatOpen, openChat, chatButton } = useShell();
 	const crumbs = breadcrumbOf(url);
+	const back = useBackNavigation(url, fallbackBackHref(url, crumbs));
 
 	return (
 		<header
@@ -47,6 +49,19 @@ export default function TopBar({
 					<Menu aria-hidden="true" />
 				</Button>
 			)}
+			<Button
+				type="button"
+				variant="ghost"
+				size="sm"
+				aria-label={t("ui.shell.back")}
+				disabled={!back.canGoBack}
+				onClick={back.goBack}
+				data-testid="topbar-back"
+				className="shrink-0"
+			>
+				<ArrowLeft aria-hidden="true" />
+				<span className="max-sm:hidden">{t("ui.shell.back")}</span>
+			</Button>
 			<nav
 				aria-label={t("ui.shell.breadcrumb.label")}
 				className="min-w-0 flex-1"
