@@ -1476,6 +1476,27 @@
         "cancel": "Cancelar",
         "need_source": "Escolha um arquivo ou informe um caminho."
       },
+      "dropzone": {
+        "section": "Abrir um arquivo de imagem",
+        "title": "Solte um arquivo de imagem aqui",
+        "subtitle": "PNG, JPEG ou WebP — abre direto no editor de imagem sem precisar criar um projeto antes.",
+        "choose": "Escolher arquivo de imagem",
+        "opening": "Abrindo imagem…",
+        "uploading": "Enviando {name}…",
+        "opening_asset": "Abrindo imagem da biblioteca…"
+      },
+      "attach": {
+        "open": "Anexar a projeto",
+        "title": "Anexar imagem a um projeto",
+        "intro": "Exporta esta imagem em PNG e importa o arquivo na biblioteca de mídia do projeto escolhido.",
+        "loading": "Carregando projetos…",
+        "empty": "Você ainda não tem projetos ativos. Crie um em Projetos primeiro.",
+        "project_label": "Projeto",
+        "submit": "Anexar PNG",
+        "working": "Anexando…",
+        "done": "Anexada em",
+        "open_project": "Abrir projeto"
+      },
       "brand": {
         "place_logo": "Colocar logotipo",
         "logo_name": "Logotipo",

@@ -15,6 +15,7 @@ import { useLocale, useT } from "@/lib/i18n";
 import NotificationBell from "../shell/NotificationBell";
 import { useShell } from "../shell/ShellContext";
 import type { ImageDocument } from "./api/types";
+import { AttachProjectTool } from "./export/AttachProjectTool";
 import { ExportTool } from "./export/ExportDialog";
 import { paletteHint } from "./palette/CommandPalette";
 import { OperationTools } from "./toolbar/OperationTools";
@@ -164,6 +165,7 @@ export default function TopBar({
 			<PaletteButton />
 			<NotificationBell />
 			<ChatButton />
+			<AttachProjectTool />
 			<ExportTool />
 		</header>
 	);

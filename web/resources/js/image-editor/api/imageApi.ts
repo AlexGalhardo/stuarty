@@ -59,6 +59,15 @@ export interface ImageApi {
 		file: File,
 		request: Omit<ImageImportRequest, "path" | "hash">,
 	): Promise<ImageImportResult>;
+	// Open or create a standalone image document from an existing workspace asset hash (epic 105).
+	openFromAsset(
+		assetHash: string,
+		options?: { name?: string; preset?: string },
+	): Promise<ImageImportResult>;
+	// Active production projects the user can attach an exported image to (epic 105).
+	listProjects(): Promise<{ projects: { id: string; name: string }[] }>;
+	// Import an exported image file into a project's media library (epic 105).
+	attachExportToProject(projectId: string, path: string): Promise<unknown>;
 	// The HTTP status of GET /images/{id}, or 0 when the network failed: the probe of the event stream.
 	probe(id: string): Promise<number>;
 }
@@ -140,6 +149,20 @@ export function createImageApi(transport: Transport): ImageApi {
 				file,
 			);
 		},
+		openFromAsset: (assetHash, options) =>
+			call("POST", "/images/from-asset", IMPORT_TIMEOUT_MS, {
+				asset_hash: assetHash,
+				...(options?.name === undefined ? {} : { name: options.name }),
+				...(options?.preset === undefined ? {} : { preset: options.preset }),
+			}),
+		listProjects: () => call("GET", "/projects", READ_TIMEOUT_MS),
+		attachExportToProject: (projectId, path) =>
+			call(
+				"POST",
+				`/projects/${encodeURIComponent(projectId)}/media`,
+				IMPORT_TIMEOUT_MS,
+				{ path },
+			),
 		async probe(id) {
 			try {
 				const response = await transport.send({

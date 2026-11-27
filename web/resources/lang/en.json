@@ -1476,6 +1476,27 @@
         "cancel": "Cancel",
         "need_source": "Choose a file or give a path."
       },
+      "dropzone": {
+        "section": "Open an image file",
+        "title": "Drop an image file here",
+        "subtitle": "PNG, JPEG, or WebP — opens immediately in the image editor without creating a project first.",
+        "choose": "Choose image file",
+        "opening": "Opening image…",
+        "uploading": "Uploading {name}…",
+        "opening_asset": "Opening image from library…"
+      },
+      "attach": {
+        "open": "Attach to project",
+        "title": "Attach image to a project",
+        "intro": "Exports this image as PNG and imports it into the chosen project media library.",
+        "loading": "Loading projects…",
+        "empty": "You have no active projects yet. Create one in Projects first.",
+        "project_label": "Project",
+        "submit": "Attach PNG",
+        "working": "Attaching…",
+        "done": "Attached to",
+        "open_project": "Open project"
+      },
       "brand": {
         "place_logo": "Place logo",
         "logo_name": "Logo",

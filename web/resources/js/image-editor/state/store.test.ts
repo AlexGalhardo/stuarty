@@ -135,6 +135,9 @@ function fakeApi(start: ImageDocument): {
 			]);
 			return importResult(current.revision);
 		},
+		openFromAsset: async () => importResult(current.revision),
+		listProjects: async () => ({ projects: [] }),
+		attachExportToProject: async () => ({}),
 		checkpoints: async () => ({
 			image_id: "img_aaaaaaaaaa",
 			revision: current.revision,
