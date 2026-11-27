@@ -135,7 +135,7 @@ describe("Sidebar", () => {
 		expect(html).toContain("Local mode");
 	});
 
-	test("the rail keeps every item's name and hides its group headings", () => {
+	test("the rail keeps every item's name and hides its group headings and version", () => {
 		const html = renderToString(
 			<I18nProvider messages={messages} locale="en" locales={["en"]}>
 				<Sidebar url="/" appName="Stuarty" user={null} form="rail" />
@@ -145,6 +145,8 @@ describe("Sidebar", () => {
 		expect(html).toContain('data-state="collapsed"');
 		expect(html).toMatch(/<span class="sr-only">Projects<\/span>/);
 		expect(html).toMatch(/id="nav-group-create"[^>]*class="[^"]*sr-only/);
+		expect(html).not.toContain('data-testid="sidebar-version"');
+		expect(html).not.toContain('data-testid="sidebar-mode"');
 	});
 
 	test("the drawer draws no column: the top bar opens it", () => {

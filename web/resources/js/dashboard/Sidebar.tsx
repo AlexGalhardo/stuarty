@@ -422,24 +422,20 @@ function SidebarBody({
 					collapsed ? "flex-col" : "justify-between",
 				)}
 			>
-				<div
-					data-testid="sidebar-version"
-					className={cn(
-						"flex items-center gap-2 px-1",
-						collapsed && "flex-col gap-0",
-					)}
-				>
-					<ReleaseMark inline compact={collapsed} />
-					<span
-						data-testid="sidebar-mode"
-						className={cn(
-							"text-xs text-muted-foreground",
-							collapsed && "sr-only",
-						)}
+				{!collapsed && (
+					<div
+						data-testid="sidebar-version"
+						className="flex items-center gap-2 px-1"
 					>
-						{t(`ui.shell.mode.${mode}`)}
-					</span>
-				</div>
+						<ReleaseMark inline />
+						<span
+							data-testid="sidebar-mode"
+							className="text-xs text-muted-foreground"
+						>
+							{t(`ui.shell.mode.${mode}`)}
+						</span>
+					</div>
+				)}
 				<div className={cn("flex items-center gap-1", collapsed && "flex-col")}>
 					<ThemeToggle />
 					{onToggle !== undefined && (
