@@ -479,3 +479,35 @@ func (s stub) LibrarySearch(context.Context, service.LibrarySearchRequest) (*ser
 func (s stub) LibraryReindex(context.Context, service.LibraryReindexRequest) (*service.LibraryReindexResult, error) {
 	return reply[service.LibraryReindexResult](s.err)
 }
+
+func (s stub) StandaloneVideoList(context.Context, service.StandaloneVideoListRequest) (*service.ProjectListResult, error) {
+	return reply[service.ProjectListResult](s.err)
+}
+
+func (s stub) StandaloneVideoCreate(
+	context.Context,
+	service.StandaloneVideoCreateRequest,
+) (*service.StandaloneVideoResult, error) {
+	return reply[service.StandaloneVideoResult](s.err)
+}
+
+func (s stub) StandaloneVideoUpload(
+	context.Context,
+	service.StandaloneVideoUploadRequest,
+) (*service.StandaloneVideoResult, error) {
+	return reply[service.StandaloneVideoResult](s.err)
+}
+
+func (s stub) StandalonePromote(
+	context.Context,
+	service.StandalonePromoteRequest,
+) (*service.ProjectUpdateResult, error) {
+	return reply[service.ProjectUpdateResult](s.err)
+}
+
+func (s stub) ImageOpenFromAsset(
+	context.Context,
+	service.ImageOpenFromAssetRequest,
+) (*service.ImageImportResult, error) {
+	return reply[service.ImageImportResult](s.err)
+}

@@ -1,6 +1,6 @@
 {
  "name": "project_item",
- "description": "add: timeline (id: timeline_id), text, output (export job_id); move, rename, trash, restore: item_id; brief: read, or write text (empty clears); briefing: questions or answers {id: text}, production_kind (project's); text: list, read (item_id) or write (text, title, text_kind); revisions (revision, until); revert (revision); check: caption (network), script (wpm), post; update: title=name, text=description, goal; skip/unskip: title=step.",
+ "description": "add: timeline, text, output(job_id); move/rename/trash/restore: item_id; brief: read or write text; briefing: questions/answers, production_kind; text: list/read/write(text,title,text_kind); revisions/revert; check: caption(network)/script(wpm)/post; update/promote: title=name, text=description, goal; skip/unskip: title=step.",
  "inputSchema": {
   "type": "object",
   "properties": {
@@ -18,6 +18,7 @@
      "revert",
      "check",
      "update",
+     "promote",
      "skip",
      "unskip"
     ]

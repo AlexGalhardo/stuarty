@@ -14,13 +14,15 @@ import (
 //
 // The keys are the paths the sidebar links to in resources/js/dashboard/sections.ts;
 // TestDashboardSectionsMatchTheSidebar compares the two lists.
-var dashboardSections = []string{
-	"edit-video",
-}
+var dashboardSections = []string{}
 
 // dashboardPages installs the home and one empty-state route for each section
 // of dashboardSections. A handler only names the page; it computes nothing.
 func dashboardPages(r *router.Router) {
+	// Standalone video editor launcher (epic 105, SDD-012 section 23.1).
+	r.Get("/edit-video", func(c *web.Ctx) error {
+		return inertia.Render(c, "EditVideo/Index", inertia.Props{})
+	}).Name("edit_video.index")
 	// Memory, skills and prompts have pages of their own (epic 15, SDD-018 section 14): the pages read and
 	// write the library through /api/v1/library.
 	for _, page := range []struct{ path, component string }{

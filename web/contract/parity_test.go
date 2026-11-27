@@ -40,6 +40,23 @@ var parity = []row{
 	{method: "ProjectGet", tool: "project_get", command: "project:show", route: "GET /projects/{}"},
 	{method: "ProjectTrash", tool: "project_trash", command: "project:trash", route: "POST /projects/{}/trash"},
 	{method: "ProjectRestore", tool: "project_trash", command: "project:restore", route: "POST /projects/{}/restore"},
+	{
+		method: "StandaloneVideoList", tool: "project_list", command: "video:standalone-list",
+		route: "GET /standalone/videos",
+	},
+	{
+		method: "StandaloneVideoCreate", tool: "project_create", command: "video:quick-open",
+		route: "POST /standalone/videos",
+	},
+	{method: "StandaloneVideoUpload", route: "POST /standalone/videos/upload", httpOnly: true},
+	{
+		method: "StandalonePromote", tool: "project_item", command: "video:promote",
+		route: "POST /standalone/videos/{}/promote",
+	},
+	{
+		method: "ImageOpenFromAsset", tool: "image", command: "image:quick-open",
+		route: "POST /images/from-asset",
+	},
 	{method: "Edit", tool: "edit", command: "edit", route: "POST /projects/{}/edit"},
 	{method: "CommandHelp", tool: "command_help", command: "command:help", route: "GET /commands"},
 	{method: "HistoryList", tool: "history", command: "history", route: "GET /projects/{}/history"},

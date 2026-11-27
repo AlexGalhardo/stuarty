@@ -28,8 +28,9 @@ var projectID = regexp.MustCompile(`^prj_[0-9a-hjkmnp-tv-z]{10}$`)
 // The session cookie set by /auth/launch authenticates the editor's calls, so
 // no credential travels in the page (SDD-007 section 3.7).
 type editorBootstrap struct {
-	ProjectID string         `json:"project_id"`
-	Mode      string         `json:"mode"`
+	ProjectID  string         `json:"project_id"`
+	Standalone bool           `json:"standalone,omitempty"`
+	Mode       string         `json:"mode"`
 	APIBase   string         `json:"api_base"`
 	Locale    string         `json:"locale"`
 	Locales   []string       `json:"locales"`
@@ -382,10 +383,11 @@ func editorPage(c *web.Ctx, d *httpapi.Deps, app *vukem.App) error {
 	person, _ := service.CallerFrom(c.Context())
 
 	return c.Render("editor", map[string]any{"Bootstrap": editorBootstrap{
-		ProjectID: id, Mode: "local", APIBase: httpapi.BasePath, Locale: locale, Locales: app.I18n.Locales(),
+		ProjectID: id, Standalone: head.Standalone, Mode: "local", APIBase: httpapi.BasePath, Locale: locale,
+		Locales: app.I18n.Locales(),
 		Messages: app.I18n.Messages(locale, "ui.editor.", "ui.common.", "ui.theme.", "ui.nav.",
 			"ui.shell.", "ui.chat.", "ui.agent_activity.", "ui.session.",
-			"ui.errors.", "ui.lint.", "ui.export_check.", "ui.jobs."),
+			"ui.errors.", "ui.lint.", "ui.export_check.", "ui.jobs.", "ui.projects.", "ui.help."),
 		Version: d.Version,
 		Session: editorSession{Privileged: person.Browser},
 	}})

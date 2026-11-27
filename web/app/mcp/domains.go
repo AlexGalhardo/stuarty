@@ -216,8 +216,8 @@ func imageCheckpointAction(ctx context.Context, svc service.Service, in *history
 // of the Service operations the tool serves. A tool that routes by the domain argument (served) lists those
 // domains too; command_help is the discovery of every domain.
 var toolDomains = map[string][]string{
-	"project_list":   {command.DomainProject},
-	"project_create": {command.DomainProject},
+	"project_list":   {command.DomainProject, command.DomainVideo},
+	"project_create": {command.DomainProject, command.DomainVideo},
 	"project_get":    {command.DomainProject},
 	"project_trash":  {command.DomainProject},
 	// project_item also serves the texts of a production (text, revisions, revert, check; SDD-019).

@@ -62,11 +62,21 @@ func (p pageArgs) page() service.Page { return service.Page{Cursor: p.Cursor, Li
 
 func projectList(ctx context.Context, svc service.Service, raw json.RawMessage) (*toolOutput, error) {
 	in, err := decode[struct {
-		State string `json:"state"`
+		State      string `json:"state"`
+		Standalone bool   `json:"standalone"`
 		pageArgs
 	}](raw)
 	if err != nil {
 		return nil, err
+	}
+
+	if in.Standalone {
+		res, serr := svc.StandaloneVideoList(ctx, service.StandaloneVideoListRequest{State: in.State, Page: in.page()})
+		if serr != nil {
+			return nil, serr
+		}
+
+		return &toolOutput{value: res, text: res.Text}, nil
 	}
 
 	res, err := svc.ProjectList(ctx, service.ProjectListRequest{State: in.State, Page: in.page()})
@@ -109,9 +119,28 @@ func projectCreate(ctx context.Context, svc service.Service, raw json.RawMessage
 		ID          string              `json:"id"`
 		From        string              `json:"from"`
 		Kind        string              `json:"kind"`
+		Standalone  bool                `json:"standalone"`
+		Path        string              `json:"path"`
+		AssetHash   string              `json:"asset_hash"`
 	}](raw)
 	if err != nil {
 		return nil, err
+	}
+
+	if in.Standalone {
+		res, serr := svc.StandaloneVideoCreate(ctx, service.StandaloneVideoCreateRequest{
+			Name:      in.Name,
+			Preset:    in.Preset,
+			FPS:       string(in.FPS),
+			ID:        in.ID,
+			Path:      in.Path,
+			AssetHash: in.AssetHash,
+		})
+		if serr != nil {
+			return nil, serr
+		}
+
+		return &toolOutput{value: res, text: res.Text}, nil
 	}
 
 	if in.From != "" {
@@ -1005,6 +1034,26 @@ func projectItem(ctx context.Context, svc service.Service, raw json.RawMessage) 
 		}
 
 		return &toolOutput{value: upd, text: upd.Text}, nil
+	}
+
+	if in.Action == "promote" {
+		var goal service.ProjectGoal
+		if in.Goal != nil {
+			goal = *in.Goal
+		}
+
+		pro, perr := svc.StandalonePromote(ctx, service.StandalonePromoteRequest{
+			ProjectID:   in.ProjectID,
+			Name:        in.Title,
+			Description: deref(in.Text),
+			Goal:        goal,
+			Kind:        in.Kind,
+		})
+		if perr != nil {
+			return nil, perr
+		}
+
+		return &toolOutput{value: pro, text: pro.Text}, nil
 	}
 
 	if in.Action == "skip" || in.Action == "unskip" {

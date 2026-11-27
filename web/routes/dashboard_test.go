@@ -38,8 +38,8 @@ func TestDashboardSectionsMatchTheSidebar(t *testing.T) {
 
 	// The sections with a page of their own, served by Pages.
 	own := []string{
-		"projects", "connections", "skills", "prompts", "memory", "edit-image", "visual-assets", "video-assets",
-		"sound-assets", "publish", "write", "webhooks",
+		"projects", "connections", "skills", "prompts", "memory", "edit-video", "edit-image", "visual-assets",
+		"video-assets", "sound-assets", "publish", "write", "webhooks",
 	}
 
 	for _, key := range keys {

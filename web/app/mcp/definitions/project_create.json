@@ -1,6 +1,6 @@
 {
  "name": "project_create",
- "description": "A project, no timeline yet (project_item add timeline). name 4-32 letters/digits, description 64-1024, goal: SMART parts 16-280 each + due YYYY-MM-DD; all required, agents read them first. from copies one. preset, fps: ignored.",
+ "description": "Create project (name 4-32, description 64-1024, SMART goal 16-280 + due YYYY-MM-DD). from copies one. standalone=true opens a standalone video (optional path/asset_hash/preset/fps).",
  "inputSchema": {
   "type": "object",
   "properties": {
@@ -19,6 +19,15 @@
      "video",
      "image"
     ]
+   },
+   "standalone": {
+    "type": "boolean"
+   },
+   "path": {
+    "type": "string"
+   },
+   "asset_hash": {
+    "type": "string"
    },
    "preset": {},
    "fps": {},
