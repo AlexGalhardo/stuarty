@@ -33,9 +33,10 @@ func (r *Runner) HelperTool(ctx context.Context, path string, deadline time.Dura
 		Path:        path,
 		Limits:      LimitsFor(KindExportHardware, deadline, cpus, 0),
 		CPUCount:    cpus,
-		VersionArgs: []string{"--version"},
+		VersionArgs: []string{},
 		// Use the helper deadline as the fallback for callers that run the tool directly.
 		Timeout: deadline,
+		Prepare: HideWindow,
 	})
 }
 
