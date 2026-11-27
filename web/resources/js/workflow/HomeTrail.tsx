@@ -1,8 +1,10 @@
+import { Link } from "@inertiajs/react";
 import { Check, Circle, CircleDot } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { cn } from "@/lib/cn";
 import { useT } from "@/lib/i18n";
+import { continueTarget, isDocumentNavigation } from "./continueTarget";
 import type { StepState, Workflow, WorkflowStep } from "./types";
 import { actorWord, stateWord, titleWord } from "./words";
 
@@ -58,14 +60,63 @@ function note(t: ReturnType<typeof useT>, step: WorkflowStep): string {
 		: base;
 }
 
+function StepAnchor({
+	href,
+	label,
+	testId,
+	className,
+	children,
+}: {
+	href: string;
+	label: string;
+	testId: string;
+	className: string;
+	children: ReactNode;
+}): ReactNode {
+	if (isDocumentNavigation(href)) {
+		return (
+			<a
+				href={href}
+				aria-label={label}
+				data-testid={testId}
+				className={className}
+			>
+				{children}
+			</a>
+		);
+	}
+	return (
+		<Link
+			href={href}
+			aria-label={label}
+			data-testid={testId}
+			className={className}
+		>
+			{children}
+		</Link>
+	);
+}
+
 // The path of a project as a row: a mark for each step with its line to the next one, the title and a line of
 // words under it. From 768 px up it is the row of the final design; on a phone it is the bar of segments and the
 // stage the service says is current. The steps are the workflow as it came: none is added, hidden or reordered.
-export function HomeTrail({ workflow }: { workflow: Workflow }): ReactNode {
+export function HomeTrail({
+	workflow,
+	projectId,
+	textItemId,
+}: {
+	workflow: Workflow;
+	projectId?: string;
+	textItemId?: string;
+}): ReactNode {
 	const t = useT();
 	const steps = workflow.steps;
 	const at = steps.findIndex((s) => s.id === workflow.current);
 	const current = at < 0 ? undefined : steps[at];
+	const currentHref =
+		projectId !== undefined && current !== undefined
+			? continueTarget(current.id, projectId, textItemId, workflow.kind)
+			: null;
 	return (
 		<>
 			<ol
@@ -74,41 +125,78 @@ export function HomeTrail({ workflow }: { workflow: Workflow }): ReactNode {
 				aria-label={t("ui.workflow.label")}
 				className="hidden grid-flow-col auto-cols-fr gap-x-2 md:grid"
 			>
-				{steps.map((step, index) => (
-					<li
-						key={step.id}
-						data-step={step.id}
-						data-state={step.state}
-						aria-current={step.state === "current" ? "step" : undefined}
-						className="flex min-w-0 flex-col gap-2"
-					>
-						<div className="flex items-center gap-2">
-							<Mark state={step.state} />
-							{index < steps.length - 1 ? (
-								<span
-									aria-hidden="true"
-									className={cn(
-										"h-0.5 flex-1 rounded-full",
-										step.state === "done" ? "bg-success" : "bg-border-strong",
-									)}
-								/>
-							) : null}
-						</div>
-						<div className="min-w-0">
-							<p
-								className={cn(
-									"truncate text-sm text-text",
-									step.state === "current" ? "font-semibold" : "font-medium",
+				{steps.map((step, index) => {
+					const title = titleWord(t, step);
+					const href =
+						projectId === undefined
+							? null
+							: continueTarget(step.id, projectId, textItemId, workflow.kind);
+					const stepLabel = t("ui.workflow.go_to_step", { step: title });
+					return (
+						<li
+							key={step.id}
+							data-step={step.id}
+							data-state={step.state}
+							aria-current={step.state === "current" ? "step" : undefined}
+							className="flex min-w-0 flex-col gap-2"
+						>
+							<div className="flex items-center gap-2">
+								{href === null ? (
+									<Mark state={step.state} />
+								) : (
+									<StepAnchor
+										href={href}
+										label={stepLabel}
+										testId={`home-trail-step-${step.id}`}
+										className="inline-flex rounded-full transition-shadow hover:ring-2 hover:ring-accent/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+									>
+										<Mark state={step.state} />
+									</StepAnchor>
 								)}
-							>
-								{titleWord(t, step)}
-							</p>
-							<p className="truncate text-sm text-text-subtle">
-								{note(t, step)}
-							</p>
-						</div>
-					</li>
-				))}
+								{index < steps.length - 1 ? (
+									<span
+										aria-hidden="true"
+										className={cn(
+											"h-0.5 flex-1 rounded-full",
+											step.state === "done" ? "bg-success" : "bg-border-strong",
+										)}
+									/>
+								) : null}
+							</div>
+							<div className="min-w-0">
+								{href === null ? (
+									<p
+										className={cn(
+											"truncate text-sm text-text",
+											step.state === "current"
+												? "font-semibold"
+												: "font-medium",
+										)}
+									>
+										{title}
+									</p>
+								) : (
+									<StepAnchor
+										href={href}
+										label={stepLabel}
+										testId={`home-trail-label-${step.id}`}
+										className={cn(
+											"block truncate rounded text-sm text-text hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus",
+											step.state === "current"
+												? "font-semibold"
+												: "font-medium",
+										)}
+									>
+										{title}
+									</StepAnchor>
+								)}
+								<p className="truncate text-sm text-text-subtle">
+									{note(t, step)}
+								</p>
+							</div>
+						</li>
+					);
+				})}
 			</ol>
 			<div
 				className="flex flex-col gap-3 md:hidden"
@@ -122,7 +210,7 @@ export function HomeTrail({ workflow }: { workflow: Workflow }): ReactNode {
 						/>
 					))}
 				</div>
-				{current === undefined ? null : (
+				{current === undefined ? null : currentHref === null ? (
 					<p className="inline-flex w-fit items-center gap-1.5 rounded-full bg-accent-soft px-3 py-1 text-sm font-medium text-accent-text">
 						<CircleDot aria-hidden="true" className="size-4" />
 						{t("ui.workflow.stage", {
@@ -131,6 +219,22 @@ export function HomeTrail({ workflow }: { workflow: Workflow }): ReactNode {
 							step: titleWord(t, current),
 						})}
 					</p>
+				) : (
+					<StepAnchor
+						href={currentHref}
+						label={t("ui.workflow.go_to_step", {
+							step: titleWord(t, current),
+						})}
+						testId={`home-trail-compact-${current.id}`}
+						className="inline-flex w-fit items-center gap-1.5 rounded-full bg-accent-soft px-3 py-1 text-sm font-medium text-accent-text hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+					>
+						<CircleDot aria-hidden="true" className="size-4" />
+						{t("ui.workflow.stage", {
+							number: at + 1,
+							total: steps.length,
+							step: titleWord(t, current),
+						})}
+					</StepAnchor>
 				)}
 			</div>
 		</>
