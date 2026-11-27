@@ -4,6 +4,7 @@ package audit
 
 import (
 	"encoding/json"
+	"slices"
 	"strings"
 )
 
@@ -67,28 +68,12 @@ func AllowedDomains() []string {
 
 // ValidateActorKind reports whether kind is empty or a known actor filter.
 func ValidateActorKind(kind string) bool {
-	if kind == "" {
-		return true
-	}
-	for _, a := range allowedActorKinds {
-		if kind == a {
-			return true
-		}
-	}
-	return false
+	return kind == "" || slices.Contains(allowedActorKinds, kind)
 }
 
 // ValidateDomain reports whether domain is empty or a known domain filter.
 func ValidateDomain(domain string) bool {
-	if domain == "" {
-		return true
-	}
-	for _, d := range allowedDomains {
-		if domain == d {
-			return true
-		}
-	}
-	return false
+	return domain == "" || slices.Contains(allowedDomains, domain)
 }
 
 // ClassifyActor determines whether an audit actor identifier belongs to a human,
