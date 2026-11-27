@@ -73,6 +73,26 @@ describe("EmptyState", () => {
 			),
 		).toContain("Create");
 	});
+
+	test("uses container queries for numbered steps so narrow panes stack vertically without overflow", () => {
+		const html = renderToString(
+			<EmptyState
+				icon={FolderOpen}
+				title="Nothing here yet."
+				description="Save a text you use often."
+				steps={[
+					{ title: "Write a text with variables" },
+					{ title: "Save it with a name" },
+					{ title: "Fill the variables and use it" },
+				]}
+			/>,
+		);
+		expect(html).toContain("@container");
+		expect(html).toContain("grid-cols-1");
+		expect(html).toContain("@[34rem]:grid-cols-3");
+		expect(html).not.toContain("sm:grid-cols-3");
+		expect(html).toContain("[overflow-wrap:anywhere]");
+	});
 });
 
 describe("GuideStrip and NumberedStep", () => {

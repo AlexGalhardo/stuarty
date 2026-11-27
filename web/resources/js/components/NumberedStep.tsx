@@ -50,7 +50,7 @@ export function NumberedStep({
 			<span className="min-w-0 flex-1">
 				<span
 					className={cn(
-						"block text-base text-text",
+						"block text-base [overflow-wrap:anywhere] text-text",
 						state === "current" ? "font-semibold" : "font-medium",
 					)}
 				>
@@ -62,7 +62,9 @@ export function NumberedStep({
 					) : null}
 				</span>
 				{description ? (
-					<span className="block text-sm text-text-muted">{description}</span>
+					<span className="block text-sm [overflow-wrap:anywhere] text-text-muted">
+						{description}
+					</span>
 				) : null}
 			</span>
 		</li>
