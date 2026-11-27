@@ -175,7 +175,7 @@ Every UI epic in this section updates `docs/design/final/stuarty-redesign-final-
 
 | Epic | Title | Size | Depends on | Status |
 | --- | --- | --- | --- | --- |
-| [100](100-windows-silent-processes-and-export.md) | Windows silent child processes, FFmpeg shim resolution and reliable video export | M | 46, 98 | TODO |
+| [100](100-windows-silent-processes-and-export.md) | Windows silent child processes, FFmpeg shim resolution and reliable video export | M | 46, 98 | IN PROGRESS (2026-11-27; tasks 1-4, golangci-lint and desktop windowsgui build verified, interactive GUI smoke test pending) |
 | [101](101-installer-naming-and-desktop-updater.md) | Explicit web-localhost installer naming and desktop in-app auto-updater | M | 100 | TODO |
 | [102](102-critical-ui-bug-fixes.md) | Critical UI bug fixes: workflow navigation, collapsed sidebar version and empty-state layout | S | 75, 79, 99 | IN PROGRESS (2026-11-27, `3d8d10821`..`bc1cb73bd`; tasks 1-3 verified, Playwright E2E pending) |
 | [103](103-login-and-recovery-polish.md) | Login, password recovery and account switching polish | S | 57, 84 | IN PROGRESS (2026-11-27, `092916646`..`5dbf40e8c`; tasks 1-3 and i18n/Vitest verified, Playwright E2E pending) |

@@ -3,6 +3,7 @@ package export
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/AlexGalhardo/stuarty/core/lint"
 	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
@@ -94,6 +95,51 @@ func verifyError(checks []Check) *ffmpeg.Error {
 		Hint:    "Export again; if it keeps failing, report it with the output of \"stuarty doctor\".",
 		Details: map[string]any{"checks": checks},
 	}
+}
+
+// encoderReasonLimit bounds details.encoder_reason to one concise scrubbed line.
+const encoderReasonLimit = 240
+
+// firstStderrLine extracts the first non-empty line of scrubbed stderr for details.encoder_reason.
+func firstStderrLine(stderr string) string {
+	scrubbed := ffmpeg.Scrub(stderr, scrubLimit)
+	for line := range strings.SplitSeq(scrubbed, "\n") {
+		line = strings.TrimSpace(line)
+		if line == "" {
+			continue
+		}
+		if len(line) > encoderReasonLimit {
+			return line[:encoderReasonLimit]
+		}
+		return line
+	}
+	return ""
+}
+
+// attachEncoderDetails enriches an E_EXPORT_FAILED error with the failing encoder,
+// every encoder attempted during fallback, and the scrubbed first stderr line (epic 100).
+func attachEncoderDetails(err error, encoder string, tried []string) error {
+	ffErr, ok := errors.AsType[*ffmpeg.Error](err)
+	if !ok {
+		return err
+	}
+	if ffErr.Details == nil {
+		ffErr.Details = map[string]any{}
+	}
+	if encoder != "" {
+		ffErr.Details["encoder"] = encoder
+	}
+	if len(tried) > 0 {
+		copied := make([]string, len(tried))
+		copy(copied, tried)
+		ffErr.Details["tried_encoders"] = copied
+	}
+	if raw, ok := ffErr.Details["stderr"].(string); ok {
+		if reason := firstStderrLine(raw); reason != "" {
+			ffErr.Details["encoder_reason"] = reason
+		}
+	}
+	return ffErr
 }
 
 // ReasonSizeLimit is details.reason of an export whose file passed STUARTY_MAX_EXPORT_BYTES.
