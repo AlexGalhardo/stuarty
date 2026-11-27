@@ -65,7 +65,7 @@ var recordingStartCmd = &spec{
 	name:    "recording:start",
 	summary: "start recording a display or a window (for a person in the app; the local token is refused)",
 	usage: []string{
-		"stuarty recording:start --project <id> --kind display|window --source <id> [--fps 24|30|60] " +
+		"stuarty recording:start [--project <id>] --kind display|window --source <id> [--fps 24|30|60] " +
 			"[--microphone <id>|default] [--system-audio] [--camera <id>] [--events]",
 		"stuarty recording:start --recording <id of a prepared recording>",
 	},
@@ -195,12 +195,19 @@ var (
 
 var recordingListCmd = &spec{
 	name:    "recording:list",
-	summary: "list the recordings of a project that you may see, newest first",
-	usage:   []string{"stuarty recording:list --project <id>"},
+	summary: "list recordings that you may see, newest first",
+	usage:   []string{"stuarty recording:list [--project <id>]"},
 	example: "stuarty recording:list --project prj_7k2m9x4q1b",
-	project: true,
+	flags: []flagDef{
+		{Name: "project", Kind: kindString, Usage: "the project (default $" + EnvProject + ")"},
+	},
 	run: func(ctx context.Context, c *call) (*output, error) {
-		res, err := c.svc.RecordingList(ctx, service.RecordingListRequest{ProjectID: c.projectID})
+		project := c.args.str("project")
+		if project == "" {
+			project = c.rt.Getenv(EnvProject)
+		}
+
+		res, err := c.svc.RecordingList(ctx, service.RecordingListRequest{ProjectID: project})
 		if err != nil {
 			return nil, err
 		}

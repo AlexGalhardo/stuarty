@@ -462,6 +462,7 @@ func (h *apiHandler) registerAll() {
 	register(h, "recordings.upload.chunk", h.recordingUploadChunk)
 	register(h, "recordings.upload.finish", h.recordingUploadFinish)
 	register(h, "projects.recordings", h.recordingList)
+	register(h, "recordings.list", h.recordingListRecent)
 	register(h, "approvals.list", h.approvalsList)
 	register(h, "approvals.events", h.approvalsStream)
 	register(h, "approvals.get", h.approvalsGet)

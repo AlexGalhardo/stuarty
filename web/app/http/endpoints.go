@@ -711,6 +711,10 @@ var Endpoints = []Endpoint{
 		Summary: "Place a recording the person added on the timeline, as one batch",
 	},
 	{
+		ID: "recordings.list", Method: http.MethodGet, Path: "/recordings", Scope: service.ScopeRead,
+		Service: "RecordingList", Status: 200, Summary: "List recent recordings",
+	},
+	{
 		ID: "projects.recordings", Method: http.MethodGet, Path: "/projects/{id}/recordings", Scope: service.ScopeRead,
 		Service: "RecordingList", Status: 200, Summary: "List the recordings of a project",
 	},

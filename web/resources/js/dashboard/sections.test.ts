@@ -11,12 +11,13 @@ import {
 } from "./sections";
 
 describe("SECTIONS", () => {
-	test("are the twelve sections of RF-311 in order, then the webhooks of epic 59", () => {
+	test("list the dashboard sections in order", () => {
 		expect(SECTIONS.map((s) => s.key)).toEqual([
 			"projects",
 			"edit-video",
 			"edit-image",
 			"write",
+			"record",
 			"visual-assets",
 			"video-assets",
 			"sound-assets",
@@ -30,7 +31,7 @@ describe("SECTIONS", () => {
 	});
 
 	test("each has its own path and icon", () => {
-		expect(new Set(SECTIONS.map((s) => s.path)).size).toBe(13);
+		expect(new Set(SECTIONS.map((s) => s.path)).size).toBe(14);
 		for (const s of SECTIONS) {
 			expect(s.path).toBe(`/${s.key}`);
 			expect(s.icon).toBeTruthy();
@@ -91,12 +92,13 @@ describe("NAV_GROUPS", () => {
 		expect(new Set(hrefs).size).toBe(hrefs.length);
 		expect(hrefs).toContain("/approvals");
 		expect(hrefs).toContain("/settings/brand-kit");
-		expect(hrefs).not.toContain("/record");
+		expect(hrefs).toContain("/record");
 		expect(hrefs).not.toContain("/local-models");
 	});
 
 	test("activeNavItem is the longest path that holds the url", () => {
 		expect(activeNavItem("/approvals")).toBe("approvals");
+		expect(activeNavItem("/record")).toBe("record");
 		expect(activeNavItem("/projects/prj_x")).toBe("projects");
 		expect(activeNavItem("/settings/brand-kit")).toBe("brand-kit");
 		expect(activeNavItem("/settings/keys")).toBe("keys");

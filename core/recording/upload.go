@@ -62,7 +62,7 @@ type UploadSpec struct {
 func ValidateUpload(s UploadSpec) []FieldError {
 	var out []FieldError
 
-	if !timeline.ValidID("prj", s.ProjectID) {
+	if s.ProjectID != "" && !timeline.ValidID("prj", s.ProjectID) {
 		out = append(out, FieldError{"project_id", "invalid_id"})
 	}
 

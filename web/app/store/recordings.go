@@ -162,6 +162,14 @@ func (r recordingRepo) ListByProject(ctx context.Context, projectID string) ([]r
 	return r.list(ctx, true, `project_id = ?`, projectID)
 }
 
+func (r recordingRepo) ListRecent(ctx context.Context, owner string) ([]recordings.Row, error) {
+	if owner == "" {
+		return r.list(ctx, true, `1 = 1`)
+	}
+
+	return r.list(ctx, true, `project_id IN (SELECT id FROM projects WHERE owner_user_id = ?)`, owner)
+}
+
 func (r recordingRepo) ListByAssetHash(ctx context.Context, hash string) ([]recordings.Row, error) {
 	return r.list(ctx, false, `asset_hash = ?`, hash)
 }

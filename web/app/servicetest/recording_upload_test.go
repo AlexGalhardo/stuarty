@@ -107,6 +107,49 @@ func (u *upEnv) begin(t *testing.T, project string, camera bool) *service.Record
 	return rec
 }
 
+func TestStandaloneBrowserRecordingIsAtomicAndOwnerIsolated(t *testing.T) {
+	u := newUpEnv(t, false)
+	owner := func(id string) context.Context {
+		return service.WithCaller(t.Context(), service.Caller{
+			Actor: id, OwnerUserID: id, Browser: true, Scopes: service.AllScopes,
+		})
+	}
+	alice, bob := owner("alice"), owner("bob")
+	req := service.RecordingUploadBeginRequest{Container: "webm"}
+	take, err := u.svc.RecordingUploadBegin(alice, req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := u.svc.RecordingUploadBegin(alice, req); code(err) != "E_QUEUE_FULL" {
+		t.Fatalf("second recording: %v", err)
+	}
+
+	standalone, err := u.svc.StandaloneVideoList(alice, service.StandaloneVideoListRequest{})
+	if err != nil || len(standalone.Projects) != 1 || standalone.Projects[0].ID != take.ProjectID {
+		t.Fatalf("standalone sessions: %+v, %v", standalone, err)
+	}
+
+	productions, err := u.svc.ProjectList(alice, service.ProjectListRequest{})
+	if err != nil || len(productions.Projects) != 0 {
+		t.Fatalf("productions: %+v, %v", productions, err)
+	}
+
+	mine, err := u.svc.RecordingList(alice, service.RecordingListRequest{})
+	if err != nil || len(mine.Recordings) != 1 || mine.Recordings[0].ID != take.ID {
+		t.Fatalf("owner's recordings: %+v, %v", mine, err)
+	}
+
+	theirs, err := u.svc.RecordingList(bob, service.RecordingListRequest{})
+	if err != nil || len(theirs.Recordings) != 0 {
+		t.Fatalf("other owner's recordings: %+v, %v", theirs, err)
+	}
+
+	if _, err := u.svc.RecordingCancel(alice, service.RecordingRef{ID: take.ID}); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func (u *upEnv) send(
 	ctx context.Context, id, track string, index int, body []byte, elapsed int64,
 ) (*service.RecordingUploadChunkResult, error) {

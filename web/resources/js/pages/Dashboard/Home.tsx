@@ -14,6 +14,7 @@ import {
 	Plug,
 	Plus,
 	ShieldCheck,
+	Video,
 } from "lucide-react";
 import type { ReactNode } from "react";
 
@@ -506,12 +507,24 @@ export function HomeView({
 						: summaryLine(t, inProgress, requests)
 				}
 				actions={
-					<PageHeaderAction asChild variant="outline" className="max-md:hidden">
-						<Link href={NEW_PROJECT}>
-							<Plus aria-hidden="true" />
-							{t("ui.dashboard.home.new_project")}
-						</Link>
-					</PageHeaderAction>
+					<>
+						<PageHeaderAction asChild variant="outline">
+							<Link href="/record">
+								<Video aria-hidden="true" />
+								{t("ui.record.title")}
+							</Link>
+						</PageHeaderAction>
+						<PageHeaderAction
+							asChild
+							variant="outline"
+							className="max-md:hidden"
+						>
+							<Link href={NEW_PROJECT}>
+								<Plus aria-hidden="true" />
+								{t("ui.dashboard.home.new_project")}
+							</Link>
+						</PageHeaderAction>
+					</>
 				}
 			/>
 			{home.state === "loading" ? (

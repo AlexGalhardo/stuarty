@@ -73,6 +73,7 @@ export function tagOf(route: string): Tag {
 	const byRoot: Record<string, Tag> = {
 		assets: "Media",
 		briefing: "Projects",
+		standalone: "Projects",
 		commands: "Commands",
 		templates: "Templates",
 		fonts: "Fonts",

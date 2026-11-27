@@ -70,6 +70,10 @@ func (c *Client) RecordingGet(ctx context.Context, req service.RecordingRef) (*s
 func (c *Client) RecordingList(
 	ctx context.Context, req service.RecordingListRequest,
 ) (*service.RecordingListResult, error) {
+	if req.ProjectID == "" {
+		return get[service.RecordingListResult](ctx, c, "/recordings", nil)
+	}
+
 	return get[service.RecordingListResult](ctx, c, "/projects/"+segment(req.ProjectID)+"/recordings", nil)
 }
 

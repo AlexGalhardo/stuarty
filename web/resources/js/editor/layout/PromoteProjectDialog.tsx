@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useT } from "@/lib/i18n";
 import { useRuntime } from "../state/EditorContext";
+import type { EditorRuntime } from "../state/runtime";
 
 function defaultDueDate(): string {
 	const d = new Date();
@@ -25,19 +26,43 @@ function defaultDueDate(): string {
 	return `${d.getFullYear()}-${m}-${day}`;
 }
 
-export default function PromoteProjectDialog({
-	open,
-	initialName,
-	onOpenChange,
-	onPromoted,
-}: {
+export default function PromoteProjectDialog(
+	props: PromoteDialogProps,
+): ReactNode {
+	const t = useT();
+	const runtime = useRuntime();
+	return (
+		<PromoteProjectForm
+			{...props}
+			promote={async (input) => {
+				const result = await runtime.promoteStandalone(input);
+				runtime.noticeWriter.push({
+					kind: "info",
+					message: t("ui.editor.promote.success", { name: result.name }),
+				});
+				return result;
+			}}
+		/>
+	);
+}
+
+interface PromoteDialogProps {
 	open: boolean;
 	initialName: string;
 	onOpenChange(open: boolean): void;
 	onPromoted(projectId: string, name: string): void;
+}
+
+export function PromoteProjectForm({
+	open,
+	initialName,
+	onOpenChange,
+	onPromoted,
+	promote,
+}: PromoteDialogProps & {
+	promote: EditorRuntime["promoteStandalone"];
 }): ReactNode {
 	const t = useT();
-	const runtime = useRuntime();
 	const [name, setName] = useState(initialName.slice(0, 32));
 	const [description, setDescription] = useState("");
 	const [specific, setSpecific] = useState("");
@@ -56,7 +81,7 @@ export default function PromoteProjectDialog({
 		setBusy(true);
 		setFailure(null);
 		try {
-			const res = await runtime.promoteStandalone({
+			const res = await promote({
 				name: name.trim(),
 				description: description.trim(),
 				goal: {
@@ -68,10 +93,6 @@ export default function PromoteProjectDialog({
 					due: due.trim(),
 				},
 				kind: "video",
-			});
-			runtime.noticeWriter.push({
-				kind: "info",
-				message: t("ui.editor.promote.success", { name: res.name }),
 			});
 			onPromoted(res.project_id, res.name);
 			onOpenChange(false);

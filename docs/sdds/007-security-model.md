@@ -486,6 +486,9 @@ Scopes: `read`, `edit`, `media`, `render`, `admin` (SDD-000 §4). They are indep
 | `ProjectCreate` | `POST /projects` | - | R | - | - | - | Refused for a project-limited key (`E_FORBIDDEN`); sets `owner_user_id` |
 | `ProjectUpdate` | `PATCH /projects/{id}` | - | R | - | - | - | Project and ownership check; the same field rules as `ProjectCreate` (epic 56) |
 | `ProjectGet` | `GET /projects/{id}` | R | - | - | - | - | Project and ownership check |
+| `StandaloneVideoList` | `GET /standalone/videos` | R | - | - | - | - | Owner-isolated list of standalone sessions |
+| `StandaloneVideoCreate`, `StandaloneVideoUpload` | `POST /standalone/videos`, `POST /standalone/videos/upload` | - | R | - | - | - | Refused for a project-limited key; import also checks media permission |
+| `StandalonePromote` | `POST /standalone/videos/{id}/promote` | - | R | - | - | - | Project and ownership check before changing the standalone session |
 | `ProjectTrash`, `ProjectRestore` | `POST /projects/{id}/trash`, `/restore` | - | R | - | - | - | Reversible |
 | `Edit` | `POST /projects/{id}/edit` | - | R | R when the batch has a `media` command | - | - | The scope set is the union over the batch (5.3). `dry_run` needs the same scopes |
 | `CommandHelp` | `GET /commands`, `/commands/{name}` | R | - | - | - | - | Lists no `internal` command |
@@ -556,7 +559,7 @@ Scopes: `read`, `edit`, `media`, `render`, `admin` (SDD-000 §4). They are indep
 | `RecordingResume` | `POST /recordings/{id}/resume` | - | - | R | - | - | A privileged browser session only, checked before anything else: resuming restarts the capture of the screen (T-118); audited |
 | `RecordingEvents` | `GET /recordings/{id}/events` | R | - | - | - | - | A dismissed recording is `E_RECORDING_NOT_FOUND` to every caller but a person (T-119); only pointer events leave the file (T-125) |
 | `RecordingCancel` | `POST /recordings/{id}/cancel` | - | - | R | - | - | Any caller for a recording in progress; a privileged browser session to delete a finished one (T-119); audited |
-| `RecordingGet`, `RecordingList` | `GET /recordings/{id}`, `GET /projects/{id}/recordings` | R | - | - | - | - | A dismissed recording is `E_RECORDING_NOT_FOUND` to every caller but a person (T-119); project check |
+| `RecordingGet`, `RecordingList` | `GET /recordings/{id}`, `GET /recordings`, `GET /projects/{id}/recordings` | R | - | - | - | - | A dismissed recording is visible only to a person (T-119); project and ownership checks |
 | `RecordingConfirm`, `RecordingDismiss` | `POST /recordings/{id}/confirm`, `/dismiss` | - | - | R | - | - | A privileged browser session only (T-119); audited |
 | `RecordingUploadBegin` | `POST /recordings/upload` | - | - | R | - | - | A privileged browser session only, checked before anything else (T-137); one open upload per actor and four on the workspace; audited |
 | `RecordingUploadChunk` | `PUT /recordings/{id}/upload/{track}/{index}` | - | - | R | - | - | A privileged browser session only, checked before anything else (T-137); the body is at most 16 MiB (route limit), in order, with a matching SHA-256, under the byte, disk and duration limits of SDD-025 section 18.4; the name of the stored part is made of the track and the index |
@@ -632,6 +635,7 @@ Scopes: `read`, `edit`, `media`, `render`, `admin` (SDD-000 §4). They are indep
 | `ImageRedo` | `POST /images/{id}/redo` | - | R | - | - | - | In network mode an image is visible to its owner and to an administrator, `E_NOT_FOUND` otherwise (SDD-021) |
 | `ImageExport` | `POST /images/{id}/export` | - | R | - | - | - | In network mode an image is visible to its owner and to an administrator, `E_NOT_FOUND` otherwise (SDD-021); writes one file under `exports/images` of the workspace |
 | `ImageImport` | `POST /images/import` | - | R | - | - | - | A `path` is read with the rules of section 7 (the same as `MediaImport`: absolute, canonical, inside the allowed roots in network mode, size and pixel ceilings) and a `hash` only when the caller holds the file; refused for a project-limited key; the file is decoded only by the ingest of SDD-011 §4.7; a refusal creates no document; the id of the new document is chosen by the server in network mode (SDD-021 §10.1) |
+| `ImageOpenFromAsset` | `POST /images/from-asset` | - | R | - | - | - | Uses the image import rules above and takes a content hash from the workspace library |
 | `ImageImportFile` | `POST /images/import/file` | - | R | - | - | - | The bytes of the request are the file: at most 64 MiB (or `STUARTY_MAX_IMPORT_BYTES` when smaller), a declared length over the limit refused before a byte is read and a stream cut at the limit, both `E_LIMIT_EXCEEDED`; the file name is a label; only the ingest decodes the bytes; a refusal creates no document, a refusal by size keeps no file, and a file the ingest refuses is kept as a failed file and never served; otherwise as `ImageImport` (threats T-62 to T-66) |
 | `ImageFrame` | `GET /images/{id}/frame` | R | - | - | - | - | Renders the picture of a document the caller may see (`E_NOT_FOUND` otherwise); writes nothing; refused for a project-limited key; at most two at once per caller (SDD-012 §24.3) |
 | `ImageHistory` | `GET /images/{id}/history` | R | - | - | - | - | Same visibility as `ImageDescribe`; reads the log of the document |

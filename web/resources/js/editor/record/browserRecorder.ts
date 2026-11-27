@@ -34,6 +34,7 @@ export interface SharedTracks {
 export type RecorderPhase =
 	| "starting"
 	| "recording"
+	| "paused"
 	// the person stopped: the last chunks go up and the server is told
 	| "sending"
 	| "finishing"
@@ -55,7 +56,7 @@ export interface RecorderState {
 
 export interface RecorderSetup {
 	client: ApiClient;
-	projectId: string;
+	projectId: string | undefined;
 	mimeType: string;
 	container: RecordingContainer;
 	choice: CaptureChoice;
@@ -71,6 +72,8 @@ const TICK_MS = 250;
 export interface BrowserRecording {
 	readonly recordingId: string;
 	stop(): Promise<RecorderState>;
+	togglePause(): void;
+	cancel(): Promise<void>;
 	state(): RecorderState;
 }
 
@@ -146,7 +149,7 @@ export async function startBrowserRecording(
 	let begun: Recording;
 	try {
 		begun = await client.beginRecordingUpload({
-			project_id: setup.projectId,
+			...(setup.projectId ? { project_id: setup.projectId } : {}),
 			container: setup.container,
 			...(shared.camera ? { camera: true } : {}),
 			label: "Browser",
@@ -170,6 +173,10 @@ export async function startBrowserRecording(
 		const screenStream = new MediaStream(screenTracks);
 
 		const startedAt = performance.now();
+		let pausedAt = 0;
+		let pausedTotal = 0;
+		const elapsed = () =>
+			Math.round((pausedAt || performance.now()) - startedAt - pausedTotal);
 		let elapsedMs = 0;
 		let stoppedBy: RecorderState["stoppedBy"] = null;
 		let phase: RecorderPhase = "recording";
@@ -194,7 +201,7 @@ export async function startBrowserRecording(
 		const uploader = new ChunkUploader(client, begun.recording_id, (u) => {
 			emit(u);
 			// the server said enough (a limit) or the upload cannot go on: stop what is being captured
-			if (u.end !== null && phase === "recording") {
+			if (u.end !== null && (phase === "recording" || phase === "paused")) {
 				stoppedBy = u.end.kind === "limit" ? "limit" : "failure";
 				void halt();
 			}
@@ -205,11 +212,7 @@ export async function startBrowserRecording(
 			const recorder = new MediaRecorder(stream, { mimeType: setup.mimeType });
 			recorder.ondataavailable = (event: BlobEvent) => {
 				if (event.data.size > 0) {
-					uploader.enqueue(
-						kind,
-						event.data,
-						Math.round(performance.now() - startedAt),
-					);
+					uploader.enqueue(kind, event.data, elapsed());
 				}
 			};
 			recorders.push({ kind, recorder });
@@ -219,7 +222,7 @@ export async function startBrowserRecording(
 
 		timer = setInterval(() => {
 			if (phase !== "recording") return;
-			elapsedMs = Math.round(performance.now() - startedAt);
+			elapsedMs = elapsed();
 			emit(uploader.snapshot());
 		}, setup.tickMs ?? TICK_MS);
 
@@ -234,6 +237,7 @@ export async function startBrowserRecording(
 			});
 
 		let ending: Promise<RecorderState> | null = null;
+		let discarding = false;
 		const audioMix = mix;
 		const tickTimer = timer;
 
@@ -242,7 +246,7 @@ export async function startBrowserRecording(
 		async function halt(): Promise<RecorderState> {
 			if (ending !== null) return ending;
 			ending = (async () => {
-				elapsedMs = Math.round(performance.now() - startedAt);
+				elapsedMs = elapsed();
 				phase = "sending";
 				emit(uploader.snapshot());
 				await Promise.all(recorders.map((r) => stopped(r.recorder)));
@@ -253,13 +257,17 @@ export async function startBrowserRecording(
 				phase = "finishing";
 				emit(finalState);
 				try {
-					recording =
-						finalState.end?.kind === "failed"
-							? await client.stopRecording(begun.recording_id)
-							: await client.finishRecordingUpload(begun.recording_id, {
-									tracks: uploader.acknowledged(),
-									elapsed_ms: elapsedMs,
-								});
+					if (discarding) {
+						recording = await client.cancelRecording(begun.recording_id);
+					} else {
+						recording =
+							finalState.end?.kind === "failed"
+								? await client.stopRecording(begun.recording_id)
+								: await client.finishRecordingUpload(begun.recording_id, {
+										tracks: uploader.acknowledged(),
+										elapsed_ms: elapsedMs,
+									});
+					}
 				} catch (error) {
 					failure = error instanceof Error ? error : new Error(String(error));
 				}
@@ -275,7 +283,7 @@ export async function startBrowserRecording(
 
 		// The person pressed "Stop sharing" in the browser: that ends the recording as Stop does.
 		display.getVideoTracks()[0]?.addEventListener("ended", () => {
-			if (phase === "recording") {
+			if (phase === "recording" || phase === "paused") {
 				stoppedBy = "browser";
 				void halt();
 			}
@@ -286,6 +294,25 @@ export async function startBrowserRecording(
 		return {
 			recordingId: begun.recording_id,
 			state: () => current,
+			togglePause: () => {
+				if (phase === "recording") {
+					pausedAt = performance.now();
+					elapsedMs = elapsed();
+					phase = "paused";
+					for (const { recorder } of recorders) recorder.pause();
+				} else if (phase === "paused") {
+					pausedTotal += performance.now() - pausedAt;
+					pausedAt = 0;
+					phase = "recording";
+					for (const { recorder } of recorders) recorder.resume();
+				}
+				emit(uploader.snapshot());
+			},
+			cancel: async () => {
+				discarding = true;
+				const result = await halt();
+				if (result.error !== null) throw result.error;
+			},
 			stop: () => {
 				if (phase === "recording") stoppedBy = "person";
 				return halt();

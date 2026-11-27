@@ -631,6 +631,17 @@ func TestRecordingStartRefusals(t *testing.T) {
 	}
 }
 
+func TestNativeRecordingCreatesAStandaloneTimeline(t *testing.T) {
+	r := newRecEnv(t)
+	take := r.start(t, "")
+	result, err := r.svc.ProjectGet(personCtx(), service.ProjectGetRequest{
+		ProjectID: take.ProjectID, Detail: "document",
+	})
+	if err != nil || result.Document == nil || len(result.Document.Tracks) != 1 {
+		t.Fatalf("standalone capture timeline: %+v, %v", result, err)
+	}
+}
+
 func TestRecordingUnavailableWhereThereIsNoCapture(t *testing.T) {
 	m := newMediaEnv(t, mediaCfg{with: func(_ *env, o *service.Options) { o.CaptureReason = "web" }})
 	project := m.newProject("p")

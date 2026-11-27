@@ -456,6 +456,67 @@
         }
       }
     },
+    "record": {
+      "title": "Gravar tela",
+      "description": "Escolha o que compartilhar, grave uma tomada e faça os ajustes no estúdio.",
+      "native": "Captura no desktop",
+      "browser": "Captura no navegador",
+      "leave": "Sair desta página com uma captura em andamento?",
+      "discard": "Descartar tomada",
+      "recent": "Gravações recentes",
+      "empty": "Suas gravações vão aparecer aqui.",
+      "open_take": "Abrir tomada",
+      "script_project": "Projeto com roteiro",
+      "select_project": "Selecione um projeto",
+      "polish": "Ajustar a tomada",
+      "preview": "Prévia da gravação",
+      "open_editor": "Abrir no editor de vídeo",
+      "export": "Exportar MP4",
+      "open_project": "Abrir projeto",
+      "exporting": "Exportando a tomada…",
+      "export_failed": "A exportação não terminou. Inicie uma nova exportação.",
+      "style": "Layout e fundo",
+      "layout": "Disposição",
+      "camera_position": "Posição da câmera",
+      "background": "Fundo",
+      "no_background": "Nenhum",
+      "apply_style": "Aplicar layout e fundo",
+      "pointer": "Cursor e cliques",
+      "zoom": "Aplicar zoom automático",
+      "cursor": "Mostrar cursor suave",
+      "clicks": "Destacar cliques",
+      "clear_pointer": "Limpar efeitos",
+      "trim_end": "Novo tempo final",
+      "trim_help": "Informe o tempo a partir do início da tomada.",
+      "trim_example": "ex.: 12s",
+      "trim": "Cortar o final",
+      "source": {
+        "browser": "Navegador",
+        "display": "Tela",
+        "window": "Janela"
+      },
+      "state": {
+        "prepared": "Preparada",
+        "recording": "Gravando",
+        "paused": "Pausada",
+        "finishing": "Finalizando",
+        "ready": "Pronta",
+        "failed": "Com erro",
+        "cancelled": "Descartada"
+      },
+      "layouts": {
+        "screen_only": "Só a tela",
+        "pip": "Janela sobreposta",
+        "split": "Tela dividida",
+        "camera_focus": "Foco na câmera"
+      },
+      "corners": {
+        "top_left": "Superior esquerdo",
+        "top_right": "Superior direito",
+        "bottom_left": "Inferior esquerdo",
+        "bottom_right": "Inferior direito"
+      }
+    },
     "nav": {
       "label": "Navegação principal",
       "skip": "Ir para o conteúdo principal",
@@ -487,6 +548,7 @@
         "projects": "Projetos",
         "edit-video": "Editor de vídeo",
         "edit-image": "Editor de imagem",
+        "record": "Gravar",
         "write": "Escrita",
         "visual-assets": "Visuais",
         "video-assets": "Vídeos",
