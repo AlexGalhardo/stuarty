@@ -46,8 +46,8 @@ OutputDir={#OutputDir}
 #ifndef FileVersion
   #define FileVersion "0-0-0"
 #endif
-; FileVersion is AppVersion with dots replaced by dashes: stuarty-0-15-0.exe.
-OutputBaseFilename=stuarty-{#FileVersion}
+; FileVersion is AppVersion with dots replaced by dashes: stuarty-web-localhost-0-61-0.exe.
+OutputBaseFilename=stuarty-web-localhost-{#FileVersion}
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern

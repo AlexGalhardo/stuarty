@@ -5,7 +5,7 @@
 #
 # appimagetool is the pinned one of .config/installers/tools.env, fetched by
 # scripts/fetch-installer-tool.sh (set APPIMAGETOOL to use another path). The output is
-# <output directory>/stuarty-<version with dashes>.AppImage (stuarty-0-28-0.AppImage).
+# <output directory>/stuarty-web-localhost-<version with dashes>.AppImage (stuarty-web-localhost-0-61-0.AppImage).
 # The AppImage carries the
 # icon and the desktop entry, and starts "stuarty open" when it is run with no argument.
 set -euo pipefail
@@ -31,6 +31,6 @@ install -m 0644 "$repo/THIRD_PARTY_NOTICES.md" "$appdir/THIRD_PARTY_NOTICES.md"
 cp -R "$repo/licenses" "$appdir/licenses"
 
 # Runners have no FUSE: appimagetool is itself an AppImage, so it extracts itself and runs.
-file="$out/stuarty-${version//./-}.AppImage"
+file="$out/stuarty-web-localhost-${version//./-}.AppImage"
 ARCH=x86_64 APPIMAGE_EXTRACT_AND_RUN=1 "$tool" --no-appstream "$appdir" "$file"
 echo "$file"

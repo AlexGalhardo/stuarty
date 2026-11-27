@@ -25,7 +25,7 @@ Publicar e gerar algo que custa dinheiro esperam por você na fila de aprovaçõ
 
 ## Instalar
 
-1. **Windows:** baixe `stuarty-desktop-X-Y-Z.exe` (aplicativo de mesa) ou `stuarty-X-Y-Z.exe` (servidor local, para linha de comando e agentes) na [página de releases](https://github.com/AlexGalhardo/stuarty/releases). O Windows avisa antes da primeira execução porque o instalador não tem certificado pago: escolha **Mais informações** e depois **Executar assim mesmo**. A assinatura e a soma de verificação provam que o arquivo é o genuíno.
+1. **Windows:** baixe `stuarty-desktop-X-Y-Z.exe` (aplicativo de mesa) ou `stuarty-web-localhost-X-Y-Z.exe` (servidor web local, para linha de comando e agentes) na [página de releases](https://github.com/AlexGalhardo/stuarty/releases). O Windows avisa antes da primeira execução porque o instalador não tem certificado pago: escolha **Mais informações** e depois **Executar assim mesmo**. A assinatura e a soma de verificação provam que o arquivo é o genuíno.
 2. **Docker:** `docker run -d --name stuarty -p 127.0.0.1:7878:7878 -v stuarty:/data -e APP_KEY="$(openssl rand -base64 32)" -e STUARTY_ADMIN_EMAIL=admin@stuarty.com -e STUARTY_ADMIN_PASSWORD="admin@stuarty.com" ghcr.io/alexgalhardo/stuarty:latest`. Publique a porta só em `127.0.0.1` e troque a senha de exemplo antes de expor o contêiner fora da máquina local.
 3. **Servidor:** `git clone --branch vX.Y.Z https://github.com/AlexGalhardo/stuarty.git`, depois `bash deploy/install.sh --domain stuarty.exemplo.com --email voce@exemplo.com`. Guarde `deploy/secrets/master_key` fora do servidor: é o único arquivo que não se recupera.
 
