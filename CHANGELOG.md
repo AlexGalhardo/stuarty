@@ -7,6 +7,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.61.0] - 2026-11-27
+
+### Added
+
+- **ui:** Add global Back button in dashboard and video editor top bars ([09053fc](https://github.com/AlexGalhardo/stuarty/commit/09053fc54bd8be563ddfd59d5dffd5937a64575a))
+- **ui:** Make every Home workflow trail step clickable ([1cf5146](https://github.com/AlexGalhardo/stuarty/commit/1cf5146e3bc1e469e3572ac822c57d0de549995a))
+- **ui:** Add double-click shortcuts for calendar days and media assets ([ae83cd9](https://github.com/AlexGalhardo/stuarty/commit/ae83cd93144d44e9c8ebd54cda691ad0721b68ec))
+- **desktop:** Expose in-app updater controls over the desktop bridge ([ec33025](https://github.com/AlexGalhardo/stuarty/commit/ec330251a55dec697f5a220545117072bd8a98ae))
+- **web:** Add desktop update controls and auto-update toggle to login and sidebar ([42eee54](https://github.com/AlexGalhardo/stuarty/commit/42eee5418709f34aee95aa55b566a9c1f09c7344))
+- **web:** Add unified error localizer and complete EN/pt-BR error, lint and job catalogues ([5dd0d31](https://github.com/AlexGalhardo/stuarty/commit/5dd0d31ad6440a463d7c1e777ebfe885446b4645))
+- **web:** Wire localized errors, lint findings and job progress across dashboard and editors ([779a951](https://github.com/AlexGalhardo/stuarty/commit/779a951e36f49c91e400c78ac17c5487db5ca4af))
+- **web:** Add global and per-project activity history ([8be3ef3](https://github.com/AlexGalhardo/stuarty/commit/8be3ef38ec68ecad06ec743bb7a138ece19713ab))
+- **service:** Extend durable activity history coverage ([d124a3b](https://github.com/AlexGalhardo/stuarty/commit/d124a3b37718ad267f0192a22ef1146c56c145c4))
+- **web:** Add FieldHelp primitives and input help specification ([e36f5b8](https://github.com/AlexGalhardo/stuarty/commit/e36f5b851b4a770a9f863822910abb86d3367478))
+- **web:** Add input placeholders and help to account, settings, projects, write and publish ([243ad9d](https://github.com/AlexGalhardo/stuarty/commit/243ad9db853882cc0139609604e9c339f7b80cc0))
+- **web:** Add input help to assets, library, chat, connections, and webhooks ([ecf9181](https://github.com/AlexGalhardo/stuarty/commit/ecf91810ed48aec3de2b78a0da06ed9f2149d6a9))
+- **web:** Add input help to video and image editors ([0d1a590](https://github.com/AlexGalhardo/stuarty/commit/0d1a59096690ab6d1eca6227fcb28c031f339d24))
+- **web:** Add check:input-help guard and mark epic 112 done ([1667400](https://github.com/AlexGalhardo/stuarty/commit/1667400c0b3b6215b8ecc292ad46946143b0ed69))
+- **service:** Add standalone video sessions and promote rules ([e5a47c5](https://github.com/AlexGalhardo/stuarty/commit/e5a47c5f745afbc05f054858ebb2f6e9aa39bf28))
+- **web:** Expose standalone video and image API, CLI, MCP and route ([9295037](https://github.com/AlexGalhardo/stuarty/commit/92950372ef550de7c896a750c34099793bd89e86))
+- **web:** Add standalone Edit Video launcher and promote dialog ([05071df](https://github.com/AlexGalhardo/stuarty/commit/05071dff1a5f7e6f5af1f006fce25f4bfa5fc188))
+- **web:** Add instant image dropzone, asset quick-open and attach to project ([de7d85d](https://github.com/AlexGalhardo/stuarty/commit/de7d85d56311a2ff39ac752645ba628845f27a20))
+- **web:** Add a standalone screen recording studio ([8162d06](https://github.com/AlexGalhardo/stuarty/commit/8162d068b09dc7ee0d865e34762007905ab28d89))
+
+### Fixed
+
+- **ui:** Use full navigation for video editor links and Inertia location guard ([3d8d108](https://github.com/AlexGalhardo/stuarty/commit/3d8d1082137ff9ae8a71e3c06c4d197a097f01ec))
+- **ui:** Hide product version label when sidebar is collapsed ([86dde0f](https://github.com/AlexGalhardo/stuarty/commit/86dde0fce0924c84f5adf5279d631593f4db9b6f))
+- **ui:** Make EmptyState numbered steps container-responsive without overflow ([bc1cb73](https://github.com/AlexGalhardo/stuarty/commit/bc1cb73bd71f47b3860f58ed47a77332754efe49))
+- **ui:** Streamline login and password recovery screens and switch account button ([5dbf40e](https://github.com/AlexGalhardo/stuarty/commit/5dbf40e8cc894be65615e237d3b46ede0d7bf8f6))
+- **desktop:** Hide Windows console window when spawning local server ([bb59b5f](https://github.com/AlexGalhardo/stuarty/commit/bb59b5f64e6f16dc7d8467af598dbd2bfb55674e))
+- **engine:** Resolve Scoop FFmpeg shims and hide Windows console on helper runs ([1dbd922](https://github.com/AlexGalhardo/stuarty/commit/1dbd922164cba57499dd6e2f17eb8fffc36b01e8))
+- **export:** Add ordered encoder fallback, h264_mf compatibility and diagnostics ([4306678](https://github.com/AlexGalhardo/stuarty/commit/430667880e5e1b18a1e2afb21b8b1ce51860c7b5))
+- **core:** Clear activity history lint findings ([c177141](https://github.com/AlexGalhardo/stuarty/commit/c177141d3355f21775309c9bc585573c0a6a4c0d))
+- **mcp:** Complete the activity history contract ([84e9c90](https://github.com/AlexGalhardo/stuarty/commit/84e9c908109add288e47a68ca20ab3fa6123a7e7))
+- **web:** Toggle agent chat from the scene bar ([2367e39](https://github.com/AlexGalhardo/stuarty/commit/2367e392cc1f186e4d7e7f921e4945c27e531c3c))
+- **web:** Refine history and hide the mobile scene bar ([669f448](https://github.com/AlexGalhardo/stuarty/commit/669f448800045e6d03ffc35dbc2e7fd5c731e563))
+
 ## [0.60.0] - 2026-11-26
 
 ### Fixed
@@ -2936,7 +2974,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **security:** Count retries in the rolling render quota ([1bc8114](https://github.com/AlexGalhardo/vukem-studio/commit/1bc81140afc4efcc346d68dd16bd7e91abbc15f4))
 - **security:** Add a global rolling daily model budget ([7d3afc4](https://github.com/AlexGalhardo/vukem-studio/commit/7d3afc46c8da935e36ad5bcd179ea12a474d0423))
 
-[Unreleased]: https://github.com/AlexGalhardo/stuarty/compare/v0.60.0...HEAD
+[Unreleased]: https://github.com/AlexGalhardo/stuarty/compare/v0.61.0...HEAD
+[0.61.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.60.0...v0.61.0
 [0.60.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.59.0...v0.60.0
 [0.59.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.58.0...v0.59.0
 [0.58.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.57.0...v0.58.0
