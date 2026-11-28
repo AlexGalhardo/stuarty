@@ -939,6 +939,26 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 			_, err := e.svc.RecordingUploadFinish(ctx, service.RecordingUploadFinishRequest{ID: "rec_0000000001"})
 			return err
 		},
+		"StandaloneVideoList": func() error {
+			_, err := e.svc.StandaloneVideoList(ctx, service.StandaloneVideoListRequest{})
+			return err
+		},
+		"StandaloneVideoCreate": func() error {
+			_, err := e.svc.StandaloneVideoCreate(ctx, service.StandaloneVideoCreateRequest{})
+			return err
+		},
+		"StandaloneVideoUpload": func() error {
+			_, err := e.svc.StandaloneVideoUpload(ctx, service.StandaloneVideoUploadRequest{FileName: "a.mp4"})
+			return err
+		},
+		"StandalonePromote": func() error {
+			_, err := e.svc.StandalonePromote(ctx, service.StandalonePromoteRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"ImageOpenFromAsset": func() error {
+			_, err := e.svc.ImageOpenFromAsset(ctx, service.ImageOpenFromAssetRequest{AssetHash: "sha256:00"})
+			return err
+		},
 	}
 
 	// Every method of the interface is checked here and has a scope entry.
